@@ -81,15 +81,47 @@ module MCollective
         reply[:output]  = "Currently #{reply[:status]}; last completed run #{reply[:runtime]} seconds ago"
       end
 
+      def rm_file file
+        begin
+          File.unlink(file)
+          return true
+        rescue
+          return false
+        end
+      end
+
       def puppet_daemon_status
+        err_msg = ""
+        alive = false
+        if File.exists?(@pidfile)
+          pid = File.read(@pidfile)
+          begin
+            ::Process.kill(0, Integer(pid)) # check that pid is alive
+          alive = true
+          rescue
+            err_msg << "Pidfile is present but process not running. Trying to remove pidfile..."
+            err_msg << (rm_file(@pidfile) ? "ok. " : "failed. ")
+          end
+        end
+
         locked = File.exists?(@lockfile)
         disabled = locked && File::Stat.new(@lockfile).zero?
-        has_pid = File.exists?(@pidfile)
+        if locked && !disabled && !alive
+          err_msg << "Process not running but not empty lockfile is present. Trying to remove lockfile..."
+          err_msg << (rm_file(@lockfile) ? "ok." : "failed.")
+        end
 
-        return 'disabled' if disabled
-        return 'running'  if   locked && has_pid
-        return 'idling'   if ! locked && has_pid
-        return 'stopped'  if ! has_pid
+        reply[:err_msg] = err_msg if err_msg.any?
+
+        if disabled
+          'disabled'
+        elsif alive && locked
+          'running'
+        elsif alive && !locked
+          'idling'
+        elsif !alive
+          'stopped'
+        end
       end
 
       def runonce
