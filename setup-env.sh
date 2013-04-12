@@ -1,7 +1,7 @@
 #!/bin/bash
-for agent in `ls ../mcagent/`; do
+for agent in `ls mcagents/`; do
     echo "Linking agent $agent of mcollective.."
-    ln -sf `readlink -f ../mcagent/$agent` /usr/libexec/mcollective/mcollective/agent/$agent
+    ln -sf `readlink -f mcagents/$agent` /usr/libexec/mcollective/mcollective/agent/$agent
 done
 ln -sfT `readlink -f ../puppet/nailytest` /etc/puppet/modules/nailytest
 ln -sf `readlink -f ../puppet/nailytest/examples/site.pp` /etc/puppet/manifests/site.pp
