@@ -9,15 +9,15 @@ module Astute
         return false
       end
       uids = nodes.map {|n| n['uid']}
-      rpuppet = MClient.new(ctx, "rpuppet", uids)
-
-      data = {"parameters" => parameters,
-              "classes" => classes,
-              "environment" => env}
-
+      data = {
+        "parameters" => parameters,
+        "classes" => classes,
+        "environment" => env
+      }
       Astute.logger.debug "Waiting for puppet to finish deployment on all nodes (timeout = #{Astute.config.PUPPET_TIMEOUT} sec)..."
       time_before = Time.now
       Timeout::timeout(Astute.config.PUPPET_TIMEOUT) do
+        rpuppet = MClient.new(ctx, "rpuppet", uids)
         rpuppet.run(:data => data.to_json)
       end
       time_spent = Time.now - time_before
