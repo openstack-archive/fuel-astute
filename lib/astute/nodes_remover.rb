@@ -18,7 +18,7 @@ module Astute
       else
         answer = {'status' => 'error', 'nodes' => erased_nodes.nodes.map(&:to_hash), 'error_nodes' => error_nodes.nodes.map(&:to_hash)}
         Astute.logger.error "#{@ctx.task_id}: Removing of nodes #{@nodes.uids.inspect} finished "\
-                                             "with errors: #{error_nodes.nodes.inspect}"
+                                             "with errors: #{error_nodes.nodes.map(&:to_hash).inspect}"
       end
       Astute.logger.info "#{@ctx.task_id}: Finished removing of nodes: #{@nodes.uids.inspect}"
       answer

@@ -75,8 +75,16 @@ module Astute
     def mc_send(*args)
       @mc.send(*args)
     rescue => ex
+      case ex
+      when Stomp::Error::NoCurrentConnection
+        # stupid stomp cannot recover severed connection
+        stomp = MCollective::PluginManager["connector_plugin"]
+        stomp.disconnect rescue nil
+        stomp.instance_variable_set :@connection, nil
+        initialize_mclient
+      end
+      sleep rand
       Astute.logger.error "Retrying MCollective call after exception: #{ex}"
-      initialize_mclient
       retry
     end
 
