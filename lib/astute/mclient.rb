@@ -16,6 +16,11 @@ module Astute
       initialize_mclient
     end
 
+    def on_respond_timeout(&block)
+      @on_respond_timeout = block
+      self
+    end
+
     def method_missing(method, *args)
       @mc_res = mc_send(method, *args)
 
@@ -57,7 +62,11 @@ module Astute
         if @mc_res.length < @nodes.length
           nodes_responded = @mc_res.map { |n| n.results[:sender] }
           not_responded = @nodes - nodes_responded
-          err_msg += "MCollective agents '#{not_responded.join(',')}' didn't respond. \n"
+          if @on_respond_timeout
+            @on_respond_timeout.call not_responded
+          else
+            err_msg += "MCollective agents '#{not_responded.join(',')}' didn't respond. \n"
+          end
         end
       end
       failed = @mc_res.select{|x| x.results[:statuscode] != 0 }

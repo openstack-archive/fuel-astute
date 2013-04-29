@@ -66,6 +66,9 @@ module Astute
       time_before = Time.now
       Timeout::timeout(Astute.config.PUPPET_TIMEOUT) do
         puppetd = MClient.new(ctx, "puppetd", uids)
+        puppetd.on_respond_timeout do |uids|
+          ctx.reporter.report('nodes' => uids.map{|uid| {'uid' => uid, 'status' => 'error', 'error_type' => 'deploy'}})
+        end if change_node_status
         prev_summary = puppetd.last_run_summary
         puppetd_runonce(puppetd, uids)
         nodes_to_check = uids
