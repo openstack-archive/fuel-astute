@@ -495,7 +495,25 @@ module Astute
             },
             ]
           },
-        }
+
+        'puppet-log-components-list-ha-cinder' => {
+          'type' => 'count-lines',
+          'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
+          'expected_line_number' => 345
+        },
+
+        'puppet-log-components-list-multinode-cinder' => {
+          'type' => 'count-lines',
+          'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
+          'expected_line_number' => 345
+        },
+
+        'puppet-log-components-list-singlenode-cinder' => {
+          'type' => 'count-lines',
+          'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
+          'expected_line_number' => 345
+        },
+      }
     end
 	end
 end
