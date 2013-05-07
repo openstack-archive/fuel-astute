@@ -1,8 +1,8 @@
-#!/usr/bin/env rspec
-require File.join(File.dirname(__FILE__), "..", "spec_helper")
+require_relative '../spec_helper'
 
 describe Astute::Orchestrator do
   include SpecHelpers
+
   before(:each) do
     @orchestrator = Astute::Orchestrator.new
     @reporter = mock('reporter')

@@ -1,9 +1,9 @@
-#!/usr/bin/env rspec
-require File.join(File.dirname(__FILE__), "..", "spec_helper")
+require_relative '../spec_helper'
 include Astute
 
 describe MClient do
   include SpecHelpers
+
   before(:each) do
     @ctx = mock('context')
     @ctx.stubs(:task_id)

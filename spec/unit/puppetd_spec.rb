@@ -1,9 +1,9 @@
-#!/usr/bin/env rspec
-require File.join(File.dirname(__FILE__), "..", "spec_helper")
+require_relative '../spec_helper'
 include Astute
 
 describe "Puppetd" do
   include SpecHelpers
+
   context "PuppetdDeployer" do
     before :each do
       @ctx = mock
@@ -39,7 +39,7 @@ describe "Puppetd" do
           returns([rpcclient_valid_result]).then.
           returns([rpcclient_new_res]).then.
           returns([rpcclient_finished_res])
-          
+
       rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])
 
       Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0)
@@ -71,7 +71,7 @@ describe "Puppetd" do
           returns([rpcclient_valid_result]).then.
           returns([rpcclient_new_res]).then.
           returns([rpcclient_finished_res])
-          
+
       rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])
 
       Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0, change_node_status=false)
