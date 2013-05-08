@@ -1,42 +1,40 @@
 require 'mcollective'
-require 'active_support/core_ext/class/attribute_accessors'
 
 module Astute
   class MClient
     include MCollective::RPC
 
     attr_accessor :retries
-    cattr_accessor :semaphore
 
     def initialize(ctx, agent, nodes=nil, check_result=true, timeout=nil)
       @task_id = ctx.task_id
       @agent = agent
-      @nodes = nodes.map { |n| n.to_s }
+      @nodes = nodes.map { |n| n.to_s } if nodes
       @check_result = check_result
-      try_synchronize do
-        @mc = rpcclient(agent, :exit_on_failure => false)
-      end
-      @mc.timeout = timeout if timeout
-      @mc.progress = false
       @retries = Astute.config.MC_RETRIES
-      unless @nodes.nil?
-        @mc.discover(:nodes => @nodes)
-      end
+      @timeout = timeout
+      initialize_mclient
     end
 
     def method_missing(method, *args)
-      try_synchronize do
-        @mc_res = @mc.send(method, *args)
-      end
+      @mc_res = mc_send(method, *args)
 
       if method == :discover
         @nodes = args[0][:nodes]
         return @mc_res
       end
+
       # Enable if needed. In normal case it eats the screen pretty fast
       log_result(@mc_res, method)
-      return @mc_res unless @check_result
-      
+
+      check_results_with_retries(method, args) if @check_result
+
+      @mc_res
+    end
+
+  private
+
+    def check_results_with_retries(method, args)
       err_msg = ''
       # Following error might happen because of misconfiguration, ex. direct_addressing = 1 only on client
       #  or.. could be just some hang? Let's retry if @retries is set
@@ -48,12 +46,8 @@ module Astute
           nodes_responded = @mc_res.map { |n| n.results[:sender] }
           not_responded = @nodes - nodes_responded
           Astute.logger.debug "Retry ##{retry_index} to run mcollective agent on nodes: '#{not_responded.join(',')}'"
-          @mc.discover(:nodes => not_responded)
-
-          try_synchronize do
-            @new_res = @mc.send(method, *args)
-          end
-
+          mc_send :discover, :nodes => not_responded
+          @new_res = mc_send(method, *args)
           log_result(@new_res, method)
           # @new_res can have some nodes which finally responded
           @mc_res += @new_res
@@ -75,26 +69,42 @@ module Astute
         Astute.logger.error err_msg
         raise "#{@task_id}: #{err_msg}"
       end
-
-      @mc_res
     end
 
-  private
+
+    def mc_send(*args)
+      @mc.send(*args)
+    rescue => ex
+      case ex
+      when Stomp::Error::NoCurrentConnection
+        # stupid stomp cannot recover severed connection
+        stomp = MCollective::PluginManager["connector_plugin"]
+        stomp.disconnect rescue nil
+        stomp.instance_variable_set :@connection, nil
+        initialize_mclient
+      end
+      sleep rand
+      Astute.logger.error "Retrying MCollective call after exception: #{ex}"
+      retry
+    end
+
+    def initialize_mclient
+      @mc = rpcclient(@agent, :exit_on_failure => false)
+      @mc.timeout = @timeout if @timeout
+      @mc.progress = false
+      if @nodes
+        @mc.discover :nodes => @nodes
+      end
+    rescue => ex
+      Astute.logger.error "Retrying RPC client instantiation after exception: #{ex}"
+      sleep 5
+      retry
+    end
 
     def log_result(result, method)
       result.each do |node|
         Astute.logger.debug "#{@task_id}: MC agent '#{node.agent}', method '#{method}', "\
                             "results: #{node.results.inspect}"
-      end
-    end
-
-    def try_synchronize
-      if self.semaphore
-        self.semaphore.synchronize do
-          yield
-        end
-      else
-        yield
       end
     end
   end

@@ -26,12 +26,13 @@ module Astute
   LogParser.autoload :Patterns, 'astute/logparser/parser_patterns'
 
   def self.logger
-    @logger ||= Logger.new('/var/log/astute.log')
-    @logger.formatter = proc {|severity, datetime, progname, msg|
-      severity_map = {'DEBUG' => 'debug', 'INFO' => 'info', 'WARN' => 'warning',
-        'ERROR' => 'err', 'FATAL' => 'crit'}
-      "#{datetime.strftime("%Y-%m-%dT%H:%M:%S")} #{severity_map[severity]}: #{msg}\n"
-    }
+    unless @logger
+      @logger = Logger.new('/var/log/astute.log')
+      @logger.formatter = proc do |severity, datetime, progname, msg|
+        severity_map = {'DEBUG' => 'debug', 'INFO' => 'info', 'WARN' => 'warning', 'ERROR' => 'err', 'FATAL' => 'crit'}
+        "#{datetime.strftime("%Y-%m-%dT%H:%M:%S")} #{severity_map[severity]}: [#{Process.pid}] #{msg}\n"
+      end
+    end
     @logger
   end
 
