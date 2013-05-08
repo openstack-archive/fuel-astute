@@ -11,10 +11,10 @@ module Astute
       def initialize(o={})
         Astute.logger.debug("Cobbler options: #{o.inspect}")
 
-        if /^http:\/\/([^:]+?):?(\d+)?(\/.+)/ =~ o['url']
-          host = $1
-          port = $2 || '80'
-          path = $3
+        if (match = /^http:\/\/([^:]+?):?(\d+)?(\/.+)/.match(o['url']))
+          host = match[1]
+          port = match[2] || '80'
+          path = match[3]
         else
           host = o['host'] || 'localhost'
           port = o['port'] || '80'
@@ -49,7 +49,7 @@ module Astute
         end
 
         # defining system interfaces
-        if what == 'system' and cobblerized.has_key?('interfaces')
+        if what == 'system' && cobblerized.has_key?('interfaces')
           Astute.logger.debug("Defining system interfaces #{name} #{cobblerized['interfaces']}")
           remote.call('modify_system', item_id, 'modify_interface',
                   cobblerized['interfaces'], token)
@@ -181,7 +181,11 @@ module Astute
 
         each do |k, v|
           k = aliased(k)
-          raise CobblerError, "Wrong cobbler data: #{k} is duplicated" if ch.has_key?(k)
+          if ch.has_key?(k) && ch[k] == v
+            next
+          elsif ch.has_key?(k)
+            raise CobblerError, "Wrong cobbler data: #{k} is duplicated"
+          end
 
           # skiping not valid item options
           unless valid_field?(k)
@@ -227,7 +231,7 @@ module Astute
         k1 = k.gsub(/-/,'_')
         # converting orig keys into alias keys
         # example: 'ksmeta' into 'ks_meta'
-        k2 = (ALIASES.each_key.select{|ak| ALIASES[ak].include?(k1)}[0] or k1)
+        k2 = ALIASES.each_key.select{|ak| ALIASES[ak].include?(k1)}[0] || k1
         Astute.logger.debug("Key #{k} aliased with #{k2}") if k != k2
         k2
       end
