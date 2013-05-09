@@ -90,8 +90,8 @@ module Astute
         remote.call('sync', token)
       end
 
-      def power(name, power)
-        options = {"systems" => [name], "power" => power}
+      def power(name, action)
+        options = {"systems" => [name], "power" => action}
         remote.call('background_power_system', options, token)
       end
 
@@ -221,7 +221,7 @@ module Astute
           end
 
           ch.store(k, v)
-        end # keys.each do |k|
+        end # each do |k, v|
         ch.store('ks_meta', ks_meta.strip) if ks_meta.strip.length > 0
         ch
       end
