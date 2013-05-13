@@ -215,12 +215,12 @@ module Astute
       Astute.logger.info "calculate_networks function was provided with #{data.size} interfaces"
       data.each do |net|
         Astute.logger.debug "Calculating network for #{net.inspect}"
-        if net['vlan'] and net['vlan'] != 0
+        if net['vlan'] && net['vlan'] != 0
           name = [net['dev'], net['vlan']].join('.')
         else
           name = net['dev']
         end
-        if not interfaces.has_key?(name)
+        unless interfaces.has_key?(name)
           interfaces[name] = {'interface' => name, 'ipaddr' => []}
         end
         iface = interfaces[name]
@@ -236,7 +236,7 @@ module Astute
           if net['ip']
             iface['ipaddr'] += [net['ip']]
           end
-          if net['gateway'] and net['name'] =~ /^public$/i
+          if net['gateway'] && net['name'] =~ /^public$/i
             iface['gateway'] = net['gateway']
           end
         end
@@ -251,4 +251,3 @@ module Astute
     end
   end
 end
-
