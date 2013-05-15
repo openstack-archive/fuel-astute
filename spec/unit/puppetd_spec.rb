@@ -84,31 +84,53 @@ describe "Puppetd" do
 
       last_run_result = {:statuscode=>0, :data=>
           {:changes=>{"total"=>1}, :time=>{"last_run"=>1358425701},
-           :resources=>{"failed"=>0}, :status => "running",
-           :running => 1, :idling => 0, :runtime => 100},
+           :resources=>{"failed"=>0}, :status => "stopped", :enabled => 1,
+           :stopped => 1, :idling => 0, :running => 0, :runtime => 1358425701},
          :sender=>"1"}
-      last_run_result_new = Marshal.load(Marshal.dump(last_run_result))
-      last_run_result_new[:data][:time]['last_run'] = 1358426000
-      last_run_result_new[:data][:resources]['failed'] = 1
+
+      last_run_result_idle_pre = Marshal.load(Marshal.dump(last_run_result))
+      last_run_result_idle_pre[:data].update(
+        {:status => 'idling', :idling => 1, :stopped => 0}
+      )
+
+      last_run_result_running = Marshal.load(Marshal.dump(last_run_result))
+      last_run_result_running[:data].update(
+        {:status => 'running', :running => 1, :stopped => 0}
+      )
+
+      last_run_result_finishing = Marshal.load(Marshal.dump(last_run_result_running))
+      last_run_result_finishing[:data].update(
+        {
+          :runtime => 1358426000, :time => {"last_run" => 1358426000},
+          :resources => {"failed" => 1}
+        }
+      )
+
+      last_run_result_idle_post = Marshal.load(Marshal.dump(last_run_result_finishing))
+      last_run_result_idle_post[:data].update(
+        {:status => 'idling', :idling => 1, :running => 0}
+      )
+
+      last_run_result_finished = Marshal.load(Marshal.dump(last_run_result_finishing))
+      last_run_result_finished[:data].update(
+        {:status => 'stopped', :stopped => 1, :running => 0}
+      )
 
       nodes = [{'uid' => '1'}]
 
-      last_run_result_finished = Marshal.load(Marshal.dump(last_run_result))
-      last_run_result_finished[:data][:status] = 'stopped'
-      last_run_result_finished[:data][:time]['last_run'] = 1358427000
-      last_run_result_finished[:data][:resources]['failed'] = 1
-
       rpcclient = mock_rpcclient(nodes)
 
-      rpcclient_valid_result = mock_mc_result(last_run_result)
-      rpcclient_new_res = mock_mc_result(last_run_result_new)
-      rpcclient_finished_res = mock_mc_result(last_run_result_finished)
-
-      rpcclient.stubs(:last_run_summary).returns([rpcclient_valid_result]).then.
-          returns([rpcclient_valid_result]).then.
-          returns([rpcclient_new_res]).then.
-          returns([rpcclient_finished_res])
-      rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])
+      rpcclient.stubs(:last_run_summary).at_least(8).
+        returns([ mock_mc_result(last_run_result) ]).then.
+        returns([ mock_mc_result(last_run_result) ]).then.
+        returns([ mock_mc_result(last_run_result_idle_pre) ]).then.
+        returns([ mock_mc_result(last_run_result_running) ]).then.
+        returns([ mock_mc_result(last_run_result_running) ]).then.
+        returns([ mock_mc_result(last_run_result_finishing) ]).then.
+        returns([ mock_mc_result(last_run_result_idle_post) ]).then.
+        returns([ mock_mc_result(last_run_result_finished) ])
+      rpcclient.expects(:runonce).at_least_once.
+        returns([ mock_mc_result(last_run_result) ])
 
       MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
       Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0)
