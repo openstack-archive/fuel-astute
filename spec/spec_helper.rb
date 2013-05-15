@@ -14,6 +14,7 @@ end
 Astute.config.PUPPET_DEPLOY_INTERVAL = 0
 Astute.config.PUPPET_FADE_INTERVAL = 0
 Astute.config.MC_RETRY_INTERVAL = 0
+Astute.logger = Logger.new(STDERR)
 
 module SpecHelpers
   def mock_rpcclient(discover_nodes=nil, timeout=nil)
@@ -22,23 +23,22 @@ module SpecHelpers
       unless timeout.nil?
         expects(:timeout=).with(timeout)
       end
-      unless discover_nodes.nil?
-        expects(:discover).with(:nodes => discover_nodes.map{|x| x['uid'].to_s}).at_least_once
-      else
+      if discover_nodes.nil?
         stubs(:discover)
+      else
+        expects(:discover).with(:nodes => discover_nodes.map { |x| x['uid'].to_s }).at_least_once
       end
     end
     Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
-    return rpcclient
+    rpcclient
   end
 
   def mock_mc_result(result={})
     mc_res = {:statuscode => 0, :data => {}, :sender => '1'}
     mc_res.merge!(result)
-    mc_result = mock('mc_result') do
+    mock('mc_result') do
       stubs(:results).returns(mc_res)
       stubs(:agent).returns('mc_stubbed_agent')
     end
-    return mc_result
   end
 end
