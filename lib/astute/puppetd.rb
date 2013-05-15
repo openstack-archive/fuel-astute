@@ -53,7 +53,7 @@ module Astute
 
       # Select all finished nodes which not failed and changed last_run time.
       succeed_nodes = stopped.select { |n|
-        n.results[:data][:resources]['failed'] == 0 and 
+        n.results[:data][:resources]['failed'] == 0 and
         n.results[:data][:time]['last_run'] !=
           prev_run.select {|ps|
             ps.results[:sender] == n.results[:sender]
@@ -78,17 +78,17 @@ module Astute
     def self.deploy(ctx, nodes, retries=2, change_node_status=true)
       # TODO: can we hide retries, ignore_failure into @ctx ?
       uids = nodes.map {|n| n['uid']}
-      # TODO(mihgen): handle exceptions from mclient, raised if agent does not respond or responded with error
-      puppetd = MClient.new(ctx, "puppetd", uids)
-      prev_summary = puppetd.last_run_summary
-
       # Keep info about retries for each node
       node_retries = {}
       uids.each {|x| node_retries.merge!({x => retries}) }
-
       Astute.logger.debug "Waiting for puppet to finish deployment on all nodes (timeout = #{Astute.config.PUPPET_TIMEOUT} sec)..."
       time_before = Time.now
       Timeout::timeout(Astute.config.PUPPET_TIMEOUT) do
+        puppetd = MClient.new(ctx, "puppetd", uids)
+        puppetd.on_respond_timeout do |uids|
+          ctx.reporter.report('nodes' => uids.map{|uid| {'uid' => uid, 'status' => 'error', 'error_type' => 'deploy'}})
+        end if change_node_status
+        prev_summary = puppetd.last_run_summary
         puppetd_runonce(puppetd, uids)
         nodes_to_check = uids
         last_run = prev_summary
