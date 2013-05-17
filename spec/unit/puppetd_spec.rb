@@ -133,7 +133,7 @@ describe "Puppetd" do
         returns([ mock_mc_result(last_run_result) ])
 
       MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
-      Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0)
+      Astute::PuppetdDeployer.deploy(@ctx, nodes, 10)
     end
 
     it "doesn't publish error status for node if change_node_status disabled" do
