@@ -76,19 +76,17 @@ module Astute
                    n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0]})
       end
 
-      attrs['nodes'] = []
-      role = 'primary-controller'
-      ctrl_nodes.each do |n|
-        attrs['nodes'].push({
+      attrs['nodes'] = ctrl_nodes.map do |n|
+        {
           'name'             => n['fqdn'].split(/\./)[0],
-          'role'             => role,
+          'role'             => 'controller',
           'internal_address' => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
           'public_address'   => n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0],
           'mountpoints'      => "1 1\n2 2",
           'storage_local_net_ip' => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
-        })
-        role = 'controller'
+        }
       end
+      attrs['nodes'].first['role'] = 'primary-controller'
       attrs['ctrl_hostnames'] = ctrl_nodes.map {|n| n['fqdn'].split(/\./)[0]}
       attrs['master_hostname'] = ctrl_nodes[0]['fqdn'].split(/\./)[0]
       attrs['ctrl_public_addresses'] = ctrl_public_addrs
@@ -113,18 +111,24 @@ module Astute
         end
       end
       compute_nodes = nodes.select {|n| n['role'] == 'compute'}
+      quantum_nodes = nodes.select {|n| n['role'] == 'quantum'}
       storage_nodes = nodes.select {|n| n['role'] == 'storage'}
       proxy_nodes = nodes.select {|n| n['role'] == 'swift-proxy'}
       primary_proxy_nodes = nodes.select {|n| n['role'] == 'primary-swift-proxy'}
-      other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - primary_proxy_nodes
+      other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - \
+        primary_proxy_nodes - quantum_nodes
 
-      Astute.logger.info "Starting deployment of primary proxy and controller"
+      Astute.logger.info "Starting deployment of primary controller"
       deploy_piece(primary_ctrl_nodes, attrs, 0, false)
 
       Astute.logger.info "Starting deployment of all controllers one by one"
       ctrl_nodes.each {|n| deploy_piece([n], attrs)}
-      Astute.logger.info "Starting deployment of 1st controller again"
+
+      Astute.logger.info "Starting deployment of 1st controller and 1st proxy"
       deploy_piece(primary_ctrl_nodes + primary_proxy_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of quantum nodes"
+      deploy_piece(quantum_nodes, attrs)
 
       Astute.logger.info "Starting deployment of other nodes"
       deploy_piece(other_nodes, attrs)
