@@ -1,5 +1,4 @@
-#!/usr/bin/env rspec
-require File.join(File.dirname(__FILE__), "..", "spec_helper")
+require_relative '../spec_helper'
 
 describe "SimplePuppet DeploymentEngine" do
   context "When deploy is called, " do

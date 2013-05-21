@@ -1,9 +1,4 @@
-#!/usr/bin/env rspec
-require File.join(File.dirname(__FILE__), "..", "spec_helper")
-require 'tempfile'
-require 'tmpdir'
-require 'date'
-
+require_relative '../spec_helper'
 include Astute
 
 describe LogParser do

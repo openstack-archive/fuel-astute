@@ -1,13 +1,12 @@
-$LOAD_PATH << File.join(File.dirname(__FILE__),"..","lib")
+require 'tempfile'
+require 'tmpdir'
+require 'date'
+require 'yaml'
 require 'rspec'
 # Following require is needed for rcov to provide valid results
 require 'rspec/autorun'
-require 'yaml'
-require 'astute'
 
-RSpec.configure do |config|
-  config.mock_with :mocha
-end
+require_relative '../lib/astute'
 
 # NOTE(mihgen): I hate to wait for unit tests to complete,
 #               resetting time to sleep significantly increases tests speed
@@ -15,6 +14,10 @@ Astute.config.PUPPET_DEPLOY_INTERVAL = 0
 Astute.config.PUPPET_FADE_INTERVAL = 0
 Astute.config.MC_RETRY_INTERVAL = 0
 Astute.logger = Logger.new(STDERR)
+
+RSpec.configure do |c|
+  c.mock_with :mocha
+end
 
 module SpecHelpers
   def mock_rpcclient(discover_nodes=nil, timeout=nil)

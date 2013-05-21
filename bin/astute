@@ -33,7 +33,8 @@ optparse.parse!(ARGV)
 
 if opts[:filename].nil?
   puts optparse
-  exit
+  ERROR_CODE_COMMAND_USAGE = 64
+  exit ERROR_CODE_COMMAND_USAGE
 end
 
 reporter = ConsoleReporter.new
@@ -52,4 +53,3 @@ end
 
 orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
 orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
-#orchestrator.verify_networks(reporter, task_id, nodes, networks)

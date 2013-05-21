@@ -1,5 +1,4 @@
-#!/usr/bin/env rspec
-require File.join(File.dirname(__FILE__), "..", "spec_helper")
+require_relative '../spec_helper'
 
 describe Astute::Node do
   it "accepts hash for initialization" do
@@ -46,7 +45,10 @@ end
 
 describe Astute::NodesHash do
   it "accepts array of hashes or nodes for initialization and allows accessing by uid" do
-    nodes = Astute::NodesHash.build([{'uid' => 123, 'info' => 'blabla1'}, Astute::Node.new({'uid' => 'abc', 'info' => 'blabla2'})])
+    nodes = Astute::NodesHash.build(
+      [{'uid' => 123, 'info' => 'blabla1'},
+      Astute::Node.new({'uid' => 'abc', 'info' => 'blabla2'})])
+
     nodes['123'].info.should == 'blabla1'
     nodes['abc'].info.should == 'blabla2'
     nodes[123].info.should == 'blabla1'
@@ -64,7 +66,10 @@ describe Astute::NodesHash do
   end
 
   it "introduces meaningful aliases" do
-    nodes = Astute::NodesHash.build([{'uid' => 123, 'info' => 'blabla1'}, Astute::Node.new({'uid' => 'abc', 'info' => 'blabla2'})])
+    nodes = Astute::NodesHash.build(
+      [{'uid' => 123, 'info' => 'blabla1'},
+      Astute::Node.new({'uid' => 'abc', 'info' => 'blabla2'})])
+
     nodes.uids.should  == nodes.keys
     nodes.nodes.should == nodes.values
   end
