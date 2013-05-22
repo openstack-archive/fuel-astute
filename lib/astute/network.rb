@@ -71,22 +71,23 @@ module Astute
     end
 
     def self.format_result(stats)
+      uids = stats.map{|node| node.results[:sender]}.sort
       stats.map do |node|
         {
           'uid' => node.results[:sender],
           'networks' => check_vlans_by_traffic(
-            node.results[:sender],
+            uids,
             node.results[:data][:neighbours])
         }
       end
     end
 
-    def self.check_vlans_by_traffic(uid, data)
+    def self.check_vlans_by_traffic(uids, data)
       data.map do |iface, vlans|
         {
           'iface' => iface,
           'vlans' => vlans.reject{ |k, v|
-            v.size == 1 && v.has_key?(uid)
+            v.keys.sort != uids
           }.keys.map(&:to_i)
         }
       end
