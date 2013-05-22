@@ -83,7 +83,7 @@ module Astute
           'internal_address' => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
           'public_address'   => n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0],
           'mountpoints'      => "1 1\n2 2",
-          'storage_local_net_ip' => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
+          'storage_local_net_ip' => n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0],
         }
       end
       attrs['nodes'].first['role'] = 'primary-controller'
