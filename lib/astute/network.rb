@@ -7,7 +7,7 @@ module Astute
           "#{ctx.task_id}: Network checker: nodes list is empty. Nothing to check.")
         return {
           'status' => 'error',
-          'error' => "Nodes list is empty. Nothing to check."
+          'error' => "Network verification requires a minimum of two nodes."
         }
       elsif nodes.length == 1
         Astute.logger.info(
