@@ -1,4 +1,5 @@
-require_relative '../spec_helper'
+require File.join(File.dirname(__FILE__), '../spec_helper')
+
 include Astute
 
 describe "Puppetd" do
