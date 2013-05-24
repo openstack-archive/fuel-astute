@@ -41,7 +41,7 @@ module Astute
     # we mix all attrs and prepare them for Puppet
     # Works for multinode deployment mode
     def attrs_multinode(nodes, attrs)
-      ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
+      ctrl_nodes = attrs['controller_nodes']
       # TODO(mihgen): we should report error back if there are not enough metadata passed
       ctrl_management_ips = []
       ctrl_public_ips = []
@@ -75,7 +75,7 @@ module Astute
 
     def attrs_ha(nodes, attrs)
       # TODO(mihgen): we should report error back if there are not enough metadata passed
-      ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
+      ctrl_nodes = attrs['controller_nodes']
       ctrl_manag_addrs = {}
       ctrl_public_addrs = {}
       ctrl_nodes.each do |n|
