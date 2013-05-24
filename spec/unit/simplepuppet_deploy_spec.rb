@@ -41,7 +41,7 @@ describe "SimplePuppet DeploymentEngine" do
     it "ha deploy should not raise any exception" do
       @env['attributes']['deployment_mode'] = "ha"
       Astute::Metadata.expects(:publish_facts).never
-      Astute::PuppetdDeployer.expects(:deploy).times(6)
+      Astute::PuppetdDeployer.expects(:deploy).times(2)
       @deploy_engine.deploy(@env['nodes'], @env['attributes'])
     end
 
@@ -60,18 +60,17 @@ describe "SimplePuppet DeploymentEngine" do
                             {'uid'=>'o1', 'role'=>'other'}])
       controller_nodes = @env['nodes'].select{|n| n['role'] == 'controller'}
       compute_nodes = @env['nodes'].select{|n| n['role'] == 'compute'}
-      other_nodes = @env['nodes'] - controller_nodes - compute_nodes
+      other_nodes = @env['nodes'] - controller_nodes
+      primary_ctrl_nodes = [controller_nodes.shift]
 
       Astute::Metadata.expects(:publish_facts).never
+      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, primary_ctrl_nodes, 0, false).once
       controller_nodes.each do |n|
-        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 0, false).once
+        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 2, true).once
       end
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [controller_nodes.first], 0, false).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes[1..-1], 0, false).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [controller_nodes.first], 0, true).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes[1..-1], 0, true).once
+      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, primary_ctrl_nodes, 2, true).once
+
       Astute::PuppetdDeployer.expects(:deploy).with(@ctx, other_nodes, instance_of(Fixnum), true).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
       @deploy_engine.deploy(@env['nodes'], @env['attributes'])
     end
 
@@ -80,33 +79,27 @@ describe "SimplePuppet DeploymentEngine" do
       @env['nodes'].concat([{'uid'=>'c1', 'role'=>'controller'}, {'uid'=>'c2', 'role'=>'controller'},
                             {'uid'=>'q1', 'role'=>'quantum'}, {'uid'=>'q2', 'role'=>'quantum'},
                             {'uid'=>'st1', 'role'=>'storage'}, {'uid'=>'st2', 'role'=>'storage'},
-                            {'uid'=>'sw1', 'role'=>'swift-proxy'}, {'uid'=>'sw2', 'role'=>'swift-proxy'},
+                            {'uid'=>'sw1', 'role'=>'primary-swift-proxy'}, {'uid'=>'sw2', 'role'=>'swift-proxy'},
                             {'uid'=>'o1', 'role'=>'other'}])
       controller_nodes = @env['nodes'].select{|n| n['role'] == 'controller'}
+      primary_ctrl_nodes = [controller_nodes.shift]
       compute_nodes = @env['nodes'].select{|n| n['role'] == 'compute'}
       quantum_nodes = @env['nodes'].select {|n| n['role'] == 'quantum'}
       storage_nodes = @env['nodes'].select {|n| n['role'] == 'storage'}
       proxy_nodes = @env['nodes'].select {|n| n['role'] == 'swift-proxy'}
-      other_nodes = @env['nodes'] - controller_nodes - compute_nodes - quantum_nodes - storage_nodes -proxy_nodes
+      primary_proxy_nodes = @env['nodes'].select {|n| n['role'] == 'primary-swift-proxy'}
+      primary_nodes = primary_ctrl_nodes + primary_proxy_nodes
+      other_nodes = @env['nodes'] - controller_nodes - primary_nodes - quantum_nodes
 
       Astute::Metadata.expects(:publish_facts).never
+      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, primary_ctrl_nodes, 0, false).once
       controller_nodes.each do |n|
-        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 0, true).once
+        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 2, true).once
       end
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [controller_nodes.first], 0, true).once
+      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, primary_nodes, 2, true).once
 
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, quantum_nodes, 0, true).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
+      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, quantum_nodes, 2, true).once
 
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, storage_nodes, instance_of(Fixnum), false).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, storage_nodes, instance_of(Fixnum), false).once
-
-      proxy_nodes.each do |n|
-        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 0, false).once
-      end
-
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, storage_nodes, instance_of(Fixnum), true).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, proxy_nodes, instance_of(Fixnum), true).once
       Astute::PuppetdDeployer.expects(:deploy).with(@ctx, other_nodes, instance_of(Fixnum), true).once
       @deploy_engine.deploy(@env['nodes'], @env['attributes'])
     end

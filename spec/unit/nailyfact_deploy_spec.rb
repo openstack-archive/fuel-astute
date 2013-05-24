@@ -151,21 +151,20 @@ describe "NailyFact DeploymentEngine" do
     it "ha deploy should not raise any exception" do
       Astute::Metadata.expects(:publish_facts).at_least_once
       controller_nodes = @data_ha['args']['nodes'].select{|n| n['role'] == 'controller'}
+      primary_nodes = [controller_nodes.shift]
       compute_nodes = @data_ha['args']['nodes'].select{|n| n['role'] == 'compute'}
+      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, primary_nodes, 0, false).once
       controller_nodes.each do |n|
-        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 0, false).once
+        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 2, true).once
       end
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes, 0, false).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [controller_nodes.first], 0, false).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes, 0, false).once
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes, 3, true).once
+      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, primary_nodes, 2, true).once
       Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
       @deploy_engine.deploy(@data_ha['args']['nodes'], @data_ha['args']['attributes'])
     end
 
     it "ha deploy should not raise any exception if there are only one controller" do
       Astute::Metadata.expects(:publish_facts).at_least_once
-      Astute::PuppetdDeployer.expects(:deploy).times(5)
+      Astute::PuppetdDeployer.expects(:deploy).once
       ctrl = @data_ha['args']['nodes'].select {|n| n['role'] == 'controller'}[0]
       @deploy_engine.deploy([ctrl], @data_ha['args']['attributes'])
     end
