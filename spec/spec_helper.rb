@@ -6,7 +6,7 @@ require 'rspec'
 # Following require is needed for rcov to provide valid results
 require 'rspec/autorun'
 
-require_relative '../lib/astute'
+require File.join(File.dirname(__FILE__), '../lib/astute')
 
 # NOTE(mihgen): I hate to wait for unit tests to complete,
 #               resetting time to sleep significantly increases tests speed

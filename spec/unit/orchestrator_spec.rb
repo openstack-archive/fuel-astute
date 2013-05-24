@@ -1,4 +1,4 @@
-require_relative '../spec_helper'
+require File.join(File.dirname(__FILE__), '../spec_helper')
 
 describe Astute::Orchestrator do
   include SpecHelpers
@@ -75,7 +75,7 @@ describe Astute::Orchestrator do
 
     it "returns error if nodes list is empty" do
       res = @orchestrator.verify_networks(@reporter, 'task_uuid', [])
-      res.should eql({'status' => 'error', 'error' => "Nodes list is empty. Nothing to check."})
+      res.should eql({'status' => 'error', 'error' => "Network verification requires a minimum of two nodes."})
     end
 
     it "returns all vlans passed if only one node provided" do
