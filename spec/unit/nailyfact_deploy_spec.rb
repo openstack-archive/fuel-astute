@@ -76,6 +76,10 @@ describe "NailyFact DeploymentEngine" do
                             "role" => "compute"}]},
               "method" => "deploy",
               "respond_to" => "deploy_resp"}
+
+      @data['args']['attributes']['controller_nodes'] = @data['args']['nodes'].
+        select { |node| node['role'] == 'controller'}
+
       ha_nodes = @data['args']['nodes'] +
                           [{"mac" => "52:54:00:0E:88:88", "status" => "provisioned",
                             "uid" => "4", "error_type" => nil,
