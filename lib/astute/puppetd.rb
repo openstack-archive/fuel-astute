@@ -54,7 +54,8 @@ module Astute
       # Select all finished nodes which not failed and changed last_run time.
       succeed_nodes = stopped.select { |n|
         prev_n = prev_run.find{|ps| ps.results[:sender] == n.results[:sender] }
-        n.results[:data][:resources]['failed'] == 0 &&
+        n.results[:data][:resources]['failed'].to_i == 0 &&
+          n.results[:data][:resources]['failed_to_restart'].to_i == 0 &&
           n.results[:data][:time]['last_run'] != (prev_n && prev_n.results[:data][:time]['last_run'])
       }.map{|x| x.results[:sender] }
 
