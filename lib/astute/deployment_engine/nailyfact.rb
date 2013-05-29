@@ -6,7 +6,6 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
   end
 
   def create_facts(node, attrs)
-    metapublisher = Astute::Metadata.method(:publish_facts)
     # calculate_networks method is common and you can find it in superclass
     # if node['network_data'] is undefined, we use empty list because we later try to iterate over it
     #   otherwise we will get KeyError
@@ -17,6 +16,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       'uid'  => node['uid'],
       'network_data' => network_data_puppet.to_json
     }
+
     attrs.each do |k, v|
       if v.is_a? String
         metadata[k] = v
@@ -25,6 +25,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
         metadata[k] = v.to_json
       end
     end
+
     # Let's calculate interface settings we need for OpenStack:
     node_network_data.each do |iface|
       device = if iface['vlan'] && iface['vlan'] > 0
@@ -38,7 +39,11 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     # internal_address is required for HA..
     metadata['internal_address'] = node['network_data'].select{|nd| nd['name'] == 'management' }[0]['ip'].split('/')[0]
 
-    metapublisher.call(@ctx, node['uid'], metadata)
+    if metadata['network_manager'] == 'VlanManager' && !metadata['fixed_interface']
+      metadata['fixed_interface'] = get_fixed_interface(node, metadata)
+    end
+
+    Astute::Metadata.publish_facts(@ctx, node['uid'], metadata)
   end
 
   def deploy_piece(nodes, attrs, retries=2, change_node_status=true)
@@ -55,4 +60,13 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     nodes_roles = nodes.map { |n| { n['uid'] => n['role'] } }
     Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
   end
+
+  private
+  def get_fixed_interface(node, attrs)
+    return node['vlan_interface'] if node['vlan_interface']
+
+    Astute.logger.warn "Can not find vlan_interface for node #{node['uid']}"
+    nil
+  end
+
 end
