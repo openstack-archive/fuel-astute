@@ -48,6 +48,7 @@ module MCollective
       end
 
       private
+
       def last_run_summary
         # wrap into begin..rescue: fixes PRD-252
         begin
@@ -92,20 +93,10 @@ module MCollective
 
       def puppet_daemon_status
         err_msg = ""
-        alive = false
-        if File.exists?(@pidfile)
-          pid = File.read(@pidfile)
-          begin
-            ::Process.kill(0, Integer(pid)) # check that pid is alive
-          alive = true
-          rescue
-            err_msg << "Pidfile is present but process not running. Trying to remove pidfile..."
-            err_msg << (rm_file(@pidfile) ? "ok. " : "failed. ")
-          end
-        end
-
+        alive = !!puppet_agent_pid
         locked = File.exists?(@lockfile)
         disabled = locked && File::Stat.new(@lockfile).zero?
+
         if locked && !disabled && !alive
           err_msg << "Process not running but not empty lockfile is present. Trying to remove lockfile..."
           err_msg << (rm_file(@lockfile) ? "ok." : "failed.")
@@ -134,26 +125,12 @@ module MCollective
           reply.fail "Lock file and PID file exist; puppet agent is running."
 
         when 'idling' then       # signal daemon
-          pid = File.read(@pidfile)
-          if pid !~ /^\d+$/
-            reply.fail "PID file does not contain a PID; got #{pid.inspect}"
-          else
-            begin
-              ::Process.kill(0, Integer(pid)) # check that pid is alive
-              # REVISIT: Should we add an extra round of security here, and
-              # ensure that the PID file is securely owned, or that the target
-              # process looks like Puppet?  Otherwise a malicious user could
-              # theoretically signal arbitrary processes with this...
-              begin
-                ::Process.kill("USR1", Integer(pid))
-                reply[:output] = "Signalled daemonized puppet agent to run (process #{Integer(pid)}); " + (reply[:output] || '')
-              rescue Exception => e
-                reply.fail "Failed to signal the puppet agent daemon (process #{pid}): #{e}"
-              end
-            rescue Errno::ESRCH => e
-              # PID is invalid, run puppet onetime as usual
-              runonce_background
-            end
+          pid = puppet_agent_pid
+          begin
+            ::Process.kill('USR1', pid)
+            reply[:output] = "Signalled daemonized puppet agent to run (process #{pid}); " + (reply[:output] || '')
+          rescue => ex
+            reply.fail "Failed to signal the puppet agent daemon (process #{pid}): #{ex}"
           end
 
         when 'stopped' then      # just run
@@ -210,8 +187,11 @@ module MCollective
           end
         end
       end
+
+      def puppet_agent_pid
+        result = `ps -C puppet -o pid,comm --no-headers`.lines.first
+        result && result.strip.split(' ')[0].to_i
+      end
     end
   end
 end
-
-# vi:tabstop=2:expandtab:ai:filetype=ruby
