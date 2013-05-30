@@ -137,7 +137,7 @@ describe "NailyFact DeploymentEngine" do
       nodes = [{'uid' => 1}]
       attrs = {'deployment_mode' => 'ha'}
       attrs_modified = attrs.merge({'some' => 'somea'})
-      
+
       @deploy_engine.expects(:attrs_ha).with(nodes, attrs).returns(attrs_modified)
       @deploy_engine.expects(:deploy_ha).with(nodes, attrs_modified)
       # All implementations of deploy_piece go to subclasses
@@ -189,6 +189,51 @@ describe "NailyFact DeploymentEngine" do
       Astute::Metadata.expects(:publish_facts).times(@data['args']['nodes'].size)
       Astute::PuppetdDeployer.expects(:deploy).with(@ctx, @data['args']['nodes'], instance_of(Fixnum), true).once
       @deploy_engine.deploy(@data['args']['nodes'], @data['args']['attributes'])
+    end
+
+    describe 'Vlan manager' do
+      it 'Should set fixed_interface value' do
+        node = {
+          'role' => 'controller',
+          'uid' => 1,
+          'vlan_interface' => 'eth2',
+          'network_data' => [
+            {
+              "gateway" => "192.168.0.1",
+              "name" => "management", "dev" => "eth0",
+              "brd" => "192.168.0.255", "netmask" => "255.255.255.0",
+              "vlan" => 102, "ip" => "192.168.0.2/24"
+            }
+          ]
+        }
+        attrs = {
+          'network_manager' => 'VlanManager'
+        }
+
+        expect = {
+          "role" => "controller",
+          "uid"=>1,
+
+          "network_data" => {"eth0.102" =>
+            {
+              "interface" => "eth0.102",
+              "ipaddr" => ["192.168.0.2/24"]
+            },
+            "lo" => {
+              "interface" => "lo",
+              "ipaddr" => "dhcp"
+            }
+          }.to_json,
+
+          "fixed_interface" => "eth2",
+          "network_manager" => "VlanManager",
+          "management_interface" => "eth0.102",
+          "internal_address" => "192.168.0.2"
+        }
+
+        Astute::Metadata.expects(:publish_facts).with(@ctx, node['uid'], expect)
+        @deploy_engine.create_facts(node, attrs)
+      end
     end
   end
 end
