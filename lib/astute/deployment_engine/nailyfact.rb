@@ -40,7 +40,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     metadata['internal_address'] = node['network_data'].select{|nd| nd['name'] == 'management' }[0]['ip'].split('/')[0]
 
     if metadata['network_manager'] == 'VlanManager' && !metadata['fixed_interface']
-      metadata['fixed_interface'] = get_fixed_interface(node, metadata)
+      metadata['fixed_interface'] = get_fixed_interface(node)
     end
 
     Astute::Metadata.publish_facts(@ctx, node['uid'], metadata)
@@ -62,7 +62,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
   end
 
   private
-  def get_fixed_interface(node, attrs)
+  def get_fixed_interface(node)
     return node['vlan_interface'] if node['vlan_interface']
 
     Astute.logger.warn "Can not find vlan_interface for node #{node['uid']}"
