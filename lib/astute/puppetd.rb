@@ -90,7 +90,7 @@ module Astute
         prev_summary = puppetd.last_run_summary
         puppetd_runonce(puppetd, uids)
         nodes_to_check = uids
-        last_run = prev_summary
+        last_run = puppetd.last_run_summary
         while nodes_to_check.any?
           calc_nodes = calc_nodes_status(last_run, prev_summary)
           Astute.logger.debug "Nodes statuses: #{calc_nodes.inspect}"
