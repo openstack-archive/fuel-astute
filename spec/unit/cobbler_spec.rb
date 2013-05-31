@@ -65,7 +65,7 @@ describe Cobbler do
       end
 
       @data = {
-        'profile' => 'centos63-x86_64',
+        'profile' => 'centos-x86_64',
         'power_type' => 'ssh',
         'power_user' => 'root',
         'power_pass' => '/root/.ssh/bootstrap.rsa',
