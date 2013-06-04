@@ -153,7 +153,7 @@ module Astute
       return true
     end
 
-    def calculate_networks(data)
+    def calculate_networks(data, hwinterfaces)
       interfaces = {}
       data ||= []
       Astute.logger.info "calculate_networks function was provided with #{data.size} interfaces"
@@ -187,6 +187,11 @@ module Astute
         Astute.logger.debug "Calculated network for interface: #{name}, data: #{iface.inspect}"
       end
       interfaces['lo'] = {'interface'=>'lo', 'ipaddr'=>'dhcp'} unless interfaces.has_key?('lo')
+      hwinterfaces.each do |i|
+        unless interfaces.has_key?(i['name'])
+          interfaces[i['name']] = {'interface' => i['name'], 'ipaddr' => []}
+        end
+      end
       interfaces.keys.each do |i|
         interfaces[i]['ipaddr'] = 'none' if interfaces[i]['ipaddr'].size == 0
         interfaces[i]['ipaddr'] = 'dhcp' if interfaces[i]['ipaddr'] == ['dhcp']
