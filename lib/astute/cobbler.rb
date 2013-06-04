@@ -107,6 +107,10 @@ module Astute
         power(name, 'reboot')
       end
 
+      def event_status(event_id)
+        remote.call('get_task_status', event_id)
+      end
+
     end
 
     class Cobsh < ::Hash
