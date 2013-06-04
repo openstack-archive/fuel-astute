@@ -34,6 +34,9 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
         iface['dev']
       end
       metadata["#{iface['name']}_interface"] = device
+      if iface['ip']
+        metadata["#{iface['name']}_address"] = iface['ip'].split('/')[0]
+      end
     end
 
     # internal_address is required for HA..
