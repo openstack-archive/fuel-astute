@@ -114,6 +114,7 @@ module MCollective
 
         cmd = "net_probe.py -c #{fpath}"
         status = run(cmd, :stdout => :out, :stderr => :error)
+        f.unlink
         reply.fail "Failed to send probing frames, cmd='#{cmd}' failed, config: #{config.inspect}" if status != 0
       end
 
