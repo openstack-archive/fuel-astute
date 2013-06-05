@@ -67,6 +67,7 @@ module Astute
       ctrl_nodes = attrs['controller_nodes']
       ctrl_manag_addrs = {}
       ctrl_public_addrs = {}
+      ctrl_storage_addrs = {}
       ctrl_nodes.each do |n|
         # current puppet modules require `hostname -s`
         hostname = n['fqdn'].split(/\./)[0]
@@ -74,15 +75,18 @@ module Astute
                    n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0]})
         ctrl_public_addrs.merge!({hostname =>
                    n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0]})
+        ctrl_storage_addrs.merge!({hostname =>
+                   n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0]})
       end
 
       attrs['nodes'] = ctrl_nodes.map do |n|
         {
-          'name'             => n['fqdn'].split(/\./)[0],
-          'role'             => 'controller',
-          'internal_address' => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
-          'public_address'   => n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0],
-          'mountpoints'      => "1 1\n2 2",
+          'name'                 => n['fqdn'].split(/\./)[0],
+          'role'                 => 'controller',
+          'internal_address'     => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
+          'public_address'       => n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0],
+          'mountpoints'          => "1 1\n2 2",
+          'zone'                 => n['id'],
           'storage_local_net_ip' => n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0],
         }
       end
@@ -91,6 +95,7 @@ module Astute
       attrs['master_hostname'] = ctrl_nodes[0]['fqdn'].split(/\./)[0]
       attrs['ctrl_public_addresses'] = ctrl_public_addrs
       attrs['ctrl_management_addresses'] = ctrl_manag_addrs
+      attrs['ctrl_storage_addresses'] = ctrl_storage_addrs
       attrs
     end
 
@@ -148,7 +153,7 @@ module Astute
       return true
     end
 
-    def calculate_networks(data)
+    def calculate_networks(data, hwinterfaces)
       interfaces = {}
       data ||= []
       Astute.logger.info "calculate_networks function was provided with #{data.size} interfaces"
@@ -182,6 +187,11 @@ module Astute
         Astute.logger.debug "Calculated network for interface: #{name}, data: #{iface.inspect}"
       end
       interfaces['lo'] = {'interface'=>'lo', 'ipaddr'=>'dhcp'} unless interfaces.has_key?('lo')
+      hwinterfaces.each do |i|
+        unless interfaces.has_key?(i['name'])
+          interfaces[i['name']] = {'interface' => i['name'], 'ipaddr' => []}
+        end
+      end
       interfaces.keys.each do |i|
         interfaces[i]['ipaddr'] = 'none' if interfaces[i]['ipaddr'].size == 0
         interfaces[i]['ipaddr'] = 'dhcp' if interfaces[i]['ipaddr'] == ['dhcp']

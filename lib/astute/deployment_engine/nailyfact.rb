@@ -10,7 +10,8 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     # if node['network_data'] is undefined, we use empty list because we later try to iterate over it
     #   otherwise we will get KeyError
     node_network_data = node['network_data'].nil? ? [] : node['network_data']
-    network_data_puppet = calculate_networks(node_network_data)
+    interfaces = node['meta']['interfaces']
+    network_data_puppet = calculate_networks(node_network_data, interfaces)
     metadata = {
       'role' => node['role'],
       'uid'  => node['uid'],
