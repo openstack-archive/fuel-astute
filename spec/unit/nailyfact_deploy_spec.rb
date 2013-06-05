@@ -10,6 +10,15 @@ describe "NailyFact DeploymentEngine" do
       @ctx.stubs(:reporter).returns(reporter)
       reporter.stubs(:report)
       @deploy_engine = Astute::DeploymentEngine::NailyFact.new(@ctx)
+      meta = {
+        'interfaces' => [
+          {
+            'name' => 'eth1',
+          }, {
+            'name' => 'eth0',
+          }
+        ]
+      }
       @data = {"args" =>
                 {"attributes" =>
                   {"storage_network_range" => "172.16.0.0/24", "auto_assign_floating_ip" => false,
@@ -41,7 +50,8 @@ describe "NailyFact DeploymentEngine" do
                                                 "brd" => "172.16.1.255"}],
                             "id" => 1,
                             "ip" => "10.20.0.200",
-                            "role" => "controller"},
+                            "role" => "controller",
+                            'meta' => meta},
                            {"mac" => "52:54:00:50:91:DD", "status" => "provisioning",
                             "uid" => 2, "error_type" => nil,
                             "fqdn" => "slave-2.mirantis.com",
@@ -60,7 +70,8 @@ describe "NailyFact DeploymentEngine" do
                                                 "brd" => "172.16.1.255"}],
                             "id" => 2,
                             "ip" => "10.20.0.221",
-                            "role" => "compute"},
+                            "role" => "compute",
+                            'meta' => meta},
                            {"mac" => "52:54:00:C3:2C:28", "status" => "provisioning",
                             "uid" => 3, "error_type" => nil,
                             "fqdn" => "slave-3.mirantis.com",
@@ -79,7 +90,8 @@ describe "NailyFact DeploymentEngine" do
                                                 "brd" => "172.16.1.255"}],
                             "id" => 3,
                             "ip" => "10.20.0.68",
-                            "role" => "compute"}]},
+                            "role" => "compute",
+                            'meta' => meta}]},
               "method" => "deploy",
               "respond_to" => "deploy_resp"}
 
@@ -105,7 +117,8 @@ describe "NailyFact DeploymentEngine" do
                                                 "brd" => "172.16.1.255"}],
                             "id" => 4,
                             "ip" => "10.20.0.205",
-                            "role" => "controller"},
+                            "role" => "controller",
+                            'meta' => meta},
                            {"mac" => "52:54:00:0E:99:99", "status" => "provisioned",
                             "uid" => "5", "error_type" => nil,
                             "fqdn" => "controller-5.mirantis.com",
@@ -124,7 +137,8 @@ describe "NailyFact DeploymentEngine" do
                                                 "brd" => "172.16.1.255"}],
                             "id" => 5,
                             "ip" => "10.20.0.206",
-                            "role" => "controller"}]
+                            "role" => "controller",
+                            'meta' => meta}]
       @data_ha = Marshal.load(Marshal.dump(@data))
       @data_ha['args']['nodes'] = ha_nodes
       @data_ha['args']['attributes']['deployment_mode'] = "ha"
@@ -204,7 +218,16 @@ describe "NailyFact DeploymentEngine" do
               "brd" => "192.168.0.255", "netmask" => "255.255.255.0",
               "vlan" => 102, "ip" => "192.168.0.2/24"
             }
-          ]
+          ],
+          'meta' => {
+            'interfaces' => [
+              {
+                'name' => 'eth1',
+              }, {
+                'name' => 'eth0',
+              }
+            ]
+          }
         }
         attrs = {
           'network_manager' => 'VlanManager'
@@ -222,13 +245,22 @@ describe "NailyFact DeploymentEngine" do
             "lo" => {
               "interface" => "lo",
               "ipaddr" => "dhcp"
-            }
+            },
+            'eth1' => {
+              'interface' => 'eth1',
+              'ipaddr' => 'none'
+            },
+            'eth0' => {
+              'interface' =>'eth0',
+              'ipaddr' => 'none'
+            },
           }.to_json,
 
           "fixed_interface" => "eth2",
           "network_manager" => "VlanManager",
           "management_interface" => "eth0.102",
-          "internal_address" => "192.168.0.2"
+          "internal_address" => "192.168.0.2",
+          'management_address' => '192.168.0.2'
         }
 
         Astute::Metadata.expects(:publish_facts).with(@ctx, node['uid'], expect)
