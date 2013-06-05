@@ -93,63 +93,121 @@ describe "Puppetd" do
       Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0, change_node_status=false)
     end
 
-    it "publishes error status for node if puppet failed" do
-      @reporter.expects(:report).with('nodes' => [{'status' => 'error',
-        'error_type' => 'deploy', 'uid' => '1'}])
 
-      last_run_result = {:statuscode=>0, :data=>
-          {:changes=>{"total"=>1}, :time=>{"last_run"=>1358425701},
-           :resources=>{"failed"=>0}, :status => "stopped", :enabled => 1,
-           :stopped => 1, :idling => 0, :running => 0, :runtime => 1358425701},
-         :sender=>"1"}
+    context "puppet state transitions" do
+      before :each do
+        @last_run_result = {:statuscode=>0, :data=>
+            {:changes=>{"total"=>1}, :time=>{"last_run"=>1358425701},
+             :resources=>{"failed"=>0}, :status => "stopped", :enabled => 1,
+             :stopped => 1, :idling => 0, :running => 0, :runtime => 1358425701},
+                           :sender=>"1"}
 
-      last_run_result_idle_pre = Marshal.load(Marshal.dump(last_run_result))
-      last_run_result_idle_pre[:data].update(
-        {:status => 'idling', :idling => 1, :stopped => 0}
-      )
+        @last_run_result_idle_pre = Marshal.load(Marshal.dump(@last_run_result))
+        @last_run_result_idle_pre[:data].update(
+            {:status => 'idling', :idling => 1, :stopped => 0}
+        )
 
-      last_run_result_running = Marshal.load(Marshal.dump(last_run_result))
-      last_run_result_running[:data].update(
-        {:status => 'running', :running => 1, :stopped => 0}
-      )
+        @last_run_result_running = Marshal.load(Marshal.dump(@last_run_result))
+        @last_run_result_running[:data].update(
+            {:status => 'running', :running => 1, :stopped => 0}
+        )
 
-      last_run_result_finishing = Marshal.load(Marshal.dump(last_run_result_running))
-      last_run_result_finishing[:data].update(
-        {
-          :runtime => 1358426000, :time => {"last_run" => 1358426000},
-          :resources => {"failed" => 1}
-        }
-      )
+        @last_run_result_finishing = Marshal.load(Marshal.dump(@last_run_result_running))
+        @last_run_result_finishing[:data].update(
+            {
+                :runtime => 1358426000, :time => {"last_run" => 1358426000},
+                :resources => {"failed" => 1}
+            }
+        )
 
-      last_run_result_idle_post = Marshal.load(Marshal.dump(last_run_result_finishing))
-      last_run_result_idle_post[:data].update(
-        {:status => 'idling', :idling => 1, :running => 0}
-      )
+        @last_run_result_idle_post = Marshal.load(Marshal.dump(@last_run_result_finishing))
+        @last_run_result_idle_post[:data].update(
+            {:status => 'idling', :idling => 1, :running => 0}
+        )
 
-      last_run_result_finished = Marshal.load(Marshal.dump(last_run_result_finishing))
-      last_run_result_finished[:data].update(
-        {:status => 'stopped', :stopped => 1, :running => 0}
-      )
+        @last_run_result_finished = Marshal.load(Marshal.dump(@last_run_result_finishing))
+        @last_run_result_finished[:data].update(
+            {:status => 'stopped', :stopped => 1, :running => 0}
+        )
 
-      nodes = [{'uid' => '1'}]
+        @nodes = [{'uid' => '1'}]
+      end
 
-      rpcclient = mock_rpcclient(nodes)
+      after :each do
+        MClient.any_instance.unstub(:rpcclient)
+      end
 
-      rpcclient.stubs(:last_run_summary).times(9).
-        returns([ mock_mc_result(last_run_result) ]).then.
-        returns([ mock_mc_result(last_run_result) ]).then.
-        returns([ mock_mc_result(last_run_result_idle_pre) ]).then.
-        returns([ mock_mc_result(last_run_result_idle_pre) ]).then.
-        returns([ mock_mc_result(last_run_result_running) ]).then.
-        returns([ mock_mc_result(last_run_result_running) ]).then.
-        returns([ mock_mc_result(last_run_result_finishing) ]).then.
-        returns([ mock_mc_result(last_run_result_idle_post) ]).then.
-        returns([ mock_mc_result(last_run_result_finished) ])
-      rpcclient.expects(:runonce).once.
-        returns([ mock_mc_result(last_run_result) ])
+      it "publishes error status for node if puppet failed" do
+        @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        @rpcclient = mock_rpcclient(@nodes)
+        @rpcclient.stubs(:last_run_summary).times(9).
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result_idle_pre) ]).then.
+          returns([ mock_mc_result(@last_run_result_idle_pre) ]).then.
+          returns([ mock_mc_result(@last_run_result_running) ]).then.
+          returns([ mock_mc_result(@last_run_result_running) ]).then.
+          returns([ mock_mc_result(@last_run_result_finishing) ]).then.
+          returns([ mock_mc_result(@last_run_result_idle_post) ]).then.
+          returns([ mock_mc_result(@last_run_result_finished) ])
+        @rpcclient.expects(:runonce).once.
+          returns([ mock_mc_result(@last_run_result) ])
+        Astute::PuppetdDeployer.deploy(@ctx, @nodes, 0)
+      end
 
-      MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
-      Astute::PuppetdDeployer.deploy(@ctx, nodes, 0)
+      it "publishes error status for node if puppet failed" do
+        @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        @rpcclient = mock_rpcclient(@nodes)
+        @rpcclient.stubs(:last_run_summary).times(6).
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result_running) ]).then.
+          returns([ mock_mc_result(@last_run_result_running) ]).then.
+          returns([ mock_mc_result(@last_run_result_finishing) ]).then.
+          returns([ mock_mc_result(@last_run_result_finished) ])
+        @rpcclient.expects(:runonce).once.
+          returns([ mock_mc_result(@last_run_result) ])
+        Astute::PuppetdDeployer.deploy(@ctx, @nodes, 0)
+      end
+
+      it "publishes error status for node if puppet failed" do
+        @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        @rpcclient = mock_rpcclient(@nodes)
+        @rpcclient.stubs(:last_run_summary).times(4).
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result_running) ]).then.
+          returns([ mock_mc_result(@last_run_result_finished) ])
+        @rpcclient.expects(:runonce).once.
+          returns([ mock_mc_result(@last_run_result) ])
+        Astute::PuppetdDeployer.deploy(@ctx, @nodes, 0)
+      end
+
+      it "publishes error status for node if puppet failed" do
+        @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        @rpcclient = mock_rpcclient(@nodes)
+        @rpcclient.stubs(:last_run_summary).times(5).
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result_running) ]).then.
+          returns([ mock_mc_result(@last_run_result_finishing) ]).then.
+          returns([ mock_mc_result(@last_run_result_finished) ])
+        @rpcclient.expects(:runonce).once.
+          returns([ mock_mc_result(@last_run_result) ])
+        Astute::PuppetdDeployer.deploy(@ctx, @nodes, 0)
+      end
+
+      it "publishes error status for node if puppet failed" do
+        @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        @rpcclient = mock_rpcclient(@nodes)
+        @rpcclient.stubs(:last_run_summary).times(3).
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result) ]).then.
+          returns([ mock_mc_result(@last_run_result_finished) ])
+        @rpcclient.expects(:runonce).once.
+          returns([ mock_mc_result(@last_run_result) ])
+        Astute::PuppetdDeployer.deploy(@ctx, @nodes, 0)
+      end
     end
 
     it "doesn't publish error status for node if change_node_status disabled" do
