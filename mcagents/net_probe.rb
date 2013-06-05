@@ -106,8 +106,15 @@ module MCollective
         if request.data.key?('config')
           config.merge!(JSON.parse(request[:config]))
         end
-        cmd = "net_probe.py -c -"
-        status = run(cmd, :stdin => config.to_json, :stdout => :out, :stderr => :error)
+
+        f = Tempfile.new "net_probe"
+        f.write config.to_json
+        fpath = f.path
+        f.close
+
+        cmd = "net_probe.py -c #{fpath}"
+        status = run(cmd, :stdout => :out, :stderr => :error)
+        f.unlink
         reply.fail "Failed to send probing frames, cmd='#{cmd}' failed, config: #{config.inspect}" if status != 0
       end
 
