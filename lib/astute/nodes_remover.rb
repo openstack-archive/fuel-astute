@@ -11,20 +11,38 @@ module Astute
       #   2. Should we rename nodes -> removed_nodes array?
       #   3. If exception is raised here, we should not fully fall into error, but only failed node
       erased_nodes, error_nodes, inaccessible_nodes = remove_nodes(@nodes)
-      error_nodes.merge! inaccessible_nodes
-      retry_remove_nodes error_nodes, erased_nodes, Astute.config[:MC_RETRIES], Astute.config[:MC_RETRY_INTERVAL]
-      if error_nodes.empty?
-        answer = {'nodes' => erased_nodes.nodes.map(&:to_hash)}
-      else
-        answer = {'status' => 'error', 'nodes' => erased_nodes.nodes.map(&:to_hash), 'error_nodes' => error_nodes.nodes.map(&:to_hash)}
-        Astute.logger.error "#{@ctx.task_id}: Removing of nodes #{@nodes.uids.inspect} finished "\
-                                             "with errors: #{error_nodes.nodes.map(&:to_hash).inspect}"
+      retry_remove_nodes(error_nodes, erased_nodes,
+                         Astute.config[:MC_RETRIES], Astute.config[:MC_RETRY_INTERVAL])
+
+      retry_remove_nodes(inaccessible_nodes, erased_nodes,
+                         Astute.config[:MC_RETRIES], Astute.config[:MC_RETRY_INTERVAL])
+
+      answer = {'nodes' => serialize_nodes(erased_nodes)}
+
+      unless inaccessible_nodes.empty?
+        serialized_inaccessible_nodes = serialize_nodes(inaccessible_nodes)
+        answer.merge!({'inaccessible_nodes' => serialized_inaccessible_nodes})
+
+        Astute.logger.warn "#{@ctx.task_id}: Removing of nodes #{@nodes.uids.inspect} finished " \
+                           "with errors. Nodes #{serialized_inaccessible_nodes.inspect} are inaccessible"
+      end
+
+      unless error_nodes.empty?
+        serialized_error_nodes = serialize_nodes(error_nodes)
+        answer.merge!({'status' => 'error', 'error_nodes' => serialized_error_nodes})
+
+        Astute.logger.error "#{@ctx.task_id}: Removing of nodes #{@nodes.uids.inspect} finished " \
+                            "with errors: #{serialized_error_nodes.inspect}"
       end
       Astute.logger.info "#{@ctx.task_id}: Finished removing of nodes: #{@nodes.uids.inspect}"
+
       answer
     end
 
-  private
+    private
+    def serialize_nodes(nodes)
+      nodes.nodes.map(&:to_hash)
+    end
 
     def remove_nodes(nodes)
       if nodes.empty?
@@ -57,16 +75,16 @@ module Astute
     end
 
     def retry_remove_nodes(error_nodes, erased_nodes, retries=3, interval=1)
-      until retries == 0
-        retries -= 1
+      retries.times do
         retried_erased_nodes = remove_nodes(error_nodes)[0]
         retried_erased_nodes.each do |uid, node|
           error_nodes.delete uid
           erased_nodes << node
         end
         return if error_nodes.empty?
-        sleep interval if interval > 0
+        sleep(interval) if interval > 0
       end
     end
+
   end
 end
