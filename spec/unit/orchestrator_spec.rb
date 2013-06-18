@@ -177,8 +177,8 @@ describe Astute::Orchestrator do
 
     res = @orchestrator.remove_nodes(@reporter, 'task_uuid', nodes)
     res['nodes'] = res['nodes'].sort_by{|n| n['uid'] }
-    res.should eql({'nodes' => [{'uid' => '2'}, {'uid' => '3'}], 'status' => 'error',
-                    'error_nodes' => [{'uid'=>'1', 'error'=>'Node not answered by RPC.'}]})
+    res.should eql({'nodes' => [{'uid' => '2'}, {'uid' => '3'}],
+                    'inaccessible_nodes' => [{'uid'=>'1', 'error'=>'Node not answered by RPC.'}]})
   end
 
   it "remove_nodes and returns early if retries were successful" do
