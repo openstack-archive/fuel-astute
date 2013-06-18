@@ -79,7 +79,7 @@ module MCollective
       end
 
       def reboot
-        cmd = "/bin/sleep 5; /sbin/shutdown -r now"
+        cmd = "/bin/sleep 5; /sbin/reboot --force"
         pid = fork { system(cmd) }
         Process.detach(pid)
       end
@@ -97,8 +97,10 @@ module MCollective
         fd.seek(offset)
         ret = fd.syswrite("\000"*length)
         fd.close
+        system('/bin/sync')
       end
 
+      # Prevent discover by agent while node rebooting.
       def prevent_discover
         FileUtils.touch '/var/run/nodiscover'
       end
