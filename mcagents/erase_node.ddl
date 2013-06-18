@@ -1,4 +1,4 @@
-metadata    :name        => "Erase node bootloader",
+metadata    :name        => "Erase node bootloader and reboot it",
             :description => "Erase node bootloader and reboot it.",
             :author      => "Andrey Danin",
             :license     => "MIT",
