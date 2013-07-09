@@ -217,5 +217,142 @@ describe Astute::Orchestrator do
   end
 
   it "remove_nodes do not fail if any of nodes failed"
+  
+  describe '#provision' do
+    
+    before(:all) do
+      @data = {
+        "engine"=>{
+          "url"=>"http://localhost/cobbler_api", 
+          "username"=>"cobbler", 
+          "password"=>"cobbler"
+        }, 
+        "task_uuid"=>"a5c44b9a-285a-4a0c-ae65-2ed6b3d250f4",
+        "nodes" => [
+          {
+            'profile' => 'centos-x86_64',
+            "name"=>"controller-1",
+            'power_type' => 'ssh',
+            'power_user' => 'root',
+            'power_pass' => '/root/.ssh/bootstrap.rsa',
+            'power-address' => '1.2.3.5',
+            'hostname' => 'name.domain.tld',
+            'name_servers' => '1.2.3.4 1.2.3.100',
+            'name_servers_search' => 'some.domain.tld domain.tld',
+            'netboot_enabled' => '1',
+            'ks_meta' => 'some_param=1 another_param=2',
+            'interfaces' => {
+              'eth0' => {
+                'mac_address' => '00:00:00:00:00:00',
+                'static' => '1',
+                'netmask' => '255.255.255.0',
+                'ip_address' => '1.2.3.5',
+                'dns_name' => 'node.mirantis.net',
+              },
+              'eth1' => {
+                'mac_address' => '00:00:00:00:00:01',
+                'static' => '0',
+                'netmask' => '255.255.255.0',
+                'ip_address' => '1.2.3.6',
+              }
+            },
+            'interfaces_extra' => {
+              'eth0' => {
+                'peerdns' => 'no',
+                'onboot' => 'yes',
+              },
+              'eth1' => {
+                'peerdns' => 'no',
+                'onboot' => 'yes',
+              }
+            }
+          }
+        ]
+      }.freeze
+    end
+    
+    context 'cobler cases' do
+      it "raise error if cobler settings empty" do
+        expect {@orchestrator.provision(@reporter, {}, @data['nodes'])}.
+                              to raise_error(StopIteration)
+      end
+    end
+    
+    context 'node state cases' do
+      before(:each) do
+      
+        remote = mock() do
+          stubs(:call)
+          stubs(:call).with('login', 'cobbler', 'cobbler').returns('remotetoken')
+        end
+        @tmp = XMLRPC::Client
+        XMLRPC::Client = mock() do
+          stubs(:new).returns(remote)
+        end
+      end
+    
+      it "raises error if nodes list is empty" do
+        expect {@orchestrator.provision(@reporter, @data['engine'], {})}.
+                              to raise_error(/Nodes to provision are not provided!/)
+      end
+    
+      it "try to reboot nodes from list" do
+        Astute::Provision::Cobbler.any_instance do
+          expects(:power_reboot).with('controller-1')
+        end
+        @orchestrator.stubs(:check_reboot_nodes).returns([])
+        @orchestrator.provision(@reporter, @data['engine'], @data['nodes'])
+      end
+      
+      before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:power_reboot).returns(333) }
+        
+      context 'node reboot success' do
+        
+        before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:event_status).
+                                                   returns([Time.now.to_f, 'controller-1', 'complete'])}
+        
+        it "does not find failed nodes" do
+          Astute::Provision::Cobbler.any_instance.stubs(:event_status).
+                                                  returns([Time.now.to_f, 'controller-1', 'complete'])
+          
+          @orchestrator.provision(@reporter, @data['engine'], @data['nodes'])
+        end
+        
+        it "report about success" do
+          @reporter.expects(:report).with({'status' => 'ready', 'progress' => 100}).returns(true)
+          @orchestrator.provision(@reporter, @data['engine'], @data['nodes'])
+        end
+        
+        it "sync engine state" do
+          Astute::Provision::Cobbler.any_instance do
+            expects(:sync).once
+          end
+          @orchestrator.provision(@reporter, @data['engine'], @data['nodes'])
+        end
+                
+      end
+      
+      context 'node reboot fail' do
+        before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:event_status).
+                                                                returns([Time.now.to_f, 'controller-1', 'failed'])}
+        
+        it "should sync engine state" do
+          Astute::Provision::Cobbler.any_instance do
+            expects(:sync).once
+          end
+          begin
+            @orchestrator.provision(@reporter, @data['engine'], @data['nodes'])
+          rescue
+          end
+        end
+        
+        it "raise error if failed node find" do
+          expect {@orchestrator.provision(@reporter, @data['engine'], @data['nodes'])}.to raise_error(StopIteration)
+        end
+              
+      end
+
+    end
+  end
 end
 

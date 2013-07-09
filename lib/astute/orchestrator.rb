@@ -55,19 +55,8 @@ module Astute
     end
     
     def provision(reporter, engine_attrs, nodes)
-      begin
-        Astute.logger.info("Trying to instantiate cobbler engine: #{engine_attrs.inspect}")
-        engine = Astute::Provision::Cobbler.new(engine_attrs)
-      rescue
-        Astute.logger.error("Error occured during cobbler initializing")
-        
-        reporter.report({
-                          'status' => 'error',
-                          'error' => 'Cobbler can not be initialized',
-                          'progress' => 100
-                        })
-        raise StopIteration
-      end
+      raise "Nodes to provision are not provided!" if nodes.empty?
+      engine = create_engine(engine_attrs, reporter)
       
       begin
         reboot_events = reboot_nodes(engine, nodes)
@@ -119,7 +108,7 @@ module Astute
         Timeout::timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
           while true
             time = Time::now.to_f
-            types = self.node_type(reporter, task_id, nodes, 2)
+            types = node_type(reporter, task_id, nodes, 2)
             types.each do |t|
               Astute.logger.debug("Got node types: uid=#{t['uid']} type=#{t['node_type']}")
             end
@@ -169,7 +158,7 @@ module Astute
       reporter.report({'nodes' => nodes_progress})
 
       begin
-        result = self.deploy(reporter, task_id, nodes, attrs)
+        result = deploy(reporter, task_id, nodes, attrs)
       rescue Timeout::Error
         msg = "Timeout of deployment is exceeded."
         Astute.logger.error msg
@@ -197,6 +186,22 @@ module Astute
       result = {} unless result.instance_of?(Hash)
       status = default_result.merge(result)
       reporter.report(status)
+    end
+    
+    def create_engine(engine_attrs, reporter)
+      begin
+        Astute.logger.info("Trying to instantiate cobbler engine: #{engine_attrs.inspect}")
+        engine = Astute::Provision::Cobbler.new(engine_attrs)
+      rescue
+        Astute.logger.error("Error occured during cobbler initializing")
+        
+        reporter.report({
+                          'status' => 'error',
+                          'error' => 'Cobbler can not be initialized',
+                          'progress' => 100
+                        })
+        raise StopIteration
+      end
     end
     
     def reboot_nodes(engine, nodes)

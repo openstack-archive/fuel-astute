@@ -42,6 +42,11 @@ optparse = OptionParser.new do |o|
   end
 
   o.on("-h") { puts o; exit }
+  
+  o.on("-c", "--command [COMMAND]", [:deploy, :provision], "Select operation (deploy, provision)") do |c|
+    opts[:command] = c || :deploy
+  end
+  
 end
 optparse.parse!(ARGV)
 
@@ -65,5 +70,11 @@ case environment['attributes']['deployment_engine']
     deploy_engine = nil  # Orchestrator will use it's default
 end
 
-orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
-orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+case opts[:command]
+  when :deploy
+    orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
+    orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+  when :provision
+    orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
+    orchestrator.provision(reporter, environment['engine'], environment['nodes'])
+end
