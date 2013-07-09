@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+require "rubygems"
 require 'astute/ruby_removed_functions'
 
 require 'json'
