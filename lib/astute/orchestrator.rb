@@ -156,6 +156,20 @@ module Astute
     def verify_networks(reporter, task_id, nodes)
       Network.check_network(Context.new(task_id, reporter), nodes)
     end
+
+    def download_release (up_reporter, task_id, nodes, attrs)
+      raise "Nodes to release download are not provided!" if nodes.empty?
+      nodes.map { |x| x['uid'] = x['uid'].to_s }
+      context = Context.new(task_id, proxy_reporter, @log_parser)
+      deploy_engine_instance = @deploy_engine.new(context)
+      Astute.logger.info "Using #{deploy_engine_instance.class} for release download."
+      begin
+        #@log_parser.prepare(nodes)
+      rescue Exception => e
+        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.inspect}"
+      end
+      deploy_engine_instance.deploy(nodes, attrs)
+    end
     
     private
     

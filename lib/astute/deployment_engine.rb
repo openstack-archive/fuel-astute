@@ -155,6 +155,15 @@ module Astute
       return
     end
 
+    def attrs_rpmcache(nodes, attrs)
+      attrs
+    end
+
+    def deploy_rpmcache(nodes, attrs)
+      Astute.logger.info "Starting release downloading"
+      deploy_piece(nodes, attrs, 0)
+    end
+
     private
     def nodes_status(nodes, status, data_to_merge)
       {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
