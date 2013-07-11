@@ -16,15 +16,10 @@ module Astute
   class Orchestrator
     def initialize(deploy_engine=nil, log_parsing=false)
       @deploy_engine = deploy_engine || Astute::DeploymentEngine::NailyFact
-      if log_parsing
-        @log_parser = LogParser::ParseDeployLogs.new
-        @provisionLogParser = LogParser::ParseProvisionLogs.new
-      else
-        @log_parser = LogParser::NoParsing.new
-        @provisionLogParser = LogParser::NoParsing.new
-      end
+      @log_parser = log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
     end
 
+    # TODO(waprc): does this method should be private? 
     def node_type(reporter, task_id, nodes, timeout=nil)
       context = Context.new(task_id, reporter)
       uids = nodes.map {|n| n['uid']}
@@ -54,7 +49,7 @@ module Astute
       deploy_engine_instance.deploy(nodes, attrs)
     end
     
-    def provision(reporter, engine_attrs, nodes)
+    def fast_provision(reporter, engine_attrs, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
       engine = create_engine(engine_attrs, reporter)
       
@@ -88,57 +83,49 @@ module Astute
       return
     end
     
-    def naily_deploy(reporter, task_id, nodes, attrs)
+    def provision(reporter, task_id, nodes)
+      raise "Nodes to provision are not provided!" if nodes.empty?
       
       # Following line fixes issues with uids: it should always be string
-      nodes.map { |x| x['uid'] = x['uid'].to_s }
+      nodes.map { |x| x['uid'] = x['uid'].to_s } # NOTE: perform that on environment['nodes'] initialization
 
       nodes_uids = nodes.map { |n| n['uid'] }
-      time = Time::now.to_f
-      nodes_not_booted = nodes.map { |n| n['uid'] }
-      Astute.logger.info "Starting OS provisioning for nodes: #{nodes_not_booted.join(',')}"
-      begin
-        @provisionLogParser.prepare(nodes)
-      rescue Exception => e
-        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.inspect}"
+      
+      provisionLogParser = LogParser::ParseProvisionLogs.new
+      sleep_not_greater_than(10) do # Wait while nodes going to reboot
+        Astute.logger.info "Starting OS provisioning for nodes: #{nodes_uids.join(',')}"
+        begin
+          provisionLogParser.prepare(nodes)
+        rescue => e
+          Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.inspect}"
+        end
       end
-      time = 10 + time - Time::now.to_f
-      sleep (time) if time > 0 # Wait while nodes going to reboot. Sleep not greater than 10 sec.
+      nodes_not_booted = nodes_uids.clone
       begin
-        Timeout::timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
-          while true
-            time = Time::now.to_f
-            types = node_type(reporter, task_id, nodes, 2)
-            types.each do |t|
-              Astute.logger.debug("Got node types: uid=#{t['uid']} type=#{t['node_type']}")
-            end
-            Astute.logger.debug("Not target nodes will be rejected")
-            target_uids = types.reject{|n| n['node_type'] != 'target'}.map{|n| n['uid']}
-            Astute.logger.debug "Not provisioned: #{nodes_not_booted.join(',')}, got target OSes: #{target_uids.join(',')}"
-            if nodes.length == target_uids.length
-              Astute.logger.info "All nodes #{target_uids.join(',')} are provisioned."
-              break
-            else
-              Astute.logger.debug("Nodes list length is not equal to target nodes list length: #{nodes.length} != #{target_uids.length}")
-            end
-            nodes_not_booted = nodes_uids - types.map { |n| n['uid'] }
-            begin
-              nodes_progress = @provisionLogParser.progress_calculate(nodes_uids, nodes)
-              nodes_progress.each do |n|
-                if target_uids.include?(n['uid'])
-                  n['progress'] = 100
-                  # TODO(mihgen): should we change status only once?
-                  n['status'] = 'provisioned'
+        Timeout.timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
+          catch :done do
+            while true
+              sleep_not_greater_than(5) do 
+                types = node_type(reporter, task_id, nodes, 2)
+                types.each { |t| Astute.logger.debug("Got node types: uid=#{t['uid']} type=#{t['node_type']}") }
+          
+                Astute.logger.debug("Not target nodes will be rejected")
+                target_uids = types.reject{|n| n['node_type'] != 'target'}.map{|n| n['uid']}
+                nodes_not_booted -= types.map { |n| n['uid'] }
+                Astute.logger.debug "Not provisioned: #{nodes_not_booted.join(',')}, got target OSes: #{target_uids.join(',')}"
+          
+                if nodes.length == target_uids.length
+                  Astute.logger.info "All nodes #{target_uids.join(',')} are provisioned."
+                  throw :done
+                else
+                  Astute.logger.debug("Nodes list length is not equal to target nodes list length: #{nodes.length} != #{target_uids.length}")
                 end
+
+                report_about_progress(reporter, provisionLogParser, nodes_uids, target_uids, nodes)     
               end
-              reporter.report({'nodes' => nodes_progress})
-            rescue Exception => e
-              Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.backtrace.inspect}"
             end
-            time = 5 + time - Time::now.to_f
-            sleep (time) if time > 0 # Sleep not greater than 5 sec.
           end
-          # We are here if jumped by break from while cycle
+          # We are here if jumped by throw from while cycle 
         end
       rescue Timeout::Error
         msg = "Timeout of provisioning is exceeded."
@@ -156,17 +143,6 @@ module Astute
         {'uid' => n['uid'], 'progress' => 100, 'status' => 'provisioned'}
       end
       reporter.report({'nodes' => nodes_progress})
-
-      begin
-        result = deploy(reporter, task_id, nodes, attrs)
-      rescue Timeout::Error
-        msg = "Timeout of deployment is exceeded."
-        Astute.logger.error msg
-        reporter.report({'status' => 'error', 'error' => msg})
-        return
-      end
-
-      report_result(result, reporter)
     end
     
 
@@ -186,6 +162,13 @@ module Astute
       result = {} unless result.instance_of?(Hash)
       status = default_result.merge(result)
       reporter.report(status)
+    end
+    
+    def sleep_not_greater_than(sleep_time, &block)
+      time = Time.now.to_f
+      block.call
+      time = time + sleep_time - Time.now.to_f
+      sleep (time) if time > 0
     end
     
     def create_engine(engine_attrs, reporter)
@@ -247,6 +230,21 @@ module Astute
         raise e
       end
       failed_nodes
+    end
+    
+    def report_about_progress(reporter, provisionLogParser, nodes_uids, target_uids, nodes)
+      begin
+        nodes_progress = provisionLogParser.progress_calculate(nodes_uids, nodes)
+        nodes_progress.each do |n|
+          if target_uids.include?(n['uid']) && n['status'] != 'provisioned'
+            n['progress'] = 100
+            n['status']   = 'provisioned'
+          end
+        end
+        reporter.report({'nodes' => nodes_progress})
+      rescue => e
+        Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.backtrace.inspect}"
+      end
     end
     
   end

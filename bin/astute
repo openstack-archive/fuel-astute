@@ -43,7 +43,8 @@ optparse = OptionParser.new do |o|
 
   o.on("-h") { puts o; exit }
   
-  o.on("-c", "--command [COMMAND]", [:deploy, :provision], "Select operation (deploy, provision)") do |c|
+  o.on("-c", "--command [COMMAND]", [:deploy, :fast_provision, :provision], 
+                                    "Select operation (deploy, fast_provision, provision)") do |c|
     opts[:command] = c || :deploy
   end
   
@@ -74,7 +75,10 @@ case opts[:command]
   when :deploy
     orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
     orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+  when :fast_provision
+    orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
+    orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
   when :provision
     orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
-    orchestrator.provision(reporter, environment['engine'], environment['nodes'])
+    orchestrator.provision(reporter, environment['task_uuid'], environment['nodes']) 
 end
