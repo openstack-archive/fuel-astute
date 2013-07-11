@@ -191,7 +191,7 @@ module Astute
     def create_engine(engine_attrs, reporter)
       begin
         Astute.logger.info("Trying to instantiate cobbler engine: #{engine_attrs.inspect}")
-        engine = Astute::Provision::Cobbler.new(engine_attrs)
+        Astute::Provision::Cobbler.new(engine_attrs)
       rescue
         Astute.logger.error("Error occured during cobbler initializing")
         
