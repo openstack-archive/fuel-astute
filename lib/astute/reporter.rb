@@ -26,7 +26,7 @@ STATES = {
 }
 
 module Astute
-  class ProxyReporter
+  class DeploymentProxyReporter
     def initialize(up_reporter)
       @up_reporter = up_reporter
       @nodes = []
@@ -119,6 +119,66 @@ module Astute
       end
 
       node
+    end
+  end
+
+  class DLReleaseProxyReporter < DeploymentProxyReporter
+    def initialize(up_reporter, amount)
+      @up_reporter = up_reporter
+      @nodes = []
+      @amount = amount
+    end
+
+    def report(data)
+      nodes_to_report = []
+      nodes = (data['nodes'] or [])
+      nodes.each do |node|
+        node = node_validate(node)
+        nodes_to_report << node if node
+      end
+      # Let's report only if nodes updated
+      if nodes_to_report.any?
+        # Update nodes attributes in @nodes.
+        nodes_to_report.each do |node|
+          saved_node = @nodes.select {|x| x['uid'] == node['uid']}.first  # NOTE: use nodes hash
+          if saved_node
+            node.each {|k, v| saved_node[k] = v}
+          else
+            @nodes << node
+          end
+        end
+        data['progress'] ||= calculate_overall_progress
+        data.merge!(get_overall_status(data))
+        @up_reporter.report(data)
+      end
+    end
+
+  private
+
+    def calculate_overall_progress
+      total = 0
+      @nodes.each do |node|
+        total += node['progress'] unless node['progress'].nil?
+      end
+      total / @amount
+    end
+
+    def get_overall_status(data)
+      status = data['status']
+      error_nodes = @nodes.select {|n| n['status'] == 'error'}
+      status 'error' if error_nodes.any?
+      case status
+      when 'error' then
+        error_uids = error_nodes.map{|n| n['uid']}
+        msg = "Cannot download release on nodes #{error_uids.inspect}"
+      when 'ready' then
+        msg = "Release downloaded successfully"
+      end
+
+      progress = data['progress']
+      progress = calculate_overall_progress unless progress
+
+      {'status' => status, 'error' => msg, 'progress' => progress}
     end
   end
 end

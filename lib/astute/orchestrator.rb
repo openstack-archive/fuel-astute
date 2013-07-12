@@ -36,7 +36,7 @@ module Astute
       raise "Nodes to deploy are not provided!" if nodes.empty?
       # Following line fixes issues with uids: it should always be string
       nodes.map { |x| x['uid'] = x['uid'].to_s }  # NOTE: perform that on environment['nodes'] initialization
-      proxy_reporter = ProxyReporter.new(up_reporter)
+      proxy_reporter = DeploymentProxyReporter.new(up_reporter)
       context = Context.new(task_id, proxy_reporter, @log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
@@ -157,14 +157,26 @@ module Astute
       Network.check_network(Context.new(task_id, reporter), nodes)
     end
 
-    def download_release (up_reporter, task_id, nodes, attrs)
-      raise "Nodes to release download are not provided!" if nodes.empty?
-      nodes.map { |x| x['uid'] = x['uid'].to_s }
+    def download_release (up_reporter, task_id, release_info)
+      raise "Nodes to release download are not provided!" if release_info.empty?
+      attrs = {'deployment_type' => 'rpmcache',
+               'deployment_id' => 'rpmcache'}
+      facts = {'rh_username' => release_info['username'],
+               'rh_password' => release_info['username']}
+      facts.merge!(attrs)
+      if release_info['license_type'] == 'rhn'
+        facts.merge!(
+          {'use_satellite' => 'true',
+           'sat_hostname' => release_info['satellite'],
+           'activation_key' => release_info['activation_key']})
+      end
+      nodes = [{'uid' => 'master', 'facts' => facts}]
+      proxy_reporter = DLReleaseProxyReporter.new(up_reporter, nodes.size)
       context = Context.new(task_id, proxy_reporter, @log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for release download."
       begin
-        #@log_parser.prepare(nodes)
+        @log_parser.prepare(nodes)
       rescue Exception => e
         Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.inspect}"
       end
