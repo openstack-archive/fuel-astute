@@ -19,7 +19,6 @@ module Astute
       @log_parser = log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
     end
 
-    # TODO(waprc): does this method should be private? 
     def node_type(reporter, task_id, nodes, timeout=nil)
       context = Context.new(task_id, reporter)
       uids = nodes.map {|n| n['uid']}

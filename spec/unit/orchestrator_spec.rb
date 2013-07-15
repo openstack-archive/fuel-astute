@@ -359,6 +359,13 @@ describe Astute::Orchestrator do
   
   describe '#provision' do
     
+    before(:each) do
+      # Disable sleeping in test env (doubles the test speed)
+      def @orchestrator.sleep_not_greater_than(time, &block)
+        block.call
+      end
+    end
+    
     it "raises error if nodes list is empty" do
       expect {@orchestrator.provision(@reporter, @data['task_uuid'], {})}.
                             to raise_error(/Nodes to provision are not provided!/)
@@ -369,7 +376,7 @@ describe Astute::Orchestrator do
         expects(:prepare).with(@data['nodes']).once
       end
       @orchestrator.stubs(:report_about_progress).returns()
-      @orchestrator.stubs(:node_type).returns([{'uid' => 1, 'node_type' => 'target' }])
+      @orchestrator.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
       
       @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
     end
@@ -380,37 +387,34 @@ describe Astute::Orchestrator do
       end
       
       @orchestrator.stubs(:report_about_progress).returns()
-      @orchestrator.stubs(:node_type).returns([{'uid' => 1, 'node_type' => 'target' }])
+      @orchestrator.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
       
       @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
     end
     
     it 'provision nodes using mclient' do
       @orchestrator.stubs(:report_about_progress).returns()
-      @orchestrator.expects(:node_type).returns([{'uid' => 1, 'node_type' => 'target' }])
+      @orchestrator.expects(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
       
       @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
     end
     
-    xit "fail if timeout of provisioning is exceeded" do
+    it "fail if timeout of provisioning is exceeded" do
       Astute::LogParser::ParseProvisionLogs.any_instance do
         stubs(:prepare).returns()
       end
-      
-      @orchestrator.stubs(:node_type).returns([{'uid' => 1, 'node_type' => 'target' }])
-      
+            
       Timeout.stubs(:timeout).raises(Timeout::Error)
       
-      msg = 'Timeout of provisioning is exceeded'
-      Astute.logger.expects(:error).with(msg)
-      
-      # error_mgs = {'status' => 'error', 'error' => msg, 'nodes' => [{ 'uid' => 1,
-#                                                           'status' => 'error',
-#                                                           'error_msg' => msg,
-#                                                           'progress' => 100,
-#                                                           'error_type' => 'provision'}]}
-#       
-      #@reporter.expects(:report).with(error_mgs)
+      msg = 'Timeout of provisioning is exceeded.'      
+      error_mgs = {'status' => 'error', 'error' => msg, 'nodes' => [{ 'uid' => '1',
+                                                            'status' => 'error',
+                                                            'error_msg' => msg,
+                                                            'progress' => 100,
+                                                            'error_type' => 'provision'}]}
+        
+      @reporter.expects(:report).with(error_mgs).once
+      @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
     end
     
   end

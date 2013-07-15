@@ -71,14 +71,16 @@ case environment['attributes']['deployment_engine']
     deploy_engine = nil  # Orchestrator will use it's default
 end
 
+
+if [:deploy, :fast_provision, :provision].include? opts[:command]
+  orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
+end
+
 case opts[:command]
   when :deploy
-    orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
     orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
   when :fast_provision
-    orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
     orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
   when :provision
-    orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
     orchestrator.provision(reporter, environment['task_uuid'], environment['nodes']) 
 end
