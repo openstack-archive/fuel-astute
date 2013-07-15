@@ -2,7 +2,6 @@
 task_uuid: deployment_task
 
 attributes:
-  deployment_engine: simplepuppet
 
 engine:
   url: http://localhost/cobbler_api
