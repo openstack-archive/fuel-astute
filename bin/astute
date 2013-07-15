@@ -62,15 +62,16 @@ Astute.logger = Logger.new(STDOUT) if opts[:verbose]
 
 environment = YAML.load_file(opts[:filename])
 
-case environment['attributes']['deployment_engine']
-  when 'nailyfact'
-    deploy_engine = Astute::DeploymentEngine::NailyFact
-  when 'simplepuppet'
-    deploy_engine = Astute::DeploymentEngine::SimplePuppet  # It just calls puppet and doesn't do any magic
-  else
-    deploy_engine = nil  # Orchestrator will use it's default
-end
+deploy_engine = nil
 
+if environment['attributes'] && environment['attributes']['deployment_engine']
+  case environment['attributes']['deployment_engine']
+    when 'nailyfact'
+      deploy_engine = Astute::DeploymentEngine::NailyFact
+    when 'simplepuppet'
+      deploy_engine = Astute::DeploymentEngine::SimplePuppet  # It just calls puppet and doesn't do any magic
+  end
+end
 
 if [:deploy, :fast_provision, :provision].include? opts[:command]
   orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
