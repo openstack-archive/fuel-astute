@@ -239,7 +239,7 @@ module Astute
       begin
         nodes_progress = provisionLogParser.progress_calculate(nodes_uids, nodes)
         nodes_progress.each do |n|
-          if target_uids.include?(n['uid']) && n['status'] != 'provisioned'
+          if target_uids.include?(n['uid'])
             n['progress'] = 100
             n['status']   = 'provisioned'
           end
