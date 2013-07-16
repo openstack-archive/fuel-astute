@@ -51,8 +51,8 @@ module Astute
     
     def fast_provision(reporter, engine_attrs, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
-      proxy_reporter = ProxyReporter.new(reporter)
-      engine = create_engine(engine_attrs, proxy_reporter)
+
+      engine = create_engine(engine_attrs, reporter)
       
       begin
         reboot_events = reboot_nodes(engine, nodes)
@@ -60,7 +60,7 @@ module Astute
         
       rescue RuntimeError => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
-        proxy_reporter.report({
+        reporter.report({
                           'status' => 'error',
                           'error' => 'Cobbler error',
                           'progress' => 100
@@ -71,11 +71,11 @@ module Astute
       end
       
       if failed_nodes.empty?
-        report_result({}, proxy_reporter)
+        report_result({}, reporter)
         return SUCCESS
       else
         Astute.logger.error("Nodes failed to reboot: #{failed_nodes.inspect}")
-        proxy_reporter.report({
+        reporter.report({
                           'status' => 'error',
                           'error' => "Nodes failed to reboot: #{failed_nodes.inspect}",
                           'progress' => 100
