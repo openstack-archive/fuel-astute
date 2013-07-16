@@ -1,73 +1,108 @@
 ---
 task_uuid: deployment_task
-
-attributes:
-
-engine:
-  url: http://localhost/cobbler_api
-  username: cobbler
-  password: cobbler
-
 nodes:
-- profile: centos-x86_64
-  name_servers_search: domain.tld
-  ks_meta:
-    mco_enable: 1
-    mco_vhost: mcollective
-    mco_pskey: unset
-    ks_spaces: '"[{\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0\",
-      \"volumes\": [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 209715200},
-      {\"type\": \"mbr\"}, {\"size\": 16959668224, \"type\": \"pv\", \"vg\": \"os\"}],
-      \"size\": 17179869184}, {\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-1:0:0:0\",
-      \"volumes\": [{\"size\": 536860426240, \"type\": \"pv\", \"vg\": \"os\"}], \"size\":
-      536870912000}, {\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-2:0:0:0\",
-      \"volumes\": [{\"size\": 2411714314240, \"type\": \"pv\", \"vg\": \"os\"}],
-      \"size\": 2411724800000}, {\"type\": \"vg\", \"id\": \"os\", \"volumes\": [{\"mount\":
-      \"/\", \"type\": \"lv\", \"name\": \"root\", \"size\": 2963243016192}, {\"mount\":
-      \"swap\", \"type\": \"lv\", \"name\": \"swap\", \"size\": 2090065920}]}]"'
-    mco_user: mcollective
-    puppet_enable: 0
-    install_log_2_syslog: 1
-    mco_password: marionette
-    puppet_auto_setup: 1
-    puppet_master: fuelweb.domain.tld
-    mco_auto_setup: 1
-    auth_key: '""'
-    puppet_version: 2.7.19
-    mco_connector: rabbitmq
-    mco_host: 10.20.0.2
-  interfaces:
-    eth2:
-      ip_address: 10.20.0.129
+- status: provisioning
+  uid: 22
+  ip: 10.20.0.95
+  mac: 08:00:27:C2:06:DE
+  meta:
+    memory:
+      total: 778694656
+    interfaces:
+    - mac: '08:00:27:31:09:34'
+      max_speed: 100
+      name: eth2
+      current_speed: 100
+    - mac: 08:00:27:93:54:B0
+      max_speed: 100
+      name: eth1
+      current_speed: 100
+    - name: eth0
+      ip: 10.20.0.95
       netmask: 255.255.255.0
-      static: 0
-      mac_address: 08:00:27:4E:1D:DD
-    eth1:
-      ip_address: 10.20.0.130
-      netmask: 255.255.255.0
-      static: 0
-      mac_address: 08:00:27:86:97:99
-    eth0:
-      ip_address: 10.20.0.131
-      netmask: 255.255.255.0
-      dns_name: controller-1.domain.tld
-      static: 0
-      mac_address: 08:00:27:0B:2E:DD
-  interfaces_extra:
-    eth2:
-      onboot: no
-      peerdns: no
-    eth1:
-      onboot: no
-      peerdns: no
-    eth0:
-      onboot: yes
-      peerdns: no
-  power_type: ssh
-  power_user: root
-  power_address: 10.20.0.78
-  name_servers:  10.20.0.2
-  name: controller-1
-  hostname: controller-1.domain.tld
-  power_pass: /root/.ssh/bootstrap.rsa
-  netboot_enabled: 1
+      mac: 08:00:27:C2:06:DE
+      max_speed: 100
+      current_speed: 100
+    disks:
+    - model: VBOX HARDDISK
+      disk: disk/by-path/pci-0000:00:0d.0-scsi-2:0:0:0
+      name: sdc
+      size: 2411724800000
+    - model: VBOX HARDDISK
+      disk: disk/by-path/pci-0000:00:0d.0-scsi-1:0:0:0
+      name: sdb
+      size: 536870912000
+    - model: VBOX HARDDISK
+      disk: disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0
+      name: sda
+      size: 17179869184
+    system:
+      serial: '0'
+      version: '1.2'
+      fqdn: bootstrap
+      family: Virtual Machine
+      manufacturer: VirtualBox
+    cpu:
+      real: 0
+      total: 1
+      spec:
+      - model: Intel(R) Core(TM)2 Duo CPU P8600 @ 2.40GHz
+        frequency: 2397
+  id: 22
+  error_type: 
+  fqdn: controller-22.domain.tld
+  network_data:
+  - name: management
+    ip: 192.168.6.2/24
+    vlan: 125
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 192.168.6.255
+    gateway: 192.168.6.1
+  - name: public
+    ip: 240.0.13.2/24
+    vlan: 124
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 240.0.13.255
+    gateway: 240.0.13.1
+  - name: storage
+    ip: 172.16.6.2/24
+    vlan: 126
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 172.16.6.255
+    gateway: 172.16.6.1
+  - name: management
+    ip: 192.168.6.5/24
+    vlan: 125
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 192.168.6.255
+    gateway: 192.168.6.1
+  - name: public
+    ip: 240.0.13.5/24
+    vlan: 124
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 240.0.13.255
+    gateway: 240.0.13.1
+  - name: storage
+    ip: 172.16.6.5/24
+    vlan: 126
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 172.16.6.255
+    gateway: 172.16.6.1
+  - vlan: 124
+    name: floating
+    dev: eth0
+  - vlan: 127
+    name: fixed
+    dev: eth0
+  - name: admin
+    dev: eth0
+  role: controller
+  online: true
+  progress: 0
+  

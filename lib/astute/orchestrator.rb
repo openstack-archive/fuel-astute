@@ -46,10 +46,12 @@ module Astute
         Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.inspect}"
       end
       deploy_engine_instance.deploy(nodes, attrs)
+      return SUCCESS
     end
     
     def fast_provision(reporter, engine_attrs, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
+
       engine = create_engine(engine_attrs, reporter)
       
       begin
@@ -70,6 +72,7 @@ module Astute
       
       if failed_nodes.empty?
         report_result({}, reporter)
+        return SUCCESS
       else
         Astute.logger.error("Nodes failed to reboot: #{failed_nodes.inspect}")
         reporter.report({
@@ -79,7 +82,6 @@ module Astute
                         })
         raise StopIteration
       end
-      return
     end
     
     def provision(reporter, task_id, nodes)
@@ -91,6 +93,7 @@ module Astute
       nodes_uids = nodes.map { |n| n['uid'] }
       
       provisionLogParser = LogParser::ParseProvisionLogs.new
+      proxy_reporter = ProxyReporter.new(reporter)
       sleep_not_greater_than(10) do # Wait while nodes going to reboot
         Astute.logger.info "Starting OS provisioning for nodes: #{nodes_uids.join(',')}"
         begin
@@ -105,7 +108,7 @@ module Astute
           catch :done do
             while true
               sleep_not_greater_than(5) do 
-                types = node_type(reporter, task_id, nodes, 2)
+                types = node_type(proxy_reporter, task_id, nodes, 2)
                 types.each { |t| Astute.logger.debug("Got node types: uid=#{t['uid']} type=#{t['node_type']}") }
           
                 Astute.logger.debug("Not target nodes will be rejected")
@@ -120,7 +123,7 @@ module Astute
                   Astute.logger.debug("Nodes list length is not equal to target nodes list length: #{nodes.length} != #{target_uids.length}")
                 end
 
-                report_about_progress(reporter, provisionLogParser, nodes_uids, target_uids, nodes)     
+                report_about_progress(proxy_reporter, provisionLogParser, nodes_uids, target_uids, nodes)     
               end
             end
           end
@@ -134,14 +137,15 @@ module Astute
                                                   'error_msg' => msg,
                                                   'progress' => 100,
                                                   'error_type' => 'provision'} }
-        reporter.report({'status' => 'error', 'error' => msg, 'nodes' => error_nodes})
-        return
+        proxy_reporter.report({'status' => 'error', 'error' => msg, 'nodes' => error_nodes})
+        return FAIL
       end
 
       nodes_progress = nodes.map do |n|
         {'uid' => n['uid'], 'progress' => 100, 'status' => 'provisioned'}
       end
-      reporter.report({'nodes' => nodes_progress})
+      proxy_reporter.report({'nodes' => nodes_progress})
+      return SUCCESS
     end
     
 
@@ -235,7 +239,7 @@ module Astute
       begin
         nodes_progress = provisionLogParser.progress_calculate(nodes_uids, nodes)
         nodes_progress.each do |n|
-          if target_uids.include?(n['uid']) && n['status'] != 'provisioned'
+          if target_uids.include?(n['uid'])
             n['progress'] = 100
             n['status']   = 'provisioned'
           end
