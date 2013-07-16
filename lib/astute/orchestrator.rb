@@ -46,6 +46,7 @@ module Astute
         Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.inspect}"
       end
       deploy_engine_instance.deploy(nodes, attrs)
+      return SUCCESS
     end
     
     def fast_provision(reporter, engine_attrs, nodes)
@@ -71,6 +72,7 @@ module Astute
       
       if failed_nodes.empty?
         report_result({}, proxy_reporter)
+        return SUCCESS
       else
         Astute.logger.error("Nodes failed to reboot: #{failed_nodes.inspect}")
         proxy_reporter.report({
@@ -136,12 +138,14 @@ module Astute
                                                   'progress' => 100,
                                                   'error_type' => 'provision'} }
         proxy_reporter.report({'status' => 'error', 'error' => msg, 'nodes' => error_nodes})
+        return FAIL
       end
 
       nodes_progress = nodes.map do |n|
         {'uid' => n['uid'], 'progress' => 100, 'status' => 'provisioned'}
       end
       proxy_reporter.report({'nodes' => nodes_progress})
+      return SUCCESS
     end
     
 

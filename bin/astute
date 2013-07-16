@@ -43,9 +43,9 @@ optparse = OptionParser.new do |o|
 
   o.on("-h") { puts o; exit }
   
-  o.on("-c", "--command [COMMAND]", [:deploy, :fast_provision, :provision], 
-                                    "Select operation (deploy, fast_provision, provision)") do |c|
-    opts[:command] = c || :deploy
+  o.on("-c", "--command COMMAND", [:deploy, :fast_provision, :provision], 
+                                    "Select operation (deploy, fast_provision or provision)") do |c|
+    opts[:command] = c
   end
   
 end
@@ -77,11 +77,18 @@ if [:deploy, :fast_provision, :provision].include? opts[:command]
   orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
 end
 
-case opts[:command]
-  when :deploy
-    orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
-  when :fast_provision
-    orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
-  when :provision
-    orchestrator.provision(reporter, environment['task_uuid'], environment['nodes']) 
+result = Astute::SUCCESS
+
+begin
+  result = case opts[:command]
+    when :deploy
+      orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+    when :fast_provision
+      orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
+    when :provision
+      orchestrator.provision(reporter, environment['task_uuid'], environment['nodes']) 
+  end
+rescue
+  result = Astute::FAIL
 end
+exit result 
