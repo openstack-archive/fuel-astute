@@ -1,0 +1,511 @@
+---
+task_uuid: deployment_task
+nodes:
+- status: provisioning
+  uid: 22
+  ip: 10.20.0.95
+  mac: 08:00:27:C2:06:DE
+  meta:
+    memory:
+      total: 778694656
+    interfaces:
+    - mac: '08:00:27:31:09:34'
+      max_speed: 100
+      name: eth2
+      current_speed: 100
+    - mac: 08:00:27:93:54:B0
+      max_speed: 100
+      name: eth1
+      current_speed: 100
+    - name: eth0
+      ip: 10.20.0.95
+      netmask: 255.255.255.0
+      mac: 08:00:27:C2:06:DE
+      max_speed: 100
+      current_speed: 100
+    disks:
+    - model: VBOX HARDDISK
+      disk: disk/by-path/pci-0000:00:0d.0-scsi-2:0:0:0
+      name: sdc
+      size: 2411724800000
+    - model: VBOX HARDDISK
+      disk: disk/by-path/pci-0000:00:0d.0-scsi-1:0:0:0
+      name: sdb
+      size: 536870912000
+    - model: VBOX HARDDISK
+      disk: disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0
+      name: sda
+      size: 17179869184
+    system:
+      serial: '0'
+      version: '1.2'
+      fqdn: bootstrap
+      family: Virtual Machine
+      manufacturer: VirtualBox
+    cpu:
+      real: 0
+      total: 1
+      spec:
+      - model: Intel(R) Core(TM)2 Duo CPU P8600 @ 2.40GHz
+        frequency: 2397
+  id: 22
+  error_type: 
+  fqdn: controller-22.domain.tld
+  network_data:
+  - name: management
+    ip: 192.168.6.2/24
+    vlan: 125
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 192.168.6.255
+    gateway: 192.168.6.1
+  - name: public
+    ip: 240.0.13.2/24
+    vlan: 124
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 240.0.13.255
+    gateway: 240.0.13.1
+  - name: storage
+    ip: 172.16.6.2/24
+    vlan: 126
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 172.16.6.255
+    gateway: 172.16.6.1
+  - name: management
+    ip: 192.168.6.5/24
+    vlan: 125
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 192.168.6.255
+    gateway: 192.168.6.1
+  - name: public
+    ip: 240.0.13.5/24
+    vlan: 124
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 240.0.13.255
+    gateway: 240.0.13.1
+  - name: storage
+    ip: 172.16.6.5/24
+    vlan: 126
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 172.16.6.255
+    gateway: 172.16.6.1
+  - vlan: 124
+    name: floating
+    dev: eth0
+  - vlan: 127
+    name: fixed
+    dev: eth0
+  - name: admin
+    dev: eth0
+  role: controller
+  online: true
+  progress: 0
+  
+attributes:
+  use_cow_images: true
+  network_manager: FlatDHCPManager
+  libvirt_type: qemu
+  controller_nodes:
+  - status: provisioning
+    uid: 22
+    ip: 10.20.0.95
+    mac: 08:00:27:C2:06:DE
+    meta:
+      memory:
+        total: 778694656
+      interfaces:
+      - mac: '08:00:27:31:09:34'
+        max_speed: 100
+        name: eth2
+        current_speed: 100
+      - mac: 08:00:27:93:54:B0
+        max_speed: 100
+        name: eth1
+        current_speed: 100
+      - name: eth0
+        ip: 10.20.0.95
+        netmask: 255.255.255.0
+        mac: 08:00:27:C2:06:DE
+        max_speed: 100
+        current_speed: 100
+      disks:
+      - model: VBOX HARDDISK
+        disk: disk/by-path/pci-0000:00:0d.0-scsi-2:0:0:0
+        name: sdc
+        size: 2411724800000
+      - model: VBOX HARDDISK
+        disk: disk/by-path/pci-0000:00:0d.0-scsi-1:0:0:0
+        name: sdb
+        size: 536870912000
+      - model: VBOX HARDDISK
+        disk: disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0
+        name: sda
+        size: 17179869184
+      system:
+        serial: '0'
+        version: '1.2'
+        fqdn: bootstrap
+        family: Virtual Machine
+        manufacturer: VirtualBox
+      cpu:
+        real: 0
+        total: 1
+        spec:
+        - model: Intel(R) Core(TM)2 Duo CPU P8600 @ 2.40GHz
+          frequency: 2397
+    id: 22
+    error_type: 
+    fqdn: controller-22.domain.tld
+    network_data:
+    - name: management
+      ip: 192.168.6.2/24
+      vlan: 125
+      dev: eth0
+      netmask: 255.255.255.0
+      brd: 192.168.6.255
+      gateway: 192.168.6.1
+    - name: public
+      ip: 240.0.13.2/24
+      vlan: 124
+      dev: eth0
+      netmask: 255.255.255.0
+      brd: 240.0.13.255
+      gateway: 240.0.13.1
+    - name: storage
+      ip: 172.16.6.2/24
+      vlan: 126
+      dev: eth0
+      netmask: 255.255.255.0
+      brd: 172.16.6.255
+      gateway: 172.16.6.1
+    - name: management
+      ip: 192.168.6.5/24
+      vlan: 125
+      dev: eth0
+      netmask: 255.255.255.0
+      brd: 192.168.6.255
+      gateway: 192.168.6.1
+    - name: public
+      ip: 240.0.13.5/24
+      vlan: 124
+      dev: eth0
+      netmask: 255.255.255.0
+      brd: 240.0.13.255
+      gateway: 240.0.13.1
+    - name: storage
+      ip: 172.16.6.5/24
+      vlan: 126
+      dev: eth0
+      netmask: 255.255.255.0
+      brd: 172.16.6.255
+      gateway: 172.16.6.1
+    - vlan: 124
+      name: floating
+      dev: eth0
+    - vlan: 127
+      name: fixed
+      dev: eth0
+    - name: admin
+      dev: eth0
+    role: controller
+    online: true
+    progress: 0
+  mysql:
+    root_password: X1HWFL2i
+  glance:
+    db_password: hW3VFgdb
+    user_password: UMDMMYfp
+  network_size: 256
+  swift:
+    user_password: ODwuK9ij
+  fixed_network_range: 10.0.6.0/24
+  nova:
+    db_password: vlY5FhkA
+    user_password: UeVjkUxq
+  access:
+    password: admin
+    user: admin
+    tenant: admin
+    email: admin@example.org
+  keystone:
+    db_password: XjwwZsBU
+    admin_token: giVDBp05
+  auto_assign_floating_ip: false
+  start_guests_on_host_boot: true
+  rabbit:
+    password: 3ix8DkDi
+  management_network_range: 192.168.6.0/24
+  base_syslog:
+    syslog_port: '514'
+    syslog_server: 10.20.0.2
+  storage_network_range: 172.16.6.0/24
+  floating_network_range:
+  - 240.0.12.10
+  - 240.0.12.100
+  - 240.0.12.101
+  - 240.0.12.102
+  - 240.0.12.103
+  - 240.0.12.104
+  - 240.0.12.105
+  - 240.0.12.106
+  - 240.0.12.107
+  - 240.0.12.108
+  - 240.0.12.109
+  - 240.0.12.11
+  - 240.0.12.110
+  - 240.0.12.111
+  - 240.0.12.112
+  - 240.0.12.113
+  - 240.0.12.114
+  - 240.0.12.115
+  - 240.0.12.116
+  - 240.0.12.117
+  - 240.0.12.118
+  - 240.0.12.119
+  - 240.0.12.12
+  - 240.0.12.120
+  - 240.0.12.121
+  - 240.0.12.122
+  - 240.0.12.123
+  - 240.0.12.124
+  - 240.0.12.125
+  - 240.0.12.126
+  - 240.0.12.127
+  - 240.0.12.128
+  - 240.0.12.129
+  - 240.0.12.13
+  - 240.0.12.130
+  - 240.0.12.131
+  - 240.0.12.132
+  - 240.0.12.133
+  - 240.0.12.134
+  - 240.0.12.135
+  - 240.0.12.136
+  - 240.0.12.137
+  - 240.0.12.138
+  - 240.0.12.139
+  - 240.0.12.14
+  - 240.0.12.140
+  - 240.0.12.141
+  - 240.0.12.142
+  - 240.0.12.143
+  - 240.0.12.144
+  - 240.0.12.145
+  - 240.0.12.146
+  - 240.0.12.147
+  - 240.0.12.148
+  - 240.0.12.149
+  - 240.0.12.15
+  - 240.0.12.150
+  - 240.0.12.151
+  - 240.0.12.152
+  - 240.0.12.153
+  - 240.0.12.154
+  - 240.0.12.155
+  - 240.0.12.156
+  - 240.0.12.157
+  - 240.0.12.158
+  - 240.0.12.159
+  - 240.0.12.16
+  - 240.0.12.160
+  - 240.0.12.161
+  - 240.0.12.162
+  - 240.0.12.163
+  - 240.0.12.164
+  - 240.0.12.165
+  - 240.0.12.166
+  - 240.0.12.167
+  - 240.0.12.168
+  - 240.0.12.169
+  - 240.0.12.17
+  - 240.0.12.170
+  - 240.0.12.171
+  - 240.0.12.172
+  - 240.0.12.173
+  - 240.0.12.174
+  - 240.0.12.175
+  - 240.0.12.176
+  - 240.0.12.177
+  - 240.0.12.178
+  - 240.0.12.179
+  - 240.0.12.18
+  - 240.0.12.180
+  - 240.0.12.181
+  - 240.0.12.182
+  - 240.0.12.183
+  - 240.0.12.184
+  - 240.0.12.185
+  - 240.0.12.186
+  - 240.0.12.187
+  - 240.0.12.188
+  - 240.0.12.189
+  - 240.0.12.19
+  - 240.0.12.190
+  - 240.0.12.191
+  - 240.0.12.192
+  - 240.0.12.193
+  - 240.0.12.194
+  - 240.0.12.195
+  - 240.0.12.196
+  - 240.0.12.197
+  - 240.0.12.198
+  - 240.0.12.199
+  - 240.0.12.2
+  - 240.0.12.20
+  - 240.0.12.200
+  - 240.0.12.201
+  - 240.0.12.202
+  - 240.0.12.203
+  - 240.0.12.204
+  - 240.0.12.205
+  - 240.0.12.206
+  - 240.0.12.207
+  - 240.0.12.208
+  - 240.0.12.209
+  - 240.0.12.21
+  - 240.0.12.210
+  - 240.0.12.211
+  - 240.0.12.212
+  - 240.0.12.213
+  - 240.0.12.214
+  - 240.0.12.215
+  - 240.0.12.216
+  - 240.0.12.217
+  - 240.0.12.218
+  - 240.0.12.219
+  - 240.0.12.22
+  - 240.0.12.220
+  - 240.0.12.221
+  - 240.0.12.222
+  - 240.0.12.223
+  - 240.0.12.224
+  - 240.0.12.225
+  - 240.0.12.226
+  - 240.0.12.227
+  - 240.0.12.228
+  - 240.0.12.229
+  - 240.0.12.23
+  - 240.0.12.230
+  - 240.0.12.231
+  - 240.0.12.232
+  - 240.0.12.233
+  - 240.0.12.234
+  - 240.0.12.235
+  - 240.0.12.236
+  - 240.0.12.237
+  - 240.0.12.238
+  - 240.0.12.239
+  - 240.0.12.24
+  - 240.0.12.240
+  - 240.0.12.241
+  - 240.0.12.242
+  - 240.0.12.243
+  - 240.0.12.244
+  - 240.0.12.245
+  - 240.0.12.246
+  - 240.0.12.247
+  - 240.0.12.248
+  - 240.0.12.249
+  - 240.0.12.25
+  - 240.0.12.250
+  - 240.0.12.251
+  - 240.0.12.252
+  - 240.0.12.253
+  - 240.0.12.254
+  - 240.0.12.26
+  - 240.0.12.27
+  - 240.0.12.28
+  - 240.0.12.29
+  - 240.0.12.3
+  - 240.0.12.30
+  - 240.0.12.31
+  - 240.0.12.32
+  - 240.0.12.33
+  - 240.0.12.34
+  - 240.0.12.35
+  - 240.0.12.36
+  - 240.0.12.37
+  - 240.0.12.38
+  - 240.0.12.39
+  - 240.0.12.4
+  - 240.0.12.40
+  - 240.0.12.41
+  - 240.0.12.42
+  - 240.0.12.43
+  - 240.0.12.44
+  - 240.0.12.45
+  - 240.0.12.46
+  - 240.0.12.47
+  - 240.0.12.48
+  - 240.0.12.49
+  - 240.0.12.5
+  - 240.0.12.50
+  - 240.0.12.51
+  - 240.0.12.52
+  - 240.0.12.53
+  - 240.0.12.54
+  - 240.0.12.55
+  - 240.0.12.56
+  - 240.0.12.57
+  - 240.0.12.58
+  - 240.0.12.59
+  - 240.0.12.6
+  - 240.0.12.60
+  - 240.0.12.61
+  - 240.0.12.62
+  - 240.0.12.63
+  - 240.0.12.64
+  - 240.0.12.65
+  - 240.0.12.66
+  - 240.0.12.67
+  - 240.0.12.68
+  - 240.0.12.69
+  - 240.0.12.7
+  - 240.0.12.70
+  - 240.0.12.71
+  - 240.0.12.72
+  - 240.0.12.73
+  - 240.0.12.74
+  - 240.0.12.75
+  - 240.0.12.76
+  - 240.0.12.77
+  - 240.0.12.78
+  - 240.0.12.79
+  - 240.0.12.8
+  - 240.0.12.80
+  - 240.0.12.81
+  - 240.0.12.82
+  - 240.0.12.83
+  - 240.0.12.84
+  - 240.0.12.85
+  - 240.0.12.86
+  - 240.0.12.87
+  - 240.0.12.88
+  - 240.0.12.89
+  - 240.0.12.9
+  - 240.0.12.90
+  - 240.0.12.91
+  - 240.0.12.92
+  - 240.0.12.93
+  - 240.0.12.94
+  - 240.0.12.95
+  - 240.0.12.96
+  - 240.0.12.97
+  - 240.0.12.98
+  - 240.0.12.99
+  auth_key: ''
+  syslog:
+    syslog_port: '514'
+    syslog_transport: udp
+    syslog_server: ''
+  compute_scheduler_driver: nova.scheduler.filter_scheduler.FilterScheduler
+  deployment_mode: multinode
+  cinder:
+    db_password: rveahKih
+    user_password: ENwyu6oa
+  deployment_id: 8
