@@ -45,7 +45,8 @@ module Astute
             {'pattern' => 'leaving (1) step postscripts', 'supposed_time' => 130},
             {'pattern' => 'wait while node rebooting', 'supposed_time' => 20},
             ].reverse,
-          'filename' => 'install/anaconda.log'
+          'filename' => 'install/anaconda.log',
+          'path_format' => '<%= @pattern_spec[\'path_prefix\'] %><%= node[\'fqdn\'] %>/<%= @pattern_spec[\'filename\'] %>'
           },
 
         'anaconda-log-supposed-time-kvm' => # key for default kvm provision pattern
@@ -68,7 +69,8 @@ module Astute
             {'pattern' => 'leaving (1) step postscripts', 'supposed_time' => 200},
             {'pattern' => 'wait while node rebooting', 'supposed_time' => 20},
             ].reverse,
-          'filename' => 'install/anaconda.log'
+          'filename' => 'install/anaconda.log',
+          'path_format' => '<%= @pattern_spec[\'path_prefix\'] %><%= node[\'fqdn\'] %>/<%= @pattern_spec[\'filename\'] %>'
           },
 
         'puppet-log-components-list-ha-controller' =>   # key for default HA deploy pattern
@@ -76,6 +78,7 @@ module Astute
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-agent.log',
+          'path_format' => '<%= @pattern_spec[\'path_prefix\'] %><%= node[\'fqdn\'] %>/<%= @pattern_spec[\'filename\'] %>',
           'components_list' => [
             {'name' => 'Galera', 'weight' => 5, 'patterns' => [
                {'pattern' => '/Stage[main]/Galera/File[/etc/mysql]/ensure) created', 'progress' => 0.1},
@@ -240,6 +243,7 @@ module Astute
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-agent.log',
+          'path_format' => '<%= @pattern_spec[\'path_prefix\'] %><%= node[\'fqdn\'] %>/<%= @pattern_spec[\'filename\'] %>',
           'components_list' => [
             {'name' => 'Keystone', 'weight' => 10, 'patterns' => [
                {'pattern' => '/Stage[main]/Keystone::Python/Package[python-keystone]/ensure) created', 'progress' => 1},
@@ -292,6 +296,7 @@ module Astute
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-agent.log',
+          'path_format' => '<%= @pattern_spec[\'path_prefix\'] %><%= node[\'fqdn\'] %>/<%= @pattern_spec[\'filename\'] %>',
           'components_list' => [
             {'name' => 'Glance', 'weight' => 10, 'patterns' => [
                {'pattern' => '/Stage[main]/Glance/Package[glance]/ensure) created', 'progress' => 0.1},
@@ -378,6 +383,7 @@ module Astute
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-agent.log',
+          'path_format' => '<%= @pattern_spec[\'path_prefix\'] %><%= node[\'fqdn\'] %>/<%= @pattern_spec[\'filename\'] %>',
           'components_list' => [
             {'name' => 'Glance', 'weight' => 10, 'patterns' => [
                {'pattern' => '/Stage[main]/Glance/Package[glance]/ensure) created', 'progress' => 0.1},
@@ -464,6 +470,7 @@ module Astute
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-agent.log',
+          'path_format' => '<%= @pattern_spec[\'path_prefix\'] %><%= node[\'fqdn\'] %>/<%= @pattern_spec[\'filename\'] %>',
           'components_list' => [
             {'name' => 'Keystone', 'weight' => 10, 'patterns' => [
                {'pattern' => '/Stage[main]/Keystone::Python/Package[python-keystone]/ensure) created', 'progress' => 1},
