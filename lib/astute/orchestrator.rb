@@ -242,6 +242,8 @@ module Astute
           if target_uids.include?(n['uid'])
             n['progress'] = 100
             n['status']   = 'provisioned'
+          else
+            n['status']   = 'provisioning'
           end
         end
         reporter.report({'nodes' => nodes_progress})
