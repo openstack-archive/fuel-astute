@@ -158,7 +158,7 @@ module Astute
     end
 
     def download_release (up_reporter, task_id, release_info)
-      raise "Nodes to release download are not provided!" if release_info.empty?
+      raise "Release information not provided!" if release_info.empty?
       attrs = {'deployment_mode' => 'rpmcache',
                'deployment_id' => 'rpmcache'}
       facts = {'rh_username' => release_info['username'],

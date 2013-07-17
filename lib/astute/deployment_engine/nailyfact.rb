@@ -71,6 +71,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
     Astute.logger.info "#{@ctx.task_id}: Calculation of required attributes to pass, include netw.settings"
     nodes.each do |node|
+      # Use predefined facts or create new.
       node['facts'] = create_facts(node, attrs) unless node['facts']
       Astute::Metadata.publish_facts(@ctx, node['uid'], node['facts'])
     end
