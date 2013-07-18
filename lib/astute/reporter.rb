@@ -55,14 +55,16 @@ module Astute
 
       def get_overall_status(data)
         status = data['status']
-        error_nodes = @nodes.select {|n| n['status'] == 'error'}
-        status = 'error' if error_nodes.any?
         msg = case status
-              when 'error'
-                error_uids = error_nodes.map{|n| n['uid']}
-                data['error'] || "Error occured on nodes #{error_uids.inspect}"
               when 'ready'
-                data['error'] || "Deployment finished successfully"
+                error_nodes = @nodes.select {|n| n['status'] == 'error'}
+                if error_nodes.any?
+                  status = 'error'
+                  error_uids = error_nodes.map{|n| n['uid']}
+                  "Some error occured on nodes #{error_uids.inspect}"
+                else
+                  data['error']
+                end
               else
                 data['error']
               end
@@ -178,16 +180,20 @@ module Astute
       def get_overall_status(data)
         status = data['status']
         error_nodes = @nodes.select {|n| n['status'] == 'error'}
-        status = 'error' if error_nodes.any?
-        msg = case status
-              when 'error'
-                error_uids = error_nodes.map{|n| n['uid']}
+        if error_nodes.any?
+          error_uids = error_nodes.map{|n| n['uid']}
+          msg = case status
+                when 'error'
+                data['error'] || "Cannot download release on nodes #{error_uids.inspect}"
+                when 'ready'
+                status = 'error'
                 "Cannot download release on nodes #{error_uids.inspect}"
-              when 'ready'
-                "Release downloaded successfully"
-              else
-                data['error']
-              end
+                else
+                  data['error']
+                end
+        else
+          msg = data['error']
+        end
         progress = data['progress'] || calculate_overall_progress
 
         {'status' => status, 'error' => msg, 'progress' => progress}.reject{|k,v| v.nil?}
