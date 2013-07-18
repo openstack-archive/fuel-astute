@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 require 'astute/ruby_removed_functions'
 
 require 'json'
@@ -40,6 +39,9 @@ module Astute
   LogParser.autoload :ParseDeployLogs, 'astute/logparser/deployment'
   LogParser.autoload :ParseProvisionLogs, 'astute/logparser/provision'
   LogParser.autoload :Patterns, 'astute/logparser/parser_patterns'
+  
+  SUCCESS = 0
+  FAIL = 1
 
   def self.logger
     unless @logger

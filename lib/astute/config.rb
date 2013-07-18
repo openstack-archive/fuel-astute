@@ -53,12 +53,14 @@ module Astute
 
   def self.default_config
     conf = {}
-    conf[:PUPPET_TIMEOUT] = 60*60        # maximum time it waits for the whole deployment
-    conf[:PUPPET_DEPLOY_INTERVAL] = 2    # sleep for ## sec, then check puppet status again
-    conf[:PUPPET_FADE_TIMEOUT] = 60      # How long it can take for puppet to exit after dumping to last_run_summary
-    conf[:MC_RETRIES] = 5                # MClient tries to call mcagent before failure
-    conf[:MC_RETRY_INTERVAL] = 1         # MClient sleeps for ## sec between retries
-    conf[:PUPPET_FADE_INTERVAL] = 1      # Retry every ## seconds to check puppet state if it was running
+    conf[:PUPPET_TIMEOUT] = 60*60         # maximum time it waits for the whole deployment
+    conf[:PUPPET_DEPLOY_INTERVAL] = 2     # sleep for ## sec, then check puppet status again
+    conf[:PUPPET_FADE_TIMEOUT] = 60       # how long it can take for puppet to exit after dumping to last_run_summary
+    conf[:MC_RETRIES] = 5                 # MClient tries to call mcagent before failure
+    conf[:MC_RETRY_INTERVAL] = 1          # MClient sleeps for ## sec between retries
+    conf[:PUPPET_FADE_INTERVAL] = 1       # retry every ## seconds to check puppet state if it was running
+    conf[:PROVISIONING_TIMEOUT] = 90 * 60 # timeout for booting target OS in provision
+    conf[:REBOOT_TIMEOUT] = 120           # how long it can take for node to reboot 
     return conf
   end
 end

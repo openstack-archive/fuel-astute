@@ -28,6 +28,8 @@ require File.join(File.dirname(__FILE__), '../lib/astute')
 Astute.config.PUPPET_DEPLOY_INTERVAL = 0
 Astute.config.PUPPET_FADE_INTERVAL = 0
 Astute.config.MC_RETRY_INTERVAL = 0
+Astute.config.PROVISIONING_TIMEOUT = 0
+Astute.config.REBOOT_TIMEOUT = 0
 Astute.logger = Logger.new(STDERR)
 
 RSpec.configure do |c|

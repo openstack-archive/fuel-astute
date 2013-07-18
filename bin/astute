@@ -42,6 +42,12 @@ optparse = OptionParser.new do |o|
   end
 
   o.on("-h") { puts o; exit }
+  
+  o.on("-c", "--command COMMAND", [:provision, :deploy, :provision_and_deploy],
+                                    "Select operation: provision, deploy or provision_and_deploy") do |c|
+    opts[:command] = c
+  end
+  
 end
 optparse.parse!(ARGV)
 
@@ -56,14 +62,49 @@ Astute.logger = Logger.new(STDOUT) if opts[:verbose]
 
 environment = YAML.load_file(opts[:filename])
 
-case environment['attributes']['deployment_engine']
-  when 'nailyfact'
-    deploy_engine = Astute::DeploymentEngine::NailyFact
-  when 'simplepuppet'
-    deploy_engine = Astute::DeploymentEngine::SimplePuppet  # It just calls puppet and doesn't do any magic
-  else
-    deploy_engine = nil  # Orchestrator will use it's default
+deploy_engine = nil
+
+if environment['attributes'] && environment['attributes']['deployment_engine']
+  case environment['attributes']['deployment_engine']
+    when 'nailyfact'
+      deploy_engine = Astute::DeploymentEngine::NailyFact
+    when 'simplepuppet'
+      deploy_engine = Astute::DeploymentEngine::SimplePuppet  # It just calls puppet and doesn't do any magic
+  end
 end
 
-orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
-orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+if [:deploy, :provision, :provision_and_deploy].include? opts[:command]
+  orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
+end
+
+def console_provision(orchestrator, reporter, environment)
+  res = orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
+  if res == Astute::SUCCESS
+    puts "restarting nodes..."
+    sleep 5
+    res = orchestrator.provision(reporter, environment['task_uuid'], environment['nodes'])
+  end
+  res
+end
+
+result = Astute::SUCCESS
+
+begin
+  result = case opts[:command]
+    when :deploy
+      orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+    when :provision
+      console_provision(orchestrator, reporter, environment)
+    when :provision_and_deploy
+      res = console_provision(orchestrator, reporter, environment)
+      if res == Astute::SUCCESS
+        res = orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+      end
+      res
+    end
+  end
+rescue => e
+  puts "Error: #{e.inspect}"
+  result = Astute::FAIL
+end
+exit result 
