@@ -259,7 +259,7 @@ describe "NailyFact DeploymentEngine" do
             },
             "lo" => {
               "interface" => "lo",
-              "ipaddr" => "dhcp"
+              "ipaddr" => ["127.0.0.1/8"]
             },
             'eth1' => {
               'interface' => 'eth1',
