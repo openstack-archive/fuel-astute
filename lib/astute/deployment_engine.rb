@@ -201,7 +201,7 @@ module Astute
         end
         Astute.logger.debug "Calculated network for interface: #{name}, data: #{iface.inspect}"
       end
-      interfaces['lo'] = {'interface'=>'lo', 'ipaddr'=>'dhcp'} unless interfaces.has_key?('lo')
+      interfaces['lo'] = {'interface'=>'lo', 'ipaddr'=>['127.0.0.1/8']} unless interfaces.has_key?('lo')
       hwinterfaces.each do |i|
         unless interfaces.has_key?(i['name'])
           interfaces[i['name']] = {'interface' => i['name'], 'ipaddr' => []}
