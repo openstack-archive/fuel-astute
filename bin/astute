@@ -43,8 +43,8 @@ optparse = OptionParser.new do |o|
 
   o.on("-h") { puts o; exit }
   
-  o.on("-c", "--command COMMAND", [:deploy, :fast_provision, :provision], 
-                                    "Select operation (deploy, fast_provision or provision)") do |c|
+  o.on("-c", "--command COMMAND", [:provision, :deploy, :provision_and_deploy],
+                                    "Select operation: provision, deploy or provision_and_deploy") do |c|
     opts[:command] = c
   end
   
@@ -73,8 +73,18 @@ if environment['attributes'] && environment['attributes']['deployment_engine']
   end
 end
 
-if [:deploy, :fast_provision, :provision].include? opts[:command]
+if [:deploy, :provision, :provision_and_deploy].include? opts[:command]
   orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
+end
+
+def console_provision(orchestrator, reporter, environment)
+  res = orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
+  if res == Astute::SUCCESS
+    puts "restarting nodes..."
+    sleep 5
+    res = orchestrator.provision(reporter, environment['task_uuid'], environment['nodes'])
+  end
+  res
 end
 
 result = Astute::SUCCESS
@@ -83,12 +93,18 @@ begin
   result = case opts[:command]
     when :deploy
       orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
-    when :fast_provision
-      orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
     when :provision
-      orchestrator.provision(reporter, environment['task_uuid'], environment['nodes']) 
+      console_provision(orchestrator, reporter, environment)
+    when :provision_and_deploy
+      res = console_provision(orchestrator, reporter, environment)
+      if res == Astute::SUCCESS
+        res = orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+      end
+      res
+    end
   end
-rescue
+rescue => e
+  puts "Error: #{e.inspect}"
   result = Astute::FAIL
 end
 exit result 
