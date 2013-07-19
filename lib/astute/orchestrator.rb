@@ -162,7 +162,7 @@ module Astute
       attrs = {'deployment_mode' => 'rpmcache',
                'deployment_id' => 'rpmcache'}
       facts = {'rh_username' => release_info['username'],
-               'rh_password' => release_info['username']}
+               'rh_password' => release_info['password']}
       facts.merge!(attrs)
       if release_info['license_type'] == 'rhn'
         facts.merge!(
