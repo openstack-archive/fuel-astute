@@ -1,0 +1,242 @@
+---
+# Base config
+task_uuid: deployment_task
+engine:
+  url: http://localhost/cobbler_api
+  username: cobbler
+  password: cobbler
+  
+power_info: &power_info
+  power_type: ssh
+  power_user: root
+  name_servers: ! '"10.20.0.2"'
+  power_pass: /root/.ssh/bootstrap.rsa
+  netboot_enabled: '1'
+
+ks_meta: &ks_meta
+  mco_enable: 1
+  mco_vhost: mcollective
+  mco_pskey: unset
+  mco_user: mcollective
+  puppet_enable: 0
+  install_log_2_syslog: 1
+  mco_password: marionette
+  puppet_auto_setup: 1
+  puppet_master: fuelweb.domain.tld
+  mco_auto_setup: 1
+  auth_key: ! '""'
+  puppet_version: 2.7.19
+  mco_connector: rabbitmq
+  mco_host: 10.20.0.2
+
+# Nodes
+node_22: &node_22
+  id: 22
+  uid: 22
+  mac: 08:00:27:C2:06:DE
+  ip: &ip 10.20.0.95
+  fqdn: &fqdn controller-22.domain.tld
+  
+  # Data for provision
+  profile: centos-x86_64
+  ks_meta: 
+    <<: *ks_meta
+    ks_spaces: ! '"[{\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0\",
+      \"volumes\": [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 209715200},
+      {\"type\": \"mbr\"}, {\"size\": 16959668224, \"type\": \"pv\", \"vg\": \"os\"}],
+      \"size\": 17179869184}, {\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-1:0:0:0\",
+      \"volumes\": [{\"size\": 536860426240, \"type\": \"pv\", \"vg\": \"os\"}], \"size\":
+      536870912000}, {\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-2:0:0:0\",
+      \"volumes\": [{\"size\": 2411714314240, \"type\": \"pv\", \"vg\": \"os\"}],
+      \"size\": 2411724800000}, {\"type\": \"vg\", \"id\": \"os\", \"volumes\": [{\"mount\":
+      \"/\", \"type\": \"lv\", \"name\": \"root\", \"size\": 2963243016192}, {\"mount\":
+      \"swap\", \"type\": \"lv\", \"name\": \"swap\", \"size\": 2090065920}]}]"'
+  
+  <<: *power_info
+  name: controller-22
+  hostname: *fqdn
+  power_address: *ip
+  interfaces:
+    eth2:
+      ip_address: 10.20.0.187
+      netmask: 255.255.255.0
+      static: '0'
+      mac_address: '08:00:27:31:09:34'
+    eth1:
+      ip_address: 10.20.0.186
+      netmask: 255.255.255.0
+      static: '0'
+      mac_address: 08:00:27:93:54:B0
+    eth0:
+      ip_address: 10.20.0.188
+      netmask: 255.255.255.0
+      dns_name: *fqdn
+      static: '0'
+      mac_address: 08:00:27:C2:06:DE
+  interfaces_extra:
+    eth2:
+      onboot: 'no'
+      peerdns: 'no'
+    eth1:
+      onboot: 'no'
+      peerdns: 'no'
+    eth0:
+      onboot: 'yes'
+      peerdns: 'no'
+  #End data for provision
+  
+  meta:
+    memory:
+      total: 778694656
+    interfaces:
+    - mac: '08:00:27:31:09:34'
+      max_speed: 100
+      name: eth2
+      current_speed: 100
+    - mac: 08:00:27:93:54:B0
+      max_speed: 100
+      name: eth1
+      current_speed: 100
+    - name: eth0
+      ip: 10.20.0.95
+      netmask: 255.255.255.0
+      mac: 08:00:27:C2:06:DE
+      max_speed: 100
+      current_speed: 100
+    disks:
+    - model: VBOX HARDDISK
+      disk: disk/by-path/pci-0000:00:0d.0-scsi-2:0:0:0
+      name: sdc
+      size: 2411724800000
+    - model: VBOX HARDDISK
+      disk: disk/by-path/pci-0000:00:0d.0-scsi-1:0:0:0
+      name: sdb
+      size: 536870912000
+    - model: VBOX HARDDISK
+      disk: disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0
+      name: sda
+      size: 17179869184
+    system:
+      serial: '0'
+      version: '1.2'
+      fqdn: bootstrap
+      family: Virtual Machine
+      manufacturer: VirtualBox
+    cpu:
+      real: 0
+      total: 1
+      spec:
+      - model: Intel(R) Core(TM)2 Duo CPU P8600 @ 2.40GHz
+        frequency: 2397
+  error_type: 
+  network_data:
+  - name: management
+    ip: 192.168.6.2/24
+    vlan: 125
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 192.168.6.255
+    gateway: 192.168.6.1
+  - name: public
+    ip: 240.0.13.2/24
+    vlan: 124
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 240.0.13.255
+    gateway: 240.0.13.1
+  - name: storage
+    ip: 172.16.6.2/24
+    vlan: 126
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 172.16.6.255
+    gateway: 172.16.6.1
+  - name: management
+    ip: 192.168.6.5/24
+    vlan: 125
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 192.168.6.255
+    gateway: 192.168.6.1
+  - name: public
+    ip: 240.0.13.5/24
+    vlan: 124
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 240.0.13.255
+    gateway: 240.0.13.1
+  - name: storage
+    ip: 172.16.6.5/24
+    vlan: 126
+    dev: eth0
+    netmask: 255.255.255.0
+    brd: 172.16.6.255
+    gateway: 172.16.6.1
+  - vlan: 124
+    name: floating
+    dev: eth0
+  - vlan: 127
+    name: fixed
+    dev: eth0
+  - name: admin
+    dev: eth0
+  role: controller
+  online: true
+  progress: 0
+
+
+nodes:
+- <<: *node_22
+  
+attributes:
+  #deployment_engine: simplepuppet
+  use_cow_images: true
+  network_manager: FlatDHCPManager
+  libvirt_type: qemu
+  controller_nodes:
+  - <<: *node_22
+  mysql:
+    root_password: X1HWFL2i
+  glance:
+    db_password: hW3VFgdb
+    user_password: UMDMMYfp
+  network_size: 256
+  swift:
+    user_password: ODwuK9ij
+  fixed_network_range: 10.0.6.0/24
+  nova:
+    db_password: vlY5FhkA
+    user_password: UeVjkUxq
+  access:
+    password: admin
+    user: admin
+    tenant: admin
+    email: admin@example.org
+  keystone:
+    db_password: XjwwZsBU
+    admin_token: giVDBp05
+  auto_assign_floating_ip: false
+  start_guests_on_host_boot: true
+  rabbit:
+    password: 3ix8DkDi
+  management_network_range: 192.168.6.0/24
+  base_syslog:
+    syslog_port: '514'
+    syslog_server: 10.20.0.2
+  storage_network_range: 172.16.6.0/24
+  floating_network_range:
+  - 240.0.12.10
+  - 240.0.12.11
+
+  auth_key: ''
+  syslog:
+    syslog_port: '514'
+    syslog_transport: udp
+    syslog_server: ''
+  compute_scheduler_driver: nova.scheduler.filter_scheduler.FilterScheduler
+  deployment_mode: multinode
+  cinder:
+    db_password: rveahKih
+    user_password: ENwyu6oa
+  deployment_id: 8
+  
