@@ -93,7 +93,7 @@ module Astute
       nodes_uids = nodes.map { |n| n['uid'] }
       
       provisionLogParser = LogParser::ParseProvisionLogs.new
-      proxy_reporter = ProxyReporter.new(reporter)
+      proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(reporter)
       sleep_not_greater_than(10) do # Wait while nodes going to reboot
         Astute.logger.info "Starting OS provisioning for nodes: #{nodes_uids.join(',')}"
         begin
