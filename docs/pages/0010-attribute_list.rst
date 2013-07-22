@@ -102,7 +102,7 @@ $controller_storage_addresses
 
 **Scheme:**     [<hostname1>=>IP1,<hostname2>=>IP2 ... ]
 
-**Description:** Array of hashes of controllers hostnames and IP addresses for Swift
+**Description:** Array of hashes of controllers hostnames and IP addresses for Swift.
 
 **FUEL way:**   **NOT USED**
 
@@ -1162,4 +1162,468 @@ $controller_node_public
       attrs['controller_node_address'] = ctrl_management_ips[0].split('/')[0]
       ** attrs['controller_node_public'] = ctrl_public_ips[0].split('/')[0] **
 
+$public_br
+----------
 
+**Type:** String
+
+**Description:** Name of public bridge to which attach $public_interface. Used only in quantum mode
+
+**FUEL way:** simple setting
+
+**OSNF way:** does not exist
+
+$internal_br
+----------
+
+**Type:** String
+
+**Description:** Name of public bridge to which attach $public_interface. Used only in quantum mode
+
+**FUEL way:** simple setting
+
+**OSNF way:** does not exist
+
+$default_gateway
+----------------
+
+**Type:** IP
+
+**Description:** default gateway for the node
+
+**FUEL way:** simple setting
+
+**OSNF way:** DOES NOT EXIST
+
+$dns_nameservers
+----------------
+
+**Type:** Array of  IPs
+
+**Description:** DNS nameservers for the node
+
+**FUEL way:** simple setting
+
+**OSNF way:** DOES NOT EXIST
+
+$internal_netmask
+-----------------
+
+**Type:** Network mask
+
+**Description:** network mask for internal interface/bridge configuration
+
+**FUEL way:** simple setting
+
+**OSNF way:** ** DOES NOT EXIST **
+
+$public_netmask
+-----------------
+
+**Type:** Network mask
+
+**Description:** network mask for public interface/bridge configuration
+
+**FUEL way:** simple setting
+
+**OSNF way:** ** DOES NOT EXIST **
+
+$node
+-----
+
+**Type:** Hash
+
+**Description:** Hash of node attributes
+
+**FUEL way:** ::
+
+$node = filter_nodes($nodes,'name',$::hostname)
+
+**OSNF way:** **DOES NOT EXIST*
+
+$ha_provider
+------------
+
+**Type:** enum of strings
+
+**Description:** 'generic|pacemaker'
+
+**FUEL way:** pacemaker for HA, not set (defaults to *generic*) in non-HA
+
+**OSNF way:** **DOES NOT EXIST**
+
+$use_unicast_corosync
+---------------------
+
+**Type:** Boolean
+
+**Description:** which type of corosync configuration to use. True for unicast, false for multicast
+
+**FUEL way:** simple setting. *unicast* by default
+
+**OSNF way:** **DOES NOT EXIST**
+
+$nagios
+-------
+
+**Type:** Boolean
+
+**Description:** whether to enable nagios clients
+
+**FUEL way:** simple setting. defaults to *true*
+
+**OSNF way:** **DOES NOT EXIST**
+
+$nagios_master
+--------------
+
+**Type:** String
+
+**Description:** nagios master server
+
+**FUEL way:** simple setting
+
+**OSNF way:** **DOES NOT EXIST**
+
+
+$proj_name
+--------------
+
+**Type:** String
+
+**Description:** nagios project name
+
+**FUEL way:** simple setting
+
+**OSNF way:** **DOES NOT EXIST**
+
+$quantum_netnode_on_cnt
+-----------------------
+
+**Type:** Boolean
+
+**Description:** whether to install quantum nodes on controller
+
+**FUEL way:** simple setting. defaults to *true*
+
+**OSNF way:** **DOES NOT EXIST**
+
+$quantum_gre_bind_addr
+----------------------
+ 
+**Type:** String
+
+**Description:** which interface to use endpoint for Quantum GRE interface
+
+**FUEL way:** simple setting. defaults to *internal_interface*
+
+**OSNF way:** **DOES NOT EXIST**
+
+$cinder_nodes
+-------------
+
+**Type:** Array of strings
+
+**Description:** Specify nodes hostnames, IPs or role names on which to deploy cinder volumes services
+
+**FUEL way:** simple setting. ::
+
+$cinder_nodes          = ['controller']
+
+**OSNF way:** **DOES NOT EXIST**
+
+$cinder_iscsi_bind_addr
+-----------------------
+
+**Type:** IP
+
+**Description:** IP address on which to bind iscsi target on cinder volume nodes. Partially duplicated by $storage_address.
+
+**FUEL way:** ::
+
+$cinder_iscsi_bind_addr = $internal_address
+
+$nv_physical_volume
+-------------------
+
+**Type:** Array
+
+**Description:** array of block devices passed to LVM manifests during deployment stage to create cinder volume VGs. Can be empty in case VG is created during provisioning stage.
+
+**FUEL way:** ::
+
+$nv_physical_volume     = ['/dev/sdz', '/dev/sdy', '/dev/sdx']
+
+**OSNF way:** **DOES NOT EXIST**
+
+$is_cinder_node
+---------------
+
+**Type:** Boolean
+
+**Description:** whether current node is cinder-volume node.
+
+**FUEL-way:** ::
+
+if ($cinder) {
+  if (member($cinder_nodes,'all')) {
+    $is_cinder_node = true
+  } elsif (member($cinder_nodes,$::hostname)) {
+    $is_cinder_node = true
+  } elsif (member($cinder_nodes,$internal_address)) {
+    $is_cinder_node = true
+  } elsif ($node[0]['role'] =~ /controller/ ) {
+    $is_cinder_node = member($cinder_nodes,'controller')
+  } else {
+    $is_cinder_node = member($cinder_nodes,$node[0]['role'])
+  }
+} else {
+  $is_cinder_node = false
+}
+
+**OSNF way:** **DOES NOT EXIST**
+
+$swift_loopback
+---------------
+
+**Type:** String enum
+
+**Description:** 'loopback|false'. Whether to use loopbacks for swift partitions
+
+**FUEL way:** simple setting. defaults to *loopback*
+
+**OSNF way:** DOES NOT EXIST
+
+
+$swift_local_net_ip
+-------------------
+
+**Type:** IP
+
+**Description:** IP address on which to bind swift storage node on cinder volume nodes. Partially duplicated by $storage_address.
+
+**FUEL way:** ::
+
+$swift_local_net_ip      = $internal_address
+
+**OSNF way:** **DOES NOT EXIST**
+
+$swift_proxies
+--------------
+
+**Type:** Array of IPs
+
+**Description:** Array of swift proxies
+
+
+**FUEL way:** ::
+
+*FULL*
+
+$swift_proxy_nodes = merge_arrays(filter_nodes($nodes,'role','primary-swift-proxy'),filter_nodes($nodes,'role','swift-proxy'))
+$swift_proxies = nodes_to_hash($swift_proxy_nodes,'name','internal_address')
+
+*COMPACT*
+
+$swift_proxies = $controller_internal_addresses
+
+**OSNF way:** **DOES NOT EXIST**
+
+$master_swift_proxy_nodes
+-------------------------
+
+**Type:** Array of IPs
+
+**Description:** Array of swift primary proxies
+
+**FUEL way:** ::
+
+*COMPACT*
+
+$master_swift_proxy_nodes = filter_nodes($nodes,'role','primary-controller')
+$master_swift_proxy_ip = $master_swift_proxy_nodes[0]['internal_address']
+
+*FULL*
+
+$master_swift_proxy_nodes = filter_nodes($nodes,'role','primary-swift-proxy')
+$master_swift_proxy_ip = $master_swift_proxy_nodes[0]['internal_address']
+
+**OSNF way:** **DOES NOT EXIST**
+
+
+$use_syslog
+-----------
+
+**Type:** Boolean
+
+**Description:** Whether to use syslog for logging.
+
+**FUEL way:** simple setting. set to *true* by default
+
+**OSNF way:** **DOES NOT EXIST**
+
+$syslog_log_level
+-----------------
+**Type:** String
+
+**Description:** Default log level would have been used, if non verbose and non debug
+
+**FUEL way:** simple setting ::
+
+$syslog_log_level             = 'ERROR'
+
+**OSNF way:** **DOES NOT EXIST**
+
+$syslog_log_facility_glance|cinder|quantum|nova|keystone
+---------------------------
+
+**FUEL way:** ::
+
+$syslog_log_facility_glance   = 'LOCAL2'
+$syslog_log_facility_cinder   = 'LOCAL3'
+$syslog_log_facility_quantum  = 'LOCAL4'
+$syslog_log_facility_nova     = 'LOCAL6'
+$syslog_log_facility_keystone = 'LOCAL7'
+
+**OSNF way:** **DOES NOT EXIST**
+
+$enable_test_repo
+-----------------
+
+**Type:** Boolean
+
+**Description:** whether to attach test repo. used in tests
+
+**FUEL way:** simple setting. defaults to false
+
+**OSNF way:** **DOES NOT EXIST**
+
+
+
+$repo_proxy
+-----------
+
+**Type:** String
+
+**Description:** address of repository proxy.
+
+**FUEL way:** ::
+
+$repo_proxy = undef
+
+**OSNF way:** **DOES NOT EXIST**
+
+$ntp_servers
+------------
+
+**Type:** Array of IPs/hostnames
+
+**Description:** Array of ntp servers
+
+**FUEL way:** ::
+
+$ntp_servers = ['pool.ntp.org']
+
+**OSNF way:** **DOES NOT EXIST**
+
+$horizon_use_ssl
+----------------
+
+**Type:** enum 
+
+**Description:** whether and how to use horizon SSL. 'false|"exist"|"default"|"custom"'
+
+false: normal mode with no encryption
+'default': uses keys supplied with the ssl module package
+'exist': assumes that the keys (domain name based certificate) are provisioned in advance
+'custom': require fileserver static mount point [ssl_certs] and hostname based certificate existence
+
+**FUEL way: ::
+
+$horizon_use_ssl = false
+
+**OSNF way:** **DOES NOT EXIST**
+
+$vips
+-----
+
+**Type:** Hash
+
+**Description:** hash of parameters of virtual IP addresses
+
+**FUEL way:** ::
+$vips = { # Do not convert to ARRAY, It can't work in 2.7
+  public_old => {
+    nic    => $public_int,
+    ip     => $public_virtual_ip,
+  },
+  management_old => {
+    nic    => $internal_int,
+    ip     => $internal_virtual_ip,
+  },
+}
+
+**OSNF way:** :: 
+
+*exists in consolidated code*
+
+$vips = { # Do not convert to ARRAY, It can't work in 2.7
+  public_old => {
+    nic    => $public_int,
+    ip     => $public_virtual_ip,
+  },
+  management_old => {
+    nic    => $internal_int,
+    ip     => $internal_virtual_ip,
+  },
+}
+
+$vip_keys
+---------
+
+**Type:** array of strings
+
+**Description:** array of names for virtual ip resources
+
+**FUEL way:** ::
+
+$vip_keys = keys($vips)
+
+**OSNF way:** the same in consolidated (fuel-777 branch) code
+
+
+$nova_rate_limits
+-----------------
+
+**Type:** Hash
+
+**Description:** hash of nova rate limits
+
+**FUEL way:** ::
+
+$nova_rate_limits = {
+  'POST' => 1000,
+  'POST_SERVERS' => 1000,
+  'PUT' => 1000, 'GET' => 1000,
+  'DELETE' => 1000
+}
+
+**OSNF way:** **DOES NOT EXIST**
+
+$cinder_rate_limits
+-----------------
+
+**Type:** Hash
+
+**Description:** hash of cinder rate limits
+
+**FUEL way:** ::
+
+$cinder_rate_limits = {
+  'POST' => 1000,
+  'POST_SERVERS' => 1000,
+  'PUT' => 1000, 'GET' => 1000,
+  'DELETE' => 1000
+}
+
+**OSNF way:** **DOES NOT EXIST**
