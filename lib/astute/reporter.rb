@@ -42,11 +42,11 @@ module Astute
 
       def report_new_data(data)
         if data['nodes']
-          nodes_to_report = get_nodes_to_report(data)
+          nodes_to_report = get_nodes_to_report(data['nodes'])
           # Let's report only if nodes updated
           return if nodes_to_report.empty?
           # Update nodes attributes in @nodes.
-          update_nodes(nodes_to_report)
+          update_saved_nodes(nodes_to_report)
           data['nodes'] = nodes_to_report
         end
         data.merge!(get_overall_status(data))
@@ -73,17 +73,11 @@ module Astute
         {'status' => status, 'error' => msg, 'progress' => progress}.reject{|k,v| v.nil?}
       end
 
-      def get_nodes_to_report(data)
-        nodes_to_report = []
-        nodes = data['nodes']
-        nodes.each do |node|
-          node = node_validate(node)
-          nodes_to_report << node if node
-        end
-        nodes_to_report
+      def get_nodes_to_report(nodes)
+        nodes.compact.inject([]) { |result, node| n = node_validate(node) and result << n; result }
       end
 
-      def update_nodes(new_nodes)
+      def update_saved_nodes(new_nodes)
         # Update nodes attributes in @nodes.
         new_nodes.each do |node|
           saved_node = @nodes.select {|x| x['uid'] == node['uid']}.first  # NOTE: use nodes hash
@@ -153,7 +147,7 @@ module Astute
           end
 
           # We need to update node here only if progress is greater, or status changed
-          return if node.select{|k, v| not saved_node[k].eql?(v)}.empty?
+          return if node.select{|k, v| saved_node[k] != v }.empty?
         end
 
         node
@@ -184,10 +178,10 @@ module Astute
           error_uids = error_nodes.map{|n| n['uid']}
           msg = case status
                 when 'error'
-                data['error'] || "Cannot download release on nodes #{error_uids.inspect}"
+                  data['error'] || "Cannot download release on nodes #{error_uids.inspect}"
                 when 'ready'
-                status = 'error'
-                "Cannot download release on nodes #{error_uids.inspect}"
+                  status = 'error'
+                  "Cannot download release on nodes #{error_uids.inspect}"
                 else
                   data['error']
                 end
