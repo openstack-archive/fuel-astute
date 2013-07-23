@@ -92,14 +92,12 @@ module Astute
       def node_validate(node)
         # Validate basic correctness of attributes.
         err = []
-        if node['status'].nil?
-          err << "progress value provided, but no status" if node['progress']
+        if node['status']
+          err << "Status provided #{node['status']} is not supported" unless STATES[node['status']]
         else
-          err << "Status provided #{node['status']} is not supported" if STATES[node['status']].nil?
+          err << "progress value provided, but no status" if node['progress']
         end
-        if node['uid'].nil?
-          err << "Node uid is not provided"
-        end
+        err << "Node uid is not provided" unless node['uid']
         if err.any?
           msg = "Validation of node: #{node.inspect} for report failed: #{err.join('; ')}."
           Astute.logger.error(msg)
