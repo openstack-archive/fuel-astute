@@ -168,7 +168,7 @@ module Astute
         status = data['status']
         error_nodes = @nodes.select {|n| n['status'] == 'error'}.map{|n| n['uid']}
         msg = data['error']
-        err_msg = "Cannot download release on nodes #{error_uids.inspect}" if error_uids.any?
+        err_msg = "Cannot download release on nodes #{error_uids.inspect}" if error_nodes.any?
         if status == 'error'
           msg ||= err_msg
         elsif status ==  'ready' and err_msg
