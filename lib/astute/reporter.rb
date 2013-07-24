@@ -26,25 +26,55 @@ STATES = {
 }
 
 module Astute
-  class ProxyReporter
-    def initialize(up_reporter)
-      @up_reporter = up_reporter
-      @nodes = []
-    end
-
-    def report(data)
-      nodes_to_report = []
-      nodes = (data['nodes'] or [])
-      nodes.each do |node|
-        node = node_validate(node)
-        nodes_to_report << node if node
+  module ProxyReporter
+    class DeploymentProxyReporter
+      def initialize(up_reporter)
+        @up_reporter = up_reporter
+        @nodes = []
       end
-      # Let's report only if nodes updated
-      if nodes_to_report.any?
-        data['nodes'] = nodes_to_report
+
+      def report(data)
+        Astute.logger.debug("Data received by DeploymetProxyReporter to report it up: #{data.inspect}")
+        report_new_data(data)
+      end
+
+    private
+
+      def report_new_data(data)
+        if data['nodes']
+          nodes_to_report = get_nodes_to_report(data['nodes'])
+          # Let's report only if nodes updated
+          return if nodes_to_report.empty?
+          # Update nodes attributes in @nodes.
+          update_saved_nodes(nodes_to_report)
+          data['nodes'] = nodes_to_report
+        end
+        data.merge!(get_overall_status(data))
         @up_reporter.report(data)
+      end
+
+      def get_overall_status(data)
+        status = data['status']
+        error_nodes = @nodes.select { |n| n['status'] == 'error' }
+        msg = data['error']
+
+        if status == 'ready' && error_nodes.any?
+          status = 'error'
+          error_uids = error_nodes.map{ |n| n['uid'] }
+          msg = "Some error occured on nodes #{error_uids.inspect}"
+        end
+        progress = data['progress']
+
+        {'status' => status, 'error' => msg, 'progress' => progress}.reject{|k,v| v.nil?}
+      end
+
+      def get_nodes_to_report(nodes)
+        nodes.map{ |node| node_validate(node) }.compact
+      end
+
+      def update_saved_nodes(new_nodes)
         # Update nodes attributes in @nodes.
-        nodes_to_report.each do |node|
+        new_nodes.each do |node|
           saved_node = @nodes.select {|x| x['uid'] == node['uid']}.first  # NOTE: use nodes hash
           if saved_node
             node.each {|k, v| saved_node[k] = v}
@@ -53,72 +83,102 @@ module Astute
           end
         end
       end
-    end
 
-  private
+      def node_validate(node)
+        # Validate basic correctness of attributes.
+        err = []
+        if node['status']
+          err << "Status provided #{node['status']} is not supported" unless STATES[node['status']]
+        elsif node['progress']
+          err << "progress value provided, but no status"
+        end
+        err << "Node uid is not provided" unless node['uid']
+        if err.any?
+          msg = "Validation of node: #{node.inspect} for report failed: #{err.join('; ')}."
+          Astute.logger.error(msg)
+          raise msg
+        end
 
-    def node_validate(node)
-      # Validate basic correctness of attributes.
-      err = []
-      if node['status'].nil?
-        err << "progress value provided, but no status" unless node['progress'].nil?
-      else
-        err << "Status provided #{node['status']} is not supported" if STATES[node['status']].nil?
-      end
-      unless node['uid']
-        err << "Node uid is not provided"
-      end
-      if err.any?
-        msg = "Validation of node: #{node.inspect} for report failed: #{err.join('; ')}."
-        Astute.logger.error(msg)
-        raise msg
-      end
-
-      # Validate progress field.
-      unless node['progress'].nil?
-        if node['progress'] > 100
-          Astute.logger.warn("Passed report for node with progress > 100: "\
-                              "#{node.inspect}. Adjusting progress to 100.")
+        # Validate progress field.
+        if node['progress']
+          if node['progress'] > 100
+            Astute.logger.warn("Passed report for node with progress > 100: "\
+                                "#{node.inspect}. Adjusting progress to 100.")
+            node['progress'] = 100
+          end
+          if node['progress'] < 0
+            Astute.logger.warn("Passed report for node with progress < 0: "\
+                                "#{node.inspect}. Adjusting progress to 0.")
+            node['progress'] = 0
+          end
+        end
+        if node['status'] && ['provisioned', 'ready'].include?(node['status']) && node['progress'] != 100
+          Astute.logger.warn("In #{node['status']} state node should have progress 100, "\
+                              "but node passed: #{node.inspect}. Setting it to 100")
           node['progress'] = 100
         end
-        if node['progress'] < 0
-          Astute.logger.warn("Passed report for node with progress < 0: "\
-                              "#{node.inspect}. Adjusting progress to 0.")
-          node['progress'] = 0
-        end
-      end
-      if not node['status'].nil? and ['provisioned', 'ready'].include?(node['status']) and node['progress'] != 100
-        Astute.logger.warn("In #{node['status']} state node should have progress 100, "\
-                            "but node passed: #{node.inspect}. Setting it to 100")
-        node['progress'] = 100
-      end
 
-      # Comparison with previous state.
-      saved_node = @nodes.select {|x| x['uid'] == node['uid']}.first
-      unless saved_node.nil?
-        saved_status = (STATES[saved_node['status']] or 0)
-        node_status = (STATES[node['status']] or saved_status)
-        saved_progress = (saved_node['progress'] or 0)
-        node_progress = (node['progress'] or saved_progress)
+        # Comparison with previous state.
+        saved_node = @nodes.select {|x| x['uid'] == node['uid']}.first
+        if saved_node
+          saved_status = STATES[saved_node['status']].to_i
+          node_status = STATES[node['status']] || saved_status
+          saved_progress = saved_node['progress'].to_i
+          node_progress = node['progress'] || saved_progress
 
-        if node_status < saved_status
-          Astute.logger.warn("Attempt to assign lower status detected: "\
-                             "Status was: #{saved_status}, attempted to "\
-                             "assign: #{node_status}. Skipping this node (id=#{node['uid']})")
-          return
-        end
-        if node_progress < saved_progress and node_status == saved_status
-          Astute.logger.warn("Attempt to assign lesser progress detected: "\
-                             "Progress was: #{saved_progress}, attempted to "\
-                             "assign: #{node_progress}. Skipping this node (id=#{node['uid']})")
-          return
+          if node_status < saved_status
+            Astute.logger.warn("Attempt to assign lower status detected: "\
+                               "Status was: #{saved_status}, attempted to "\
+                               "assign: #{node_status}. Skipping this node (id=#{node['uid']})")
+            return
+          end
+          if node_progress < saved_progress && node_status == saved_status
+            Astute.logger.warn("Attempt to assign lesser progress detected: "\
+                               "Progress was: #{saved_progress}, attempted to "\
+                               "assign: #{node_progress}. Skipping this node (id=#{node['uid']})")
+            return
+          end
+
+          # We need to update node here only if progress is greater, or status changed
+          return if node.select{|k, v| saved_node[k] != v }.empty?
         end
 
-        # We need to update node here only if progress is greater, or status changed
-        return if node.select{|k, v| not saved_node[k].eql?(v)}.empty?
+        node
+      end
+    end
+
+    class DLReleaseProxyReporter <DeploymentProxyReporter
+      def initialize(up_reporter, amount)
+        @amount = amount
+        super(up_reporter)
       end
 
-      node
+      def report(data)
+        Astute.logger.debug("Data received by DLReleaseProxyReporter to report it up: #{data.inspect}")
+        report_new_data(data)
+      end
+
+    private
+
+      def calculate_overall_progress
+        @nodes.inject(0) { |sum, node| sum + node['progress'].to_i } / @amount
+      end
+
+      def get_overall_status(data)
+        status = data['status']
+        error_nodes = @nodes.select {|n| n['status'] == 'error'}.map{|n| n['uid']}
+        msg = data['error']
+        err_msg = "Cannot download release on nodes #{error_uids.inspect}" if error_uids.any?
+        if status == 'error'
+          msg ||= err_msg
+        elsif status ==  'ready' and err_msg
+          msg = err_msg
+          status = 'error'
+        end
+        progress = data['progress'] || calculate_overall_progress
+
+        {'status' => status, 'error' => msg, 'progress' => progress}.reject{|k,v| v.nil?}
+      end
     end
   end
 end

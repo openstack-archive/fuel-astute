@@ -25,7 +25,7 @@ describe "Puppetd" do
       @ctx = mock
       @ctx.stubs(:task_id)
       @reporter = mock('reporter')
-      @ctx.stubs(:reporter).returns(ProxyReporter.new(@reporter))
+      @ctx.stubs(:reporter).returns(ProxyReporter::DeploymentProxyReporter.new(@reporter))
       @ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::NoParsing.new)
     end
 
