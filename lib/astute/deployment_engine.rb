@@ -79,27 +79,27 @@ module Astute
 
     def attrs_ha(nodes, attrs)
       # TODO(mihgen): we should report error back if there are not enough metadata passed
-      ctrl_nodes = attrs['controller_nodes']
-      ctrl_manag_addrs = {}
-      ctrl_public_addrs = {}
-      ctrl_storage_addrs = {}
-      ctrl_nodes.each do |n|
+      #ctrl_nodes = attrs['controller_nodes']
+      #ctrl_manag_addrs = {}
+      #ctrl_public_addrs = {}
+      #ctrl_storage_addrs = {}
+      #ctrl_nodes.each do |n|
         # current puppet modules require `hostname -s`
-        hostname = n['fqdn'].split(/\./)[0]
-        ctrl_manag_addrs.merge!({hostname =>
-                   n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0]})
-        ctrl_public_addrs.merge!({hostname =>
-                   n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0]})
-        ctrl_storage_addrs.merge!({hostname =>
+       # hostname = n['fqdn'].split(/\./)[0]
+       # ctrl_manag_addrs.merge!({hostname =>
+       #            n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0]})
+       # ctrl_public_addrs.merge!({hostname =>
+       #            n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0]})
+       # ctrl_storage_addrs.merge!({hostname =>
                    n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0]})
-      end
+      #end
 
       # we use the same set of mount points for all storage nodes
       attrs['mp'] = {'point' => '1', 'weight' => '1'}
-      attrs['nodes'] = ctrl_nodes.map do |n|
+      attrs['nodes'] = nodes.map do |n|
         {
           'name'                 => n['fqdn'].split(/\./)[0],
-          'role'                 => 'controller',
+          'role'                 => n['role'],
           'internal_address'     => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
           'public_address'       => n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0],
           'mountpoints'          => "#{attrs['mp']['point']} #{attrs['mp']['weight']}",
@@ -107,12 +107,12 @@ module Astute
           'storage_local_net_ip' => n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0],
         }
       end
-      attrs['nodes'].first['role'] = 'primary-controller'
-      attrs['ctrl_hostnames'] = ctrl_nodes.map {|n| n['fqdn'].split(/\./)[0]}
-      attrs['master_hostname'] = ctrl_nodes[0]['fqdn'].split(/\./)[0]
-      attrs['ctrl_public_addresses'] = ctrl_public_addrs
-      attrs['ctrl_management_addresses'] = ctrl_manag_addrs
-      attrs['ctrl_storage_addresses'] = ctrl_storage_addrs
+      attrs['nodes'].first['role'] = 'primary-controller' if attrs['nodes'].select { |node| node['role'] == primary-controller }.empty?
+      #attrs['ctrl_hostnames'] = ctrl_nodes.map {|n| n['fqdn'].split(/\./)[0]}
+      attrs['master_hostname'] = ctrl_nodes[0]['fqdn'].split(/\./)[0] if attrs['master_hostname'].nil?
+      #attrs['ctrl_public_addresses'] = ctrl_public_addrs
+      #attrs['ctrl_management_addresses'] = ctrl_manag_addrs
+      #attrs['ctrl_storage_addresses'] = ctrl_storage_addrs
       attrs
     end
 
