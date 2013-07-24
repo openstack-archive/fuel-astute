@@ -157,7 +157,7 @@ module Astute
       Network.check_network(Context.new(task_id, reporter), nodes)
     end
 
-    def download_release (up_reporter, task_id, release_info)
+    def download_release(up_reporter, task_id, release_info)
       raise "Release information not provided!" if release_info.empty?
       attrs = {'deployment_mode' => 'rpmcache',
                'deployment_id' => 'rpmcache'}

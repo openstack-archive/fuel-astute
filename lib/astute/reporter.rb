@@ -55,26 +55,21 @@ module Astute
 
       def get_overall_status(data)
         status = data['status']
-        msg = case status
-              when 'ready'
-                error_nodes = @nodes.select {|n| n['status'] == 'error'}
-                if error_nodes.any?
-                  status = 'error'
-                  error_uids = error_nodes.map{|n| n['uid']}
-                  "Some error occured on nodes #{error_uids.inspect}"
-                else
-                  data['error']
-                end
-              else
-                data['error']
-              end
+        error_nodes = @nodes.select { |n| n['status'] == 'error' }
+        msg = data['error']
+
+        if status == 'ready' && error_nodes.any?
+          status = 'error'
+          error_uids = error_nodes.map{ |n| n['uid'] }
+          msg = "Some error occured on nodes #{error_uids.inspect}"
+        end
         progress = data['progress']
 
         {'status' => status, 'error' => msg, 'progress' => progress}.reject{|k,v| v.nil?}
       end
 
       def get_nodes_to_report(nodes)
-        nodes.compact.inject([]) { |result, node| n = node_validate(node) and result << n; result }
+        nodes.map{ |node| node_validate(node) }.compact
       end
 
       def update_saved_nodes(new_nodes)
@@ -94,8 +89,8 @@ module Astute
         err = []
         if node['status']
           err << "Status provided #{node['status']} is not supported" unless STATES[node['status']]
-        else
-          err << "progress value provided, but no status" if node['progress']
+        elsif node['progress']
+          err << "progress value provided, but no status"
         end
         err << "Node uid is not provided" unless node['uid']
         if err.any?
