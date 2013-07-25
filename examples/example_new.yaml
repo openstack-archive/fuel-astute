@@ -1,5 +1,6 @@
 
 ##Network section of node configuration
+<<<<<<< Updated upstream
 nodes:
   - <<: *node_01
 
@@ -22,13 +23,38 @@ node_01: &node_01
   mac: 08:00:27:C2:06:DE
   name: controller
   ip: 192.168.150.2
+=======
+node_01: &node_01
+  network_data:
+    - name: management|public|storage|floating|fixed|admin
+      ip: 10.20.0.94
+      dev: eth0
+      netmask: 255.255.255.0
+      gateway: 10.20.0.1
+  id: 01
+  uid: 01
+  mac: 64:43:7B:CA:56:DD
+  name: controller-01
+  ip: 10.20.0.94
+>>>>>>> Stashed changes
   fqdn: controller-01.domain.tld
   power_type: ssh
   power_user: root
   power_pass: /root/.ssh/bootstrap.rsa
   netboot_enabled: '1'
+<<<<<<< Updated upstream
   name_servers: ! '"192.168.150.2"'
   ks_meta: 
+=======
+  name_servers: ! '"10.20.0.2"'
+  ks_meta: 
+    ks_spaces: '"[{\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3\",
+     \"volumes\": [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 209715200},
+     {\"type\": \"mbr\"}, {\"size\": 21265121000, \"type\": \"pv\", \"vg\": \"os\"}],
+     \"size\": 21474836480}, {\"type\": \"vg\", \"id\": \"os\", \"volumes\": [{\"mount\":
+     \"/\", \"type\": \"lv\", \"name\": \"root\", \"size\": 10737418240 }, {\"mount\":
+     \"swap\", \"type\": \"lv\", \"name\": \"swap\", \"size\": 2147483648}]}]"'
+>>>>>>> Stashed changes
     mco_enable: 1
     mco_vhost: mcollective
     mco_pskey: unset
@@ -42,6 +68,7 @@ node_01: &node_01
     auth_key: ! '""'
     puppet_version: 2.7.19
     mco_connector: rabbitmq
+<<<<<<< Updated upstream
     mco_host: 192.168.150.2
     ks_spaces: ! '"[{\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0\",
       \"volumes\": [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 209715200},
@@ -53,10 +80,15 @@ node_01: &node_01
       \"size\": 2411724800000}, {\"type\": \"vg\", \"id\": \"os\", \"volumes\": [{\"mount\":
       \"/\", \"type\": \"lv\", \"name\": \"root\", \"size\": 2963243016192}, {\"mount\":
       \"swap\", \"type\": \"lv\", \"name\": \"swap\", \"size\": 2090065920}]}]"' 
+=======
+    mco_host: 10.20.0.2
+
+>>>>>>> Stashed changes
     meta:
       memory:
         total: 778694656
       interfaces:
+<<<<<<< Updated upstream
       - mac: '08:00:27:31:09:34'
         max_speed: 100
         name: eth2
@@ -69,6 +101,24 @@ node_01: &node_01
         ip: 10.20.0.95
         netmask: 255.255.255.0
         mac: 08:00:27:C2:06:DE
+=======
+      - mac: 64:D8:E1:F6:66:43 
+        max_speed: 100
+        name: eth2
+        ip: 10.22.0.94
+        netmask: 255.255.255.0
+        current_speed: 100
+      - mac: 64:C8:E2:3B:FD:6E
+        max_speed: 100
+        name: eth1
+        ip: 10.21.0.94
+        netmask: 255.255.255.0
+        current_speed: 100
+      - name: eth0
+        ip: 10.20.0.94
+        netmask: 255.255.255.0
+        mac: 64:43:7B:CA:56:DD
+>>>>>>> Stashed changes
         max_speed: 100
         current_speed: 100
     disks:
@@ -97,22 +147,23 @@ node_01: &node_01
       - model: Intel(R) Core(TM)2 Duo CPU P8600 @ 2.40GHz
         frequency: 2397
   error_type: 
-  use_cow_images: true|false
-  libvirt_type: qemu|kvm
-  dns_nameservers: Array of IPs
-  public_br: <String>
-  internal_br: <String>
+  use_cow_images: true
+  libvirt_type: qemu
+  dns_nameservers:
+  - 10.20.0.1
+  public_br: eth0 
+  internal_br: eth1
   verbose: true|false
   debug: true|false
-  auto_assign_floating_ip: true|false
-  start_guests_on_host_boot: true|false
-  create_networks: true|false
-  compute_scheduler_driver: <String - name of compute scheduler type>
-  quantum: true|false
-  master_hostname: <hostname>
-  nagios: true|false
-  proj_name: String
-  nagios_master: IP|hostname
+  auto_assign_floating_ip: true
+  start_guests_on_host_boot: true
+  create_networks: true
+  compute_scheduler_driver: VLANDhcpManager
+  quantum: true
+  master_hostname: controller-01
+  nagios: false
+  proj_name: test 
+  nagios_master: fuelweb.domain.tld
   #Nova-network part, gets ignored if $quantum = `false`
   nova-network_parameters:
   - fixed_network_range: CIDR
@@ -121,31 +172,36 @@ node_01: &node_01
     network_size: <Integer>
   #Quantum part, used only if quantum='true'
   quantum_parameters:
-  - tenant_network_type: 'gre|vlan'
-    segment_range: <Range of integers from 1 to 1024>
+  - tenant_network_type: gre
+    segment_range: 300:500
   mysql:
-    root_password: <password>
+    root_password: root
   glance:
-    db_password: <password>
-    user_password: <password>
+    db_password: glance 
+    user_password: glance
   swift:
-    user_password: <password>
+    user_password: swift_pass
   nova:
-    db_password: <password>
-    user_password: <password>
+    db_password: nova
+    user_password: nova
   access:
-    password: <password>
-    user: <username>
-    tenant: <tenant_name>
-    email: <email>
+    password: admin
+    user: admin
+    tenant: admin>
+    email: admin@example.org
   keystone:
-    db_password: <password>
-    admin_token: <password>
+    db_password: keystone
+    admin_token: nova
   quantum:
-    db_password: <password>
+    db_password: quantum
   rabbit:
-    password: <password>
-    user:  <username>
-  deployment_mode: ha|simple
-  deployment_source: cli|web
+    password: nova
+    user:  nova
+  deployment_mode: ha
+  deployment_source: cli
+
+nodes:
+  - <<: *node_01
+
+
 
