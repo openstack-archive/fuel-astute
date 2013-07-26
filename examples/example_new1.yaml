@@ -15,8 +15,8 @@ node_01: &node_01
     dev: eth1
   - name: fixed
     dev: eth2
-  public_br: eth0 
-  internal_br: eth1
+  public_br: br-ex
+  internal_br: br-mgmt
   id: 01
   default_gateway: 10.20.0.1
   uid: 01
@@ -46,7 +46,7 @@ node_01: &node_01
     install_log_2_syslog: 1
     mco_password: marionette
     puppet_auto_setup: 1
-    puppet_master: fuelweb.domain.tld
+    puppet_master: fuel.domain.tld
     mco_auto_setup: 1
     auth_key: ! '""'
     puppet_version: 2.7.19
@@ -137,6 +137,8 @@ attributes:
   nagios: false
   proj_name: test 
   nagios_master: fuelweb.domain.tld
+  management_vip: 10.20.1.200 
+  public_vip: 10.20.0.200 
   #Nova-network part, gets ignored if $quantum = `false`
   novanetwork_parameters:
     fixed_network_range: CIDR
@@ -147,6 +149,7 @@ attributes:
   quantum_parameters:
     tenant_network_type: gre
     segment_range: ! '300:500'
+    metadata_proxy_shared_secret: quantum
   mysql:
     root_password: root
   glance:
@@ -165,7 +168,8 @@ attributes:
   keystone:
     db_password: keystone
     admin_token: nova
-  quantum:
+  quantum_access:
+    user_password: quantum
     db_password: quantum
   rabbit:
     password: nova
