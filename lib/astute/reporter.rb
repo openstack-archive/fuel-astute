@@ -55,13 +55,12 @@ module Astute
 
       def get_overall_status(data)
         status = data['status']
-        error_nodes = @nodes.select { |n| n['status'] == 'error' }
+        error_nodes = @nodes.select { |n| n['status'] == 'error' }.map{ |n| n['uid'] }
         msg = data['error']
 
         if status == 'ready' && error_nodes.any?
           status = 'error'
-          error_uids = error_nodes.map{ |n| n['uid'] }
-          msg = "Some error occured on nodes #{error_uids.inspect}"
+          msg = "Some error occured on nodes #{error_nodes.inspect}"
         end
         progress = data['progress']
 
@@ -168,7 +167,7 @@ module Astute
         status = data['status']
         error_nodes = @nodes.select {|n| n['status'] == 'error'}.map{|n| n['uid']}
         msg = data['error']
-        err_msg = "Cannot download release on nodes #{error_uids.inspect}" if error_nodes.any?
+        err_msg = "Cannot download release on nodes #{error_nodes.inspect}" if error_nodes.any?
         if status == 'error'
           msg ||= err_msg
         elsif status ==  'ready' and err_msg
