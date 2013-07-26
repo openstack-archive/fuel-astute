@@ -20,10 +20,9 @@ module MCollective
     class Execute_shell_command < RPC::Agent
 
       action 'execute' do
-        validate :cmd, String
-        validate :timeout, String
+        timeout = request[:timeout] || 600
         reply[:stdout], reply[:stderr], reply[:exit_code] = \
-          run_shell_command(request[:cmd], request[:timeout].to_i)
+          run_shell_command(request[:cmd], timeout)
       end
 
       private
