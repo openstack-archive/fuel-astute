@@ -20,33 +20,18 @@ module MCollective
     class Execute_shell_command < RPC::Agent
 
       action 'execute' do
-        timeout = request[:timeout] || 600
-        reply[:stdout], reply[:stderr], reply[:exit_code] = \
-          run_shell_command(request[:cmd], timeout)
+        reply[:stdout], reply[:stderr], reply[:exit_code] = run_shell_command(request[:cmd])
       end
 
       private
-      def run_shell_command(command, timeout)
-        require 'timeout'
-
+      def run_shell_command(command)
         exit_code, stdout, stderr = nil
-        begin
-          Timeout.timeout(timeout) do
-            shell = Shell.new(command)
-            shell.runcommand
 
-            stdout = shell.stdout
-            stderr = shell.stderr
-            exit_code = shell.status.exitstatus
-          end
-        rescue Timeout::Error
-          exit_code = 124
-          stderr = "Command '#{command}' times out with timeout=#{timeout}"
-        end
+        shell = Shell.new(command)
+        shell.runcommand
 
-        [stdout, stderr, exit_code]
+        [shell.stdout, shell.stderr, shell.status.exitstatus]
       end
-
     end
   end
 end

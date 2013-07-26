@@ -8,12 +8,6 @@ metadata    :name        => "Execute shell command",
 
 action "execute", :description => "Execute shell command" do
 
-	input :timeout,
-          :prompt         => "Timeout",
-          :description    => "Timeout for shell command, by default and maximum 600 seconds",
-          :type           => :number,
-          :optional       => true
-
 	input :cmd,
           :prompt         => "Shell command",
           :description    => "Shell command for running",
