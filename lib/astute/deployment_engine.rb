@@ -94,23 +94,32 @@ module Astute
                    n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0]})
       #end
 
+      Astute.logger.debug("#{nodes.sort}")
       attrs['nodes'] = nodes.map do |n|
         {
+          'fqdn'                 => n['fqdn'],
           'name'                 => n['fqdn'].split(/\./)[0],
           'role'                 => n['role'],
-          'internal_address'     => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
-          'public_address'       => n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0],
+          'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
+          'internal_br'          => n['internal_br'],
+          'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
+          'public_address'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['ip'].split(/\//)[0],
+          'public_br'            => n['public_br'],
+          'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
           'mountpoints'          => "1 1\n2 2",
           'zone'                 => n['id'],
-          'storage_local_net_ip' => n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0],
+          'storage_address'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
+          'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
+          'default_gateway'      => n['default_gateway']
         }
       end
-      attrs['nodes'].first['role'] = 'primary-controller' if attrs['nodes'].select { |node| node['role'] == primary-controller }.empty?
+      Astute.logger.debug("FFFUUUUUU")
+      attrs['nodes'].first['role'] = 'primary-controller' if attrs['nodes'].select { |node| node['role'] == "primary-controller" }.empty?
       #attrs['ctrl_hostnames'] = ctrl_nodes.map {|n| n['fqdn'].split(/\./)[0]}
-      attrs['master_hostname'] = ctrl_nodes[0]['fqdn'].split(/\./)[0] if attrs['master_hostname'].nil?
       #attrs['ctrl_public_addresses'] = ctrl_public_addrs
       #attrs['ctrl_management_addresses'] = ctrl_manag_addrs
       #attrs['ctrl_storage_addresses'] = ctrl_storage_addrs
+      Astute.logger.debug("#{attrs}")
       attrs
     end
 
