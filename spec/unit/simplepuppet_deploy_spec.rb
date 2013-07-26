@@ -23,7 +23,7 @@ describe "SimplePuppet DeploymentEngine" do
       @ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::NoParsing.new)
       @reporter = mock('reporter')
       @reporter.stub_everything
-      @ctx.stubs(:reporter).returns(Astute::ProxyReporter.new(@reporter))
+      @ctx.stubs(:reporter).returns(Astute::ProxyReporter::DeploymentProxyReporter.new(@reporter))
       @deploy_engine = Astute::DeploymentEngine::SimplePuppet.new(@ctx)
       @env = YAML.load_file(File.join(File.dirname(__FILE__), "..", "..", "examples", "no_attrs.yaml"))
     end

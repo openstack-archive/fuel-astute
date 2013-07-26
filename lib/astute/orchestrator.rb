@@ -36,7 +36,7 @@ module Astute
       raise "Nodes to deploy are not provided!" if nodes.empty?
       # Following line fixes issues with uids: it should always be string
       nodes.map { |x| x['uid'] = x['uid'].to_s }  # NOTE: perform that on environment['nodes'] initialization
-      proxy_reporter = ProxyReporter.new(up_reporter)
+      proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter)
       context = Context.new(task_id, proxy_reporter, @log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
@@ -93,7 +93,7 @@ module Astute
       nodes_uids = nodes.map { |n| n['uid'] }
       
       provisionLogParser = LogParser::ParseProvisionLogs.new
-      proxy_reporter = ProxyReporter.new(reporter)
+      proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(reporter)
       sleep_not_greater_than(10) do # Wait while nodes going to reboot
         Astute.logger.info "Starting OS provisioning for nodes: #{nodes_uids.join(',')}"
         begin
@@ -155,6 +155,33 @@ module Astute
 
     def verify_networks(reporter, task_id, nodes)
       Network.check_network(Context.new(task_id, reporter), nodes)
+    end
+
+    def download_release(up_reporter, task_id, release_info)
+      raise "Release information not provided!" if release_info.empty?
+      attrs = {'deployment_mode' => 'rpmcache',
+               'deployment_id' => 'rpmcache'}
+      facts = {'rh_username' => release_info['username'],
+               'rh_password' => release_info['password']}
+      facts.merge!(attrs)
+      if release_info['license_type'] == 'rhn'
+        facts.merge!(
+          {'use_satellite' => 'true',
+           'sat_hostname' => release_info['satellite'],
+           'activation_key' => release_info['activation_key']})
+      end
+      nodes = [{'uid' => 'master', 'facts' => facts}]
+      proxy_reporter = ProxyReporter::DLReleaseProxyReporter.new(up_reporter, nodes.size)
+      context = Context.new(task_id, proxy_reporter, @log_parser)
+      deploy_engine_instance = @deploy_engine.new(context)
+      Astute.logger.info "Using #{deploy_engine_instance.class} for release download."
+      begin
+        @log_parser.prepare(nodes)
+      rescue Exception => e
+        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.inspect}"
+      end
+      deploy_engine_instance.deploy(nodes, attrs)
+      proxy_reporter.report({'status' => 'ready', 'progress' => 100})
     end
     
     private

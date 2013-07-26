@@ -155,6 +155,15 @@ module Astute
       return
     end
 
+    def attrs_rpmcache(nodes, attrs)
+      attrs
+    end
+
+    def deploy_rpmcache(nodes, attrs)
+      Astute.logger.info "Starting release downloading"
+      deploy_piece(nodes, attrs, 0)
+    end
+
     private
     def nodes_status(nodes, status, data_to_merge)
       {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
@@ -201,7 +210,7 @@ module Astute
         end
         Astute.logger.debug "Calculated network for interface: #{name}, data: #{iface.inspect}"
       end
-      interfaces['lo'] = {'interface'=>'lo', 'ipaddr'=>'dhcp'} unless interfaces.has_key?('lo')
+      interfaces['lo'] = {'interface'=>'lo', 'ipaddr'=>['127.0.0.1/8']} unless interfaces.has_key?('lo')
       hwinterfaces.each do |i|
         unless interfaces.has_key?(i['name'])
           interfaces[i['name']] = {'interface' => i['name'], 'ipaddr' => []}

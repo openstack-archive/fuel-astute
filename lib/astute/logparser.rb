@@ -14,6 +14,8 @@
 
 
 # -*- coding: utf-8 -*-
+require 'erb'
+
 module Astute
   module LogParser
     LOG_PORTION = 10000
@@ -54,8 +56,8 @@ module Astute
             node_pattern_spec = Marshal.load(Marshal.dump(@pattern_spec))
             @nodes_states[uid] = node_pattern_spec
           end
-          path = "#{@pattern_spec['path_prefix']}#{node['fqdn']}/#{@pattern_spec['filename']}"
-
+          erb_path = @pattern_spec['path_format']
+          path = ERB.new(erb_path).result(binding())
           begin
             progress = (get_log_progress(path, node_pattern_spec)*100).to_i # Return percent of progress
           rescue Exception => e

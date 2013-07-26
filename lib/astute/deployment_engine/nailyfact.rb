@@ -62,7 +62,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       metadata['fixed_interface'] = get_fixed_interface(node)
     end
 
-    Astute::Metadata.publish_facts(@ctx, node['uid'], metadata)
+    metadata
   end
 
   def deploy_piece(nodes, attrs, retries=2, change_node_status=true)
@@ -71,7 +71,9 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
     Astute.logger.info "#{@ctx.task_id}: Calculation of required attributes to pass, include netw.settings"
     nodes.each do |node|
-      create_facts(node, attrs)
+      # Use predefined facts or create new.
+      node['facts'] ||= create_facts(node, attrs)
+      Astute::Metadata.publish_facts(@ctx, node['uid'], node['facts'])
     end
     Astute.logger.info "#{@ctx.task_id}: All required attrs/metadata passed via facts extension. Starting deployment."
 

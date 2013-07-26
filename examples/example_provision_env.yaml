@@ -1,10 +1,90 @@
 ---
+# Base config
 task_uuid: deployment_task
-nodes:
-- status: provisioning
+engine:
+  url: http://localhost/cobbler_api
+  username: cobbler
+  password: cobbler
+  
+power_info: &power_info
+  power_type: ssh
+  power_user: root
+  name_servers: ! '"10.20.0.2"'
+  power_pass: /root/.ssh/bootstrap.rsa
+  netboot_enabled: '1'
+
+ks_meta: &ks_meta
+  mco_enable: 1
+  mco_vhost: mcollective
+  mco_pskey: unset
+  mco_user: mcollective
+  puppet_enable: 0
+  install_log_2_syslog: 1
+  mco_password: marionette
+  puppet_auto_setup: 1
+  puppet_master: fuelweb.domain.tld
+  mco_auto_setup: 1
+  auth_key: ! '""'
+  puppet_version: 2.7.19
+  mco_connector: rabbitmq
+  mco_host: 10.20.0.2
+
+# Nodes
+node_22: &node_22
+  id: 22
   uid: 22
-  ip: 10.20.0.95
   mac: 08:00:27:C2:06:DE
+  ip: &ip 10.20.0.95
+  fqdn: &fqdn controller-22.domain.tld
+  
+  # Data for provision
+  profile: centos-x86_64
+  ks_meta: 
+    <<: *ks_meta
+    ks_spaces: ! '"[{\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0\",
+      \"volumes\": [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 209715200},
+      {\"type\": \"mbr\"}, {\"size\": 16959668224, \"type\": \"pv\", \"vg\": \"os\"}],
+      \"size\": 17179869184}, {\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-1:0:0:0\",
+      \"volumes\": [{\"size\": 536860426240, \"type\": \"pv\", \"vg\": \"os\"}], \"size\":
+      536870912000}, {\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:0d.0-scsi-2:0:0:0\",
+      \"volumes\": [{\"size\": 2411714314240, \"type\": \"pv\", \"vg\": \"os\"}],
+      \"size\": 2411724800000}, {\"type\": \"vg\", \"id\": \"os\", \"volumes\": [{\"mount\":
+      \"/\", \"type\": \"lv\", \"name\": \"root\", \"size\": 2963243016192}, {\"mount\":
+      \"swap\", \"type\": \"lv\", \"name\": \"swap\", \"size\": 2090065920}]}]"'
+  
+  <<: *power_info
+  name: controller-22
+  hostname: *fqdn
+  power_address: *ip
+  interfaces:
+    eth2:
+      ip_address: 10.20.0.187
+      netmask: 255.255.255.0
+      static: '0'
+      mac_address: '08:00:27:31:09:34'
+    eth1:
+      ip_address: 10.20.0.186
+      netmask: 255.255.255.0
+      static: '0'
+      mac_address: 08:00:27:93:54:B0
+    eth0:
+      ip_address: 10.20.0.188
+      netmask: 255.255.255.0
+      dns_name: *fqdn
+      static: '0'
+      mac_address: 08:00:27:C2:06:DE
+  interfaces_extra:
+    eth2:
+      onboot: 'no'
+      peerdns: 'no'
+    eth1:
+      onboot: 'no'
+      peerdns: 'no'
+    eth0:
+      onboot: 'yes'
+      peerdns: 'no'
+  #End data for provision
+  
   meta:
     memory:
       total: 778694656
@@ -48,9 +128,7 @@ nodes:
       spec:
       - model: Intel(R) Core(TM)2 Duo CPU P8600 @ 2.40GHz
         frequency: 2397
-  id: 22
   error_type: 
-  fqdn: controller-22.domain.tld
   network_data:
   - name: management
     ip: 192.168.6.2/24
@@ -105,4 +183,8 @@ nodes:
   role: controller
   online: true
   progress: 0
+
+
+nodes:
+- <<: *node_22
   
