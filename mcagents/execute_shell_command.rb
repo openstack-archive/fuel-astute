@@ -28,28 +28,21 @@ module MCollective
       private
       def run_shell_command(command, timeout)
         require 'timeout'
-        require 'open3'
-        require 'tempfile'
-
-        # In ruby 1.8 we cannot retrive exit code with open3
-        exit_code_file = Tempfile.new('mco_exec_exit_code')
 
         exit_code, stdout, stderr = nil
         begin
           Timeout.timeout(timeout) do
-            exec_and_save_exit_code = "#{command}; echo $? > #{exit_code_file.path}"
-            _, _stdout, _stderr = Open3.popen3(exec_and_save_exit_code)
+            shell = Shell.new(command)
+            shell.runcommand
 
-            exit_code = exit_code_file.read.to_i
-            stdout = _stdout.read()
-            stderr = _stderr.read()
+            stdout = shell.stdout
+            stderr = shell.stderr
+            exit_code = shell.status.exitstatus
           end
         rescue Timeout::Error
           exit_code = 124
           stderr = "Command '#{command}' times out with timeout=#{timeout}"
         end
-
-        exit_code_file.unlink
 
         [stdout, stderr, exit_code]
       end
