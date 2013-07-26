@@ -31,7 +31,7 @@ module MCollective
         require 'open3'
         require 'tempfile'
 
-        # In ruby 1.8 you cannot retrive exit code with open3
+        # In ruby 1.8 we cannot retrive exit code with open3
         exit_code_file = Tempfile.new('mco_exec_exit_code')
 
         exit_code, stdout, stderr = nil

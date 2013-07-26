@@ -10,7 +10,7 @@ action "execute", :description => "Execute shell command" do
 
 	input :timeout,
           :prompt         => "Timeout",
-          :description    => "Timeout for shell command, by default 600 seconds",
+          :description    => "Timeout for shell command, by default and maximum 600 seconds",
           :type           => :number,
           :optional       => true
 
