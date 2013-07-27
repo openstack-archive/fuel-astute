@@ -183,6 +183,16 @@ module Astute
       proxy_reporter.report({'status' => 'ready', 'progress' => 100})
     end
 
+    def check_redhat_credentials(reporter, task_id, credentials)
+      ctx = Context.new(task_id, reporter)
+      RedhatChecker.new(ctx, credentials).check_redhat_credentials
+    end
+
+    def check_redhat_licenses(reporter, task_id, credentials, nodes)
+      ctx = Context.new(task_id, reporter)
+      RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)
+    end
+
     private
 
     def report_result(result, reporter)
