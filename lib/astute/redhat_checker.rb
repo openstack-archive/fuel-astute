@@ -16,9 +16,9 @@
 
 
 module Astute
-  module RedhatChecker
+  class RedhatChecker
 
-    def initalize(ctx, credentials)
+    def initialize(ctx, credentials)
       @ctx = ctx
       @username = credentials
       @password = credentials
@@ -38,7 +38,7 @@ module Astute
         "--username '#{@username}' " + \
         "--password '#{@password}'"
 
-      shell = MClient.new(@ctx, 'execute_shell_command', 'master', false, timeout)
+      shell = MClient.new(@ctx, 'execute_shell_command', ['master'], false, timeout)
       response = shell.execute(:cmd => check_credentials_cmd).first
 
       report(response.results[:data], @check_credentials_errors)
@@ -51,7 +51,7 @@ module Astute
         "--username '#{@username}' " + \
         "--password '#{@password}'"
 
-      shell = MClient.new(@ctx, 'execute_shell_command', 'master', false, timeout)
+      shell = MClient.new(@ctx, 'execute_shell_command', ['master'], false, timeout)
       response = shell.execute(:cmd => get_redhat_licenses_cmd).first
 
       report(response.results[:data], @check_redhat_licenses_erros)
@@ -78,5 +78,5 @@ module Astute
     def report_error(msg)
       @ctx.reporter.report({'status' => 'error', 'error' => msg, 'progress' => 100})
     end
-
+  end
 end
