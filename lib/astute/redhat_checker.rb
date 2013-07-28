@@ -20,25 +20,37 @@ module Astute
 
     def initalize(ctx, credentials)
       @ctx = ctx
-      credentials
+      @username = credentials
+      @password = credentials
     end
 
     def check_redhat_credentials()
+      timeout = Astute.config[:REDHAT_CHECK_CREDENTIALS_TIMEOUT]
       check_credentials_cmd = "subscription-manager orgs " + \
-        "--username '#{username}' " + \
-        "--password '#{password}'"
+        "--username '#{@username}' " + \
+        "--password '#{@password}'"
 
-      shell = MClient.new(@ctx, 'execute_shell_command', 'master', false)
-      shell.execute(:cmd => check_credentials_cmd)
+      shell = MClient.new(@ctx, 'execute_shell_command', 'master', false, timeout)
+      msg = shell.execute(:cmd => check_credentials_cmd)
+
+      report(msg)
     end
 
     def check_redhat_licenses()
+      timeout = Astute.config[:REDHAT_GET_LICENSES_POOL_TIMEOUT]
       get_redhat_licenses_cmd = "get_redhat_licenses " + \
-        "--username '#{username}' " + \
-        "--password '#{password}'"
+        "--username '#{@username}' " + \
+        "--password '#{@password}'"
 
-      shell = MClient.new(@ctx, 'master', false)
-      shell.execute(:cmd => get_redhat_licenses_cmd)
+      shell = MClient.new(@ctx, 'execute_shell_command', 'master', false, timeout)
+      msg = shell.execute(:cmd => get_redhat_licenses_cmd)
+
+      report(msg)
+    end
+
+    private
+    def report(msg)
+      @ctx.reporter.report(msg)
     end
 
 end
