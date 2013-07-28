@@ -22,35 +22,61 @@ module Astute
       @ctx = ctx
       @username = credentials
       @password = credentials
+
+      @check_credentials_errors = {
+        127 => 'Can not find subscription-manager on the server',
+      }
+      @check_redhat_licenses_erros = {
+        127 => 'Can not find get_redhat_licenses on the server',
+      }
     end
 
-    def check_redhat_credentials()
+    # Checking redhat credentials
+    def check_redhat_credentials
       timeout = Astute.config[:REDHAT_CHECK_CREDENTIALS_TIMEOUT]
       check_credentials_cmd = "subscription-manager orgs " + \
         "--username '#{@username}' " + \
         "--password '#{@password}'"
 
       shell = MClient.new(@ctx, 'execute_shell_command', 'master', false, timeout)
-      msg = shell.execute(:cmd => check_credentials_cmd)
+      response = shell.execute(:cmd => check_credentials_cmd).first
 
-      report(msg)
+      report(response.results[:data], @check_credentials_errors)
     end
 
-    def check_redhat_licenses()
+    # Check redhat linceses and return message, if not enough licenses
+    def check_redhat_licenses(nodes)
       timeout = Astute.config[:REDHAT_GET_LICENSES_POOL_TIMEOUT]
       get_redhat_licenses_cmd = "get_redhat_licenses " + \
         "--username '#{@username}' " + \
         "--password '#{@password}'"
 
       shell = MClient.new(@ctx, 'execute_shell_command', 'master', false, timeout)
-      msg = shell.execute(:cmd => get_redhat_licenses_cmd)
+      response = shell.execute(:cmd => get_redhat_licenses_cmd).first
 
-      report(msg)
+      report(response.results[:data], @check_redhat_licenses_erros)
     end
 
     private
-    def report(msg)
-      @ctx.reporter.report(msg)
+    def report(result, errors)
+      stdout = result[:stdout]
+      stderr = result[:stderr]
+      exit_code = result[:exit_code]
+
+      if exit_code == 0
+        report_success
+      else
+        error = errors[exit_code] || result[:stdout] + result[:stderr]
+        report_error(error)
+      end
+    end
+
+    def report_success
+      @ctx.reporter.report({'status' => 'ready', 'progress' => 100})
+    end
+
+    def report_error(msg)
+      @ctx.reporter.report({'status' => 'error', 'error' => msg, 'progress' => 100})
     end
 
 end
