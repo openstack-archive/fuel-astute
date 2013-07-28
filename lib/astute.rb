@@ -36,6 +36,7 @@ module Astute
   autoload 'NodesRemover', 'astute/nodes_remover'
   autoload 'Node', 'astute/node'
   autoload 'NodesHash', 'astute/node'
+  autoload 'RedhatChecker', 'astute/redhat_checker'
   LogParser.autoload :ParseDeployLogs, 'astute/logparser/deployment'
   LogParser.autoload :ParseProvisionLogs, 'astute/logparser/provision'
   LogParser.autoload :Patterns, 'astute/logparser/parser_patterns'
