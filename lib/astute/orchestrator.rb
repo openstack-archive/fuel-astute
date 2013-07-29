@@ -188,6 +188,11 @@ module Astute
       Astute::RedhatChecker.new(ctx, credentials).check_redhat_credentials
     end
 
+    def redhat_has_at_least_one_license(reporter, task_id, credentials)
+      ctx = Context.new(task_id, reporter)
+      Astute::RedhatChecker.new(ctx, credentials).check_redhat_account_has_at_least_one_license
+    end
+
     def check_redhat_licenses(reporter, task_id, credentials, nodes)
       ctx = Context.new(task_id, reporter)
       Astute::RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)

@@ -29,6 +29,9 @@ module Astute
       @check_redhat_licenses_erros = {
         127 => 'Can not find get_redhat_licenses on the server',
       }
+      @check_redhat_has_at_least_one_license_erros = {
+        127 => 'Can not find get_redhat_licenses on the server',
+      }
     end
 
     # Checking redhat credentials
@@ -46,18 +49,22 @@ module Astute
 
     # Check redhat linceses and return message, if not enough licenses
     def check_redhat_licenses(nodes)
-      timeout = Astute.config[:REDHAT_GET_LICENSES_POOL_TIMEOUT]
-      get_redhat_licenses_cmd = "get_redhat_licenses " + \
-        "--username '#{@username}' " + \
-        "--password '#{@password}'"
-
-      shell = MClient.new(@ctx, 'execute_shell_command', ['master'], false, timeout)
-      response = shell.execute(:cmd => get_redhat_licenses_cmd).first
-
+      response = execute_get_licenses
       report(response.results[:data], @check_redhat_licenses_erros)
     end
 
+    # Check that redhat has at least one license
+    def redhat_has_at_least_one_license
+      response = execute_get_licenses
+      if response.results[:data][:exit_code] == 0
+        report_success
+      else
+        report(response.results[:data], @redhat_has_at_least_one_license)
+      end
+    end
+
     private
+
     def report(result, errors)
       stdout = result[:stdout]
       stderr = result[:stderr]
@@ -78,5 +85,18 @@ module Astute
     def report_error(msg)
       @ctx.reporter.report({'status' => 'error', 'error' => msg, 'progress' => 100})
     end
+
+
+    def execute_get_licenses
+      timeout = Astute.config[:REDHAT_GET_LICENSES_POOL_TIMEOUT]
+      get_redhat_licenses_cmd = "get_redhat_licenses " + \
+        "--username '#{@username}' " + \
+        "--password '#{@password}'"
+
+      shell = MClient.new(@ctx, 'execute_shell_command', ['master'], false, timeout)
+
+      shell.execute(:cmd => get_redhat_licenses_cmd).first
+    end
+
   end
 end
