@@ -20,8 +20,8 @@ module Astute
 
     def initialize(ctx, credentials)
       @ctx = ctx
-      @username = credentials
-      @password = credentials
+      @username = credentials['username']
+      @password = credentials['password']
 
       @check_credentials_errors = {
         127 => 'Can not find subscription-manager on the server',
@@ -73,7 +73,7 @@ module Astute
       if exit_code == 0
         report_success
       else
-        error = errors[exit_code] || result[:stdout] + result[:stderr]
+        error = errors[exit_code] || "#{result[:stdout]} #{result[:stderr]}"
         report_error(error)
       end
     end
