@@ -44,10 +44,39 @@ describe Astute::RedhatChecker do
     reporter.expects(:report).once.with(data)
   end
 
+  def should_report_error(data)
+    error_data = {'status' => 'error', 'progress' => 100}.merge(data)
+    reporter.expects(:report).once.with(error_data)
+  end
+
   describe '#check_redhat_credentials' do
     it 'should report ready if exit_code 0' do
       execute_returns({:exit_code => 0})
       should_report_once(success_result)
+
+      redhat_checker.check_redhat_credentials
+    end
+
+    it 'should report network connection error' do
+      execute_returns({
+        :exit_code => 255,
+        :stdout => 'Network error, unable to connect to server.'})
+
+      err_msg = 'Unable to reach host cdn.redhat.com. ' + \
+        'Please check your Internet connection.'
+      should_report_once({'status' => 'error', 'progress' => 100, 'error_msg' => err_msg})
+
+      redhat_checker.check_redhat_credentials
+    end
+
+    it 'should report invalid credentional error' do
+      execute_returns({
+        :exit_code => 255,
+        :stdout => 'Invalid username or password. Try to use another.'})
+
+      err_msg = 'Invalid username or password. ' + \
+        'To create a login, please visit https://www.redhat.com/wapps/ugc/register.html'
+      should_report_once({'status' => 'error', 'progress' => 100, 'error_msg' => err_msg})
 
       redhat_checker.check_redhat_credentials
     end
