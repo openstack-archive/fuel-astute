@@ -73,7 +73,7 @@ module Astute
       if exit_code == 0
         report_success
       else
-        error = errors[exit_code] || "#{result[:stdout]} #{result[:stderr]}"
+        error = errors[exit_code] || "Stdout: #{result[:stdout]} Stderr: #{result[:stderr]}"
         report_error(error)
       end
     end
