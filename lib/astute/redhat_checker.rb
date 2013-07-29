@@ -40,7 +40,7 @@ module Astute
       timeout = Astute.config[:REDHAT_CHECK_CREDENTIALS_TIMEOUT]
       check_credentials_cmd = "subscription-manager orgs " + \
         "--username '#{@username}' " + \
-        "--password '#{@password}' --proxy http://172.18.8.222:8888"
+        "--password '#{@password}'"
 
       shell = MClient.new(@ctx, 'execute_shell_command', ['master'], false, timeout)
       response = shell.execute(:cmd => check_credentials_cmd).first
