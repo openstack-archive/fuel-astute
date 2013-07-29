@@ -25,8 +25,6 @@ module MCollective
 
       private
       def run_shell_command(command)
-        exit_code, stdout, stderr = nil
-
         shell = Shell.new(command)
         shell.runcommand
 
