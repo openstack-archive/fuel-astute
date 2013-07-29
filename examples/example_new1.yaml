@@ -31,6 +31,7 @@ node_01: &node_01
   power_address: 10.20.0.94
   netboot_enabled: '1'
   name_servers: ! '"10.20.0.2"'
+  puppet_master: fuel.domain.tld
   ks_meta: 
     ks_spaces: '"[{\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3\",
      \"volumes\": [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 200},
