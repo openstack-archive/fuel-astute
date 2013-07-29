@@ -49,16 +49,14 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       else
         iface['dev']
       end
-    end
 
       if iface['name'].is_a?(String)
         metadata["#{iface['name']}_interface"] = device
         if iface['ip']
 #         metadata["#{iface['name']}_address"] = iface['ip'].split('/')[0]
         end
-      elsif
-       iface['name'].each do
-         |name|
+      elsif iface['name'].is_a?(Array)
+       iface['name'].each do |name|
          metadata["#{name}_interface"] = device
          if iface['ip']
 #            metadata["#{name}_address"] = iface['ip'].split('/')[0]
@@ -66,7 +64,6 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
        end
       end
     end
-
     # internal_address is required for HA..
     #metadata['internal_address'] = node['network_data'].select{|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split('/')[0]
 

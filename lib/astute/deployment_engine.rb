@@ -91,7 +91,7 @@ module Astute
        # ctrl_public_addrs.merge!({hostname =>
        #            n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0]})
        # ctrl_storage_addrs.merge!({hostname =>
-                   n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0]})
+       #            n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0]})
       #end
 
       # we use the same set of mount points for all storage nodes
@@ -176,6 +176,14 @@ module Astute
     end
 
     private
+    def select_ifaces(var,name)
+        result = false
+        if var.is_a?(Array)
+            result = true if var.include?(name)
+        elsif var.is_a?(String)
+            result = true if var == name
+        end 
+    end 
     def nodes_status(nodes, status, data_to_merge)
       {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
     end
