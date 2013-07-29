@@ -23,14 +23,15 @@ module Astute
       @username = credentials['username']
       @password = credentials['password']
 
-      @check_credentials_errors = {
-        127 => 'Can not find subscription-manager on the server',
+      @check_credential_errors = {
+        /^Network error|^Remote server error/ => 'Unable to reach host cdn.redhat.com. ' + \
+          'Please check your Internet connection.',
+        /^Invalid username or password/ => 'Invalid username or password. ' + \
+          'To create a login, please visit https://www.redhat.com/wapps/ugc/register.html'
       }
       @check_redhat_licenses_erros = {
-        127 => 'Can not find get_redhat_licenses on the server',
       }
       @check_redhat_has_at_least_one_license_erros = {
-        127 => 'Can not find get_redhat_licenses on the server',
       }
     end
 
@@ -39,12 +40,12 @@ module Astute
       timeout = Astute.config[:REDHAT_CHECK_CREDENTIALS_TIMEOUT]
       check_credentials_cmd = "subscription-manager orgs " + \
         "--username '#{@username}' " + \
-        "--password '#{@password}'"
+        "--password '#{@password}' --proxy http://172.18.8.222:8888"
 
       shell = MClient.new(@ctx, 'execute_shell_command', ['master'], false, timeout)
       response = shell.execute(:cmd => check_credentials_cmd).first
 
-      report(response.results[:data], @check_credentials_errors)
+      report(response.results[:data], @check_credential_errors)
     end
 
     # Check redhat linceses and return message, if not enough licenses
@@ -73,8 +74,16 @@ module Astute
       if exit_code == 0
         report_success
       else
-        error = errors[exit_code] || "Stdout: #{result[:stdout]} Stderr: #{result[:stderr]}"
+        err_msg = "Unknown error Stdout: #{result[:stdout]} Stderr: #{result[:stderr]}"
+        error = get_error(result, errors) || err_msg
         report_error(error)
+      end
+    end
+
+    def get_error(result, errors)
+      errors.each_pair do |regex, msg|
+        return msg if regex.match(result[:stdout])
+        return msg if regex.match(result[:stderr])
       end
     end
 
