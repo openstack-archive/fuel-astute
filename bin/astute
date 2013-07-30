@@ -18,9 +18,11 @@ require 'optparse'
 require 'yaml'
 begin
   require 'astute'
+  require 'astute/version'
 rescue LoadError
   require 'rubygems'
   require 'astute'
+  require 'astute/version'
 end
 
 class ConsoleReporter
@@ -41,7 +43,9 @@ optparse = OptionParser.new do |o|
     opts[:filename] = f
   end
 
-  o.on("-h") { puts o; exit }
+  o.on_tail("-h", "--help", "Show this message") { puts o; exit }
+
+  o.on_tail("--version", "Show version") { puts Astute::VERSION; exit }
   
   o.on("-c", "--command COMMAND", [:provision, :deploy, :provision_and_deploy],
                                     "Select operation: provision, deploy or provision_and_deploy") do |c|
@@ -51,7 +55,7 @@ optparse = OptionParser.new do |o|
 end
 optparse.parse!(ARGV)
 
-if opts[:filename].nil? || opts[:command].nil? 
+if opts[:filename].nil?
   puts optparse
   ERROR_CODE_COMMAND_USAGE = 64
   exit ERROR_CODE_COMMAND_USAGE
