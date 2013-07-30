@@ -109,7 +109,7 @@ module Astute
       if !get_error(result, errors) && exit_code == 0
         report_success
       else
-        err_msg = "Unknown error Stdout: #{result[:stdout]} Stderr: #{result[:stderr]}"
+        err_msg = "Unknown error Stdout: #{stdout} Stderr: #{stderr}"
         error = get_error(result, errors) || err_msg
         report_error(error)
       end
