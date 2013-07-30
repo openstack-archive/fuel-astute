@@ -73,6 +73,18 @@ describe Astute::RedhatChecker do
 
       execute_handler
     end
+
+    it 'should handle uniq errors' do
+      execute_returns({
+        :exit_code => 1,
+        :stdout => "Uniq error stdout",
+        :stderr => "Uniq error stderr"})
+
+      err_msg = "Unknown error Stdout: Uniq error stdout Stderr: Uniq error stderr"
+      should_report_error({'error_msg' => err_msg})
+
+      execute_handler
+    end
   end
 
   describe '#check_redhat_credentials' do
