@@ -185,12 +185,22 @@ module Astute
 
     def check_redhat_credentials(reporter, task_id, credentials)
       ctx = Context.new(task_id, reporter)
-      Astute::RedhatChecker.new(ctx, credentials).check_redhat_credentials
+      begin
+        Astute::RedhatChecker.new(ctx, credentials).check_redhat_credentials
+      rescue Exception => e
+        Astute.logger.error("Error #{e.message} traceback #{e.backtrace.inspect}")
+        raise StopIteration
+      end
     end
 
     def check_redhat_licenses(reporter, task_id, credentials, nodes=nil)
       ctx = Context.new(task_id, reporter)
-      Astute::RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)
+      begin
+        Astute::RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)
+      rescue Exception => e
+        Astute.logger.error("Error #{e.message} traceback #{e.backtrace.inspect}")
+        raise StopIteration
+      end
     end
 
     private
