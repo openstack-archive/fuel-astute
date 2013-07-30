@@ -25,15 +25,25 @@ module Astute
 
       @network_error = 'Unable to reach host cdn.redhat.com. ' + \
         'Please check your Internet connection.'
-      @check_credential_errors = {
+
+      @user_dont_has_licenses = 'Could not find any valid Red Hat ' + \
+        'OpenStack subscriptions. Contact your Red Hat sales representative ' + \
+        'to get the proper subscriptions associated with your account: '+ \
+        'https://access.redhat.com/site/solutions/368643. If you are still ' + \
+        'encountering issues, contact Mirantis Support.'
+
+      @check_licenses_success_msg = 'Your account appears to be fully entitled ' + \
+        'to deploy Red Hat Openstack.'
+
+      @msg_not_enough_licenses = "Your account has only %d licenses " + \
+        'available to deploy Red Hat OpenStack. Contact your Red Hat sales ' + \
+        'representative to get the proper subscriptions associated with your ' + \
+        'account. https://access.redhat.com/site/solutions/368643'
+
+      @common_errors = {
         /^Network error|^Remote server error/ => @network_error,
         /^Invalid username or password/ => 'Invalid username or password. ' + \
           'To create a login, please visit https://www.redhat.com/wapps/ugc/register.html'
-      }
-
-      @check_redhat_licenses_erros = {
-      }
-      @check_redhat_has_at_least_one_license_erros = {
       }
     end
 
@@ -58,26 +68,34 @@ module Astute
         return
       end
 
-      report(response.results[:data], @check_credential_errors)
+      report(response.results[:data], @common_errors)
     end
 
     # Check redhat linceses and return message, if not enough licenses
-    def check_redhat_licenses(nodes)
+    def check_redhat_licenses(nodes=nil)
       response = execute_get_licenses
       unless response
         report_error(@network_error)
-      else
-        report(response.results[:data], @check_redhat_licenses_erros)
-      end
-    end
 
-    # Check that redhat has at least one license
-    def redhat_has_at_least_one_license
-      response = execute_get_licenses
-      unless response
-        report_error(@network_error)
+        return
+      end
+
+      licenses_count = nil
+      begin
+        licenses_pool = JSON.load(response.results[:data][:stdout])
+        licenses_count = licenses_pool['openstack_licenses_physical_hosts_count']
+      rescue JSON::ParserError
+        report(response.results[:data], @common_errors)
+
+        return
+      end
+
+      if licenses_count <= 0
+        report_error(@user_dont_has_licenses)
+      elsif nodes && licenses_count < nodes.count
+        report_success(format(@msg_not_enough_licenses, licenses_count))
       else
-        report(response.results[:data], @redhat_has_at_least_one_license)
+        report_success(@check_licenses_success_msg)
       end
     end
 
@@ -88,7 +106,7 @@ module Astute
       stderr = result[:stderr]
       exit_code = result[:exit_code]
 
-      if exit_code == 0
+      if !get_error(result, errors) && exit_code == 0
         report_success
       else
         err_msg = "Unknown error Stdout: #{result[:stdout]} Stderr: #{result[:stderr]}"
@@ -102,24 +120,26 @@ module Astute
         return msg if regex.match(result[:stdout])
         return msg if regex.match(result[:stderr])
       end
+      nil
     end
 
-    def report_success
-      @ctx.reporter.report({'status' => 'ready', 'progress' => 100})
+    def report_success(msg=nil)
+      success_msg = {'status' => 'ready', 'progress' => 100}
+      success_msg.merge!({'msg' => msg}) if msg
+      @ctx.reporter.report(success_msg)
     end
 
     def report_error(msg)
       @ctx.reporter.report({'status' => 'error', 'error_msg' => msg, 'progress' => 100})
     end
 
-
     def execute_get_licenses
       timeout = Astute.config[:REDHAT_GET_LICENSES_POOL_TIMEOUT]
       get_redhat_licenses_cmd = "get_redhat_licenses " + \
-        "--username '#{@username}' " + \
-        "--password '#{@password}'"
+        "'#{@username}' " + \
+        "'#{@password}'"
 
-      shell = MClient.new(@ctx, 'execute_shell_command', ['master'], false, timeout)
+      shell = MClient.new(@ctx, 'execute_shell_command', ['master'])
       begin
         Timeout.timeout(timeout) do
           return shell.execute(:cmd => get_redhat_licenses_cmd).first
