@@ -217,15 +217,14 @@ describe Astute::Orchestrator do
   end
 
   it "remove_nodes do not fail if any of nodes failed"
-  
-  
+
   before(:all) do
     @data = {
       "engine"=>{
-        "url"=>"http://localhost/cobbler_api", 
-        "username"=>"cobbler", 
+        "url"=>"http://localhost/cobbler_api",
+        "username"=>"cobbler",
         "password"=>"cobbler"
-      }, 
+      },
       "task_uuid"=>"a5c44b9a-285a-4a0c-ae65-2ed6b3d250f4",
       "nodes" => [
         {
@@ -270,19 +269,19 @@ describe Astute::Orchestrator do
       ]
     }.freeze
   end
-  
+
   describe '#fast_provision' do
-    
+
     context 'cobler cases' do
       it "raise error if cobler settings empty" do
         expect {@orchestrator.fast_provision(@reporter, {}, @data['nodes'])}.
                               to raise_error(StopIteration)
       end
     end
-    
+
     context 'node state cases' do
       before(:each) do
-      
+
         remote = mock() do
           stubs(:call)
           stubs(:call).with('login', 'cobbler', 'cobbler').returns('remotetoken')
@@ -292,12 +291,12 @@ describe Astute::Orchestrator do
           stubs(:new).returns(remote)
         end
       end
-    
+
       it "raises error if nodes list is empty" do
         expect {@orchestrator.fast_provision(@reporter, @data['engine'], {})}.
                               to raise_error(/Nodes to provision are not provided!/)
       end
-    
+
       it "try to reboot nodes from list" do
         Astute::Provision::Cobbler.any_instance do
           expects(:power_reboot).with('controller-1')
@@ -305,39 +304,39 @@ describe Astute::Orchestrator do
         @orchestrator.stubs(:check_reboot_nodes).returns([])
         @orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])
       end
-      
+
       before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:power_reboot).returns(333) }
-        
+
       context 'node reboot success' do
-        
+
         before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:event_status).
                                                    returns([Time.now.to_f, 'controller-1', 'complete'])}
-        
+
         it "does not find failed nodes" do
           Astute::Provision::Cobbler.any_instance.stubs(:event_status).
                                                   returns([Time.now.to_f, 'controller-1', 'complete'])
-          
+
           @orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])
         end
-        
+
         it "report about success" do
           @reporter.expects(:report).with({'status' => 'ready', 'progress' => 100}).returns(true)
           @orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])
         end
-        
+
         it "sync engine state" do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
           end
           @orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])
         end
-                
+
       end
-      
+
       context 'node reboot fail' do
         before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:event_status).
                                                                 returns([Time.now.to_f, 'controller-1', 'failed'])}
-        
+
         it "should sync engine state" do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
@@ -347,77 +346,76 @@ describe Astute::Orchestrator do
           rescue
           end
         end
-        
+
         it "raise error if failed node find" do
           expect {@orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])}.to raise_error(StopIteration)
         end
-              
+
       end
 
     end
   end
-  
+
   describe '#provision' do
-    
+
     before(:each) do
       # Disable sleeping in test env (doubles the test speed)
       def @orchestrator.sleep_not_greater_than(time, &block)
         block.call
       end
     end
-    
+
     it "raises error if nodes list is empty" do
       expect {@orchestrator.provision(@reporter, @data['task_uuid'], {})}.
                             to raise_error(/Nodes to provision are not provided!/)
     end
-    
+
     it "prepare provision log for parsing" do
       Astute::LogParser::ParseProvisionLogs.any_instance do
         expects(:prepare).with(@data['nodes']).once
       end
       @orchestrator.stubs(:report_about_progress).returns()
       @orchestrator.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
-      
+
       @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
     end
-    
+
     it "ignore problem with parsing provision log" do
       Astute::LogParser::ParseProvisionLogs.any_instance do
         stubs(:prepare).with(@data['nodes']).raises
       end
-      
+
       @orchestrator.stubs(:report_about_progress).returns()
       @orchestrator.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
-      
+
       @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
     end
-    
+
     it 'provision nodes using mclient' do
       @orchestrator.stubs(:report_about_progress).returns()
       @orchestrator.expects(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
-      
+
       @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
     end
-    
+
     it "fail if timeout of provisioning is exceeded" do
       Astute::LogParser::ParseProvisionLogs.any_instance do
         stubs(:prepare).returns()
       end
-            
+
       Timeout.stubs(:timeout).raises(Timeout::Error)
-      
-      msg = 'Timeout of provisioning is exceeded.'      
+
+      msg = 'Timeout of provisioning is exceeded.'
       error_mgs = {'status' => 'error', 'error' => msg, 'nodes' => [{ 'uid' => '1',
                                                             'status' => 'error',
                                                             'error_msg' => msg,
                                                             'progress' => 100,
                                                             'error_type' => 'provision'}]}
-        
+
       @reporter.expects(:report).with(error_mgs).once
       @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
     end
-    
-  end
-  
-end
 
+  end
+
+end

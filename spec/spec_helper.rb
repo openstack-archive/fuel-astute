@@ -42,7 +42,10 @@ module SpecHelpers
       stubs(:progress=)
       unless timeout.nil?
         expects(:timeout=).with(timeout)
+      else
+        stubs(:timeout=)
       end
+
       if discover_nodes.nil?
         stubs(:discover)
       else
