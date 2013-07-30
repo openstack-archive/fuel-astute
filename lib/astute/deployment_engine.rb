@@ -95,14 +95,14 @@ module Astute
       end
 
       # we use the same set of mount points for all storage nodes
-      attrs['mountpoints'] = {'name' => '1', 'weight' => '1'}
+      attrs['mp'] = {'point' => '1', 'weight' => '1'}
       attrs['nodes'] = ctrl_nodes.map do |n|
         {
           'name'                 => n['fqdn'].split(/\./)[0],
           'role'                 => 'controller',
           'internal_address'     => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
           'public_address'       => n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0],
-          'mountpoints'          => "#{attrs['mountpoints']['name']} #{attrs['mountpoints']['weight']}",
+          'mountpoints'          => "#{attrs['mp']['point']} #{attrs['mp']['weight']}",
           'zone'                 => n['id'],
           'storage_local_net_ip' => n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0],
         }
