@@ -61,7 +61,7 @@ module Astute
           begin
             progress = (get_log_progress(path, node_pattern_spec)*100).to_i # Return percent of progress
           rescue Exception => e
-            Astute.logger.warn "Some error occurred when calculate progress for node '#{uid}': #{e.message}, trace: #{e.backtrace.inspect}"
+            Astute.logger.warn "Some error occurred when calculate progress for node '#{uid}': #{e.message}, trace: #{e.backtrace.join("\n")}"
             progress = 0
           end
 
