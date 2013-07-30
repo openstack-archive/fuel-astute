@@ -49,56 +49,95 @@ describe Astute::RedhatChecker do
     reporter.expects(:report).once.with(error_data)
   end
 
-  describe '#check_redhat_credentials' do
-    it 'should report ready if exit_code 0' do
-      execute_returns({:exit_code => 0})
-      should_report_once(success_result)
-
-      redhat_checker.check_redhat_credentials
-    end
-
-    it 'should report network connection error' do
+  shared_examples 'redhat checker' do
+    it 'should handle network connection errors' do
       execute_returns({
-        :exit_code => 255,
-        :stdout => 'Network error, unable to connect to server.'})
+        :exit_code => 0,
+        :stdout => "Text before\nNetwork error, unable to connect to server.\nText after"})
 
       err_msg = 'Unable to reach host cdn.redhat.com. ' + \
         'Please check your Internet connection.'
-      should_report_once({'status' => 'error', 'progress' => 100, 'error_msg' => err_msg})
+      should_report_error({'error_msg' => err_msg})
 
-      redhat_checker.check_redhat_credentials
+      execute_handler
     end
 
-    it 'should report invalid credentional error' do
+    it 'should handle wrong username/password errors' do
       execute_returns({
-        :exit_code => 255,
-        :stdout => 'Invalid username or password. Try to use another.'})
+        :exit_code => 0,
+        :stdout => "Text before\nInvalid username or password\nText after"})
 
       err_msg = 'Invalid username or password. ' + \
         'To create a login, please visit https://www.redhat.com/wapps/ugc/register.html'
-      should_report_once({'status' => 'error', 'progress' => 100, 'error_msg' => err_msg})
+      should_report_error({'error_msg' => err_msg})
 
-      redhat_checker.check_redhat_credentials
+      execute_handler
+    end
+  end
+
+  describe '#check_redhat_credentials' do
+    it_behaves_like 'redhat checker' do
+      def execute_handler
+        redhat_checker.check_redhat_credentials
+      end
     end
   end
 
   describe '#check_redhat_licenses' do
-    it 'should report ready if exit_code 0' do
-      execute_returns({:exit_code => 0})
-      should_report_once(success_result)
+    let(:success_result) do
+      {
+        'status' => 'ready',
+        'progress' => 100,
+        'msg' => 'Your account appears to be fully entitled to deploy Red Hat Openstack.'
+      }
+    end
 
-      nodes = []
-      redhat_checker.check_redhat_licenses(nodes)
+    describe 'nodes parameter is nil' do
+      it_behaves_like 'redhat checker' do
+        def execute_handler
+          redhat_checker.check_redhat_credentials
+        end
+      end
+
+      it 'should be success if no errors' do
+        execute_returns({:exit_code => 0, :stdout => '{"openstack_licenses_physical_hosts_count":1}'})
+        should_report_once(success_result)
+
+        redhat_checker.check_redhat_licenses
+      end
+    end
+
+    describe 'nodes parameter is not nil' do
+      it_behaves_like 'redhat checker' do
+        def execute_handler
+          redhat_checker.check_redhat_licenses([1])
+        end
+      end
+
+      it 'should report ready if no errors' do
+        execute_returns({:exit_code => 0,
+          :stdout => '{"openstack_licenses_physical_hosts_count":1}'})
+        should_report_once(success_result)
+
+        nodes = [1]
+        redhat_checker.check_redhat_licenses(nodes)
+      end
+
+      it 'should report message if not enough licenses' do
+        execute_returns({:exit_code => 0,
+          :stdout => '{"openstack_licenses_physical_hosts_count":3}'})
+
+        err_msg = 'Your account has only 3 licenses available to deploy Red ' + \
+        'Hat OpenStack. Contact your Red Hat sales representative to ' + \
+        'get the proper subscriptions associated with your account. ' + \
+        'https://access.redhat.com/site/solutions/368643'
+
+        should_report_once({'progress' => 100, 'status' => 'ready', 'msg' => err_msg})
+
+        nodes = [1, 2, 3, 4]
+        redhat_checker.check_redhat_licenses(nodes)
+      end
+
     end
   end
-
-  describe '#redhat_has_at_least_one_license' do
-    it 'should report ready if exit_code 0' do
-      execute_returns({:exit_code => 0})
-      should_report_once(success_result)
-
-      redhat_checker.redhat_has_at_least_one_license
-    end
-  end
-
 end
