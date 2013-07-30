@@ -23,12 +23,14 @@ module Astute
       @username = credentials['username']
       @password = credentials['password']
 
+      @network_error = 'Unable to reach host cdn.redhat.com. ' + \
+        'Please check your Internet connection.'
       @check_credential_errors = {
-        /^Network error|^Remote server error/ => 'Unable to reach host cdn.redhat.com. ' + \
-          'Please check your Internet connection.',
+        /^Network error|^Remote server error/ => @network_error,
         /^Invalid username or password/ => 'Invalid username or password. ' + \
           'To create a login, please visit https://www.redhat.com/wapps/ugc/register.html'
       }
+
       @check_redhat_licenses_erros = {
       }
       @check_redhat_has_at_least_one_license_erros = {
@@ -42,8 +44,19 @@ module Astute
         "--username '#{@username}' " + \
         "--password '#{@password}'"
 
-      shell = MClient.new(@ctx, 'execute_shell_command', ['master'], false, timeout)
-      response = shell.execute(:cmd => check_credentials_cmd).first
+      shell = MClient.new(@ctx, 'execute_shell_command', ['master'])
+
+      response = {}
+      begin
+        Timeout.timeout(timeout) do
+          response = shell.execute(:cmd => check_credentials_cmd).first
+        end
+      rescue Timeout::Error
+        Astute.logger.warn("Time out error for shell command '#{check_credentials_cmd}'")
+        report_error(@network_error)
+
+        return
+      end
 
       report(response.results[:data], @check_credential_errors)
     end
@@ -51,14 +64,18 @@ module Astute
     # Check redhat linceses and return message, if not enough licenses
     def check_redhat_licenses(nodes)
       response = execute_get_licenses
-      report(response.results[:data], @check_redhat_licenses_erros)
+      unless response
+        report_error(@network_error)
+      else
+        report(response.results[:data], @check_redhat_licenses_erros)
+      end
     end
 
     # Check that redhat has at least one license
     def redhat_has_at_least_one_license
       response = execute_get_licenses
-      if response.results[:data][:exit_code] == 0
-        report_success
+      unless response
+        report_error(@network_error)
       else
         report(response.results[:data], @redhat_has_at_least_one_license)
       end
@@ -103,8 +120,13 @@ module Astute
         "--password '#{@password}'"
 
       shell = MClient.new(@ctx, 'execute_shell_command', ['master'], false, timeout)
-
-      shell.execute(:cmd => get_redhat_licenses_cmd).first
+      begin
+        Timeout.timeout(timeout) do
+          return shell.execute(:cmd => get_redhat_licenses_cmd).first
+        end
+      rescue Timeout::Error
+        Astute.logger.warn("Time out error for shell command '#{get_redhat_licenses_cmd}'")
+      end
     end
 
   end
