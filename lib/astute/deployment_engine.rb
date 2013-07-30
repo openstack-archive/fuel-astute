@@ -94,7 +94,6 @@ module Astute
        #            n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0]})
       #end
 
-      Astute.logger.debug("#{nodes.sort}")
       attrs['nodes'] = nodes.map do |n|
         {
           'fqdn'                 => n['fqdn'],
