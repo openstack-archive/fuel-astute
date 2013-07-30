@@ -67,7 +67,6 @@ module Astute
       rescue Timeout::Error
         Astute.logger.warn("Time out error for shell command '#{check_credentials_cmd}'")
         report_error(@network_error)
-        return
       end
 
       report(response.results[:data], @common_errors)
@@ -76,11 +75,7 @@ module Astute
     # Check redhat linceses and return message, if not enough licenses
     def check_redhat_licenses(nodes=nil)
       response = execute_get_licenses
-      unless response
-        report_error(@network_error)
-
-        return
-      end
+      report_error(@network_error) unless response
 
       licenses_count = nil
       begin
