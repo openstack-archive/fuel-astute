@@ -59,7 +59,7 @@ describe Astute::RedhatChecker do
         'Please check your Internet connection.'
       should_report_error({'error_msg' => err_msg})
 
-      execute_handler
+      expect { execute_handler }.to raise_error(Astute::RedhatCheckingError)
     end
 
     it 'should handle wrong username/password errors' do
@@ -71,7 +71,7 @@ describe Astute::RedhatChecker do
         'To create a login, please visit https://www.redhat.com/wapps/ugc/register.html'
       should_report_error({'error_msg' => err_msg})
 
-      execute_handler
+      expect { execute_handler }.to raise_error(Astute::RedhatCheckingError)
     end
 
     it 'should handle uniq errors' do
@@ -83,7 +83,7 @@ describe Astute::RedhatChecker do
       err_msg = "Unknown error Stdout: Uniq error stdout Stderr: Uniq error stderr"
       should_report_error({'error_msg' => err_msg})
 
-      execute_handler
+      expect { execute_handler }.to raise_error(Astute::RedhatCheckingError)
     end
   end
 
