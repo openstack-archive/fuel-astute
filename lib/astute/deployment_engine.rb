@@ -74,7 +74,16 @@ module Astute
     # It should not contain any magic with attributes, and should not directly run any type of MC plugins
     # It does only support of deployment sequence. See deploy_piece implementation in subclasses.
     def deploy_multinode(nodes, attrs)
-      deploy_ha_full(nodes, attrs)
+      ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
+      compute_nodes = nodes.select {|n| n['role'] == 'compute'}
+
+      Astute.logger.info "Starting deployment of primary controller"
+      deploy_piece(primary_ctrl_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of other nodes"
+      deploy_piece(compute_nodes, attrs)
+      return
+
     end
 
     def attrs_ha(nodes, attrs)
@@ -115,23 +124,17 @@ module Astute
           'default_gateway'      => n['default_gateway']
         }
       end
-      Astute.logger.debug("FFFUUUUUU")
       attrs['nodes'].first['role'] = 'primary-controller' if attrs['nodes'].select { |node| node['role'] == "primary-controller" }.empty?
       #attrs['ctrl_hostnames'] = ctrl_nodes.map {|n| n['fqdn'].split(/\./)[0]}
       #attrs['ctrl_public_addresses'] = ctrl_public_addrs
       #attrs['ctrl_management_addresses'] = ctrl_manag_addrs
       #attrs['ctrl_storage_addresses'] = ctrl_storage_addrs
-      Astute.logger.debug("#{attrs}")
+      #Astute.logger.debug("#{attrs}")
       attrs
     end
 
-    def deploy_ha(nodes, attrs)
-      deploy_ha_full(nodes, attrs)
-    end
-
-    def deploy_ha_compact(nodes, attrs)
-      deploy_ha_full(nodes, attrs)
-    end
+    alias :attrs_ha_full  :attrs_ha
+    alias :attrs_ha_compact :attrs_ha
 
     def deploy_ha_full(nodes, attrs)
       primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
@@ -149,22 +152,60 @@ module Astute
       other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - \
         primary_proxy_nodes - quantum_nodes
 
+      Astute.logger.info "Starting deployment of primary swift proxy"
+      deploy_piece(primary_proxy_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of non-primary swift proxies"
+      deploy_piece(proxy_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of swift storages"
+      deploy_piece(storage_nodes, attrs)
+
       Astute.logger.info "Starting deployment of primary controller"
-      deploy_piece(primary_ctrl_nodes, attrs, 0, false)
+      deploy_piece(primary_ctrl_nodes, attrs)
 
       Astute.logger.info "Starting deployment of all controllers one by one"
       ctrl_nodes.each {|n| deploy_piece([n], attrs)}
-
-      Astute.logger.info "Starting deployment of 1st controller and 1st proxy"
-      deploy_piece(primary_ctrl_nodes + primary_proxy_nodes, attrs)
-
-      Astute.logger.info "Starting deployment of quantum nodes"
-      deploy_piece(quantum_nodes, attrs)
 
       Astute.logger.info "Starting deployment of other nodes"
       deploy_piece(other_nodes, attrs)
       return
     end
+
+    def deploy_ha_compact(nodes, attrs)
+      primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
+      ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
+      unless primary_ctrl_nodes.any?
+        if ctrl_nodes.size > 1
+          primary_ctrl_nodes = [ctrl_nodes.shift]
+        end
+      end
+      compute_nodes = nodes.select {|n| n['role'] == 'compute'}
+      quantum_nodes = nodes.select {|n| n['role'] == 'quantum'}
+      storage_nodes = nodes.select {|n| n['role'] == 'storage'}
+      proxy_nodes = nodes.select {|n| n['role'] == 'swift-proxy'}
+      primary_proxy_nodes = nodes.select {|n| n['role'] == 'primary-swift-proxy'}
+      other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - \
+        primary_proxy_nodes - quantum_nodes
+
+      Astute.logger.info "Starting deployment of primary controller"
+      deploy_piece(primary_ctrl_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of all controllers one by one"
+      ctrl_nodes.each {|n| deploy_piece([n], attrs)}
+
+      #Astute.logger.info "Starting deployment of 1st controller and 1st proxy"
+      #deploy_piece(primary_ctrl_nodes + primary_proxy_nodes, attrs)
+
+      #Astute.logger.info "Starting deployment of quantum nodes"
+      #deploy_piece(quantum_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of other nodes"
+      deploy_piece(other_nodes, attrs)
+      return
+    end
+
+    alias :deploy_ha :deploy_ha_compact
 
     def attrs_rpmcache(nodes, attrs)
       attrs
