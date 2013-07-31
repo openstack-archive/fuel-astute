@@ -256,9 +256,9 @@ node_03: &node_03
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 3
+  id: 4
   default_gateway: 10.20.0.1
-  uid: 3
+  uid: 4
   mac: 64:15:B1:0C:BB:8B
   name: controller-03
   ip: 10.20.0.76
@@ -376,9 +376,9 @@ node_04: &node_04
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 4
+  id: 3
   default_gateway: 10.20.0.1
-  uid: 4
+  uid: 3
   mac: 64:7D:B8:84:64:79
   name: compute-01
   ip: 10.20.0.122
@@ -504,7 +504,6 @@ attributes:
   public_vip: 10.20.0.200 
   #Nova-network part, gets ignored if $quantum = `false`
   novanetwork_parameters:
-    fixed_network_range: CIDR
     vlan_start: <1-1024>
     network_manager: String
     network_size: <Integer>
@@ -540,8 +539,8 @@ attributes:
   cinder:
     password: cinder
     user: cinder
-  floating_network_range:
-  - 10.20.0.100
+  floating_network_range: 10.20.0.150/26
+  fixed_network_range: 10.20.2.0/24
   base_syslog:
     syslog_port: '514'
     syslog_server: 10.20.0.2
