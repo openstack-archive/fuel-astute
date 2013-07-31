@@ -23,8 +23,9 @@ module Astute
 
     def initialize(ctx, credentials)
       @ctx = ctx
-      @username = credentials['username']
-      @password = credentials['password']
+      @username = credentials['redhat']['username']
+      @password = credentials['redhat']['password']
+      release_name = credentials['release_name']
 
       @network_error = 'Unable to reach host cdn.redhat.com. ' + \
         'Please check your Internet connection.'
@@ -42,6 +43,8 @@ module Astute
         'available to deploy Red Hat OpenStack. Contact your Red Hat sales ' + \
         'representative to get the proper subscriptions associated with your ' + \
         'account. https://access.redhat.com/site/solutions/368643'
+
+      @check_credentials_success = "Account information for #{release_name} has been successfully modified."
 
       @common_errors = {
         /^Network error|^Remote server error/ => @network_error,
@@ -69,7 +72,7 @@ module Astute
         report_error(@network_error)
       end
 
-      report(response.results[:data], @common_errors)
+      report(response.results[:data], @common_errors, @check_credentials_success)
     end
 
     # Check redhat linceses and return message, if not enough licenses
@@ -98,13 +101,13 @@ module Astute
 
     private
 
-    def report(result, errors)
+    def report(result, errors, success_msg=nil)
       stdout = result[:stdout]
       stderr = result[:stderr]
       exit_code = result[:exit_code]
 
       if !get_error(result, errors) && exit_code == 0
-        report_success
+        report_success(success_msg)
       else
         err_msg = "Unknown error Stdout: #{stdout} Stderr: #{stderr}"
         error = get_error(result, errors) || err_msg
