@@ -38,6 +38,37 @@ module Astute
       end
     end
 
+    class DirSizeCalculation
+      def initialize(nodes)
+        @nodes = nodes
+      end
+
+      def progress_calculate(uids_to_calc, nodes)
+        uids_to_calc.map do |uid|
+          node = @nodes.find{|n| n['uid'] == uid}
+          progress = 100.0 * recursive_size(node['path']) / node['max_size']
+          {'uid' => uid, 'progress' => progress.to_i}
+          end
+      end
+
+      private
+      def recursive_size(path, opts={})
+        path << '/' unless path.end_with?('/')
+
+        File.size?(path) if not File.directory?(path)
+
+        total_size = 0
+        Dir["#{path}**/*"].each do |f|
+          # Option :files_only used when you want to calculate total size of
+          # regular files only. The default :files_only is false, so the function will
+          # includes to total value inode size of each dir (4096 bytes in mos cases) as
+          # unix util 'du' does it.
+          total_size += File.size?(f).to_i if File.file?(f) || ! opts[:files_only]
+        end
+        total_size
+      end
+    end
+
     class ParseNodeLogs
       attr_reader :pattern_spec
 

@@ -16,7 +16,7 @@ module Astute
   class Orchestrator
     def initialize(deploy_engine=nil, log_parsing=false)
       @deploy_engine = deploy_engine || Astute::DeploymentEngine::NailyFact
-      @log_parser = log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
+      @log_parsing = log_parsing
     end
 
     def node_type(reporter, task_id, nodes, timeout=nil)
@@ -37,11 +37,12 @@ module Astute
       # Following line fixes issues with uids: it should always be string
       nodes.map { |x| x['uid'] = x['uid'].to_s }  # NOTE: perform that on environment['nodes'] initialization
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter)
-      context = Context.new(task_id, proxy_reporter, @log_parser)
+      log_parser = @log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
+      context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
       begin
-        @log_parser.prepare(nodes)
+        log_parser.prepare(nodes)
       rescue Exception => e
         Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
       end
@@ -92,7 +93,7 @@ module Astute
 
       nodes_uids = nodes.map { |n| n['uid'] }
 
-      provisionLogParser = LogParser::ParseProvisionLogs.new
+      provisionLogParser = @log_parsing ? LogParser::ParseProvisionLogs.new : LogParser::NoParsing.new
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(reporter)
       sleep_not_greater_than(10) do # Wait while nodes going to reboot
         Astute.logger.info "Starting OS provisioning for nodes: #{nodes_uids.join(',')}"
@@ -171,14 +172,11 @@ module Astute
       end
       nodes = [{'uid' => 'master', 'facts' => facts}]
       proxy_reporter = ProxyReporter::DLReleaseProxyReporter.new(up_reporter, nodes.size)
-      context = Context.new(task_id, proxy_reporter, @log_parser)
+      nodes_to_parser = [{'uid' => 'master', 'max_size' => 1111280705, 'path' => '/var/www/nailgun/rhel'}]
+      log_parser = @log_parsing ? LogParser::DirSizeCalculation.new(nodes_to_parser) : LogParser::NoParsing.new
+      context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for release download."
-      begin
-        @log_parser.prepare(nodes)
-      rescue Exception => e
-        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
-      end
       deploy_engine_instance.deploy(nodes, attrs)
       proxy_reporter.report({'status' => 'ready', 'progress' => 100})
     end
