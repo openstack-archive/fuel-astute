@@ -14,16 +14,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+if RUBY_VERSION < "1.9"
+  puts "Astute tested and works only on Ruby 1.9.3 but you use #{RUBY_VERSION}"
+  puts "Please run astute using ruby -rubygems bin/astute.rb"
+end
+
 require 'optparse'
 require 'yaml'
-begin
-  require 'astute'
-  require 'astute/version'
-rescue LoadError
-  require 'rubygems'
-  require 'astute'
-  require 'astute/version'
-end
+require 'astute'
+require 'astute/version'
 
 class ConsoleReporter
   def report(msg)
