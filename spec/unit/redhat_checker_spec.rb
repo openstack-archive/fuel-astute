@@ -60,7 +60,7 @@ describe Astute::RedhatChecker do
 
       err_msg = 'Unable to reach host cdn.redhat.com. ' + \
         'Please check your Internet connection.'
-      should_report_error({'error_msg' => err_msg})
+      should_report_error({'error' => err_msg})
 
       expect { execute_handler }.to raise_error(Astute::RedhatCheckingError)
     end
@@ -72,7 +72,7 @@ describe Astute::RedhatChecker do
 
       err_msg = 'Invalid username or password. ' + \
         'To create a login, please visit https://www.redhat.com/wapps/ugc/register.html'
-      should_report_error({'error_msg' => err_msg})
+      should_report_error({'error' => err_msg})
 
       expect { execute_handler }.to raise_error(Astute::RedhatCheckingError)
     end
@@ -84,7 +84,7 @@ describe Astute::RedhatChecker do
         :stderr => "Uniq error stderr"})
 
       err_msg = "Unknown error Stdout: Uniq error stdout Stderr: Uniq error stderr"
-      should_report_error({'error_msg' => err_msg})
+      should_report_error({'error' => err_msg})
 
       expect { execute_handler }.to raise_error(Astute::RedhatCheckingError)
     end

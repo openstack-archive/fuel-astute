@@ -131,7 +131,7 @@ module Astute
 
     # Report error and raise exception
     def report_error(msg)
-      @ctx.reporter.report({'status' => 'error', 'error_msg' => msg, 'progress' => 100})
+      @ctx.reporter.report({'status' => 'error', 'error' => msg, 'progress' => 100})
       raise RedhatCheckingError.new(msg)
     end
 
