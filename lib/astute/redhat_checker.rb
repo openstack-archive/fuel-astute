@@ -29,7 +29,7 @@ module Astute
       @network_error = 'Unable to reach host cdn.redhat.com. ' + \
         'Please check your Internet connection.'
 
-      @user_dont_has_licenses = 'Could not find any valid Red Hat ' + \
+      @user_does_not_have_licenses = 'Could not find any valid Red Hat ' + \
         'OpenStack subscriptions. Contact your Red Hat sales representative ' + \
         'to get the proper subscriptions associated with your account: '+ \
         'https://access.redhat.com/site/solutions/368643. If you are still ' + \
@@ -88,7 +88,7 @@ module Astute
       end
 
       if licenses_count <= 0
-        report_error(@user_dont_has_licenses)
+        report_error(@user_does_not_have_licenses)
       elsif nodes && licenses_count < nodes.count
         report_success(format(@msg_not_enough_licenses, licenses_count))
       else
