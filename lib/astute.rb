@@ -18,6 +18,7 @@ require 'json'
 require 'logger'
 require 'shellwords'
 
+require 'astute/ext/exception'
 require 'astute/config'
 require 'astute/logparser'
 require 'astute/orchestrator'

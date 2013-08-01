@@ -188,7 +188,7 @@ module Astute
       begin
         Astute::RedhatChecker.new(ctx, credentials).check_redhat_credentials
       rescue Exception => e
-        Astute.logger.error("Error #{e.message} traceback #{e.backtrace.inspect}")
+        Astute.logger.error("Error #{e.message} traceback #{e.format_backtrace}")
         raise StopIteration
       end
     end
@@ -198,7 +198,7 @@ module Astute
       begin
         Astute::RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)
       rescue Exception => e
-        Astute.logger.error("Error #{e.message} traceback #{e.backtrace.inspect}")
+        Astute.logger.error("Error #{e.message} traceback #{e.format_backtrace}")
         raise StopIteration
       end
     end
