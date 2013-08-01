@@ -43,7 +43,7 @@ module Astute
       begin
         @log_parser.prepare(nodes)
       rescue Exception => e
-        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.join("\n")}"
+        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
       end
       deploy_engine_instance.deploy(nodes, attrs)
       return SUCCESS
@@ -99,7 +99,7 @@ module Astute
         begin
           provisionLogParser.prepare(nodes)
         rescue => e
-          Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.join("\n")}"
+          Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
         end
       end
       nodes_not_booted = nodes_uids.clone
@@ -177,7 +177,7 @@ module Astute
       begin
         @log_parser.prepare(nodes)
       rescue Exception => e
-        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.join("\n")}"
+        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
       end
       deploy_engine_instance.deploy(nodes, attrs)
       proxy_reporter.report({'status' => 'ready', 'progress' => 100})
@@ -294,7 +294,7 @@ module Astute
         end
         reporter.report({'nodes' => nodes_progress})
       rescue => e
-        Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.backtrace.join("\n")}"
+        Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.format_backtrace}"
       end
     end
 
