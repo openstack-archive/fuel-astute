@@ -273,6 +273,82 @@ describe LogParser do
       calculated_nodes = deployment_parser_wrapper('multinode', nodes)
       calculated_nodes.each {|node| node['statistics']['pcc'].should > 0.94}
     end
+  end
 
+  context "Dirsize-based progress calculation" do
+    def create_dir_with_size(size, given_opts={})
+      raise "The required size should be a non-negative number" if size < 0
+      default_opts = {
+        :chunksize => 10000,
+        :tmpdir => Dir::tmpdir,
+      }
+      opts = default_opts.merge(given_opts)
+      if !opts[:chunksize].instance_of?(Fixnum) || opts[:chunksize] <= 0
+        raise "The 'chunksize' option should be a positive number"
+      end
+      raise "The 'tmpdir' option should be a path to a existent directory" if !opts[:tmpdir].instance_of?(String)
+
+      dir = Dir::mktmpdir(nil, opts[:tmpdir])
+      chunk = 'A' * opts[:chunksize]
+      while size >= opts[:chunksize]
+        Tempfile::open('prefix', dir){|file| file.write(chunk)}
+        size -= opts[:chunksize]
+      end
+      Tempfile::open('prefix', dir){|file| file.write('A' * size)} if size > 0
+
+      return dir
+    end
+
+    it "should correctly calculate size of directory" do
+      size = 10**6
+      dir = create_dir_with_size(size)
+      nodes = [
+        {'uid' => '1',
+         'max_size' => size*100/75,
+         'path' => dir,
+        }
+      ]
+      correct_progress = [
+        {'uid' => '1',
+        'progress' => 75}
+      ]
+      dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
+      dirsize_parser.progress_calculate(['1'], nil).should eql(correct_progress)
+      FileUtils::remove_entry_secure dir
+    end
+
+    it "should correctly calculate size of nested directories" do
+      size = 10**6
+      dir = create_dir_with_size(size)
+      create_dir_with_size(size, {:tmpdir => dir})
+      nodes = [
+        {'uid' => '1',
+         'max_size' => size*2,
+         'path' => dir,
+        }
+      ]
+      correct_progress = [
+        {'uid' => '1',
+        'progress' => 100}
+      ]
+      dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
+      dirsize_parser.progress_calculate(['1'], nil).should eql(correct_progress)
+      FileUtils::remove_entry_secure dir
+    end
+
+    it "should return zero if there is no directory" do
+      nodes = [
+        {'uid' => '1',
+         'max_size' => 10000,
+         'path' => '/the-dir-that-should-not-exist',
+        }
+      ]
+      correct_progress = [
+        {'uid' => '1',
+        'progress' => 0}
+      ]
+      dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
+      dirsize_parser.progress_calculate(['1'], nil).should eql(correct_progress)
+    end
   end
 end
