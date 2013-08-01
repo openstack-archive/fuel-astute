@@ -115,7 +115,7 @@ module Astute
           'public_br'            => n['public_br'],
           'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
           'mountpoints'          => "1 1\n2 2",
-          'zone'                 => n['id'],
+          'swift_zone'           => n['id'],
           'storage_address'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
           'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
           'default_gateway'      => n['default_gateway']
