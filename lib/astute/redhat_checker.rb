@@ -23,13 +23,14 @@ module Astute
 
     def initialize(ctx, credentials)
       @ctx = ctx
-      @username = credentials['username']
-      @password = credentials['password']
+      @username = Shellwords.escape(credentials['redhat']['username'])
+      @password = Shellwords.escape(credentials['redhat']['password'])
+      release_name = credentials['release_name']
 
       @network_error = 'Unable to reach host cdn.redhat.com. ' + \
         'Please check your Internet connection.'
 
-      @user_dont_has_licenses = 'Could not find any valid Red Hat ' + \
+      @user_does_not_have_licenses = 'Could not find any valid Red Hat ' + \
         'OpenStack subscriptions. Contact your Red Hat sales representative ' + \
         'to get the proper subscriptions associated with your account: '+ \
         'https://access.redhat.com/site/solutions/368643. If you are still ' + \
@@ -43,6 +44,8 @@ module Astute
         'representative to get the proper subscriptions associated with your ' + \
         'account. https://access.redhat.com/site/solutions/368643'
 
+      @check_credentials_success = "Account information for #{release_name} has been successfully modified."
+
       @common_errors = {
         /^Network error|^Remote server error/ => @network_error,
         /^Invalid username or password/ => 'Invalid username or password. ' + \
@@ -54,8 +57,8 @@ module Astute
     def check_redhat_credentials
       timeout = Astute.config[:REDHAT_CHECK_CREDENTIALS_TIMEOUT]
       check_credentials_cmd = "subscription-manager orgs " + \
-        "--username '#{@username}' " + \
-        "--password '#{@password}'"
+        "--username #{@username} " + \
+        "--password #{@password}"
 
       shell = MClient.new(@ctx, 'execute_shell_command', ['master'])
 
@@ -69,7 +72,7 @@ module Astute
         report_error(@network_error)
       end
 
-      report(response.results[:data], @common_errors)
+      report(response.results[:data], @common_errors, @check_credentials_success)
     end
 
     # Check redhat linceses and return message, if not enough licenses
@@ -88,7 +91,7 @@ module Astute
       end
 
       if licenses_count <= 0
-        report_error(@user_dont_has_licenses)
+        report_error(@user_does_not_have_licenses)
       elsif nodes && licenses_count < nodes.count
         report_success(format(@msg_not_enough_licenses, licenses_count))
       else
@@ -98,13 +101,13 @@ module Astute
 
     private
 
-    def report(result, errors)
+    def report(result, errors, success_msg=nil)
       stdout = result[:stdout]
       stderr = result[:stderr]
       exit_code = result[:exit_code]
 
       if !get_error(result, errors) && exit_code == 0
-        report_success
+        report_success(success_msg)
       else
         err_msg = "Unknown error Stdout: #{stdout} Stderr: #{stderr}"
         error = get_error(result, errors) || err_msg
@@ -128,15 +131,15 @@ module Astute
 
     # Report error and raise exception
     def report_error(msg)
-      @ctx.reporter.report({'status' => 'error', 'error_msg' => msg, 'progress' => 100})
+      @ctx.reporter.report({'status' => 'error', 'error' => msg, 'progress' => 100})
       raise RedhatCheckingError.new(msg)
     end
 
     def execute_get_licenses
       timeout = Astute.config[:REDHAT_GET_LICENSES_POOL_TIMEOUT]
       get_redhat_licenses_cmd = "get_redhat_licenses " + \
-        "'#{@username}' " + \
-        "'#{@password}'"
+        "#{@username} " + \
+        "#{@password}"
 
       shell = MClient.new(@ctx, 'execute_shell_command', ['master'])
       begin
