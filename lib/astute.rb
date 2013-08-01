@@ -43,10 +43,11 @@ module Astute
 
   SUCCESS = 0
   FAIL = 1
+  LOG_PATH = '/var/log/astute.log'
 
   def self.logger
     unless @logger
-      @logger = Logger.new('/var/log/astute.log')
+      @logger = Logger.new(LOG_PATH)
       @logger.formatter = proc do |severity, datetime, progname, msg|
         severity_map = {
           'DEBUG' => 'debug',
