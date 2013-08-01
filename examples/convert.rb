@@ -74,9 +74,9 @@ nodes.each do |node,macaddr|
     system_disk=json_node['meta']['disks'].select {|disk| disk['name'] == 'vda'}.first
     cinder_disk=json_node['meta']['disks'].select {|disk| disk['name'] == 'vdb'}.first
 
-    system_disk_path = system_disk['path']
+    system_disk_path = system_disk['disk']
     system_disk_size = (system_disk['size']/1048756.0).floor
-    cinder_disk_path = cinder_disk['path']
+    cinder_disk_path = cinder_disk['disk']
     cinder_disk_size = (cinder_disk['size']/1048756.0).floor
 
     system_pv_size = system_disk_size - 201
@@ -85,16 +85,30 @@ nodes.each do |node,macaddr|
     free_extents = (free_vg_size/32.0).floor
     system_disk_size = 32 * free_extents
 
-    ks_spaces = "\'[{\"type\": \"disk\", \"id\": \"#{system_disk_path}\",\"volumes\":
-      [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 200}, {\"type\":
-      \"mbr\"}, {\"size\": #{system_pv_size}, \"type\": \"pv\", \"vg\": \"os\"}],\"size\":
-      #{system_disk_size} },{\"type\": \"vg\", \"id\": \"os\", \"volumes\": [{\"mount\":
-      \"/\", \"type\": \"lv\", \"name\": \"root\", \"size\": #{system_disk_size} },  {\"mount\":
-      \"swap\", \"type\": \"lv\", \"name\": \"swap\", \"size\": #{swap_size}}]}, {\"type\":
-      \"disk\", \"id\": \"#{cinder_disk_path}\", \"volumes\":  [{\"type\": \"mbr\"},
-      {\"size\": #{cinder_disk_size}, \"type\": \"pv\", \"vg\": \"cinder-volumes\"}],    \"size\":
-      #{cinder_disk_size}]\'" 
-   
+
+#    ks_spaces: '"[{\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3\",
+#     \"volumes\": [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 200},
+#     {\"type\": \"mbr\"}, {\"size\": 20000, \"type\": \"pv\", \"vg\": \"os\"}],
+#     \"size\": 20480}, {\"type\": \"vg\", \"id\": \"os\", \"volumes\": [{\"mount\":
+#     \"/\", \"type\": \"lv\", \"name\": \"root\", \"size\": 10240 }, {\"mount\":
+#     \"swap\", \"type\": \"lv\", \"name\": \"swap\", \"size\": 2048}]}]"'
+ 
+
+    ks_spaces = '"[{\"type\": \"disk\", \"id\": \"' +
+      system_disk_path.to_s +
+      '\",\"volumes\": [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 200}, {\"type\": \"mbr\"}, {\"size\": ' +
+      system_pv_size.to_s +
+      ', \"type\": \"pv\", \"vg\": \"os\"}],\"size\": ' +
+      system_disk_size.to_s +
+      '},{\"type\": \"vg\", \"id\": \"os\", \"volumes\": [{\"mount\": \"/\", \"type\": \"lv\", \"name\": \"root\", \"size\": ' +
+      system_disk_size.to_s +
+      '},  {\"mount\": \"swap\", \"type\": \"lv\", \"name\": \"swap\", \"size\": '+
+      swap_size.to_s +
+      '}]}, {\"type\": \"disk\", \"id\": \"' + cinder_disk_path + '\", \"volumes\":  [{\"type\": \"mbr\"}, {\"size\": ' +
+      cinder_disk_size.to_s +
+      ', \"type\": \"pv\", \"vg\": \"cinder-volumes\"}], \"size\": ' +
+      cinder_disk_size.to_s + '}]"'
+  
         
     cobbler_ks_meta={"ks_spaces"=>ks_spaces,"mco_host"=>master_ip}
 
