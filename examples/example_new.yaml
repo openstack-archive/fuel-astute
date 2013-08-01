@@ -415,9 +415,6 @@ attributes:
   # List of ntp servers
   ntp_servers:
   - pool.ntp.org
-  # == nv_physical_volume
-  # list of block devices for cinder-volumes VG
-  nv_physical_volume:
   # == deployment_id
   # Id if deployment used do differentiate environments
   deployment_id: 1

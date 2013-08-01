@@ -603,7 +603,6 @@ attributes:
   - controller
   ntp_servers:
   - pool.ntp.org
-  nv_physical_volume: 
   deployment_id: 1
   deployment_mode: ha
   deployment_source: cli
