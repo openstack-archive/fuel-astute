@@ -23,8 +23,8 @@ module Astute
 
     def initialize(ctx, credentials)
       @ctx = ctx
-      @username = credentials['redhat']['username']
-      @password = credentials['redhat']['password']
+      @username = Shellwords.escape(credentials['redhat']['username'])
+      @password = Shellwords.escape(credentials['redhat']['password'])
       release_name = credentials['release_name']
 
       @network_error = 'Unable to reach host cdn.redhat.com. ' + \
@@ -57,8 +57,8 @@ module Astute
     def check_redhat_credentials
       timeout = Astute.config[:REDHAT_CHECK_CREDENTIALS_TIMEOUT]
       check_credentials_cmd = "subscription-manager orgs " + \
-        "--username '#{@username}' " + \
-        "--password '#{@password}'"
+        "--username #{@username} " + \
+        "--password #{@password}"
 
       shell = MClient.new(@ctx, 'execute_shell_command', ['master'])
 
@@ -138,8 +138,8 @@ module Astute
     def execute_get_licenses
       timeout = Astute.config[:REDHAT_GET_LICENSES_POOL_TIMEOUT]
       get_redhat_licenses_cmd = "get_redhat_licenses " + \
-        "'#{@username}' " + \
-        "'#{@password}'"
+        "#{@username} " + \
+        "#{@password}"
 
       shell = MClient.new(@ctx, 'execute_shell_command', ['master'])
       begin
