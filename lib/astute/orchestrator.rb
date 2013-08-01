@@ -172,6 +172,8 @@ module Astute
       end
       nodes = [{'uid' => 'master', 'facts' => facts}]
       proxy_reporter = ProxyReporter::DLReleaseProxyReporter.new(up_reporter, nodes.size)
+      #FIXME: These parameters should be propagated from Nailgun. Maybe they should be saved
+      #       in Release.json.
       nodes_to_parser = [{'uid' => 'master', 'max_size' => 1111280705, 'path' => '/var/www/nailgun/rhel'}]
       log_parser = @log_parsing ? LogParser::DirSizeCalculation.new(nodes_to_parser) : LogParser::NoParsing.new
       context = Context.new(task_id, proxy_reporter, log_parser)
