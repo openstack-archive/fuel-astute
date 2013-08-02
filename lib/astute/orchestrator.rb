@@ -177,8 +177,8 @@ module Astute
       nodes_to_parser = [
         {:uid => 'master',
          :path_items => [
-            {:max_size => 1111280705, :path => '/var/www/nailgun/rhel', :weight => 50},
-            {:max_size => 124000000, :path => '/var/cache/yum/x86_64/6Server', :weight => 50},
+            {:max_size => 1111280705, :path => '/var/www/nailgun/rhel', :weight => 3},
+            {:max_size => 195900000, :path => '/var/cache/yum/x86_64/6Server', :weight => 1},
          ]}
       ]
       log_parser = @log_parsing ? LogParser::DirSizeCalculation.new(nodes_to_parser) : LogParser::NoParsing.new
