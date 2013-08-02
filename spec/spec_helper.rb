@@ -15,6 +15,7 @@
 
 require 'tempfile'
 require 'tmpdir'
+require 'fileutils'
 require 'date'
 require 'yaml'
 require 'rspec'
