@@ -11,15 +11,15 @@ nodes:
     - management
     - storage
     ip: 10.107.2.39
-    dev: eth0
+    dev: eth1
     netmask: 255.255.255.0
   - name: fixed
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 1
+  id: '1'
   default_gateway: 172.18.94.33
-  uid: 1
+  uid: '1'
   mac: 64:C3:54:54:D2:66
   name: compute-01
   ip: 172.18.94.39
@@ -32,7 +32,7 @@ nodes:
   netboot_enabled: '1'
   name_servers: 172.18.94.34
   puppet_master: fuel.domain.tld
-  ks_meta: &8640500
+  ks_meta: &18648020
     ks_spaces: ! '"[{\"type\": \"disk\", \"id\": \"disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3\",\"volumes\":
       [{\"mount\": \"/boot\", \"type\": \"partition\", \"size\": 200}, {\"type\":
       \"mbr\"}, {\"size\": 20275, \"type\": \"pv\", \"vg\": \"os\"}],\"size\": 19232},{\"type\":
@@ -72,7 +72,7 @@ nodes:
     eth2:
       onboot: 'no'
       peerdns: 'no'
-  meta: &8663000
+  meta: &18667760
     memory:
       total: 778694656
     interfaces:
@@ -131,15 +131,15 @@ nodes:
     - management
     - storage
     ip: 10.107.2.41
-    dev: eth0
+    dev: eth1
     netmask: 255.255.255.0
   - name: fixed
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 1
+  id: '2'
   default_gateway: 172.18.94.33
-  uid: 1
+  uid: '2'
   mac: 64:48:7A:14:83:E8
   name: controller-01
   ip: 172.18.94.41
@@ -152,7 +152,7 @@ nodes:
   netboot_enabled: '1'
   name_servers: 172.18.94.34
   puppet_master: fuel.domain.tld
-  ks_meta: *8640500
+  ks_meta: *18648020
   interfaces:
     eth0:
       ip_address: 172.18.94.41
@@ -170,7 +170,7 @@ nodes:
     eth2:
       onboot: 'no'
       peerdns: 'no'
-  meta: *8663000
+  meta: *18667760
   error_type: 
 - role: controller
   network_data:
@@ -183,15 +183,15 @@ nodes:
     - management
     - storage
     ip: 10.107.2.42
-    dev: eth0
+    dev: eth1
     netmask: 255.255.255.0
   - name: fixed
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 1
+  id: '3'
   default_gateway: 172.18.94.33
-  uid: 1
+  uid: '3'
   mac: 64:B7:37:B1:1D:C9
   name: controller-02
   ip: 172.18.94.42
@@ -204,7 +204,7 @@ nodes:
   netboot_enabled: '1'
   name_servers: 172.18.94.34
   puppet_master: fuel.domain.tld
-  ks_meta: *8640500
+  ks_meta: *18648020
   interfaces:
     eth0:
       ip_address: 172.18.94.42
@@ -222,7 +222,7 @@ nodes:
     eth2:
       onboot: 'no'
       peerdns: 'no'
-  meta: *8663000
+  meta: *18667760
   error_type: 
 - role: controller
   network_data:
@@ -235,15 +235,15 @@ nodes:
     - management
     - storage
     ip: 10.107.2.36
-    dev: eth0
+    dev: eth1
     netmask: 255.255.255.0
   - name: fixed
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 1
+  id: '4'
   default_gateway: 172.18.94.33
-  uid: 1
+  uid: '4'
   mac: 64:F4:64:E7:50:D3
   name: controller-03
   ip: 172.18.94.36
@@ -256,7 +256,7 @@ nodes:
   netboot_enabled: '1'
   name_servers: 172.18.94.34
   puppet_master: fuel.domain.tld
-  ks_meta: *8640500
+  ks_meta: *18648020
   interfaces:
     eth0:
       ip_address: 172.18.94.36
@@ -274,7 +274,7 @@ nodes:
     eth2:
       onboot: 'no'
       peerdns: 'no'
-  meta: *8663000
+  meta: *18667760
   error_type: 
 - role: storage
   network_data:
@@ -287,15 +287,15 @@ nodes:
     - management
     - storage
     ip: 10.107.2.43
-    dev: eth0
+    dev: eth1
     netmask: 255.255.255.0
   - name: fixed
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 1
+  id: '7'
   default_gateway: 172.18.94.33
-  uid: 1
+  uid: '7'
   mac: 64:57:26:83:1D:CA
   name: swift-01
   ip: 172.18.94.43
@@ -308,7 +308,7 @@ nodes:
   netboot_enabled: '1'
   name_servers: 172.18.94.34
   puppet_master: fuel.domain.tld
-  ks_meta: *8640500
+  ks_meta: *18648020
   interfaces:
     eth0:
       ip_address: 172.18.94.43
@@ -326,7 +326,7 @@ nodes:
     eth2:
       onboot: 'no'
       peerdns: 'no'
-  meta: *8663000
+  meta: *18667760
   error_type: 
 - role: storage
   network_data:
@@ -339,15 +339,15 @@ nodes:
     - management
     - storage
     ip: 10.107.2.47
-    dev: eth0
+    dev: eth1
     netmask: 255.255.255.0
   - name: fixed
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 1
+  id: '8'
   default_gateway: 172.18.94.33
-  uid: 1
+  uid: '8'
   mac: 64:DC:FD:AD:EB:4E
   name: swift-02
   ip: 172.18.94.47
@@ -360,7 +360,7 @@ nodes:
   netboot_enabled: '1'
   name_servers: 172.18.94.34
   puppet_master: fuel.domain.tld
-  ks_meta: *8640500
+  ks_meta: *18648020
   interfaces:
     eth0:
       ip_address: 172.18.94.47
@@ -378,7 +378,7 @@ nodes:
     eth2:
       onboot: 'no'
       peerdns: 'no'
-  meta: *8663000
+  meta: *18667760
   error_type: 
 - role: storage
   network_data:
@@ -391,15 +391,15 @@ nodes:
     - management
     - storage
     ip: 10.107.2.44
-    dev: eth0
+    dev: eth1
     netmask: 255.255.255.0
   - name: fixed
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 1
+  id: '9'
   default_gateway: 172.18.94.33
-  uid: 1
+  uid: '9'
   mac: 64:EA:DF:59:79:39
   name: swift-03
   ip: 172.18.94.44
@@ -412,7 +412,7 @@ nodes:
   netboot_enabled: '1'
   name_servers: 172.18.94.34
   puppet_master: fuel.domain.tld
-  ks_meta: *8640500
+  ks_meta: *18648020
   interfaces:
     eth0:
       ip_address: 172.18.94.44
@@ -430,7 +430,7 @@ nodes:
     eth2:
       onboot: 'no'
       peerdns: 'no'
-  meta: *8663000
+  meta: *18667760
   error_type: 
 - role: primary-swift-proxy
   network_data:
@@ -443,15 +443,15 @@ nodes:
     - management
     - storage
     ip: 10.107.2.40
-    dev: eth0
+    dev: eth1
     netmask: 255.255.255.0
   - name: fixed
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 1
+  id: '6'
   default_gateway: 172.18.94.33
-  uid: 1
+  uid: '6'
   mac: 64:BC:C3:9C:07:26
   name: swiftproxy-01
   ip: 172.18.94.40
@@ -464,7 +464,7 @@ nodes:
   netboot_enabled: '1'
   name_servers: 172.18.94.34
   puppet_master: fuel.domain.tld
-  ks_meta: *8640500
+  ks_meta: *18648020
   interfaces:
     eth0:
       ip_address: 172.18.94.40
@@ -482,7 +482,7 @@ nodes:
     eth2:
       onboot: 'no'
       peerdns: 'no'
-  meta: *8663000
+  meta: *18667760
   error_type: 
 - role: swift-proxy
   network_data:
@@ -495,15 +495,15 @@ nodes:
     - management
     - storage
     ip: 10.107.2.45
-    dev: eth0
+    dev: eth1
     netmask: 255.255.255.0
   - name: fixed
     dev: eth2
   public_br: br-ex
   internal_br: br-mgmt
-  id: 1
+  id: '5'
   default_gateway: 172.18.94.33
-  uid: 1
+  uid: '5'
   mac: 64:97:93:5F:B2:DC
   name: swiftproxy-02
   ip: 172.18.94.45
@@ -516,7 +516,7 @@ nodes:
   netboot_enabled: '1'
   name_servers: 172.18.94.34
   puppet_master: fuel.domain.tld
-  ks_meta: *8640500
+  ks_meta: *18648020
   interfaces:
     eth0:
       ip_address: 172.18.94.45
@@ -534,9 +534,10 @@ nodes:
     eth2:
       onboot: 'no'
       peerdns: 'no'
-  meta: *8663000
+  meta: *18667760
   error_type: 
 attributes:
+  master_ip: 172.18.94.34
   use_cow_images: true
   libvirt_type: kvm
   dns_nameservers: 172.18.94.34
@@ -604,7 +605,7 @@ attributes:
   ntp_servers:
   - pool.ntp.org
   deployment_id: 1
-  deployment_mode: ha
+  deployment_mode: ha_full
   deployment_source: cli
   deployment_engine: nailyfact
 engine:
