@@ -112,7 +112,7 @@ nodes.each do |node,macaddr|
     result['ks_meta'] = result['ks_meta'].update(cobbler_ks_meta)
     puppet_network_data = [
         {"name" => 'public', 'ip'=>ip, "dev" => public_iface, 'netmask' => "255.255.255.0", "gateway" => default_gateway },
-        {"name" => ['management','storage'], 'ip'=>"#{internal_net_prefix.to_s}.#{l_octet}", "dev" => public_iface, 'netmask' => "255.255.255.0"},
+        {"name" => ['management','storage'], 'ip'=>"#{internal_net_prefix.to_s}.#{l_octet}", "dev" => internal_iface, 'netmask' => "255.255.255.0"},
         {"name" => 'fixed', "dev" => private_iface},
     ]
     result['network_data'] = puppet_network_data
@@ -120,6 +120,7 @@ nodes.each do |node,macaddr|
     newyaml['nodes'].push(result)
 end
 
+   newyaml['attributes']['master_ip'] = master_ip
    newyaml['attributes']['dns_nameservers'] = master_ip
    newyaml['attributes']['libvirt_type'] = 'kvm'
    newyaml['attributes']['floating_network_range'] = '10.20.0.150/28' 
