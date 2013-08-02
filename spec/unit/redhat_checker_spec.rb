@@ -38,9 +38,17 @@ describe Astute::RedhatChecker do
   let!(:rpcclient) { mock_rpcclient }
   let(:success_result) { {'status' => 'ready', 'progress' => 100} }
 
+  let(:invalid_user_password_msg) do
+    'Invalid username or password. ' + \
+      'To create a login, please visit https://www.redhat.com/wapps/ugc/register.html'
+  end
+
+  def mc_result(result)
+    [mock_mc_result({:data => result})]
+  end
+
   def execute_returns(data)
-    result = mock_mc_result({:data => data })
-    rpcclient.expects(:execute).once.returns([result])
+    rpcclient.expects(:execute).once.returns(mc_result(data))
   end
 
   def should_report_once(data)
@@ -70,8 +78,7 @@ describe Astute::RedhatChecker do
         :exit_code => 0,
         :stdout => "Text before\nInvalid username or password\nText after"})
 
-      err_msg = 'Invalid username or password. ' + \
-        'To create a login, please visit https://www.redhat.com/wapps/ugc/register.html'
+      err_msg = invalid_user_password_msg
       should_report_error({'error' => err_msg})
 
       expect { execute_handler }.to raise_error(Astute::RedhatCheckingError)
@@ -91,6 +98,8 @@ describe Astute::RedhatChecker do
   end
 
   describe '#check_redhat_credentials' do
+    let(:success_msg) { "Account information for RELEASE_NAME has been successfully modified." }
+
     it_behaves_like 'redhat checker' do
       def execute_handler
         redhat_checker.check_redhat_credentials
@@ -98,11 +107,54 @@ describe Astute::RedhatChecker do
     end
 
     it 'should be success with right credentials' do
-      execute_returns({:exit_code => 0, :stdout => '{"openstack_licenses_physical_hosts_count":1}'})
-      success_msg = "Account information for RELEASE_NAME has been successfully modified."
+      execute_returns({:exit_code => 0})
       should_report_once(success_result.merge({'msg' => success_msg}))
 
       redhat_checker.check_redhat_credentials
+    end
+
+    context 'satellite server is set' do
+      let(:redhat_credentials) do
+        {
+          'release_name' => 'RELEASE_NAME',
+          'redhat' => {
+            'username' => 'user',
+            'password' => 'password',
+            'satellite' => 'satellite.server.com'
+          }
+        }
+      end
+
+      let(:redhat_checker) { described_class.new(ctx, redhat_credentials) }
+
+      it 'success when all commands execute without an error' do
+        execute_returns({:exit_code => 0})
+        execute_returns({:exit_code => 0})
+        should_report_once(success_result.merge({'msg' => success_msg}))
+
+        redhat_checker.check_redhat_credentials
+      end
+
+      it 'fails user\password is wrong' do
+        err_msg = "Text before\nInvalid username or password\nText after"
+        execute_returns({:exit_code => 1, :stdout => err_msg })
+        should_report_error({'error' => invalid_user_password_msg})
+
+        expect { redhat_checker.check_redhat_credentials }.to raise_error(Astute::RedhatCheckingError)
+      end
+
+      it 'fails satellite server is wrong' do
+        err_msg = "text before\ncouldn't connect to host\ntext after"
+        rpcclient.expects(:execute).twice.returns(
+          mc_result({:exit_code => 0}),
+          mc_result({:exit_code => 1, :stdout => err_msg}))
+
+        err_msg = 'Unable to communicate with RHN Satellite Server. ' + \
+          'Please check host and try again.'
+        should_report_error({'error' => err_msg})
+
+        expect { redhat_checker.check_redhat_credentials }.to raise_error(Astute::RedhatCheckingError)
+      end
     end
   end
 
