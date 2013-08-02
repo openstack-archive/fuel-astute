@@ -303,9 +303,11 @@ describe LogParser do
       size = 10**6
       dir = create_dir_with_size(size)
       nodes = [
-        {'uid' => '1',
-         'max_size' => size*100/75,
-         'path' => dir,
+        {:uid => '1',
+          :path_items => [
+            {:max_size => size*100/75,
+             :path => dir}
+          ]
         }
       ]
       correct_progress = [
@@ -322,9 +324,11 @@ describe LogParser do
       dir = create_dir_with_size(size)
       create_dir_with_size(size, {:tmpdir => dir})
       nodes = [
-        {'uid' => '1',
-         'max_size' => size*2,
-         'path' => dir,
+        {:uid => '1',
+          :path_items => [
+            {:max_size => size*2,
+             :path => dir}
+          ]
         }
       ]
       correct_progress = [
@@ -338,9 +342,11 @@ describe LogParser do
 
     it "should return zero if there is no directory" do
       nodes = [
-        {'uid' => '1',
-         'max_size' => 10000,
-         'path' => '/the-dir-that-should-not-exist',
+        {:uid => '1',
+          :path_items => [
+            {:max_size => 10000,
+             :path => '/the-dir-that-should-not-exist'}
+          ]
         }
       ]
       correct_progress = [
@@ -349,6 +355,104 @@ describe LogParser do
       ]
       dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
       dirsize_parser.progress_calculate(['1'], nil).should eql(correct_progress)
+    end
+
+    it "should return zero if no items is propagated" do
+      nodes = [
+        {:uid => '1',
+          :path_items => []
+        }
+      ]
+      correct_progress = [
+        {'uid' => '1',
+        'progress' => 0}
+      ]
+      dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
+      dirsize_parser.progress_calculate(['1'], nil).should eql(correct_progress)
+    end
+  end
+
+  context "Dirsize-based weight reassignment" do
+    it "should correctly assign weights to unweighted items" do
+      nodes = [
+        {:uid => '1',
+          :path_items => [{}, {}, {}, {}]
+        }
+      ]
+      dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
+      dirsize_parser.nodes.first[:path_items].each{|n| n[:weight].should eql(0.25)}
+    end
+
+    it "should correctly recalculate weights of weighted items" do
+      nodes = [
+        {:uid => '1',
+          :path_items => [
+            {:weight => 10},
+            {:weight => 30},
+          ]
+        }
+      ]
+      dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
+      items = dirsize_parser.nodes.first[:path_items]
+      items[0][:weight].should eql(0.25)
+      items[1][:weight].should eql(0.75)
+    end
+
+    it "should correctly recalculate weights of mixed items" do
+      nodes = [
+        {:uid => '1',
+          :path_items => [
+            {:weight => 10},
+            {:weight => 30},
+            {}, {}
+          ]
+        }
+      ]
+      dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
+      items = dirsize_parser.nodes.first[:path_items]
+      items[0][:weight].should eql(0.125)
+      items[1][:weight].should eql(0.375)
+      items[2][:weight].should eql(0.25)
+      items[3][:weight].should eql(0.25)
+    end
+
+    it "should raise exception if a negative weight propagated" do
+      nodes = [
+        {:uid => '1',
+          :path_items => [
+            {:weight => -10},
+          ]
+        }
+      ]
+      expect{Astute::LogParser::DirSizeCalculation.new(nodes)}.to \
+        raise_error("Weight should be a non-negative number")
+    end
+
+    it "should drop items with zero weight" do
+      nodes = [
+        {:uid => '1',
+          :path_items => [
+            {:weight => 0},
+            {:weight => 0},
+          ]
+        }
+      ]
+      dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
+      dirsize_parser.nodes.first[:path_items].length.should eql(0)
+    end
+
+    it "should not change initialization attribute" do
+      nodes = [
+        {:uid => '1',
+          :path_items => [
+            {:weight => 0},
+            {:weight => 5},
+            {}
+          ]
+        }
+      ]
+      dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
+      dirsize_parser.nodes.should_not eql(nodes)
     end
   end
 end

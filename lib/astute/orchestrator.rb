@@ -174,7 +174,13 @@ module Astute
       proxy_reporter = ProxyReporter::DLReleaseProxyReporter.new(up_reporter, nodes.size)
       #FIXME: These parameters should be propagated from Nailgun. Maybe they should be saved
       #       in Release.json.
-      nodes_to_parser = [{'uid' => 'master', 'max_size' => 1111280705, 'path' => '/var/www/nailgun/rhel'}]
+      nodes_to_parser = [
+        {:uid => 'master',
+         :path_items => [
+            {:max_size => 1111280705, :path => '/var/www/nailgun/rhel', :weight => 50},
+            {:max_size => 124000000, :path => '/var/cache/yum/x86_64/6Server', :weight => 50},
+         ]}
+      ]
       log_parser = @log_parsing ? LogParser::DirSizeCalculation.new(nodes_to_parser) : LogParser::NoParsing.new
       context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
