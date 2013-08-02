@@ -1,0 +1,758 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+  <head>
+    <title>spec/unit/puppetd_spec.rb</title>
+    <link href="./assets/0.2.3/screen.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="./assets/0.2.3/print.css" media="print" rel="stylesheet" type="text/css" />
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    <script type="text/javascript" src="./assets/0.2.3/rcov.js"></script>
+  </head>
+  <body>
+    <h1>Astute C0 Coverage Information - Simploco - RCov</h1>
+    <h2>spec/unit/puppetd_spec.rb</h2>
+
+    <div class="report_table_wrapper">
+      <table class='report' id='report_table'>
+        <thead>
+          <tr>
+            <th class="left_align">Name</th>
+            <th class="right_align">Total Lines</th>
+            <th class="right_align">Lines of Code</th>
+            <th class="left_align">Total Coverage</th>
+            <th class="left_align">Code Coverage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="left_align"><a href="spec-unit-puppetd_spec_rb.html">spec/unit/puppetd_spec.rb</a></td>
+            <td class='right_align'><tt>233</tt></td>
+            <td class='right_align'><tt>105</tt></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>100.00%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:100px"></div>
+        <div class="uncovered" style="width:0px"></div>
+      </div></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>100.00%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:100px"></div>
+        <div class="uncovered" style="width:0px"></div>
+      </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Key</h3>
+
+    <div class="key"><pre><span class='marked'>Code reported as executed by Ruby looks like this...</span><span class='marked1'>and this: this line is also marked as covered.</span><span class='inferred'>Lines considered as run by rcov, but not reported by Ruby, look like this,</span><span class='inferred1'>and this: these lines were inferred by rcov (using simple heuristics).</span><span class='uncovered'>Finally, here's a line marked as not executed.</span></pre></div>
+
+    <h3>Coverage Details</h3>
+
+    <table class="details">
+      <tbody>
+        <tr class="inferred">
+          <td><pre><a name="line2">2</a> #    Copyright 2013 Mirantis, Inc.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line3">3</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line4">4</a> #    Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); you may</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line5">5</a> #    not use this file except in compliance with the License. You may obtain</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line6">6</a> #    a copy of the License at</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line7">7</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line8">8</a> #         http://www.apache.org/licenses/LICENSE-2.0</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line9">9</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line10">10</a> #    Unless required by applicable law or agreed to in writing, software</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line11">11</a> #    distributed under the License is distributed on an &quot;AS IS&quot; BASIS, WITHOUT</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line12">12</a> #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line13">13</a> #    License for the specific language governing permissions and limitations</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line14">14</a> #    under the License.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line15">15</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line16">16</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line17">17</a> require File.join(File.dirname(__FILE__), '../spec_helper')</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line18">18</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line19">19</a> include Astute</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line20">20</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line21">21</a> describe &quot;Puppetd&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line22">22</a>   include SpecHelpers</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line23">23</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line24">24</a>   context &quot;PuppetdDeployer&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line25">25</a>     before :each do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line26">26</a>       @ctx = mock</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line27">27</a>       @ctx.stubs(:task_id)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line28">28</a>       @reporter = mock('reporter')</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line29">29</a>       @ctx.stubs(:reporter).returns(ProxyReporter.new(@reporter))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line30">30</a>       @ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::NoParsing.new)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line31">31</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line32">32</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line33">33</a>     it &quot;reports ready status for node if puppet deploy finished successfully&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line34">34</a>       @reporter.expects(:report).with('nodes' =&gt; [{'uid' =&gt; '1', 'status' =&gt; 'ready', 'progress' =&gt; 100}])</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line35">35</a>       last_run_result = {:data=&gt;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line36">36</a>           {:time=&gt;{&quot;last_run&quot;=&gt;1358425701},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line37">37</a>            :status =&gt; &quot;running&quot;, :resources =&gt; {'failed' =&gt; 0},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line38">38</a>            :running =&gt; 1, :idling =&gt; 0},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line39">39</a>            :sender=&gt;&quot;1&quot;}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line40">40</a>       last_run_result_new = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line41">41</a>       last_run_result_new[:data][:time]['last_run'] = 1358426000</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line42">42</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line43">43</a>       last_run_result_finished = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line44">44</a>       last_run_result_finished[:data][:status] = 'stopped'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line45">45</a>       last_run_result_finished[:data][:time]['last_run'] = 1358427000</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line46">46</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line47">47</a>       nodes = [{'uid' =&gt; '1'}]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line48">48</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line49">49</a>       rpcclient = mock_rpcclient(nodes)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line50">50</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line51">51</a>       rpcclient_valid_result = mock_mc_result(last_run_result)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line52">52</a>       rpcclient_new_res = mock_mc_result(last_run_result_new)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line53">53</a>       rpcclient_finished_res = mock_mc_result(last_run_result_finished)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line54">54</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line55">55</a>       rpcclient.stubs(:last_run_summary).returns([rpcclient_valid_result]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line56">56</a>           returns([rpcclient_valid_result]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line57">57</a>           returns([rpcclient_new_res]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line58">58</a>           returns([rpcclient_finished_res])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line59">59</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line60">60</a>       rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line61">61</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line62">62</a>       Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line63">63</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line64">64</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line65">65</a>     it &quot;doesn't report ready status for node if change_node_status disabled&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line66">66</a>       @reporter.expects(:report).never</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line67">67</a>       last_run_result = {:data=&gt;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line68">68</a>           {:time=&gt;{&quot;last_run&quot;=&gt;1358425701},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line69">69</a>            :status =&gt; &quot;running&quot;, :resources =&gt; {'failed' =&gt; 0},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line70">70</a>            :running =&gt; 1, :idling =&gt; 0},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line71">71</a>            :sender=&gt;&quot;1&quot;}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line72">72</a>       last_run_result_new = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line73">73</a>       last_run_result_new[:data][:time]['last_run'] = 1358426000</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line74">74</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line75">75</a>       last_run_result_finished = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line76">76</a>       last_run_result_finished[:data][:status] = 'stopped'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line77">77</a>       last_run_result_finished[:data][:time]['last_run'] = 1358427000</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line78">78</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line79">79</a>       nodes = [{'uid' =&gt; '1'}]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line80">80</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line81">81</a>       rpcclient = mock_rpcclient(nodes)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line82">82</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line83">83</a>       rpcclient_valid_result = mock_mc_result(last_run_result)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line84">84</a>       rpcclient_new_res = mock_mc_result(last_run_result_new)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line85">85</a>       rpcclient_finished_res = mock_mc_result(last_run_result_finished)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line86">86</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line87">87</a>       rpcclient.stubs(:last_run_summary).returns([rpcclient_valid_result]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line88">88</a>           returns([rpcclient_valid_result]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line89">89</a>           returns([rpcclient_new_res]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line90">90</a>           returns([rpcclient_finished_res])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line91">91</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line92">92</a>       rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line93">93</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line94">94</a>       Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0, change_node_status=false)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line95">95</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line96">96</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line97">97</a>     it &quot;publishes error status for node if puppet failed&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line98">98</a>       @reporter.expects(:report).with('nodes' =&gt; [{'status' =&gt; 'error',</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line99">99</a>         'error_type' =&gt; 'deploy', 'uid' =&gt; '1'}])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line100">100</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line101">101</a>       last_run_result = {:statuscode=&gt;0, :data=&gt;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line102">102</a>           {:changes=&gt;{&quot;total&quot;=&gt;1}, :time=&gt;{&quot;last_run&quot;=&gt;1358425701},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line103">103</a>            :resources=&gt;{&quot;failed&quot;=&gt;0}, :status =&gt; &quot;stopped&quot;, :enabled =&gt; 1,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line104">104</a>            :stopped =&gt; 1, :idling =&gt; 0, :running =&gt; 0, :runtime =&gt; 1358425701},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line105">105</a>          :sender=&gt;&quot;1&quot;}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line106">106</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line107">107</a>       last_run_result_idle_pre = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line108">108</a>       last_run_result_idle_pre[:data].update(</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line109">109</a>         {:status =&gt; 'idling', :idling =&gt; 1, :stopped =&gt; 0}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line110">110</a>       )</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line111">111</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line112">112</a>       last_run_result_running = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line113">113</a>       last_run_result_running[:data].update(</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line114">114</a>         {:status =&gt; 'running', :running =&gt; 1, :stopped =&gt; 0}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line115">115</a>       )</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line116">116</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line117">117</a>       last_run_result_finishing = Marshal.load(Marshal.dump(last_run_result_running))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line118">118</a>       last_run_result_finishing[:data].update(</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line119">119</a>         {</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line120">120</a>           :runtime =&gt; 1358426000, :time =&gt; {&quot;last_run&quot; =&gt; 1358426000},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line121">121</a>           :resources =&gt; {&quot;failed&quot; =&gt; 1}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line122">122</a>         }</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line123">123</a>       )</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line124">124</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line125">125</a>       last_run_result_idle_post = Marshal.load(Marshal.dump(last_run_result_finishing))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line126">126</a>       last_run_result_idle_post[:data].update(</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line127">127</a>         {:status =&gt; 'idling', :idling =&gt; 1, :running =&gt; 0}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line128">128</a>       )</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line129">129</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line130">130</a>       last_run_result_finished = Marshal.load(Marshal.dump(last_run_result_finishing))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line131">131</a>       last_run_result_finished[:data].update(</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line132">132</a>         {:status =&gt; 'stopped', :stopped =&gt; 1, :running =&gt; 0}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line133">133</a>       )</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line134">134</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line135">135</a>       nodes = [{'uid' =&gt; '1'}]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line136">136</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line137">137</a>       rpcclient = mock_rpcclient(nodes)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line138">138</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line139">139</a>       rpcclient.stubs(:last_run_summary).times(9).</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line140">140</a>         returns([ mock_mc_result(last_run_result) ]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line141">141</a>         returns([ mock_mc_result(last_run_result) ]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line142">142</a>         returns([ mock_mc_result(last_run_result_idle_pre) ]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line143">143</a>         returns([ mock_mc_result(last_run_result_idle_pre) ]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line144">144</a>         returns([ mock_mc_result(last_run_result_running) ]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line145">145</a>         returns([ mock_mc_result(last_run_result_running) ]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line146">146</a>         returns([ mock_mc_result(last_run_result_finishing) ]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line147">147</a>         returns([ mock_mc_result(last_run_result_idle_post) ]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line148">148</a>         returns([ mock_mc_result(last_run_result_finished) ])</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line149">149</a>       rpcclient.expects(:runonce).once.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line150">150</a>         returns([ mock_mc_result(last_run_result) ])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line151">151</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line152">152</a>       MClient.any_instance.stubs(:rpcclient).returns(rpcclient)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line153">153</a>       Astute::PuppetdDeployer.deploy(@ctx, nodes, 0)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line154">154</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line155">155</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line156">156</a>     it &quot;doesn't publish error status for node if change_node_status disabled&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line157">157</a>       @reporter.expects(:report).never</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line158">158</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line159">159</a>       last_run_result = {:statuscode=&gt;0, :data=&gt;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line160">160</a>           {:changes=&gt;{&quot;total&quot;=&gt;1}, :time=&gt;{&quot;last_run&quot;=&gt;1358425701},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line161">161</a>            :resources=&gt;{&quot;failed&quot;=&gt;0}, :status =&gt; &quot;running&quot;,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line162">162</a>            :running =&gt; 1, :idling =&gt; 0, :runtime =&gt; 100},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line163">163</a>          :sender=&gt;&quot;1&quot;}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line164">164</a>       last_run_result_new = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line165">165</a>       last_run_result_new[:data][:time]['last_run'] = 1358426000</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line166">166</a>       last_run_result_new[:data][:resources]['failed'] = 1</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line167">167</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line168">168</a>       nodes = [{'uid' =&gt; '1'}]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line169">169</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line170">170</a>       last_run_result_finished = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line171">171</a>       last_run_result_finished[:data][:status] = 'stopped'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line172">172</a>       last_run_result_finished[:data][:time]['last_run'] = 1358427000</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line173">173</a>       last_run_result_finished[:data][:resources]['failed'] = 1</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line174">174</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line175">175</a>       rpcclient = mock_rpcclient(nodes)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line176">176</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line177">177</a>       rpcclient_valid_result = mock_mc_result(last_run_result)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line178">178</a>       rpcclient_new_res = mock_mc_result(last_run_result_new)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line179">179</a>       rpcclient_finished_res = mock_mc_result(last_run_result_finished)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line180">180</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line181">181</a>       rpcclient.stubs(:last_run_summary).returns([rpcclient_valid_result]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line182">182</a>           returns([rpcclient_valid_result]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line183">183</a>           returns([rpcclient_new_res]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line184">184</a>           returns([rpcclient_finished_res])</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line185">185</a>       rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line186">186</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line187">187</a>       MClient.any_instance.stubs(:rpcclient).returns(rpcclient)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line188">188</a>       Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0, change_node_status=false)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line189">189</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line190">190</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line191">191</a>     it &quot;retries to run puppet if it fails&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line192">192</a>       @reporter.expects(:report).with('nodes' =&gt; [{'uid' =&gt; '1', 'status' =&gt; 'ready', 'progress' =&gt; 100}])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line193">193</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line194">194</a>       last_run_result = {:statuscode=&gt;0, :data=&gt;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line195">195</a>           {:changes=&gt;{&quot;total&quot;=&gt;1}, :time=&gt;{&quot;last_run&quot;=&gt;1358425701},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line196">196</a>            :resources=&gt;{&quot;failed&quot;=&gt;0}, :status =&gt; &quot;running&quot;,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line197">197</a>            :running =&gt; 1, :idling =&gt; 0, :runtime =&gt; 100},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line198">198</a>          :sender=&gt;&quot;1&quot;}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line199">199</a>       last_run_failed = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line200">200</a>       last_run_failed[:data][:time]['last_run'] = 1358426000</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line201">201</a>       last_run_failed[:data][:resources]['failed'] = 1</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line202">202</a>       last_run_failed[:data][:status] = 'stopped'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line203">203</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line204">204</a>       last_run_fixing = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line205">205</a>       last_run_fixing[:data][:time]['last_run'] = 1358426000</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line206">206</a>       last_run_fixing[:data][:resources]['failed'] = 1</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line207">207</a>       last_run_fixing[:data][:status] = 'running'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line208">208</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line209">209</a>       last_run_success = Marshal.load(Marshal.dump(last_run_result))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line210">210</a>       last_run_success[:data][:time]['last_run'] = 1358428000</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line211">211</a>       last_run_success[:data][:status] = 'stopped'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line212">212</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line213">213</a>       nodes = [{'uid' =&gt; '1'}]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line214">214</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line215">215</a>       rpcclient = mock_rpcclient(nodes)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line216">216</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line217">217</a>       rpcclient_valid_result = mock_mc_result(last_run_result)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line218">218</a>       rpcclient_failed = mock_mc_result(last_run_failed)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line219">219</a>       rpcclient_fixing = mock_mc_result(last_run_fixing)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line220">220</a>       rpcclient_succeed = mock_mc_result(last_run_success)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line221">221</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line222">222</a>       rpcclient.stubs(:last_run_summary).returns([rpcclient_valid_result]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line223">223</a>           returns([rpcclient_valid_result]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line224">224</a>           returns([rpcclient_failed]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line225">225</a>           returns([rpcclient_failed]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line226">226</a>           returns([rpcclient_fixing]).then.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line227">227</a>           returns([rpcclient_succeed])</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line228">228</a>       rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line229">229</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line230">230</a>       MClient.any_instance.stubs(:rpcclient).returns(rpcclient)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line231">231</a>       Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=1)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line232">232</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line233">233</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line234">234</a> end</pre></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Generated on 2013-07-19 12:05:31 +0400 with <a href="https://github.com/fguillen/simplecov-rcov">SimpleCov-RCov 0.2.3</a></p>
+
+  </body>
+</html>

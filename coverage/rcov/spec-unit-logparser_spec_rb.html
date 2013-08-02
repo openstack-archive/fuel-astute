@@ -1,0 +1,893 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+  <head>
+    <title>spec/unit/logparser_spec.rb</title>
+    <link href="./assets/0.2.3/screen.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="./assets/0.2.3/print.css" media="print" rel="stylesheet" type="text/css" />
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    <script type="text/javascript" src="./assets/0.2.3/rcov.js"></script>
+  </head>
+  <body>
+    <h1>Astute C0 Coverage Information - Simploco - RCov</h1>
+    <h2>spec/unit/logparser_spec.rb</h2>
+
+    <div class="report_table_wrapper">
+      <table class='report' id='report_table'>
+        <thead>
+          <tr>
+            <th class="left_align">Name</th>
+            <th class="right_align">Total Lines</th>
+            <th class="right_align">Lines of Code</th>
+            <th class="left_align">Total Coverage</th>
+            <th class="left_align">Code Coverage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="left_align"><a href="spec-unit-logparser_spec_rb.html">spec/unit/logparser_spec.rb</a></td>
+            <td class='right_align'><tt>278</tt></td>
+            <td class='right_align'><tt>153</tt></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>100.00%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:100px"></div>
+        <div class="uncovered" style="width:0px"></div>
+      </div></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>100.00%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:100px"></div>
+        <div class="uncovered" style="width:0px"></div>
+      </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Key</h3>
+
+    <div class="key"><pre><span class='marked'>Code reported as executed by Ruby looks like this...</span><span class='marked1'>and this: this line is also marked as covered.</span><span class='inferred'>Lines considered as run by rcov, but not reported by Ruby, look like this,</span><span class='inferred1'>and this: these lines were inferred by rcov (using simple heuristics).</span><span class='uncovered'>Finally, here's a line marked as not executed.</span></pre></div>
+
+    <h3>Coverage Details</h3>
+
+    <table class="details">
+      <tbody>
+        <tr class="inferred">
+          <td><pre><a name="line2">2</a> #    Copyright 2013 Mirantis, Inc.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line3">3</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line4">4</a> #    Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); you may</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line5">5</a> #    not use this file except in compliance with the License. You may obtain</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line6">6</a> #    a copy of the License at</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line7">7</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line8">8</a> #         http://www.apache.org/licenses/LICENSE-2.0</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line9">9</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line10">10</a> #    Unless required by applicable law or agreed to in writing, software</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line11">11</a> #    distributed under the License is distributed on an &quot;AS IS&quot; BASIS, WITHOUT</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line12">12</a> #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line13">13</a> #    License for the specific language governing permissions and limitations</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line14">14</a> #    under the License.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line15">15</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line16">16</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line17">17</a> require File.join(File.dirname(__FILE__), '../spec_helper')</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line18">18</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line19">19</a> include Astute</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line20">20</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line21">21</a> describe LogParser do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line22">22</a>   def get_statistics_variables(progress_table)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line23">23</a>     # Calculate some statistics variables: expectancy, standart deviation and</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line24">24</a>     # correlation coefficient between real and ideal progress calculation.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line25">25</a>     total_time = 0</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line26">26</a>     real_expectancy = 0</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line27">27</a>     real_sqr_expectancy = 0</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line28">28</a>     prev_event_date = nil</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line29">29</a>     progress_table.each do |el|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line30">30</a>       date = el[:date]</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line31">31</a>       prev_event_date = date unless prev_event_date</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line32">32</a>       progress = el[:progress].to_f</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line33">33</a>       period = date - prev_event_date</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line34">34</a>       hours, mins, secs, frac = Date::day_fraction_to_time(period)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line35">35</a>       period_in_sec = hours * 60 * 60 + mins * 60 + secs</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line36">36</a>       total_time += period_in_sec</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line37">37</a>       real_expectancy += period_in_sec * progress</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line38">38</a>       real_sqr_expectancy += period_in_sec * progress ** 2</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line39">39</a>       el[:time_delta] = period_in_sec</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line40">40</a>       prev_event_date = date</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line41">41</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line42">42</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line43">43</a>     # Calculate standart deviation for real progress distibution.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line44">44</a>     real_expectancy = real_expectancy.to_f / total_time</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line45">45</a>     real_sqr_expectancy = real_sqr_expectancy.to_f / total_time</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line46">46</a>     real_standart_deviation = Math.sqrt(real_sqr_expectancy - real_expectancy ** 2)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line47">47</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line48">48</a>     # Calculate PCC (correlation coefficient).</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line49">49</a>     ideal_sqr_expectancy = 0</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line50">50</a>     ideal_expectancy = 0</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line51">51</a>     t = 0</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line52">52</a>     ideal_delta = 100.0 / total_time</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line53">53</a>     mixed_expectancy = 0</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line54">54</a>     progress_table.each do |el|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line55">55</a>       t += el[:time_delta]</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line56">56</a>       ideal_progress = t * ideal_delta</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line57">57</a>       ideal_expectancy += ideal_progress * el[:time_delta]</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line58">58</a>       ideal_sqr_expectancy += ideal_progress ** 2 * el[:time_delta]</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line59">59</a>       el[:ideal_progress] = ideal_progress</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line60">60</a>       mixed_expectancy += el[:progress] * ideal_progress * el[:time_delta]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line61">61</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line62">62</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line63">63</a>     ideal_expectancy = ideal_expectancy / total_time</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line64">64</a>     ideal_sqr_expectancy = ideal_sqr_expectancy / total_time</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line65">65</a>     mixed_expectancy = mixed_expectancy / total_time</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line66">66</a>     ideal_standart_deviation = Math.sqrt(ideal_sqr_expectancy - ideal_expectancy ** 2)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line67">67</a>     covariance = mixed_expectancy - ideal_expectancy * real_expectancy</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line68">68</a>     pcc = covariance / (ideal_standart_deviation * real_standart_deviation)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line69">69</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line70">70</a>     statistics = {</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line71">71</a>       'real_expectancy' =&gt; real_expectancy,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line72">72</a>       'real_sqr_expectancy' =&gt; real_sqr_expectancy,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line73">73</a>       'real_standart_deviation' =&gt; real_standart_deviation,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line74">74</a>       'ideal_expectancy' =&gt; ideal_expectancy,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line75">75</a>       'ideal_sqr_expectancy' =&gt; ideal_sqr_expectancy,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line76">76</a>       'ideal_standart_deviation' =&gt; ideal_standart_deviation,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line77">77</a>       'mixed_expectancy' =&gt; mixed_expectancy,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line78">78</a>       'covariance' =&gt; covariance,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line79">79</a>       'pcc' =&gt; pcc,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line80">80</a>       'total_time' =&gt; total_time,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line81">81</a>     }</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line82">82</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line83">83</a>     return statistics</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line84">84</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line85">85</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line86">86</a>   def get_next_line(fo, date_regexp, date_format)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line87">87</a>     until fo.eof?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line88">88</a>       line = fo.readline</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line89">89</a>       date_string = line.match(date_regexp)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line90">90</a>       if date_string</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line91">91</a>         date = DateTime.strptime(date_string[0], date_format)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line92">92</a>         return line, date</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line93">93</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line94">94</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line95">95</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line96">96</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line97">97</a>   def get_next_lines_by_date(fo, now, date_regexp, date_format)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line98">98</a>     lines = ''</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line99">99</a>     until fo.eof?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line100">100</a>       pos = fo.pos</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line101">101</a>       line, date = get_next_line(fo, date_regexp, date_format)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line102">102</a>       if date &lt;= now</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line103">103</a>         lines += line</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line104">104</a>       else</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line105">105</a>         fo.pos = pos</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line106">106</a>         return lines</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line107">107</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line108">108</a>     end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line109">109</a>     return lines</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line110">110</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line111">111</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line112">112</a>   context &quot;Correlation coeff. (PCC) of Provisioning progress bar calculation&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line113">113</a>     def provision_parser_wrapper(node)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line114">114</a>       uids = [node['uid']]</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line115">115</a>       nodes = [node]</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line116">116</a>       time_delta = 5.0/24/60/60</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line117">117</a>       log_delay = 6*time_delta</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line118">118</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line119">119</a>       deploy_parser = Astute::LogParser::ParseProvisionLogs.new</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line120">120</a>       pattern_spec = deploy_parser.pattern_spec</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line121">121</a>       date_regexp = '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line122">122</a>       date_format = '%Y-%m-%dT%H:%M:%S'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line123">123</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line124">124</a>       Dir.mktmpdir do |dir|</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line125">125</a>         # Create temp log files and structures.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line126">126</a>         pattern_spec['path_prefix'] = &quot;#{dir}/&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line127">127</a>         path = &quot;#{pattern_spec['path_prefix']}#{node['fqdn']}/#{pattern_spec['filename']}&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line128">128</a>         Dir.mkdir(File.dirname(File.dirname(path)))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line129">129</a>         Dir.mkdir(File.dirname(path))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line130">130</a>         node['file'] = File.open(path, 'w')</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line131">131</a>         src_filename = File.join(File.dirname(__FILE__), &quot;..&quot;, &quot;example-logs&quot;, node['src_filename'])</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line132">132</a>         node['src'] = File.open(src_filename)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line133">133</a>         line, date = get_next_line(node['src'], date_regexp, date_format)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line134">134</a>         node['src'].pos = 0</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line135">135</a>         node['now'] = date - log_delay</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line136">136</a>         node['progress_table'] ||= []</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line137">137</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line138">138</a>         # End 'while' cycle if reach EOF at all src files.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line139">139</a>         until node['src'].eof?</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line140">140</a>           # Copy logs line by line from example logfile to tempfile and collect progress for each step.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line141">141</a>           lines, date = get_next_lines_by_date(node['src'], node['now'], date_regexp, date_format)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line142">142</a>           node['file'].write(lines)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line143">143</a>           node['file'].flush</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line144">144</a>           node['last_lines'] = lines</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line145">145</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line146">146</a>           DateTime.stubs(:now).returns(node['now'])</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line147">147</a>           node_progress = deploy_parser.progress_calculate(uids, nodes)[0]</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line148">148</a>           node['progress_table'] &lt;&lt; {:date =&gt; node['now'], :progress =&gt; node_progress['progress']}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line149">149</a>           node['now'] += time_delta</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line150">150</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line151">151</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line152">152</a>         nodes.each do |node|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line153">153</a>           node['statistics'] = get_statistics_variables(node['progress_table'])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line154">154</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line155">155</a>         # Clear temp files.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line156">156</a>         node['file'].close</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line157">157</a>         File.unlink(node['file'].path)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line158">158</a>         Dir.unlink(File.dirname(node['file'].path))</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line159">159</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line160">160</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line161">161</a>       return node</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line162">162</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line163">163</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line164">164</a>     it &quot;should be greather than 0.96&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line165">165</a>       node = {'uid' =&gt; '1', 'ip' =&gt; '1.0.0.1', 'fqdn' =&gt; 'slave-1.domain.tld', 'role' =&gt; 'controller', 'src_filename' =&gt; 'anaconda.log_',</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line166">166</a>         'meta' =&gt; { 'disks' =&gt;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line167">167</a>           [</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line168">168</a>           {'name' =&gt; 'flash drive', 'removable' =&gt; true, 'size' =&gt; 1000},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line169">169</a>           {'name' =&gt; 'sda', 'removable'=&gt; false, 'size' =&gt; 32*1000*1000*1000},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line170">170</a>           ]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line171">171</a>         }</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line172">172</a>       }</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line173">173</a>       calculated_node = provision_parser_wrapper(node)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line174">174</a>       calculated_node['statistics']['pcc'].should &gt; 0.96</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line175">175</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line176">176</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line177">177</a>     it &quot;it must be updated at least 5 times&quot; do</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line178">178</a>       # Otherwise progress bar has no meaning I guess...</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line179">179</a>       pending('Not yet implemented')</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line180">180</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line181">181</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line182">182</a>   end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line183">183</a>   context &quot;Correlation coeff. (PCC) of Deploying progress bar calculation&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line184">184</a>     def deployment_parser_wrapper(cluster_type, nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line185">185</a>       uids = nodes.map{|n| n['uid']}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line186">186</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line187">187</a>       deploy_parser = Astute::LogParser::ParseDeployLogs.new(cluster_type)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line188">188</a>       pattern_spec = deploy_parser.pattern_spec</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line189">189</a>       date_regexp = '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line190">190</a>       date_format = '%Y-%m-%dT%H:%M:%S'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line191">191</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line192">192</a>       Dir.mktmpdir do |dir|</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line193">193</a>         # Create temp log files and structures.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line194">194</a>         pattern_spec['path_prefix'] = &quot;#{dir}/&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line195">195</a>         nodes.each do |node|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line196">196</a>           path = &quot;#{pattern_spec['path_prefix']}#{node['fqdn']}/#{pattern_spec['filename']}&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line197">197</a>           Dir.mkdir(File.dirname(path))</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line198">198</a>           node['file'] = File.open(path, 'w')</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line199">199</a>           src_filename = File.join(File.dirname(__FILE__), &quot;..&quot;, &quot;example-logs&quot;, node['src_filename'])</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line200">200</a>           node['src'] = File.open(src_filename)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line201">201</a>           node['progress_table'] ||= []</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line202">202</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line203">203</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line204">204</a>         # End 'while' cycle if reach EOF at all src files.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line205">205</a>         while nodes.index{|n| not n['src'].eof?}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line206">206</a>           # Copy logs line by line from example logfile to tempfile and collect progress for each step.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line207">207</a>           nodes.each do |node|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line208">208</a>             unless node['src'].eof?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line209">209</a>               line = node['src'].readline</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line210">210</a>               node['file'].write(line)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line211">211</a>               node['file'].flush</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line212">212</a>               node['last_line'] = line</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line213">213</a>             else</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line214">214</a>               node['last_line'] = ''</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line215">215</a>             end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line216">216</a>           end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line217">217</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line218">218</a>           nodes_progress = deploy_parser.progress_calculate(uids, nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line219">219</a>           nodes_progress.each do |progress|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line220">220</a>             node = nodes.at(nodes.index{|n| n['uid'] == progress['uid']})</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line221">221</a>             date_string = node['last_line'].match(date_regexp)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line222">222</a>             if date_string</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line223">223</a>               date = DateTime.strptime(date_string[0], date_format)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line224">224</a>               node['progress_table'] &lt;&lt; {:date =&gt; date, :progress =&gt; progress['progress']}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line225">225</a>             end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line226">226</a>           end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line227">227</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line228">228</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line229">229</a>         nodes.each do |node|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line230">230</a>           node['statistics'] = get_statistics_variables(node['progress_table'])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line231">231</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line232">232</a>         # Clear temp files.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line233">233</a>         nodes.each do |n|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line234">234</a>           n['file'].close</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line235">235</a>           File.unlink(n['file'].path)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line236">236</a>           Dir.unlink(File.dirname(n['file'].path))</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line237">237</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line238">238</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line239">239</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line240">240</a>       return nodes</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line241">241</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line242">242</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line243">243</a>     it &quot;should be greather than 0.85 for HA deployment&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line244">244</a>       nodes = [</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line245">245</a>         {'uid' =&gt; '1', 'ip' =&gt; '1.0.0.1', 'fqdn' =&gt; 'slave-1.domain.tld', 'role' =&gt; 'controller', 'src_filename' =&gt; 'puppet-agent.log.ha.contr.2'},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line246">246</a>         {'uid' =&gt; '2', 'ip' =&gt; '1.0.0.2', 'fqdn' =&gt; 'slave-2.domain.tld', 'role' =&gt; 'compute', 'src_filename' =&gt; 'puppet-agent.log.ha.compute'},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line247">247</a>       ]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line248">248</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line249">249</a>       calculated_nodes = deployment_parser_wrapper('ha', nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line250">250</a>       calculated_nodes.each {|node| node['statistics']['pcc'].should &gt; 0.85}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line251">251</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line252">252</a>       # For debug purposes.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line253">253</a>       # print &quot;\n&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line254">254</a>       # calculated_nodes.each do |node|</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line255">255</a>       #   print node['statistics'].inspect, &quot;\n&quot;, node['statistics']['pcc'], &quot;\n&quot;, node['progress_table'][-1][:progress], &quot;\n&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line256">256</a>       # end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line257">257</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line258">258</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line259">259</a>     it &quot;should be greather than 0.97 for singlenode deployment&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line260">260</a>       nodes = [</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line261">261</a>         {'uid' =&gt; '1', 'ip' =&gt; '1.0.0.1', 'fqdn' =&gt; 'slave-1.domain.tld', 'role' =&gt; 'controller', 'src_filename' =&gt; 'puppet-agent.log.singlenode'},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line262">262</a>       ]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line263">263</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line264">264</a>       calculated_nodes = deployment_parser_wrapper('singlenode', nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line265">265</a>       calculated_nodes.each {|node| node['statistics']['pcc'].should &gt; 0.97}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line266">266</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line267">267</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line268">268</a>     it &quot;should be greather than 0.94 for multinode deployment&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line269">269</a>       nodes = [</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line270">270</a>         {'uid' =&gt; '1', 'ip' =&gt; '1.0.0.1', 'fqdn' =&gt; 'slave-1.domain.tld', 'role' =&gt; 'controller', 'src_filename' =&gt; 'puppet-agent.log.multi.contr'},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line271">271</a>         {'uid' =&gt; '2', 'ip' =&gt; '1.0.0.2', 'fqdn' =&gt; 'slave-2.domain.tld', 'role' =&gt; 'compute', 'src_filename' =&gt; 'puppet-agent.log.multi.compute'},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line272">272</a>       ]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line273">273</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line274">274</a>       calculated_nodes = deployment_parser_wrapper('multinode', nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line275">275</a>       calculated_nodes.each {|node| node['statistics']['pcc'].should &gt; 0.94}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line276">276</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line277">277</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line278">278</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line279">279</a> end</pre></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Generated on 2013-07-19 12:05:31 +0400 with <a href="https://github.com/fguillen/simplecov-rcov">SimpleCov-RCov 0.2.3</a></p>
+
+  </body>
+</html>

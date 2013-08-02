@@ -1,0 +1,464 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+  <head>
+    <title>lib/astute/mclient.rb</title>
+    <link href="./assets/0.2.3/screen.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="./assets/0.2.3/print.css" media="print" rel="stylesheet" type="text/css" />
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    <script type="text/javascript" src="./assets/0.2.3/rcov.js"></script>
+  </head>
+  <body>
+    <h1>Astute C0 Coverage Information - Simploco - RCov</h1>
+    <h2>lib/astute/mclient.rb</h2>
+
+    <div class="report_table_wrapper">
+      <table class='report' id='report_table'>
+        <thead>
+          <tr>
+            <th class="left_align">Name</th>
+            <th class="right_align">Total Lines</th>
+            <th class="right_align">Lines of Code</th>
+            <th class="left_align">Total Coverage</th>
+            <th class="left_align">Code Coverage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="left_align"><a href="lib-astute-mclient_rb.html">lib/astute/mclient.rb</a></td>
+            <td class='right_align'><tt>135</tt></td>
+            <td class='right_align'><tt>75</tt></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>91.11%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:91px"></div>
+        <div class="uncovered" style="width:9px"></div>
+      </div></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>84.00%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:84px"></div>
+        <div class="uncovered" style="width:16px"></div>
+      </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Key</h3>
+
+    <div class="key"><pre><span class='marked'>Code reported as executed by Ruby looks like this...</span><span class='marked1'>and this: this line is also marked as covered.</span><span class='inferred'>Lines considered as run by rcov, but not reported by Ruby, look like this,</span><span class='inferred1'>and this: these lines were inferred by rcov (using simple heuristics).</span><span class='uncovered'>Finally, here's a line marked as not executed.</span></pre></div>
+
+    <h3>Coverage Details</h3>
+
+    <table class="details">
+      <tbody>
+        <tr class="inferred">
+          <td><pre><a name="line2">2</a> #    Copyright 2013 Mirantis, Inc.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line3">3</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line4">4</a> #    Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); you may</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line5">5</a> #    not use this file except in compliance with the License. You may obtain</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line6">6</a> #    a copy of the License at</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line7">7</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line8">8</a> #         http://www.apache.org/licenses/LICENSE-2.0</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line9">9</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line10">10</a> #    Unless required by applicable law or agreed to in writing, software</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line11">11</a> #    distributed under the License is distributed on an &quot;AS IS&quot; BASIS, WITHOUT</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line12">12</a> #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line13">13</a> #    License for the specific language governing permissions and limitations</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line14">14</a> #    under the License.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line15">15</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line16">16</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line17">17</a> require 'mcollective'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line18">18</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line19">19</a> module Astute</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line20">20</a>   class MClient</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line21">21</a>     include MCollective::RPC</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line22">22</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line23">23</a>     attr_accessor :retries</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line24">24</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line25">25</a>     def initialize(ctx, agent, nodes=nil, check_result=true, timeout=nil)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line26">26</a>       @task_id = ctx.task_id</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line27">27</a>       @agent = agent</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line28">28</a>       @nodes = nodes.map { |n| n.to_s } if nodes</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line29">29</a>       @check_result = check_result</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line30">30</a>       @retries = Astute.config.MC_RETRIES</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line31">31</a>       @timeout = timeout</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line32">32</a>       initialize_mclient</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line33">33</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line34">34</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line35">35</a>     def on_respond_timeout(&amp;block)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line36">36</a>       @on_respond_timeout = block</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line37">37</a>       self</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line38">38</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line39">39</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line40">40</a>     def method_missing(method, *args)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line41">41</a>       @mc_res = mc_send(method, *args)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line42">42</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line43">43</a>       if method == :discover</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line44">44</a>         @nodes = args[0][:nodes]</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line45">45</a>         return @mc_res</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line46">46</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line47">47</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line48">48</a>       # Enable if needed. In normal case it eats the screen pretty fast</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line49">49</a>       log_result(@mc_res, method)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line50">50</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line51">51</a>       check_results_with_retries(method, args) if @check_result</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line52">52</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line53">53</a>       @mc_res</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line54">54</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line55">55</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line56">56</a>   private</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line57">57</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line58">58</a>     def check_results_with_retries(method, args)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line59">59</a>       err_msg = ''</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line60">60</a>       # Following error might happen because of misconfiguration, ex. direct_addressing = 1 only on client</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line61">61</a>       #  or.. could be just some hang? Let's retry if @retries is set</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line62">62</a>       if @mc_res.length &lt; @nodes.length</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line63">63</a>         # some nodes didn't respond</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line64">64</a>         retry_index = 1</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line65">65</a>         while retry_index &lt;= @retries</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line66">66</a>           sleep rand</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line67">67</a>           nodes_responded = @mc_res.map { |n| n.results[:sender] }</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line68">68</a>           not_responded = @nodes - nodes_responded</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line69">69</a>           Astute.logger.debug &quot;Retry ##{retry_index} to run mcollective agent on nodes: '#{not_responded.join(',')}'&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line70">70</a>           mc_send :discover, :nodes =&gt; not_responded</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line71">71</a>           @new_res = mc_send(method, *args)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line72">72</a>           log_result(@new_res, method)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line73">73</a>           # @new_res can have some nodes which finally responded</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line74">74</a>           @mc_res += @new_res</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line75">75</a>           break if @mc_res.length == @nodes.length</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line76">76</a>           retry_index += 1</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line77">77</a>         end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line78">78</a>         if @mc_res.length &lt; @nodes.length</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line79">79</a>           nodes_responded = @mc_res.map { |n| n.results[:sender] }</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line80">80</a>           not_responded = @nodes - nodes_responded</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line81">81</a>           if @on_respond_timeout</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line82">82</a>             @on_respond_timeout.call not_responded</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line83">83</a>           else</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line84">84</a>             err_msg += &quot;MCollective agents '#{not_responded.join(',')}' didn't respond. \n&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line85">85</a>           end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line86">86</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line87">87</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line88">88</a>       failed = @mc_res.select{|x| x.results[:statuscode] != 0 }</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line89">89</a>       if failed.any?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line90">90</a>         err_msg += &quot;MCollective call failed in agent '#{@agent}', &quot;\</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line91">91</a>                      &quot;method '#{method}', failed nodes: #{failed.map{|x| x.results[:sender]}.join(',')} \n&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line92">92</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line93">93</a>       unless err_msg.empty?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line94">94</a>         Astute.logger.error err_msg</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line95">95</a>         raise &quot;#{@task_id}: #{err_msg}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line96">96</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line97">97</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line98">98</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line99">99</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line100">100</a>     def mc_send(*args)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line101">101</a>       @mc.send(*args)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line102">102</a>     rescue =&gt; ex</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line103">103</a>       case ex</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line104">104</a>       when Stomp::Error::NoCurrentConnection</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line105">105</a>         # stupid stomp cannot recover severed connection</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line106">106</a>         stomp = MCollective::PluginManager[&quot;connector_plugin&quot;]</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line107">107</a>         stomp.disconnect rescue nil</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line108">108</a>         stomp.instance_variable_set :@connection, nil</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line109">109</a>         initialize_mclient</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line110">110</a>       end</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line111">111</a>       sleep rand</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line112">112</a>       Astute.logger.error &quot;Retrying MCollective call after exception: #{ex}&quot;</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line113">113</a>       retry</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line114">114</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line115">115</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line116">116</a>     def initialize_mclient</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line117">117</a>       @mc = rpcclient(@agent, :exit_on_failure =&gt; false)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line118">118</a>       @mc.timeout = @timeout if @timeout</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line119">119</a>       @mc.progress = false</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line120">120</a>       if @nodes</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line121">121</a>         @mc.discover :nodes =&gt; @nodes</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line122">122</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line123">123</a>     rescue =&gt; ex</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line124">124</a>       Astute.logger.error &quot;Retrying RPC client instantiation after exception: #{ex}&quot;</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line125">125</a>       sleep 5</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line126">126</a>       retry</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line127">127</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line128">128</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line129">129</a>     def log_result(result, method)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line130">130</a>       result.each do |node|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line131">131</a>         Astute.logger.debug &quot;#{@task_id}: MC agent '#{node.agent}', method '#{method}', &quot;\</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line132">132</a>                             &quot;results: #{node.results.inspect}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line133">133</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line134">134</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line135">135</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line136">136</a> end</pre></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Generated on 2013-07-19 12:05:31 +0400 with <a href="https://github.com/fguillen/simplecov-rcov">SimpleCov-RCov 0.2.3</a></p>
+
+  </body>
+</html>

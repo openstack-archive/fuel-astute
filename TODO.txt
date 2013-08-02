@@ -1,0 +1,2 @@
+* CLI client should be provided for API (with all available operations supported)
+* Component to be used for orchestration transport layer (MComponent for orchestration transport layer should be pluggable. In addition to default option (MCollective) user should be able to prepare custom plugin (to use Salt, SSH, python Fabric etc) and rComponent for orchestration transport layer should be pluggable. In addition to default option (MCollective) user should be able to prepare custom plugin (to use Salt, SSH, python Fabric etc) and rCollective by default):

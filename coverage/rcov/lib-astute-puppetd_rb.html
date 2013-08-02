@@ -1,0 +1,569 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+  <head>
+    <title>lib/astute/puppetd.rb</title>
+    <link href="./assets/0.2.3/screen.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="./assets/0.2.3/print.css" media="print" rel="stylesheet" type="text/css" />
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    <script type="text/javascript" src="./assets/0.2.3/rcov.js"></script>
+  </head>
+  <body>
+    <h1>Astute C0 Coverage Information - Simploco - RCov</h1>
+    <h2>lib/astute/puppetd.rb</h2>
+
+    <div class="report_table_wrapper">
+      <table class='report' id='report_table'>
+        <thead>
+          <tr>
+            <th class="left_align">Name</th>
+            <th class="right_align">Total Lines</th>
+            <th class="right_align">Lines of Code</th>
+            <th class="left_align">Total Coverage</th>
+            <th class="left_align">Code Coverage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="left_align"><a href="lib-astute-puppetd_rb.html">lib/astute/puppetd.rb</a></td>
+            <td class='right_align'><tt>170</tt></td>
+            <td class='right_align'><tt>86</tt></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>95.88%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:96px"></div>
+        <div class="uncovered" style="width:4px"></div>
+      </div></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>91.86%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:92px"></div>
+        <div class="uncovered" style="width:8px"></div>
+      </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Key</h3>
+
+    <div class="key"><pre><span class='marked'>Code reported as executed by Ruby looks like this...</span><span class='marked1'>and this: this line is also marked as covered.</span><span class='inferred'>Lines considered as run by rcov, but not reported by Ruby, look like this,</span><span class='inferred1'>and this: these lines were inferred by rcov (using simple heuristics).</span><span class='uncovered'>Finally, here's a line marked as not executed.</span></pre></div>
+
+    <h3>Coverage Details</h3>
+
+    <table class="details">
+      <tbody>
+        <tr class="inferred">
+          <td><pre><a name="line2">2</a> #    Copyright 2013 Mirantis, Inc.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line3">3</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line4">4</a> #    Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); you may</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line5">5</a> #    not use this file except in compliance with the License. You may obtain</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line6">6</a> #    a copy of the License at</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line7">7</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line8">8</a> #         http://www.apache.org/licenses/LICENSE-2.0</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line9">9</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line10">10</a> #    Unless required by applicable law or agreed to in writing, software</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line11">11</a> #    distributed under the License is distributed on an &quot;AS IS&quot; BASIS, WITHOUT</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line12">12</a> #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line13">13</a> #    License for the specific language governing permissions and limitations</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line14">14</a> #    under the License.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line15">15</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line16">16</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line17">17</a> require 'json'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line18">18</a> require 'timeout'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line19">19</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line20">20</a> module Astute</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line21">21</a>   module PuppetdDeployer</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line22">22</a>     # As I (Andrey Danin) understand, Puppet agent goes through these steps:</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line23">23</a>     #   * Puppetd has 'stopped' state.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line24">24</a>     #   * We run it as a run_once, and puppetd goes to 'idling' state - it trying to</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line25">25</a>     #       retrieve catalog.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line26">26</a>     #   * If it can't retrieve catalog, it goes back to 'stopped' state without</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line27">27</a>     #       any update of last_run_summary file.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line28">28</a>     #   * If puppetd retrieve catalog, it goes to 'running' state, which means</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line29">29</a>     #       it appying catalog to system.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line30">30</a>     #   * When puppetd finished catalog run, it updates last_run_summary file</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line31">31</a>     #       but stays in 'running' state for a while.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line32">32</a>     #   * After puppetd finished all internal jobs connected with finished catalog,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line33">33</a>     #       it goes to 'idling' state.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line34">34</a>     #   * After a short time it goes to 'stopped' state because we ran it as a run_once.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line35">35</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line36">36</a>     private</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line37">37</a>     # Runs puppetd.runonce only if puppet is stopped on the host at the time</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line38">38</a>     # If it isn't stopped, we wait a bit and try again.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line39">39</a>     # Returns list of nodes uids which appear to be with hung puppet.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line40">40</a>     def self.puppetd_runonce(puppetd, uids)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line41">41</a>       started = Time.now.to_i</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line42">42</a>       while Time.now.to_i - started &lt; Astute.config.PUPPET_FADE_TIMEOUT</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line43">43</a>         puppetd.discover(:nodes =&gt; uids)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line44">44</a>         last_run = puppetd.last_run_summary</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line45">45</a>         running_uids = last_run.select {|x| x.results[:data][:status] != 'stopped'}.map {|n| n.results[:sender]}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line46">46</a>         stopped_uids = uids - running_uids</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line47">47</a>         if stopped_uids.any?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line48">48</a>           puppetd.discover(:nodes =&gt; stopped_uids)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line49">49</a>           puppetd.runonce</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line50">50</a>         end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line51">51</a>         uids = running_uids</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line52">52</a>         break if uids.empty?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line53">53</a>         sleep Astute.config.PUPPET_FADE_INTERVAL</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line54">54</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line55">55</a>       Astute.logger.debug &quot;puppetd_runonce completed within #{Time.now.to_i - started} seconds.&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line56">56</a>       Astute.logger.debug &quot;Following nodes have puppet hung: '#{running_uids.join(',')}'&quot; if running_uids.any?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line57">57</a>       running_uids</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line58">58</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line59">59</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line60">60</a>     def self.calc_nodes_status(last_run, prev_run)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line61">61</a>       # Finished are those which are not in running state,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line62">62</a>       #   and changed their last_run time, which is changed after application of catalog,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line63">63</a>       #   at the time of updating last_run_summary file. At that particular time puppet is</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line64">64</a>       #   still running, and will finish in a couple of seconds.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line65">65</a>       # If Puppet had crashed before it got a catalog (e.g. certificate problems),</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line66">66</a>       #   it didn't update last_run_summary file and switched to 'stopped' state.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line67">67</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line68">68</a>       stopped = last_run.select {|x| x.results[:data][:status] == 'stopped'}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line69">69</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line70">70</a>       # Select all finished nodes which not failed and changed last_run time.</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line71">71</a>       succeed_nodes = stopped.select { |n|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line72">72</a>         prev_n = prev_run.find{|ps| ps.results[:sender] == n.results[:sender] }</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line73">73</a>         n.results[:data][:resources]['failed'].to_i == 0 &amp;&amp;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line74">74</a>           n.results[:data][:resources]['failed_to_restart'].to_i == 0 &amp;&amp;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line75">75</a>           n.results[:data][:time]['last_run'] != (prev_n &amp;&amp; prev_n.results[:data][:time]['last_run'])</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line76">76</a>       }.map{|x| x.results[:sender] }</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line77">77</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line78">78</a>       stopped_nodes = stopped.map {|x| x.results[:sender]}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line79">79</a>       error_nodes = stopped_nodes - succeed_nodes</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line80">80</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line81">81</a>       # Running are all which didn't appear in finished</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line82">82</a>       running_nodes = last_run.map {|n| n.results[:sender]} - stopped_nodes</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line83">83</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line84">84</a>       nodes_to_check = running_nodes + succeed_nodes + error_nodes</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line85">85</a>       unless nodes_to_check.size == last_run.size</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line86">86</a>         raise &quot;Shoud never happen. Internal error in nodes statuses calculation. Statuses calculated for: #{nodes_to_check.inspect},&quot;</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line87">87</a>                     &quot;nodes passed to check statuses of: #{last_run.map {|n| n.results[:sender]}}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line88">88</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line89">89</a>       {'succeed' =&gt; succeed_nodes, 'error' =&gt; error_nodes, 'running' =&gt; running_nodes}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line90">90</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line91">91</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line92">92</a>     public</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line93">93</a>     def self.deploy(ctx, nodes, retries=2, change_node_status=true)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line94">94</a>       # TODO: can we hide retries, ignore_failure into @ctx ?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line95">95</a>       uids = nodes.map {|n| n['uid']}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line96">96</a>       # Keep info about retries for each node</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line97">97</a>       node_retries = {}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line98">98</a>       uids.each {|x| node_retries.merge!({x =&gt; retries}) }</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line99">99</a>       Astute.logger.debug &quot;Waiting for puppet to finish deployment on all nodes (timeout = #{Astute.config.PUPPET_TIMEOUT} sec)...&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line100">100</a>       time_before = Time.now</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line101">101</a>       Timeout::timeout(Astute.config.PUPPET_TIMEOUT) do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line102">102</a>         puppetd = MClient.new(ctx, &quot;puppetd&quot;, uids)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line103">103</a>         puppetd.on_respond_timeout do |uids|</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line104">104</a>           ctx.reporter.report('nodes' =&gt; uids.map{|uid| {'uid' =&gt; uid, 'status' =&gt; 'error', 'error_type' =&gt; 'deploy'}})</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line105">105</a>         end if change_node_status</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line106">106</a>         prev_summary = puppetd.last_run_summary</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line107">107</a>         puppetd_runonce(puppetd, uids)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line108">108</a>         nodes_to_check = uids</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line109">109</a>         last_run = puppetd.last_run_summary</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line110">110</a>         while nodes_to_check.any?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line111">111</a>           calc_nodes = calc_nodes_status(last_run, prev_summary)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line112">112</a>           Astute.logger.debug &quot;Nodes statuses: #{calc_nodes.inspect}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line113">113</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line114">114</a>           # At least we will report about successfully deployed nodes</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line115">115</a>           nodes_to_report = []</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line116">116</a>           nodes_to_report.concat(calc_nodes['succeed'].map { |n| {'uid' =&gt; n, 'status' =&gt; 'ready'} }) if change_node_status</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line117">117</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line118">118</a>           # Process retries</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line119">119</a>           nodes_to_retry = []</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line120">120</a>           calc_nodes['error'].each do |uid|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line121">121</a>             if node_retries[uid] &gt; 0</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line122">122</a>               node_retries[uid] -= 1</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line123">123</a>               Astute.logger.debug &quot;Puppet on node #{uid.inspect} will be restarted. &quot;\</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line124">124</a>                                   &quot;#{node_retries[uid]} retries remained.&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line125">125</a>               nodes_to_retry &lt;&lt; uid</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line126">126</a>             else</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line127">127</a>               Astute.logger.debug &quot;Node #{uid.inspect} has failed to deploy. There is no more retries for puppet run.&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line128">128</a>               nodes_to_report &lt;&lt; {'uid' =&gt; uid, 'status' =&gt; 'error', 'error_type' =&gt; 'deploy'} if change_node_status</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line129">129</a>             end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line130">130</a>           end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line131">131</a>           if nodes_to_retry.any?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line132">132</a>             Astute.logger.info &quot;Retrying to run puppet for following error nodes: #{nodes_to_retry.join(',')}&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line133">133</a>             puppetd_runonce(puppetd, nodes_to_retry)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line134">134</a>             # We need this magic with prev_summary to reflect new puppetd run statuses..</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line135">135</a>             prev_summary.delete_if { |x| nodes_to_retry.include?(x.results[:sender]) }</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line136">136</a>             prev_summary += last_run.select { |x| nodes_to_retry.include?(x.results[:sender]) }</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line137">137</a>           end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line138">138</a>           # /end of processing retries</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line139">139</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line140">140</a>           if calc_nodes['running'].any?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line141">141</a>             begin</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line142">142</a>               # Pass nodes because logs calculation needs IP address of node, not just uid</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line143">143</a>               nodes_progress = ctx.deploy_log_parser.progress_calculate(calc_nodes['running'], nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line144">144</a>               if nodes_progress.any?</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line145">145</a>                 Astute.logger.debug &quot;Got progress for nodes: #{nodes_progress.inspect}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line146">146</a>                 # Nodes with progress are running, so they are not included in nodes_to_report yet</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line147">147</a>                 nodes_progress.map! {|x| x.merge!({'status' =&gt; 'deploying'})}</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line148">148</a>                 nodes_to_report += nodes_progress</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line149">149</a>               end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line150">150</a>             rescue Exception =&gt; e</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line151">151</a>               Astute.logger.warn &quot;Some error occurred when parse logs for nodes progress: #{e.message}, &quot;\</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line152">152</a>                                  &quot;trace: #{e.backtrace.inspect}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line153">153</a>             end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line154">154</a>           end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line155">155</a>           ctx.reporter.report('nodes' =&gt; nodes_to_report) if nodes_to_report.any?</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line156">156</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line157">157</a>           # we will iterate only over running nodes and those that we restart deployment for</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line158">158</a>           nodes_to_check = calc_nodes['running'] + nodes_to_retry</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line159">159</a>           break if nodes_to_check.empty?</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line160">160</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line161">161</a>           sleep Astute.config.PUPPET_DEPLOY_INTERVAL</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line162">162</a>           puppetd.discover(:nodes =&gt; nodes_to_check)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line163">163</a>           last_run = puppetd.last_run_summary</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line164">164</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line165">165</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line166">166</a>       time_spent = Time.now - time_before</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line167">167</a>       Astute.logger.info &quot;#{ctx.task_id}: Spent #{time_spent} seconds on puppet run &quot;\</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line168">168</a>                          &quot;for following nodes(uids): #{nodes.map {|n| n['uid']}.join(',')}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line169">169</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line170">170</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line171">171</a> end</pre></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Generated on 2013-07-19 12:05:31 +0400 with <a href="https://github.com/fguillen/simplecov-rcov">SimpleCov-RCov 0.2.3</a></p>
+
+  </body>
+</html>

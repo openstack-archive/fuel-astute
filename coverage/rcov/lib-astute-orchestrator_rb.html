@@ -1,0 +1,827 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+  <head>
+    <title>lib/astute/orchestrator.rb</title>
+    <link href="./assets/0.2.3/screen.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="./assets/0.2.3/print.css" media="print" rel="stylesheet" type="text/css" />
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    <script type="text/javascript" src="./assets/0.2.3/rcov.js"></script>
+  </head>
+  <body>
+    <h1>Astute C0 Coverage Information - Simploco - RCov</h1>
+    <h2>lib/astute/orchestrator.rb</h2>
+
+    <div class="report_table_wrapper">
+      <table class='report' id='report_table'>
+        <thead>
+          <tr>
+            <th class="left_align">Name</th>
+            <th class="right_align">Total Lines</th>
+            <th class="right_align">Lines of Code</th>
+            <th class="left_align">Total Coverage</th>
+            <th class="left_align">Code Coverage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="left_align"><a href="lib-astute-orchestrator_rb.html">lib/astute/orchestrator.rb</a></td>
+            <td class='right_align'><tt>256</tt></td>
+            <td class='right_align'><tt>141</tt></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>90.23%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:90px"></div>
+        <div class="uncovered" style="width:10px"></div>
+      </div></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>82.27%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:82px"></div>
+        <div class="uncovered" style="width:18px"></div>
+      </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Key</h3>
+
+    <div class="key"><pre><span class='marked'>Code reported as executed by Ruby looks like this...</span><span class='marked1'>and this: this line is also marked as covered.</span><span class='inferred'>Lines considered as run by rcov, but not reported by Ruby, look like this,</span><span class='inferred1'>and this: these lines were inferred by rcov (using simple heuristics).</span><span class='uncovered'>Finally, here's a line marked as not executed.</span></pre></div>
+
+    <h3>Coverage Details</h3>
+
+    <table class="details">
+      <tbody>
+        <tr class="inferred">
+          <td><pre><a name="line2">2</a> #    Copyright 2013 Mirantis, Inc.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line3">3</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line4">4</a> #    Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); you may</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line5">5</a> #    not use this file except in compliance with the License. You may obtain</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line6">6</a> #    a copy of the License at</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line7">7</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line8">8</a> #         http://www.apache.org/licenses/LICENSE-2.0</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line9">9</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line10">10</a> #    Unless required by applicable law or agreed to in writing, software</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line11">11</a> #    distributed under the License is distributed on an &quot;AS IS&quot; BASIS, WITHOUT</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line12">12</a> #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line13">13</a> #    License for the specific language governing permissions and limitations</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line14">14</a> #    under the License.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line15">15</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line16">16</a> module Astute</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line17">17</a>   class Orchestrator</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line18">18</a>     def initialize(deploy_engine=nil, log_parsing=false)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line19">19</a>       @deploy_engine = deploy_engine || Astute::DeploymentEngine::NailyFact</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line20">20</a>       @log_parser = log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line21">21</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line22">22</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line23">23</a>     def node_type(reporter, task_id, nodes, timeout=nil)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line24">24</a>       context = Context.new(task_id, reporter)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line25">25</a>       uids = nodes.map {|n| n['uid']}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line26">26</a>       systemtype = MClient.new(context, &quot;systemtype&quot;, uids, check_result=false, timeout)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line27">27</a>       systems = systemtype.get_type</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line28">28</a>       systems.map do |n|</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line29">29</a>         {</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line30">30</a>           'uid'       =&gt; n.results[:sender],</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line31">31</a>           'node_type' =&gt; n.results[:data][:node_type].chomp</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line32">32</a>         }</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line33">33</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line34">34</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line35">35</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line36">36</a>     def deploy(up_reporter, task_id, nodes, attrs)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line37">37</a>       raise &quot;Nodes to deploy are not provided!&quot; if nodes.empty?</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line38">38</a>       # Following line fixes issues with uids: it should always be string</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line39">39</a>       nodes.map { |x| x['uid'] = x['uid'].to_s }  # NOTE: perform that on environment['nodes'] initialization</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line40">40</a>       proxy_reporter = ProxyReporter.new(up_reporter)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line41">41</a>       context = Context.new(task_id, proxy_reporter, @log_parser)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line42">42</a>       deploy_engine_instance = @deploy_engine.new(context)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line43">43</a>       Astute.logger.info &quot;Using #{deploy_engine_instance.class} for deployment.&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line44">44</a>       begin</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line45">45</a>         @log_parser.prepare(nodes)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line46">46</a>       rescue Exception =&gt; e</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line47">47</a>         Astute.logger.warn &quot;Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.inspect}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line48">48</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line49">49</a>       deploy_engine_instance.deploy(nodes, attrs)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line50">50</a>       return SUCCESS</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line51">51</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line52">52</a>     </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line53">53</a>     def fast_provision(reporter, engine_attrs, nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line54">54</a>       raise &quot;Nodes to provision are not provided!&quot; if nodes.empty?</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line55">55</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line56">56</a>       engine = create_engine(engine_attrs, reporter)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line57">57</a>       </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line58">58</a>       begin</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line59">59</a>         reboot_events = reboot_nodes(engine, nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line60">60</a>         failed_nodes  = check_reboot_nodes(engine, reboot_events)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line61">61</a>         </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line62">62</a>       rescue RuntimeError =&gt; e</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line63">63</a>         Astute.logger.error(&quot;Error occured while provisioning: #{e.inspect}&quot;)</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line64">64</a>         reporter.report({</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line65">65</a>                           'status' =&gt; 'error',</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line66">66</a>                           'error' =&gt; 'Cobbler error',</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line67">67</a>                           'progress' =&gt; 100</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line68">68</a>                         })</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line69">69</a>         raise StopIteration</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line70">70</a>       ensure</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line71">71</a>         engine.sync</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line72">72</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line73">73</a>       </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line74">74</a>       if failed_nodes.empty?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line75">75</a>         report_result({}, reporter)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line76">76</a>         return SUCCESS</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line77">77</a>       else</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line78">78</a>         Astute.logger.error(&quot;Nodes failed to reboot: #{failed_nodes.inspect}&quot;)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line79">79</a>         reporter.report({</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line80">80</a>                           'status' =&gt; 'error',</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line81">81</a>                           'error' =&gt; &quot;Nodes failed to reboot: #{failed_nodes.inspect}&quot;,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line82">82</a>                           'progress' =&gt; 100</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line83">83</a>                         })</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line84">84</a>         raise StopIteration</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line85">85</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line86">86</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line87">87</a>     </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line88">88</a>     def provision(reporter, task_id, nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line89">89</a>       raise &quot;Nodes to provision are not provided!&quot; if nodes.empty?</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line90">90</a>       </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line91">91</a>       # Following line fixes issues with uids: it should always be string</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line92">92</a>       nodes.map { |x| x['uid'] = x['uid'].to_s } # NOTE: perform that on environment['nodes'] initialization</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line93">93</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line94">94</a>       nodes_uids = nodes.map { |n| n['uid'] }</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line95">95</a>       </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line96">96</a>       provisionLogParser = LogParser::ParseProvisionLogs.new</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line97">97</a>       proxy_reporter = ProxyReporter.new(reporter)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line98">98</a>       sleep_not_greater_than(10) do # Wait while nodes going to reboot</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line99">99</a>         Astute.logger.info &quot;Starting OS provisioning for nodes: #{nodes_uids.join(',')}&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line100">100</a>         begin</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line101">101</a>           provisionLogParser.prepare(nodes)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line102">102</a>         rescue =&gt; e</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line103">103</a>           Astute.logger.warn &quot;Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.inspect}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line104">104</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line105">105</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line106">106</a>       nodes_not_booted = nodes_uids.clone</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line107">107</a>       begin</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line108">108</a>         Timeout.timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line109">109</a>           catch :done do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line110">110</a>             while true</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line111">111</a>               sleep_not_greater_than(5) do </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line112">112</a>                 types = node_type(proxy_reporter, task_id, nodes, 2)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line113">113</a>                 types.each { |t| Astute.logger.debug(&quot;Got node types: uid=#{t['uid']} type=#{t['node_type']}&quot;) }</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line114">114</a>           </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line115">115</a>                 Astute.logger.debug(&quot;Not target nodes will be rejected&quot;)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line116">116</a>                 target_uids = types.reject{|n| n['node_type'] != 'target'}.map{|n| n['uid']}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line117">117</a>                 nodes_not_booted -= types.map { |n| n['uid'] }</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line118">118</a>                 Astute.logger.debug &quot;Not provisioned: #{nodes_not_booted.join(',')}, got target OSes: #{target_uids.join(',')}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line119">119</a>           </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line120">120</a>                 if nodes.length == target_uids.length</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line121">121</a>                   Astute.logger.info &quot;All nodes #{target_uids.join(',')} are provisioned.&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line122">122</a>                   throw :done</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line123">123</a>                 else</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line124">124</a>                   Astute.logger.debug(&quot;Nodes list length is not equal to target nodes list length: #{nodes.length} != #{target_uids.length}&quot;)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line125">125</a>                 end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line126">126</a> </pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line127">127</a>                 report_about_progress(proxy_reporter, provisionLogParser, nodes_uids, target_uids, nodes)     </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line128">128</a>               end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line129">129</a>             end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line130">130</a>           end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line131">131</a>           # We are here if jumped by throw from while cycle </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line132">132</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line133">133</a>       rescue Timeout::Error</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line134">134</a>         msg = &quot;Timeout of provisioning is exceeded.&quot;</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line135">135</a>         Astute.logger.error msg</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line136">136</a>         error_nodes = nodes_not_booted.map { |n| {'uid' =&gt; n,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line137">137</a>                                                   'status' =&gt; 'error',</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line138">138</a>                                                   'error_msg' =&gt; msg,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line139">139</a>                                                   'progress' =&gt; 100,</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line140">140</a>                                                   'error_type' =&gt; 'provision'} }</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line141">141</a>         proxy_reporter.report({'status' =&gt; 'error', 'error' =&gt; msg, 'nodes' =&gt; error_nodes})</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line142">142</a>         return FAIL</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line143">143</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line144">144</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line145">145</a>       nodes_progress = nodes.map do |n|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line146">146</a>         {'uid' =&gt; n['uid'], 'progress' =&gt; 100, 'status' =&gt; 'provisioned'}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line147">147</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line148">148</a>       proxy_reporter.report({'nodes' =&gt; nodes_progress})</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line149">149</a>       return SUCCESS</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line150">150</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line151">151</a>     </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line152">152</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line153">153</a>     def remove_nodes(reporter, task_id, nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line154">154</a>       NodesRemover.new(Context.new(task_id, reporter), nodes).remove</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line155">155</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line156">156</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line157">157</a>     def verify_networks(reporter, task_id, nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line158">158</a>       Network.check_network(Context.new(task_id, reporter), nodes)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line159">159</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line160">160</a>     </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line161">161</a>     private</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line162">162</a>     </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line163">163</a>     def report_result(result, reporter)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line164">164</a>       default_result = {'status' =&gt; 'ready', 'progress' =&gt; 100}</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line165">165</a>       </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line166">166</a>       result = {} unless result.instance_of?(Hash)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line167">167</a>       status = default_result.merge(result)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line168">168</a>       reporter.report(status)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line169">169</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line170">170</a>     </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line171">171</a>     def sleep_not_greater_than(sleep_time, &amp;block)</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line172">172</a>       time = Time.now.to_f</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line173">173</a>       block.call</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line174">174</a>       time = time + sleep_time - Time.now.to_f</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line175">175</a>       sleep (time) if time &gt; 0</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line176">176</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line177">177</a>     </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line178">178</a>     def create_engine(engine_attrs, reporter)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line179">179</a>       begin</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line180">180</a>         Astute.logger.info(&quot;Trying to instantiate cobbler engine: #{engine_attrs.inspect}&quot;)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line181">181</a>         Astute::Provision::Cobbler.new(engine_attrs)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line182">182</a>       rescue</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line183">183</a>         Astute.logger.error(&quot;Error occured during cobbler initializing&quot;)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line184">184</a>         </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line185">185</a>         reporter.report({</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line186">186</a>                           'status' =&gt; 'error',</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line187">187</a>                           'error' =&gt; 'Cobbler can not be initialized',</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line188">188</a>                           'progress' =&gt; 100</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line189">189</a>                         })</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line190">190</a>         raise StopIteration</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line191">191</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line192">192</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line193">193</a>     </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line194">194</a>     def reboot_nodes(engine, nodes)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line195">195</a>       reboot_events = {}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line196">196</a>       nodes.each do |node|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line197">197</a>         begin</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line198">198</a>           Astute.logger.info(&quot;Adding #{node['name']} into cobbler&quot;)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line199">199</a>           engine.item_from_hash('system', node['name'], node,</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line200">200</a>                            :item_preremove =&gt; true)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line201">201</a>         rescue RuntimeError =&gt; e</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line202">202</a>           Astute.logger.error(&quot;Error occured while adding system #{node['name']} to cobbler&quot;)</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line203">203</a>           raise e</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line204">204</a>         end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line205">205</a>         Astute.logger.debug(&quot;Trying to reboot node: #{node['name']}&quot;)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line206">206</a>         reboot_events[node['name']] = engine.power_reboot(node['name'])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line207">207</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line208">208</a>       reboot_events</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line209">209</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line210">210</a>     </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line211">211</a>     def check_reboot_nodes(engine, reboot_events)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line212">212</a>       begin</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line213">213</a>         Astute.logger.debug(&quot;Waiting for reboot to be complete: nodes: #{reboot_events.keys}&quot;)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line214">214</a>         failed_nodes = []</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line215">215</a>         Timeout::timeout(Astute.config.REBOOT_TIMEOUT) do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line216">216</a>           while not reboot_events.empty?</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line217">217</a>             reboot_events.each do |node_name, event_id|</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line218">218</a>               event_status = engine.event_status(event_id)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line219">219</a>               Astute.logger.debug(&quot;Reboot task status: node: #{node_name} status: #{event_status}&quot;)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line220">220</a>               if event_status[2] =~ /^failed$/</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line221">221</a>                 Astute.logger.error(&quot;Error occured while trying to reboot: #{node_name}&quot;)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line222">222</a>                 reboot_events.delete(node_name)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line223">223</a>                 failed_nodes &lt;&lt; node_name</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line224">224</a>               elsif event_status[2] =~ /^complete$/</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line225">225</a>                 Astute.logger.debug(&quot;Successfully rebooted: #{node_name}&quot;)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line226">226</a>                 reboot_events.delete(node_name)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line227">227</a>               end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line228">228</a>             end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line229">229</a>             sleep(5)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line230">230</a>           end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line231">231</a>         end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line232">232</a>       rescue Timeout::Error =&gt; e</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line233">233</a>         Astute.logger.debug(&quot;Reboot timeout: reboot tasks not completed for nodes #{reboot_events.keys}&quot;)</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line234">234</a>         raise e</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line235">235</a>       end</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line236">236</a>       failed_nodes</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line237">237</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line238">238</a>     </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line239">239</a>     def report_about_progress(reporter, provisionLogParser, nodes_uids, target_uids, nodes)</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line240">240</a>       begin</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line241">241</a>         nodes_progress = provisionLogParser.progress_calculate(nodes_uids, nodes)</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line242">242</a>         nodes_progress.each do |n|</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line243">243</a>           if target_uids.include?(n['uid'])</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line244">244</a>             n['progress'] = 100</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line245">245</a>             n['status']   = 'provisioned'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line246">246</a>           else</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line247">247</a>             n['status']   = 'provisioning'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line248">248</a>           end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line249">249</a>         end</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line250">250</a>         reporter.report({'nodes' =&gt; nodes_progress})</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line251">251</a>       rescue =&gt; e</pre></td>
+        </tr>
+        <tr class="uncovered">
+          <td><pre><a name="line252">252</a>         Astute.logger.warn &quot;Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.backtrace.inspect}&quot;</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line253">253</a>       end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line254">254</a>     end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line255">255</a>     </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line256">256</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line257">257</a> end</pre></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Generated on 2013-07-19 12:05:31 +0400 with <a href="https://github.com/fguillen/simplecov-rcov">SimpleCov-RCov 0.2.3</a></p>
+
+  </body>
+</html>

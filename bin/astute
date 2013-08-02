@@ -23,6 +23,7 @@ require 'optparse'
 require 'yaml'
 require 'astute'
 require 'astute/version'
+require 'astute/enviroment'
 
 class ConsoleReporter
   def report(msg)
@@ -63,7 +64,8 @@ end
 reporter = ConsoleReporter.new
 Astute.logger = Logger.new(STDOUT) if opts[:verbose]
 
-environment = YAML.load_file(opts[:filename])
+environment = Astute::Enviroment.load_file(opts[:filename])
+p environment['nodes'][0]['ip']
 
 deploy_engine = nil
 
@@ -84,7 +86,8 @@ def console_provision(orchestrator, reporter, environment)
   res = orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
   if res == Astute::SUCCESS
     puts "restarting nodes..."
-    sleep 5
+    sleep 25
+    puts "start watching progress"
     res = orchestrator.provision(reporter, environment['task_uuid'], environment['nodes'])
   end
   res

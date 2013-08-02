@@ -1,0 +1,344 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+  <head>
+    <title>spec/unit/node_spec.rb</title>
+    <link href="./assets/0.2.3/screen.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="./assets/0.2.3/print.css" media="print" rel="stylesheet" type="text/css" />
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    <script type="text/javascript" src="./assets/0.2.3/rcov.js"></script>
+  </head>
+  <body>
+    <h1>Astute C0 Coverage Information - Simploco - RCov</h1>
+    <h2>spec/unit/node_spec.rb</h2>
+
+    <div class="report_table_wrapper">
+      <table class='report' id='report_table'>
+        <thead>
+          <tr>
+            <th class="left_align">Name</th>
+            <th class="right_align">Total Lines</th>
+            <th class="right_align">Lines of Code</th>
+            <th class="left_align">Total Coverage</th>
+            <th class="left_align">Code Coverage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="left_align"><a href="spec-unit-node_spec_rb.html">spec/unit/node_spec.rb</a></td>
+            <td class='right_align'><tt>95</tt></td>
+            <td class='right_align'><tt>52</tt></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>100.00%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:100px"></div>
+        <div class="uncovered" style="width:0px"></div>
+      </div></td>
+            <td class="left_align"><div class="percent_graph_legend"><tt class=''>100.00%</tt></div>
+      <div class="percent_graph">
+        <div class="covered" style="width:100px"></div>
+        <div class="uncovered" style="width:0px"></div>
+      </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Key</h3>
+
+    <div class="key"><pre><span class='marked'>Code reported as executed by Ruby looks like this...</span><span class='marked1'>and this: this line is also marked as covered.</span><span class='inferred'>Lines considered as run by rcov, but not reported by Ruby, look like this,</span><span class='inferred1'>and this: these lines were inferred by rcov (using simple heuristics).</span><span class='uncovered'>Finally, here's a line marked as not executed.</span></pre></div>
+
+    <h3>Coverage Details</h3>
+
+    <table class="details">
+      <tbody>
+        <tr class="inferred">
+          <td><pre><a name="line2">2</a> #    Copyright 2013 Mirantis, Inc.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line3">3</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line4">4</a> #    Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); you may</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line5">5</a> #    not use this file except in compliance with the License. You may obtain</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line6">6</a> #    a copy of the License at</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line7">7</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line8">8</a> #         http://www.apache.org/licenses/LICENSE-2.0</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line9">9</a> #</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line10">10</a> #    Unless required by applicable law or agreed to in writing, software</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line11">11</a> #    distributed under the License is distributed on an &quot;AS IS&quot; BASIS, WITHOUT</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line12">12</a> #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line13">13</a> #    License for the specific language governing permissions and limitations</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line14">14</a> #    under the License.</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line15">15</a> </pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line16">16</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line17">17</a> require File.join(File.dirname(__FILE__), '../spec_helper')</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line18">18</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line19">19</a> describe Astute::Node do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line20">20</a>   it &quot;accepts hash for initialization&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line21">21</a>     node = Astute::Node.new('uid' =&gt; 'abc', 'info' =&gt; 'blabla')</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line22">22</a>     node.uid.should == 'abc'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line23">23</a>     node.info.should == 'blabla'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line24">24</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line25">25</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line26">26</a>   it &quot;requires uid&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line27">27</a>     expect{ Astute::Node.new({}) }.to raise_error(TypeError)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line28">28</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line29">29</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line30">30</a>   it &quot;stringifies uid&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line31">31</a>     node = Astute::Node.new('uid' =&gt; :abc)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line32">32</a>     node.uid.should == 'abc'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line33">33</a>     node = Astute::Node.new('uid' =&gt; 123)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line34">34</a>     node.uid.should == '123'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line35">35</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line36">36</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line37">37</a>   it &quot;denies uid changes&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line38">38</a>     node = Astute::Node.new('uid' =&gt; 1)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line39">39</a>     expect{ node.uid    = 2 }.to raise_error(TypeError)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line40">40</a>     expect{ node['uid'] = 2 }.to raise_error(TypeError)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line41">41</a>     expect{ node[:uid]  = 2 }.to raise_error(TypeError)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line42">42</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line43">43</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line44">44</a>   it &quot;allows [] accessors&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line45">45</a>     node = Astute::Node.new('uid' =&gt; 123, 'info' =&gt; 'abc')</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line46">46</a>     node['info'].should  == 'abc'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line47">47</a>     node[:info].should   == 'abc'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line48">48</a>     node['info']          = 'cba'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line49">49</a>     node['info'].should  == 'cba'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line50">50</a>     node[:info]           = 'dcb'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line51">51</a>     node[:info].should   == 'dcb'</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line52">52</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line53">53</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line54">54</a>   it &quot;unwraps to hash&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line55">55</a>     hash = {'uid' =&gt; '123', 'info' =&gt; 'abc'}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line56">56</a>     node = Astute::Node.new(hash)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line57">57</a>     node.to_hash.should == hash</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line58">58</a>     node.to_hash.should_not === node.instance_variable_get(:@table)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line59">59</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line60">60</a> end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line61">61</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line62">62</a> describe Astute::NodesHash do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line63">63</a>   it &quot;accepts array of hashes or nodes for initialization and allows accessing by uid&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line64">64</a>     nodes = Astute::NodesHash.build(</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line65">65</a>       [{'uid' =&gt; 123, 'info' =&gt; 'blabla1'},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line66">66</a>       Astute::Node.new({'uid' =&gt; 'abc', 'info' =&gt; 'blabla2'})])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line67">67</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line68">68</a>     nodes['123'].info.should == 'blabla1'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line69">69</a>     nodes['abc'].info.should == 'blabla2'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line70">70</a>     nodes[123].info.should == 'blabla1'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line71">71</a>     nodes[:abc].info.should == 'blabla2'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line72">72</a>     nodes['123'].uid.should == '123'</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line73">73</a>     nodes.values.map(&amp;:class).uniq.should == [Astute::Node]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line74">74</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line75">75</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line76">76</a>   it &quot;allows easy elements addition and normalizes data&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line77">77</a>     nodes = Astute::NodesHash.new</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line78">78</a>     nodes &lt;&lt; {'uid' =&gt; 1} &lt;&lt; {'uid' =&gt; 2}</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line79">79</a>     nodes.push({'uid' =&gt; 3}, {'uid' =&gt; 4}, {'uid' =&gt; 5})</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line80">80</a>     nodes.keys.sort.should == %w(1 2 3 4 5)</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line81">81</a>     nodes.values.map(&amp;:class).uniq.should == [Astute::Node]</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line82">82</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line83">83</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line84">84</a>   it &quot;introduces meaningful aliases&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line85">85</a>     nodes = Astute::NodesHash.build(</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line86">86</a>       [{'uid' =&gt; 123, 'info' =&gt; 'blabla1'},</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line87">87</a>       Astute::Node.new({'uid' =&gt; 'abc', 'info' =&gt; 'blabla2'})])</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line88">88</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line89">89</a>     nodes.uids.should  == nodes.keys</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line90">90</a>     nodes.nodes.should == nodes.values</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line91">91</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line92">92</a> </pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line93">93</a>   it &quot;denies direct accessors&quot; do</pre></td>
+        </tr>
+        <tr class="marked">
+          <td><pre><a name="line94">94</a>     expect{ Astute::NodesHash.new['fake-uid'] = {'bla' =&gt; 'bla'} }.to raise_error(NoMethodError)</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line95">95</a>   end</pre></td>
+        </tr>
+        <tr class="inferred">
+          <td><pre><a name="line96">96</a> end</pre></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Generated on 2013-07-19 12:05:31 +0400 with <a href="https://github.com/fguillen/simplecov-rcov">SimpleCov-RCov 0.2.3</a></p>
+
+  </body>
+</html>
