@@ -68,6 +68,8 @@ nodes.each do |node,macaddr|
     result['default_gateway'] = default_gateway
     result['name'] = node
     result['ip'] = ip
+    result['id'] = id
+    result['uid'] = uid
     result['name_servers'] = master_ip
     result['role'] = role
     result['fqdn'] = cobbler_dnsname
