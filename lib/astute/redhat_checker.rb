@@ -72,7 +72,7 @@ module Astute
 
       # checking user/password is succeed, than try to check satellite server if it set
       if @satellite_server && !contain_errors?(response.results[:data])
-        check_server_satellite_cmd = 'curl -f -L -v --silent -o /dev/null ' + \
+        check_server_satellite_cmd = 'curl -k -f -L -v --silent -o /dev/null ' + \
           "http://#{@satellite_server}/pub/RHN-ORG-TRUSTED-SSL-CERT"
 
         response = exec_cmd_with_timeout(check_server_satellite_cmd, timeout, @satellite_error)
