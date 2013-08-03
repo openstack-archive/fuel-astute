@@ -65,15 +65,15 @@ module Astute
     # It does only support of deployment sequence. See deploy_piece implementation in subclasses.
     def deploy_multinode(nodes, attrs)
       ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
-      compute_nodes = nodes.select {|n| n['role'] == 'compute'}
+      other_nodes = nodes - ctrl_nodes
 
       Astute.logger.info "Starting deployment of primary controller"
       deploy_piece(ctrl_nodes, attrs)
 
       Astute.logger.info "Starting deployment of other nodes"
-      deploy_piece(compute_nodes, attrs)
-      return
+      deploy_piece(other_nodes, attrs)
 
+      return
     end
 
     def attrs_ha(nodes, attrs)
