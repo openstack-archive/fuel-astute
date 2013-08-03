@@ -119,7 +119,7 @@ module Astute
       proxy_nodes = nodes.select {|n| n['role'] == 'swift-proxy'}
       primary_proxy_nodes = nodes.select {|n| n['role'] == 'primary-swift-proxy'}
       other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - \
-        primary_proxy_nodes - quantum_nodes - storage_nodes
+        primary_proxy_nodes - quantum_nodes - storage_nodes - proxy_nodes
 
       Astute.logger.info "Starting deployment of primary swift proxy"
       deploy_piece(primary_proxy_nodes, attrs)
