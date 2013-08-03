@@ -36,9 +36,6 @@ module Astute
         'https://access.redhat.com/site/solutions/368643. If you are still ' + \
         'encountering issues, contact Mirantis Support.'
 
-      @check_licenses_success_msg = 'Your account appears to be fully entitled ' + \
-        'to deploy Red Hat Openstack.'
-
       @msg_not_enough_licenses = "Your account has only %d licenses " + \
         'available to deploy Red Hat OpenStack. Contact your Red Hat sales ' + \
         'representative to get the proper subscriptions associated with your ' + \
@@ -95,7 +92,7 @@ module Astute
       elsif nodes && licenses_count < nodes.count
         report_success(format(@msg_not_enough_licenses, licenses_count))
       else
-        report_success(@check_licenses_success_msg)
+        report_success
       end
     end
 

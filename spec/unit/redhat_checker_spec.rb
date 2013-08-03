@@ -107,13 +107,6 @@ describe Astute::RedhatChecker do
   end
 
   describe '#check_redhat_licenses' do
-    let(:success_result) do
-      {
-        'status' => 'ready',
-        'progress' => 100,
-        'msg' => 'Your account appears to be fully entitled to deploy Red Hat Openstack.'
-      }
-    end
 
     describe 'nodes parameter is nil' do
       it_behaves_like 'redhat checker' do
