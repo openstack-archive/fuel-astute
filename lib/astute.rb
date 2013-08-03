@@ -19,6 +19,7 @@ require 'logger'
 require 'shellwords'
 
 require 'astute/ext/exception'
+require 'astute/ext/deep_copy'
 require 'astute/config'
 require 'astute/logparser'
 require 'astute/orchestrator'

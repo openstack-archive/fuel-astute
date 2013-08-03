@@ -57,7 +57,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       attrs_to_puppet['fixed_interface'] = get_fixed_interface(node)
     end
 
-    attrs_to_puppet.merge!(attrs)
+    attrs_to_puppet.merge!(deep_copy(attrs))
 
     attrs_to_puppet.each do |k, v|
       unless v.is_a?(String) || v.is_a?(Integer)
