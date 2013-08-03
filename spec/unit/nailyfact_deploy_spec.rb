@@ -236,12 +236,14 @@ describe "NailyFact DeploymentEngine" do
           }
         }
         attrs = {
-          'network_manager' => 'VlanManager'
+          'novanetwork_parameters' => {
+            'network_manager' => 'VlanManager'
+          }
         }
 
         expect = {
           "role" => "controller",
-          "uid"=>1,
+          "uid" => 1,
 
           "network_data" => {"eth0.102" =>
             {
@@ -263,7 +265,7 @@ describe "NailyFact DeploymentEngine" do
           }.to_json,
 
           "fixed_interface" => "eth2",
-          "network_manager" => "VlanManager",
+          "novanetwork_parameters" => '{"network_manager":"VlanManager"}',
           "management_interface" => "eth0.102"
         }
 

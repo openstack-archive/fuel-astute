@@ -50,14 +50,17 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       end
     end
 
-    if attrs['novanetwork_parameters']['network_manager'] == 'VlanManager' && !attrs_to_puppet['fixed_interface']
+    if attrs['novanetwork_parameters'] && \
+        attrs['novanetwork_parameters']['network_manager'] == 'VlanManager' && \
+        !attrs_to_puppet['fixed_interface']
+
       attrs_to_puppet['fixed_interface'] = get_fixed_interface(node)
     end
 
     attrs_to_puppet.merge!(attrs)
 
     attrs_to_puppet.each do |k, v|
-      unless v.is_a?(String)
+      unless v.is_a?(String) || v.is_a?(Integer)
         attrs_to_puppet[k] = v.to_json
       end
     end
