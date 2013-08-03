@@ -98,7 +98,11 @@ module Astute
           'default_gateway'      => n['default_gateway']
         }
       end
-      attrs['nodes'].first['role'] = 'primary-controller' if attrs['nodes'].select { |node| node['role'] == "primary-controller" }.empty?
+
+      if attrs['nodes'].select { |node| node['role'] == 'primary-controller' }.empty?
+        ctrl_nodes = attrs['nodes'].select {|n| n['role'] == 'controller'}
+        ctrl_nodes[0]['role'] = 'primary-controller'
+      end
 
       attrs
     end
@@ -109,11 +113,6 @@ module Astute
     def deploy_ha_full(nodes, attrs)
       primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
       ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
-      unless primary_ctrl_nodes.any?
-        if ctrl_nodes.size > 1
-          primary_ctrl_nodes = [ctrl_nodes.shift]
-        end
-      end
       compute_nodes = nodes.select {|n| n['role'] == 'compute'}
       quantum_nodes = nodes.select {|n| n['role'] == 'quantum'}
       storage_nodes = nodes.select {|n| n['role'] == 'storage'}
@@ -145,11 +144,6 @@ module Astute
     def deploy_ha_compact(nodes, attrs)
       primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
       ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
-      unless primary_ctrl_nodes.any?
-        if ctrl_nodes.size > 1
-          primary_ctrl_nodes = [ctrl_nodes.shift]
-        end
-      end
       compute_nodes = nodes.select {|n| n['role'] == 'compute'}
       quantum_nodes = nodes.select {|n| n['role'] == 'quantum'}
       storage_nodes = nodes.select {|n| n['role'] == 'storage'}
