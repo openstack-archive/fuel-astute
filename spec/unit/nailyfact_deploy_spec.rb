@@ -264,9 +264,7 @@ describe "NailyFact DeploymentEngine" do
 
           "fixed_interface" => "eth2",
           "network_manager" => "VlanManager",
-          "management_interface" => "eth0.102",
-          "internal_address" => "192.168.0.2",
-          'management_address' => '192.168.0.2'
+          "management_interface" => "eth0.102"
         }
 
         @deploy_engine.create_facts(node, attrs).should == expect
