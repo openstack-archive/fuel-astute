@@ -39,20 +39,6 @@ module Astute
       raise "Method #{method} is not implemented for #{self.class}"
     end
 
-#    def attrs_singlenode(nodes, attrs)
-#      ctrl_management_ip = nodes[0]['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip']
-#      ctrl_public_ip = nodes[0]['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip']
-#      attrs['controller_node_address'] = ctrl_management_ip.split('/')[0]
-#      attrs['controller_node_public'] = ctrl_public_ip.split('/')[0]
-#      attrs
-#    end
-
-#    def deploy_singlenode(nodes, attrs)
-#      # TODO(mihgen) some real stuff is needed
-#      Astute.logger.info "Starting deployment of single node OpenStack"
-#      deploy_piece(nodes, attrs)
-#    end
-
     # we mix all attrs and prepare them for Puppet
     # Works for multinode deployment mode
     def attrs_multinode(nodes, attrs)
@@ -91,22 +77,6 @@ module Astute
     end
 
     def attrs_ha(nodes, attrs)
-      # TODO(mihgen): we should report error back if there are not enough metadata passed
-      #ctrl_nodes = attrs['controller_nodes']
-      #ctrl_manag_addrs = {}
-      #ctrl_public_addrs = {}
-      #ctrl_storage_addrs = {}
-      #ctrl_nodes.each do |n|
-        # current puppet modules require `hostname -s`
-       # hostname = n['fqdn'].split(/\./)[0]
-       # ctrl_manag_addrs.merge!({hostname =>
-       #            n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0]})
-       # ctrl_public_addrs.merge!({hostname =>
-       #            n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0]})
-       # ctrl_storage_addrs.merge!({hostname =>
-       #            n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0]})
-      #end
-
       # we use the same set of mount points for all storage nodes
       attrs['mp'] = {'point' => '1', 'weight' => '1'}
       Astute.logger.debug("#{nodes.sort}")
@@ -129,11 +99,7 @@ module Astute
         }
       end
       attrs['nodes'].first['role'] = 'primary-controller' if attrs['nodes'].select { |node| node['role'] == "primary-controller" }.empty?
-      #attrs['ctrl_hostnames'] = ctrl_nodes.map {|n| n['fqdn'].split(/\./)[0]}
-      #attrs['ctrl_public_addresses'] = ctrl_public_addrs
-      #attrs['ctrl_management_addresses'] = ctrl_manag_addrs
-      #attrs['ctrl_storage_addresses'] = ctrl_storage_addrs
-      #Astute.logger.debug("#{attrs}")
+
       attrs
     end
 
@@ -198,12 +164,6 @@ module Astute
       Astute.logger.info "Starting deployment of all controllers one by one"
       ctrl_nodes.each {|n| deploy_piece([n], attrs)}
 
-      #Astute.logger.info "Starting deployment of 1st controller and 1st proxy"
-      #deploy_piece(primary_ctrl_nodes + primary_proxy_nodes, attrs)
-
-      #Astute.logger.info "Starting deployment of quantum nodes"
-      #deploy_piece(quantum_nodes, attrs)
-
       Astute.logger.info "Starting deployment of other nodes"
       deploy_piece(other_nodes, attrs)
       return
@@ -227,8 +187,9 @@ module Astute
             result = true if var.include?(name)
         elsif var.is_a?(String)
             result = true if var == name
-        end 
-    end 
+        end
+    end
+
     def nodes_status(nodes, status, data_to_merge)
       {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
     end
