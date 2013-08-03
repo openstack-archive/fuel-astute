@@ -94,7 +94,7 @@ module Astute
           'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
           'swift_zone'           => n['id'],
           'storage_address'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
-          'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
+          'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['netmask'],
           'default_gateway'      => n['default_gateway']
         }
       end
