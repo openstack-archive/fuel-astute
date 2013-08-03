@@ -71,7 +71,6 @@ describe "SimplePuppet DeploymentEngine" do
       primary_ctrl_nodes = [controller_nodes.shift]
 
       Astute::Metadata.expects(:publish_facts).never
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, primary_ctrl_nodes, 0, false).once
       controller_nodes.each do |n|
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 2, true).once
       end

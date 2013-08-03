@@ -196,7 +196,6 @@ describe "NailyFact DeploymentEngine" do
       controller_nodes = @data_ha['args']['nodes'].select{|n| n['role'] == 'controller'}
       primary_nodes = [controller_nodes.shift]
       compute_nodes = @data_ha['args']['nodes'].select{|n| n['role'] == 'compute'}
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, primary_nodes, 0, false).once
       controller_nodes.each do |n|
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 2, true).once
       end
