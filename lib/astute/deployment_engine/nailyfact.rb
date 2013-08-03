@@ -27,20 +27,11 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     node_network_data = node['network_data'].nil? ? [] : node['network_data']
     interfaces = node['meta']['interfaces']
     network_data_puppet = calculate_networks(node_network_data, interfaces)
-    metadata = {
+    attrs_to_puppet = {
       'role' => node['role'],
       'uid'  => node['uid'],
       'network_data' => network_data_puppet.to_json
     }
-
-    attrs.each do |k, v|
-      if v.is_a? String
-        metadata[k] = v
-      else
-        # And it's the problem on the puppet side now to decode json
-        metadata[k] = v.to_json
-      end
-    end
 
     # Let's calculate interface settings we need for OpenStack:
     node_network_data.each do |iface|
@@ -51,19 +42,27 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       end
 
       if iface['name'].is_a?(String)
-        metadata["#{iface['name']}_interface"] = device
+        attrs_to_puppet["#{iface['name']}_interface"] = device
       elsif iface['name'].is_a?(Array)
        iface['name'].each do |name|
-         metadata["#{name}_interface"] = device
+         attrs_to_puppet["#{name}_interface"] = device
        end
       end
     end
 
-    if metadata['network_manager'] == 'VlanManager' && !metadata['fixed_interface']
-      metadata['fixed_interface'] = get_fixed_interface(node)
+    if attrs['novanetwork_parameters']['network_manager'] == 'VlanManager' && !attrs_to_puppet['fixed_interface']
+      attrs_to_puppet['fixed_interface'] = get_fixed_interface(node)
     end
 
-    metadata
+    attrs_to_puppet.merge!(attrs)
+
+    attrs_to_puppet.each do |k, v|
+      unless v.is_a?(String)
+        attrs_to_puppet[k] = v.to_json
+      end
+    end
+
+    attrs_to_puppet
   end
 
   def deploy_piece(nodes, attrs, retries=2, change_node_status=true)
