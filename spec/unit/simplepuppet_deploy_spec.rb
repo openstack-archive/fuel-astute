@@ -60,14 +60,6 @@ describe "SimplePuppet DeploymentEngine" do
       @deploy_engine.deploy(@env['nodes'], @env['attributes'])
     end
 
-    it "singlenode deploy should not raise any exception" do
-      @env['attributes']['deployment_mode'] = "singlenode"
-      @env['nodes'] = [@env['nodes'][0]]  # We have only one node in singlenode
-      Astute::Metadata.expects(:publish_facts).never
-      Astute::PuppetdDeployer.expects(:deploy).once  # one call for one node
-      @deploy_engine.deploy(@env['nodes'], @env['attributes'])
-    end
-
     it "ha_compact deploy should not raise any exception" do
       @env['attributes']['deployment_mode'] = "ha_compact"
       @env['nodes'].concat([{'uid'=>'c1', 'role'=>'controller'},

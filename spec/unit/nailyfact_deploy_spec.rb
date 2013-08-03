@@ -212,14 +212,6 @@ describe "NailyFact DeploymentEngine" do
       @deploy_engine.deploy([ctrl], @data_ha['args']['attributes'])
     end
 
-    it "singlenode deploy should not raise any exception" do
-      @data['args']['attributes']['deployment_mode'] = "singlenode"
-      @data['args']['nodes'] = [@data['args']['nodes'][0]]  # We have only one node in singlenode
-      Astute::Metadata.expects(:publish_facts).times(@data['args']['nodes'].size)
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, @data['args']['nodes'], instance_of(Fixnum), true).once
-      @deploy_engine.deploy(@data['args']['nodes'], @data['args']['attributes'])
-    end
-
     describe 'Vlan manager' do
       it 'Should set fixed_interface value' do
         node = {
