@@ -79,7 +79,7 @@ module Astute
     def attrs_ha(nodes, attrs)
       # we use the same set of mount points for all storage nodes
       attrs['mp'] = {'point' => '1', 'weight' => '1'}
-      Astute.logger.debug("#{nodes.sort}")
+      Astute.logger.debug("#{nodes}")
       attrs['nodes'] = nodes.map do |n|
         {
           'fqdn'                 => n['fqdn'],
