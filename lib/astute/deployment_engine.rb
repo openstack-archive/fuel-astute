@@ -78,14 +78,18 @@ module Astute
 
     def attrs_ha(nodes, attrs)
       # we use the same set of mount points for all storage nodes
-      attrs['mp'] = {'point' => '1', 'weight' => '1'}
+      attrs['mp'] = [{'point' => '1', 'weight' => '1'},{'point'=>'2','weight'=>'2'}]
+      mountpoints = ""
+      attrs['mp'].each do |mountpoint|
+          mountpoints << "#{mountpoint['point']} #{mountpoint['weight']}\n"
+      end
       Astute.logger.debug("#{nodes}")
       attrs['nodes'] = nodes.map do |n|
         {
           'fqdn'                 => n['fqdn'],
           'name'                 => n['fqdn'].split(/\./)[0],
           'role'                 => n['role'],
-          'mountpoints'          => "#{attrs['mp']['point']} #{attrs['mp']['weight']}",
+          'mountpoints'          => mountpoints, 
           'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
           'internal_br'          => n['internal_br'],
           'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
