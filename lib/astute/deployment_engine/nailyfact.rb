@@ -70,22 +70,42 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
   def deploy_piece(nodes, attrs, retries=2, change_node_status=true)
     return false unless validate_nodes(nodes)
-    @ctx.reporter.report nodes_status(nodes, 'deploying', {'progress' => 0})
+    
+    Astute.logger.info "#{@ctx.task_id}: Getting which nodes to deploy"
+    Astute.logger.debug "#{@ctx.task_id}: Running get_nodes_to_deploy() function:::"
+    nodes_to_deploy = get_nodes_to_deploy(nodes)
 
+    if nodes_to_deploy.empty?
+        Astute.logger.info "#{@ctx.task_id}: Returning from deployment stage. No nodes to deploy"
+        return
+    end
     Astute.logger.info "#{@ctx.task_id}: Calculation of required attributes to pass, include netw.settings"
-    nodes.each do |node|
+    @ctx.reporter.report nodes_status(nodes_to_deploy, 'deploying', {'progress' => 0})
+    nodes_to_deploy.each do |node|
       # Use predefined facts or create new.
       node['facts'] ||= create_facts(node, attrs)
       Astute::Metadata.publish_facts(@ctx, node['uid'], node['facts'])
     end
     Astute.logger.info "#{@ctx.task_id}: All required attrs/metadata passed via facts extension. Starting deployment."
 
-    Astute::PuppetdDeployer.deploy(@ctx, nodes, retries, change_node_status)
-    nodes_roles = nodes.map { |n| { n['uid'] => n['role'] } }
+    Astute::PuppetdDeployer.deploy(@ctx, nodes_to_deploy, retries, change_node_status)
+    nodes_roles = nodes_to_deploy.map { |n| { n['uid'] => n['role'] } }
     Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
   end
 
   private
+  def get_nodes_to_deploy(nodes)
+    nodes_to_deploy = []
+    nodes.each do |node|
+      if node['status'] != 'ready'
+        nodes_to_deploy << node
+      else
+        Astute.logger.info "#{@ctx.task_id}: Not adding node #{node['uid']} with hostname #{node['name']} as it does not require deploying."
+      end
+    end
+    nodes_to_deploy
+  end
+
   def get_fixed_interface(node)
     return node['vlan_interface'] if node['vlan_interface']
 
