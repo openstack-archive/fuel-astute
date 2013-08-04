@@ -85,8 +85,14 @@ module Astute
       end
     end
 
-    def provision(reporter, task_id, nodes)
-      raise "Nodes to provision are not provided!" if nodes.empty?
+    def provision(reporter, task_id, nodes_up)
+      raise "Nodes to provision are not provided!" if nodes_up.empty?
+
+      # We need only those which are not ready/provisioned yet
+      nodes = []
+      nodes_up.each do |n|
+        nodes << n unless ['provisioned', 'ready'].include?(n['status'])
+      end
 
       # Following line fixes issues with uids: it should always be string
       nodes.map { |x| x['uid'] = x['uid'].to_s } # NOTE: perform that on environment['nodes'] initialization
