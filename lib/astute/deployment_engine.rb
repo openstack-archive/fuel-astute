@@ -50,6 +50,8 @@ module Astute
           'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
           'internal_br'          => n['internal_br'],
           'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
+          'storage_address'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
+          'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['netmask'],
           'public_address'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['ip'].split(/\//)[0],
           'public_br'            => n['public_br'],
           'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
