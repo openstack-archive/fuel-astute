@@ -210,7 +210,7 @@ node_01: &node_01
       onboot: 'yes'
       peerdns: 'no'
   # == meta
-  # Strange shit needed for log parsing during astute jobs.
+  # Outdated stuff needed for log parsing during astute jobs.
   meta:
     memory:
       total: 778694656
@@ -267,6 +267,9 @@ nodes:
 
 #Openstack cluster attributes used during deployment.
 attributes:
+  # == master_ip
+  # IP of puppet master.
+  master_ip: 10.20.0.2
   # == use_cow_images:
   # Whether to use cow images
   use_cow_images: true

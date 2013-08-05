@@ -39,34 +39,38 @@ module Astute
       raise "Method #{method} is not implemented for #{self.class}"
     end
 
-    def attrs_singlenode(nodes, attrs)
-      ctrl_management_ip = nodes[0]['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip']
-      ctrl_public_ip = nodes[0]['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip']
-      attrs['controller_node_address'] = ctrl_management_ip.split('/')[0]
-      attrs['controller_node_public'] = ctrl_public_ip.split('/')[0]
-      attrs
-    end
+#    def attrs_singlenode(nodes, attrs)
+#      ctrl_management_ip = nodes[0]['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip']
+#      ctrl_public_ip = nodes[0]['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip']
+#      attrs['controller_node_address'] = ctrl_management_ip.split('/')[0]
+#      attrs['controller_node_public'] = ctrl_public_ip.split('/')[0]
+#      attrs
+#    end
 
-    def deploy_singlenode(nodes, attrs)
-      # TODO(mihgen) some real stuff is needed
-      Astute.logger.info "Starting deployment of single node OpenStack"
-      deploy_piece(nodes, attrs)
-    end
+#    def deploy_singlenode(nodes, attrs)
+#      # TODO(mihgen) some real stuff is needed
+#      Astute.logger.info "Starting deployment of single node OpenStack"
+#      deploy_piece(nodes, attrs)
+#    end
 
     # we mix all attrs and prepare them for Puppet
     # Works for multinode deployment mode
     def attrs_multinode(nodes, attrs)
-      ctrl_nodes = attrs['controller_nodes']
-      # TODO(mihgen): we should report error back if there are not enough metadata passed
-      ctrl_management_ips = []
-      ctrl_public_ips = []
-      ctrl_nodes.each do |n|
-        ctrl_management_ips << n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip']
-        ctrl_public_ips << n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip']
+      attrs['nodes'] = nodes.map do |n|
+        {
+          'fqdn'                 => n['fqdn'],
+          'name'                 => n['fqdn'].split(/\./)[0],
+          'role'                 => n['role'],
+          'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
+          'internal_br'          => n['internal_br'],
+          'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
+          'public_address'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['ip'].split(/\//)[0],
+          'public_br'            => n['public_br'],
+          'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
+          'default_gateway'      => n['default_gateway']
+        }
       end
-
-      attrs['controller_node_address'] = ctrl_management_ips[0].split('/')[0]
-      attrs['controller_node_public'] = ctrl_public_ips[0].split('/')[0]
+      # TODO(mihgen): we should report error back if there are not enough metadata passed
       attrs
     end
 
@@ -78,7 +82,7 @@ module Astute
       compute_nodes = nodes.select {|n| n['role'] == 'compute'}
 
       Astute.logger.info "Starting deployment of primary controller"
-      deploy_piece(primary_ctrl_nodes, attrs)
+      deploy_piece(ctrl_nodes, attrs)
 
       Astute.logger.info "Starting deployment of other nodes"
       deploy_piece(compute_nodes, attrs)

@@ -2,34 +2,29 @@
 require 'json'
 require 'yaml'
 
+nodes = {
+    "compute-01" => '64:7D:B8:84:64:79',
+    "controller-01" => "64:43:7B:CA:56:DD",
+}
+
+
 public_iface = "eth0"
 internal_iface = "eth1"
 private_iface = "eth2"
-default_gateway = "172.18.94.33"
-master_ip = "172.18.94.34"
+default_gateway = "10.20.0.1"
+master_ip = "10.20.0.2"
 dns1 = default_gateway
-internal_net = '10.107.2.0'
+internal_net = '10.20.1.0'
 
 internal_net_prefix = internal_net.split('.')[0..2].join(".")
 
-
-nodes = {"compute-01" => '64:c3:54:54:d2:66',
-         "controller-01" => "64:48:7a:14:83:e8",
-         "controller-02" => "64:b7:37:b1:1d:c9",
-         "controller-03" => "64:f4:64:e7:50:d3",
-         "swift-01"      => "64:57:26:83:1d:ca",
-         "swift-02"      => "64:dc:fd:ad:eb:4e",
-         "swift-03"      => "64:ea:df:59:79:39",
-         "swiftproxy-01" => "64:bc:c3:9c:07:26",
-         "swiftproxy-02" => "64:97:93:5f:b2:dc"
-}
 
 template = YAML.load(File.open('example_new.yaml'))
 template_node = template['node_01']
 newyaml = template
 newyaml['nodes'] = []
 newyaml.delete('node_01')
-cluster = JSON.load(File.open('full.json'))
+cluster = JSON.load(File.open("simple.json"))
 nodes.each do |node,macaddr| 
     result = template_node.clone
     json_node = cluster.select {|n| n['mac'].to_s == macaddr.to_s.upcase}[0]
@@ -67,9 +62,9 @@ nodes.each do |node,macaddr|
     result['mac'] = mac
     result['default_gateway'] = default_gateway
     result['name'] = node
-    result['ip'] = ip
     result['id'] = id
     result['uid'] = uid
+    result['ip'] = ip
     result['name_servers'] = master_ip
     result['role'] = role
     result['fqdn'] = cobbler_dnsname
@@ -128,10 +123,8 @@ end
    newyaml['attributes']['master_ip'] = master_ip
    newyaml['attributes']['dns_nameservers'] = master_ip
    newyaml['attributes']['libvirt_type'] = 'kvm'
-   newyaml['attributes']['public_vip'] = '172.18.94.46' 
-   newyaml['attributes']['management_vip'] = '10.107.2.254' 
-   newyaml['attributes']['floating_network_range'] = '172.18.94.48/28' 
-   newyaml['attributes']['fixed_network_range'] = '10.107.2.0/24' 
+   newyaml['attributes']['floating_network_range'] = '10.20.0.150/28' 
+   newyaml['attributes']['fixed_network_range'] = '10.20.1.0/24' 
    newyaml['attributes']['base_syslog']['syslog_server'] = master_ip
 
 puts newyaml.to_yaml

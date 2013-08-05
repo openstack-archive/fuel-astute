@@ -82,93 +82,7 @@
         "progress": 0, 
         "pending_deletion": false, 
         "os_platform": "centos", 
-        "id": 6, 
-        "manufacturer": "KVM"
-    }, 
-    {
-        "status": "discover", 
-        "name": "Untitled (D2:66)", 
-        "ip": "172.18.94.39", 
-        "error_type": null, 
-        "pending_addition": false, 
-        "fqdn": null, 
-        "network_data": [], 
-        "platform_name": null, 
-        "cluster": null, 
-        "mac": "64:C3:54:54:D2:66", 
-        "meta": {
-            "memory": {
-                "slots": 1, 
-                "total": 2147483648, 
-                "maximum_capacity": 2147483648, 
-                "devices": [
-                    {
-                        "type": "RAM", 
-                        "size": 2147483648
-                    }
-                ]
-            }, 
-            "interfaces": [
-                {
-                    "mac": "64:86:89:DC:11:DF", 
-                    "max_speed": null, 
-                    "name": "eth2", 
-                    "current_speed": null
-                }, 
-                {
-                    "mac": "64:3E:31:66:CA:AF", 
-                    "max_speed": null, 
-                    "name": "eth1", 
-                    "current_speed": null
-                }, 
-                {
-                    "name": "eth0", 
-                    "ip": "172.18.94.39", 
-                    "netmask": "255.255.255.224", 
-                    "mac": "64:C3:54:54:D2:66", 
-                    "max_speed": null, 
-                    "current_speed": null
-                }
-            ], 
-            "disks": [
-                {
-                    "model": null, 
-                    "disk": "disk/by-path/pci-0000:00:07.0-virtio-pci-virtio4", 
-                    "name": "vdb", 
-                    "size": 21474836480
-                }, 
-                {
-                    "model": null, 
-                    "disk": "disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3", 
-                    "name": "vda", 
-                    "size": 21474836480
-                }
-            ], 
-            "system": {
-                "fqdn": "bootstrap", 
-                "manufacturer": "KVM"
-            }, 
-            "cpu": {
-                "real": 0, 
-                "total": 2, 
-                "spec": [
-                    {
-                        "model": "QEMU Virtual CPU version 1.2.0", 
-                        "frequency": 1999
-                    }, 
-                    {
-                        "model": "QEMU Virtual CPU version 1.2.0", 
-                        "frequency": 1999
-                    }
-                ]
-            }
-        }, 
-        "role": null, 
-        "online": true, 
-        "progress": 0, 
-        "pending_deletion": false, 
-        "os_platform": "centos", 
-        "id": 1, 
+        "id": 7, 
         "manufacturer": "KVM"
     }, 
     {
@@ -254,7 +168,93 @@
         "progress": 0, 
         "pending_deletion": false, 
         "os_platform": "centos", 
-        "id": 4, 
+        "id": 6, 
+        "manufacturer": "KVM"
+    }, 
+    {
+        "status": "discover", 
+        "name": "Untitled (B2:DC)", 
+        "ip": "172.18.94.45", 
+        "error_type": null, 
+        "pending_addition": false, 
+        "fqdn": null, 
+        "network_data": [], 
+        "platform_name": null, 
+        "cluster": null, 
+        "mac": "64:97:93:5F:B2:DC", 
+        "meta": {
+            "memory": {
+                "slots": 1, 
+                "total": 1073741824, 
+                "maximum_capacity": 1073741824, 
+                "devices": [
+                    {
+                        "type": "RAM", 
+                        "size": 1073741824
+                    }
+                ]
+            }, 
+            "interfaces": [
+                {
+                    "mac": "64:E1:22:FF:4D:64", 
+                    "max_speed": null, 
+                    "name": "eth2", 
+                    "current_speed": null
+                }, 
+                {
+                    "mac": "64:FC:F2:3C:CA:5D", 
+                    "max_speed": null, 
+                    "name": "eth1", 
+                    "current_speed": null
+                }, 
+                {
+                    "name": "eth0", 
+                    "ip": "172.18.94.45", 
+                    "netmask": "255.255.255.224", 
+                    "mac": "64:97:93:5F:B2:DC", 
+                    "max_speed": null, 
+                    "current_speed": null
+                }
+            ], 
+            "disks": [
+                {
+                    "model": null, 
+                    "disk": "disk/by-path/pci-0000:00:07.0-virtio-pci-virtio4", 
+                    "name": "vdb", 
+                    "size": 21474836480
+                }, 
+                {
+                    "model": null, 
+                    "disk": "disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3", 
+                    "name": "vda", 
+                    "size": 21474836480
+                }
+            ], 
+            "system": {
+                "fqdn": "bootstrap", 
+                "manufacturer": "KVM"
+            }, 
+            "cpu": {
+                "real": 0, 
+                "total": 2, 
+                "spec": [
+                    {
+                        "model": "QEMU Virtual CPU version 1.2.0", 
+                        "frequency": 1999
+                    }, 
+                    {
+                        "model": "QEMU Virtual CPU version 1.2.0", 
+                        "frequency": 1999
+                    }
+                ]
+            }
+        }, 
+        "role": null, 
+        "online": true, 
+        "progress": 0, 
+        "pending_deletion": false, 
+        "os_platform": "centos", 
+        "id": 5, 
         "manufacturer": "KVM"
     }, 
     {
@@ -340,179 +340,7 @@
         "progress": 0, 
         "pending_deletion": false, 
         "os_platform": "centos", 
-        "id": 7, 
-        "manufacturer": "KVM"
-    }, 
-    {
-        "status": "discover", 
-        "name": "Untitled (79:39)", 
-        "ip": "172.18.94.44", 
-        "error_type": null, 
-        "pending_addition": false, 
-        "fqdn": null, 
-        "network_data": [], 
-        "platform_name": null, 
-        "cluster": null, 
-        "mac": "64:EA:DF:59:79:39", 
-        "meta": {
-            "memory": {
-                "slots": 1, 
-                "total": 1073741824, 
-                "maximum_capacity": 1073741824, 
-                "devices": [
-                    {
-                        "type": "RAM", 
-                        "size": 1073741824
-                    }
-                ]
-            }, 
-            "interfaces": [
-                {
-                    "mac": "64:E9:9A:4D:04:3F", 
-                    "max_speed": null, 
-                    "name": "eth2", 
-                    "current_speed": null
-                }, 
-                {
-                    "mac": "64:B9:CE:28:0D:0E", 
-                    "max_speed": null, 
-                    "name": "eth1", 
-                    "current_speed": null
-                }, 
-                {
-                    "name": "eth0", 
-                    "ip": "172.18.94.44", 
-                    "netmask": "255.255.255.224", 
-                    "mac": "64:EA:DF:59:79:39", 
-                    "max_speed": null, 
-                    "current_speed": null
-                }
-            ], 
-            "disks": [
-                {
-                    "model": null, 
-                    "disk": "disk/by-path/pci-0000:00:07.0-virtio-pci-virtio4", 
-                    "name": "vdb", 
-                    "size": 21474836480
-                }, 
-                {
-                    "model": null, 
-                    "disk": "disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3", 
-                    "name": "vda", 
-                    "size": 21474836480
-                }
-            ], 
-            "system": {
-                "fqdn": "bootstrap", 
-                "manufacturer": "KVM"
-            }, 
-            "cpu": {
-                "real": 0, 
-                "total": 2, 
-                "spec": [
-                    {
-                        "model": "QEMU Virtual CPU version 1.2.0", 
-                        "frequency": 1999
-                    }, 
-                    {
-                        "model": "QEMU Virtual CPU version 1.2.0", 
-                        "frequency": 1999
-                    }
-                ]
-            }
-        }, 
-        "role": null, 
-        "online": true, 
-        "progress": 0, 
-        "pending_deletion": false, 
-        "os_platform": "centos", 
-        "id": 9, 
-        "manufacturer": "KVM"
-    }, 
-    {
-        "status": "discover", 
-        "name": "Untitled (1D:C9)", 
-        "ip": "172.18.94.42", 
-        "error_type": null, 
-        "pending_addition": false, 
-        "fqdn": null, 
-        "network_data": [], 
-        "platform_name": null, 
-        "cluster": null, 
-        "mac": "64:B7:37:B1:1D:C9", 
-        "meta": {
-            "memory": {
-                "slots": 1, 
-                "total": 1073741824, 
-                "maximum_capacity": 1073741824, 
-                "devices": [
-                    {
-                        "type": "RAM", 
-                        "size": 1073741824
-                    }
-                ]
-            }, 
-            "interfaces": [
-                {
-                    "mac": "64:49:B1:F5:AA:CF", 
-                    "max_speed": null, 
-                    "name": "eth2", 
-                    "current_speed": null
-                }, 
-                {
-                    "mac": "64:B3:BC:6D:17:A0", 
-                    "max_speed": null, 
-                    "name": "eth1", 
-                    "current_speed": null
-                }, 
-                {
-                    "name": "eth0", 
-                    "ip": "172.18.94.42", 
-                    "netmask": "255.255.255.224", 
-                    "mac": "64:B7:37:B1:1D:C9", 
-                    "max_speed": null, 
-                    "current_speed": null
-                }
-            ], 
-            "disks": [
-                {
-                    "model": null, 
-                    "disk": "disk/by-path/pci-0000:00:07.0-virtio-pci-virtio4", 
-                    "name": "vdb", 
-                    "size": 21474836480
-                }, 
-                {
-                    "model": null, 
-                    "disk": "disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3", 
-                    "name": "vda", 
-                    "size": 21474836480
-                }
-            ], 
-            "system": {
-                "fqdn": "bootstrap", 
-                "manufacturer": "KVM"
-            }, 
-            "cpu": {
-                "real": 0, 
-                "total": 2, 
-                "spec": [
-                    {
-                        "model": "QEMU Virtual CPU version 1.2.0", 
-                        "frequency": 1999
-                    }, 
-                    {
-                        "model": "QEMU Virtual CPU version 1.2.0", 
-                        "frequency": 1999
-                    }
-                ]
-            }
-        }, 
-        "role": null, 
-        "online": true, 
-        "progress": 0, 
-        "pending_deletion": false, 
-        "os_platform": "centos", 
-        "id": 3, 
+        "id": 4, 
         "manufacturer": "KVM"
     }, 
     {
@@ -684,20 +512,20 @@
         "progress": 0, 
         "pending_deletion": false, 
         "os_platform": "centos", 
-        "id": 5, 
+        "id": 8, 
         "manufacturer": "KVM"
     }, 
     {
         "status": "discover", 
-        "name": "Untitled (B2:DC)", 
-        "ip": "172.18.94.45", 
+        "name": "Untitled (79:39)", 
+        "ip": "172.18.94.44", 
         "error_type": null, 
         "pending_addition": false, 
         "fqdn": null, 
         "network_data": [], 
         "platform_name": null, 
         "cluster": null, 
-        "mac": "64:97:93:5F:B2:DC", 
+        "mac": "64:EA:DF:59:79:39", 
         "meta": {
             "memory": {
                 "slots": 1, 
@@ -712,22 +540,22 @@
             }, 
             "interfaces": [
                 {
-                    "mac": "64:E1:22:FF:4D:64", 
+                    "mac": "64:E9:9A:4D:04:3F", 
                     "max_speed": null, 
                     "name": "eth2", 
                     "current_speed": null
                 }, 
                 {
-                    "mac": "64:FC:F2:3C:CA:5D", 
+                    "mac": "64:B9:CE:28:0D:0E", 
                     "max_speed": null, 
                     "name": "eth1", 
                     "current_speed": null
                 }, 
                 {
                     "name": "eth0", 
-                    "ip": "172.18.94.45", 
+                    "ip": "172.18.94.44", 
                     "netmask": "255.255.255.224", 
-                    "mac": "64:97:93:5F:B2:DC", 
+                    "mac": "64:EA:DF:59:79:39", 
                     "max_speed": null, 
                     "current_speed": null
                 }
@@ -770,7 +598,179 @@
         "progress": 0, 
         "pending_deletion": false, 
         "os_platform": "centos", 
-        "id": 8, 
+        "id": 9, 
+        "manufacturer": "KVM"
+    }, 
+    {
+        "status": "discover", 
+        "name": "Untitled (D2:66)", 
+        "ip": "172.18.94.39", 
+        "error_type": null, 
+        "pending_addition": false, 
+        "fqdn": null, 
+        "network_data": [], 
+        "platform_name": null, 
+        "cluster": null, 
+        "mac": "64:C3:54:54:D2:66", 
+        "meta": {
+            "memory": {
+                "slots": 1, 
+                "total": 2147483648, 
+                "maximum_capacity": 2147483648, 
+                "devices": [
+                    {
+                        "type": "RAM", 
+                        "size": 2147483648
+                    }
+                ]
+            }, 
+            "interfaces": [
+                {
+                    "mac": "64:86:89:DC:11:DF", 
+                    "max_speed": null, 
+                    "name": "eth2", 
+                    "current_speed": null
+                }, 
+                {
+                    "mac": "64:3E:31:66:CA:AF", 
+                    "max_speed": null, 
+                    "name": "eth1", 
+                    "current_speed": null
+                }, 
+                {
+                    "name": "eth0", 
+                    "ip": "172.18.94.39", 
+                    "netmask": "255.255.255.224", 
+                    "mac": "64:C3:54:54:D2:66", 
+                    "max_speed": null, 
+                    "current_speed": null
+                }
+            ], 
+            "disks": [
+                {
+                    "model": null, 
+                    "disk": "disk/by-path/pci-0000:00:07.0-virtio-pci-virtio4", 
+                    "name": "vdb", 
+                    "size": 21474836480
+                }, 
+                {
+                    "model": null, 
+                    "disk": "disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3", 
+                    "name": "vda", 
+                    "size": 21474836480
+                }
+            ], 
+            "system": {
+                "fqdn": "bootstrap", 
+                "manufacturer": "KVM"
+            }, 
+            "cpu": {
+                "real": 0, 
+                "total": 2, 
+                "spec": [
+                    {
+                        "model": "QEMU Virtual CPU version 1.2.0", 
+                        "frequency": 1999
+                    }, 
+                    {
+                        "model": "QEMU Virtual CPU version 1.2.0", 
+                        "frequency": 1999
+                    }
+                ]
+            }
+        }, 
+        "role": null, 
+        "online": true, 
+        "progress": 0, 
+        "pending_deletion": false, 
+        "os_platform": "centos", 
+        "id": 1, 
+        "manufacturer": "KVM"
+    }, 
+    {
+        "status": "discover", 
+        "name": "Untitled (1D:C9)", 
+        "ip": "172.18.94.42", 
+        "error_type": null, 
+        "pending_addition": false, 
+        "fqdn": null, 
+        "network_data": [], 
+        "platform_name": null, 
+        "cluster": null, 
+        "mac": "64:B7:37:B1:1D:C9", 
+        "meta": {
+            "memory": {
+                "slots": 1, 
+                "total": 1073741824, 
+                "maximum_capacity": 1073741824, 
+                "devices": [
+                    {
+                        "type": "RAM", 
+                        "size": 1073741824
+                    }
+                ]
+            }, 
+            "interfaces": [
+                {
+                    "mac": "64:49:B1:F5:AA:CF", 
+                    "max_speed": null, 
+                    "name": "eth2", 
+                    "current_speed": null
+                }, 
+                {
+                    "mac": "64:B3:BC:6D:17:A0", 
+                    "max_speed": null, 
+                    "name": "eth1", 
+                    "current_speed": null
+                }, 
+                {
+                    "name": "eth0", 
+                    "ip": "172.18.94.42", 
+                    "netmask": "255.255.255.224", 
+                    "mac": "64:B7:37:B1:1D:C9", 
+                    "max_speed": null, 
+                    "current_speed": null
+                }
+            ], 
+            "disks": [
+                {
+                    "model": null, 
+                    "disk": "disk/by-path/pci-0000:00:07.0-virtio-pci-virtio4", 
+                    "name": "vdb", 
+                    "size": 21474836480
+                }, 
+                {
+                    "model": null, 
+                    "disk": "disk/by-path/pci-0000:00:06.0-virtio-pci-virtio3", 
+                    "name": "vda", 
+                    "size": 21474836480
+                }
+            ], 
+            "system": {
+                "fqdn": "bootstrap", 
+                "manufacturer": "KVM"
+            }, 
+            "cpu": {
+                "real": 0, 
+                "total": 2, 
+                "spec": [
+                    {
+                        "model": "QEMU Virtual CPU version 1.2.0", 
+                        "frequency": 1999
+                    }, 
+                    {
+                        "model": "QEMU Virtual CPU version 1.2.0", 
+                        "frequency": 1999
+                    }
+                ]
+            }
+        }, 
+        "role": null, 
+        "online": true, 
+        "progress": 0, 
+        "pending_deletion": false, 
+        "os_platform": "centos", 
+        "id": 3, 
         "manufacturer": "KVM"
     }
 ]
