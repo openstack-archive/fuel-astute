@@ -148,7 +148,7 @@ module Astute
               end
             rescue Exception => e
               Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, "\
-                                 "trace: #{e.backtrace.join("\n")}"
+                                 "trace: #{e.format_backtrace}"
             end
           end
           ctx.reporter.report('nodes' => nodes_to_report) if nodes_to_report.any?

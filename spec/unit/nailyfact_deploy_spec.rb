@@ -196,7 +196,6 @@ describe "NailyFact DeploymentEngine" do
       controller_nodes = @data_ha['args']['nodes'].select{|n| n['role'] == 'controller'}
       primary_nodes = [controller_nodes.shift]
       compute_nodes = @data_ha['args']['nodes'].select{|n| n['role'] == 'compute'}
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, primary_nodes, 0, false).once
       controller_nodes.each do |n|
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 2, true).once
       end
@@ -210,14 +209,6 @@ describe "NailyFact DeploymentEngine" do
       Astute::PuppetdDeployer.expects(:deploy).once
       ctrl = @data_ha['args']['nodes'].select {|n| n['role'] == 'controller'}[0]
       @deploy_engine.deploy([ctrl], @data_ha['args']['attributes'])
-    end
-
-    it "singlenode deploy should not raise any exception" do
-      @data['args']['attributes']['deployment_mode'] = "singlenode"
-      @data['args']['nodes'] = [@data['args']['nodes'][0]]  # We have only one node in singlenode
-      Astute::Metadata.expects(:publish_facts).times(@data['args']['nodes'].size)
-      Astute::PuppetdDeployer.expects(:deploy).with(@ctx, @data['args']['nodes'], instance_of(Fixnum), true).once
-      @deploy_engine.deploy(@data['args']['nodes'], @data['args']['attributes'])
     end
 
     describe 'Vlan manager' do
@@ -245,12 +236,14 @@ describe "NailyFact DeploymentEngine" do
           }
         }
         attrs = {
-          'network_manager' => 'VlanManager'
+          'novanetwork_parameters' => {
+            'network_manager' => 'VlanManager'
+          }
         }
 
         expect = {
           "role" => "controller",
-          "uid"=>1,
+          "uid" => 1,
 
           "network_data" => {"eth0.102" =>
             {
@@ -272,10 +265,8 @@ describe "NailyFact DeploymentEngine" do
           }.to_json,
 
           "fixed_interface" => "eth2",
-          "network_manager" => "VlanManager",
-          "management_interface" => "eth0.102",
-          "internal_address" => "192.168.0.2",
-          'management_address' => '192.168.0.2'
+          "novanetwork_parameters" => '{"network_manager":"VlanManager"}',
+          "management_interface" => "eth0.102"
         }
 
         @deploy_engine.create_facts(node, attrs).should == expect

@@ -227,3 +227,14 @@ attributes:
   floating_network_range:
   - 240.0.12.10
   - 240.0.12.11
+  auth_key: ''
+  syslog:
+    syslog_port: '514'
+    syslog_transport: udp
+    syslog_server: ''
+  compute_scheduler_driver: nova.scheduler.filter_scheduler.FilterScheduler
+  deployment_mode: multinode
+  cinder:
+    db_password: rveahKih
+    user_password: ENwyu6oa
+  deployment_id: 8

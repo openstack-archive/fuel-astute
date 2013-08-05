@@ -32,12 +32,12 @@ node_01: &node1
   name: controller-5
   hostname: controller-5.domain.tld
   profile: centos-x86_64
-#  fqdn: &fqdn controller-5.domain.tld
-#  id: &id 5
-#  uid: *id
-#  mac: &mac 08:00:27:E3:BC:28
-#  ip: &ip 10.20.0.41
-#  power_address: *ip
+#  fqdn: controller-5.domain.tld
+#  id: 5
+#  uid: 5
+#  mac: 08:00:27:E3:BC:28
+#  ip: 10.20.0.41
+#  power_address: 10.20.0.41
   <<: *power_info
   #Write size in megabytes
   ks_meta:
@@ -76,6 +76,6 @@ node_01: &node1
     eth0:
       onboot: 'yes'
       peerdns: 'no'
-  
+
 nodes:
 - <<: *node1

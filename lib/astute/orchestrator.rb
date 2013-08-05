@@ -16,7 +16,7 @@ module Astute
   class Orchestrator
     def initialize(deploy_engine=nil, log_parsing=false)
       @deploy_engine = deploy_engine || Astute::DeploymentEngine::NailyFact
-      @log_parser = log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
+      @log_parsing = log_parsing
     end
 
     def node_type(reporter, task_id, nodes, timeout=nil)
@@ -37,27 +37,28 @@ module Astute
       # Following line fixes issues with uids: it should always be string
       nodes.map { |x| x['uid'] = x['uid'].to_s }  # NOTE: perform that on environment['nodes'] initialization
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter)
-      context = Context.new(task_id, proxy_reporter, @log_parser)
+      log_parser = @log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
+      context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
       begin
-        @log_parser.prepare(nodes)
+        log_parser.prepare(nodes)
       rescue Exception => e
-        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.join("\n")}"
+        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
       end
       deploy_engine_instance.deploy(nodes, attrs)
       return SUCCESS
     end
-    
+
     def fast_provision(reporter, engine_attrs, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
 
       engine = create_engine(engine_attrs, reporter)
-      
+
       begin
         reboot_events = reboot_nodes(engine, nodes)
         failed_nodes  = check_reboot_nodes(engine, reboot_events)
-        
+
       rescue RuntimeError => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
@@ -69,7 +70,7 @@ module Astute
       ensure
         engine.sync
       end
-      
+
       if failed_nodes.empty?
         report_result({}, reporter)
         return SUCCESS
@@ -83,23 +84,29 @@ module Astute
         raise StopIteration
       end
     end
-    
-    def provision(reporter, task_id, nodes)
-      raise "Nodes to provision are not provided!" if nodes.empty?
-      
+
+    def provision(reporter, task_id, nodes_up)
+      raise "Nodes to provision are not provided!" if nodes_up.empty?
+
+      # We need only those which are not ready/provisioned yet
+      nodes = []
+      nodes_up.each do |n|
+        nodes << n unless ['provisioned', 'ready'].include?(n['status'])
+      end
+
       # Following line fixes issues with uids: it should always be string
       nodes.map { |x| x['uid'] = x['uid'].to_s } # NOTE: perform that on environment['nodes'] initialization
 
       nodes_uids = nodes.map { |n| n['uid'] }
-      
-      provisionLogParser = LogParser::ParseProvisionLogs.new
+
+      provisionLogParser = @log_parsing ? LogParser::ParseProvisionLogs.new : LogParser::NoParsing.new
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(reporter)
       sleep_not_greater_than(10) do # Wait while nodes going to reboot
         Astute.logger.info "Starting OS provisioning for nodes: #{nodes_uids.join(',')}"
         begin
           provisionLogParser.prepare(nodes)
         rescue => e
-          Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.join("\n")}"
+          Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
         end
       end
       nodes_not_booted = nodes_uids.clone
@@ -107,15 +114,15 @@ module Astute
         Timeout.timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
           catch :done do
             while true
-              sleep_not_greater_than(5) do 
+              sleep_not_greater_than(5) do
                 types = node_type(proxy_reporter, task_id, nodes, 2)
                 types.each { |t| Astute.logger.debug("Got node types: uid=#{t['uid']} type=#{t['node_type']}") }
-          
+
                 Astute.logger.debug("Not target nodes will be rejected")
                 target_uids = types.reject{|n| n['node_type'] != 'target'}.map{|n| n['uid']}
                 nodes_not_booted -= types.map { |n| n['uid'] }
                 Astute.logger.debug "Not provisioned: #{nodes_not_booted.join(',')}, got target OSes: #{target_uids.join(',')}"
-          
+
                 if nodes.length == target_uids.length
                   Astute.logger.info "All nodes #{target_uids.join(',')} are provisioned."
                   throw :done
@@ -123,11 +130,11 @@ module Astute
                   Astute.logger.debug("Nodes list length is not equal to target nodes list length: #{nodes.length} != #{target_uids.length}")
                 end
 
-                report_about_progress(proxy_reporter, provisionLogParser, nodes_uids, target_uids, nodes)     
+                report_about_progress(proxy_reporter, provisionLogParser, nodes_uids, target_uids, nodes)
               end
             end
           end
-          # We are here if jumped by throw from while cycle 
+          # We are here if jumped by throw from while cycle
         end
       rescue Timeout::Error
         msg = "Timeout of provisioning is exceeded."
@@ -147,7 +154,6 @@ module Astute
       proxy_reporter.report({'nodes' => nodes_progress})
       return SUCCESS
     end
-    
 
     def remove_nodes(reporter, task_id, nodes)
       NodesRemover.new(Context.new(task_id, reporter), nodes).remove
@@ -172,42 +178,67 @@ module Astute
       end
       nodes = [{'uid' => 'master', 'facts' => facts}]
       proxy_reporter = ProxyReporter::DLReleaseProxyReporter.new(up_reporter, nodes.size)
-      context = Context.new(task_id, proxy_reporter, @log_parser)
+      #FIXME: These parameters should be propagated from Nailgun. Maybe they should be saved
+      #       in Release.json.
+      nodes_to_parser = [
+        {:uid => 'master',
+         :path_items => [
+            {:max_size => 1111280705, :path => '/var/www/nailgun/rhel', :weight => 3},
+            {:max_size => 195900000, :path => '/var/cache/yum/x86_64/6Server', :weight => 1},
+         ]}
+      ]
+      log_parser = @log_parsing ? LogParser::DirSizeCalculation.new(nodes_to_parser) : LogParser::NoParsing.new
+      context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for release download."
-      begin
-        @log_parser.prepare(nodes)
-      rescue Exception => e
-        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.backtrace.join("\n")}"
-      end
       deploy_engine_instance.deploy(nodes, attrs)
       proxy_reporter.report({'status' => 'ready', 'progress' => 100})
     end
-    
+
+    def check_redhat_credentials(reporter, task_id, credentials)
+      ctx = Context.new(task_id, reporter)
+      begin
+        Astute::RedhatChecker.new(ctx, credentials).check_redhat_credentials
+      rescue Exception => e
+        Astute.logger.error("Error #{e.message} traceback #{e.format_backtrace}")
+        raise StopIteration
+      end
+    end
+
+    def check_redhat_licenses(reporter, task_id, credentials, nodes=nil)
+      ctx = Context.new(task_id, reporter)
+      begin
+        Astute::RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)
+      rescue Exception => e
+        Astute.logger.error("Error #{e.message} traceback #{e.format_backtrace}")
+        raise StopIteration
+      end
+    end
+
     private
-    
+
     def report_result(result, reporter)
       default_result = {'status' => 'ready', 'progress' => 100}
-      
+
       result = {} unless result.instance_of?(Hash)
       status = default_result.merge(result)
       reporter.report(status)
     end
-    
+
     def sleep_not_greater_than(sleep_time, &block)
       time = Time.now.to_f
       block.call
       time = time + sleep_time - Time.now.to_f
       sleep (time) if time > 0
     end
-    
+
     def create_engine(engine_attrs, reporter)
       begin
         Astute.logger.info("Trying to instantiate cobbler engine: #{engine_attrs.inspect}")
         Astute::Provision::Cobbler.new(engine_attrs)
       rescue
         Astute.logger.error("Error occured during cobbler initializing")
-        
+
         reporter.report({
                           'status' => 'error',
                           'error' => 'Cobbler can not be initialized',
@@ -216,7 +247,7 @@ module Astute
         raise StopIteration
       end
     end
-    
+
     def reboot_nodes(engine, nodes)
       reboot_events = {}
       nodes.each do |node|
@@ -233,7 +264,7 @@ module Astute
       end
       reboot_events
     end
-    
+
     def check_reboot_nodes(engine, reboot_events)
       begin
         Astute.logger.debug("Waiting for reboot to be complete: nodes: #{reboot_events.keys}")
@@ -261,7 +292,7 @@ module Astute
       end
       failed_nodes
     end
-    
+
     def report_about_progress(reporter, provisionLogParser, nodes_uids, target_uids, nodes)
       begin
         nodes_progress = provisionLogParser.progress_calculate(nodes_uids, nodes)
@@ -275,9 +306,9 @@ module Astute
         end
         reporter.report({'nodes' => nodes_progress})
       rescue => e
-        Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.backtrace.join("\n")}"
+        Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.format_backtrace}"
       end
     end
-    
+
   end
 end

@@ -15,6 +15,7 @@
 
 require 'tempfile'
 require 'tmpdir'
+require 'fileutils'
 require 'date'
 require 'yaml'
 require 'rspec'
@@ -42,7 +43,10 @@ module SpecHelpers
       stubs(:progress=)
       unless timeout.nil?
         expects(:timeout=).with(timeout)
+      else
+        stubs(:timeout=)
       end
+
       if discover_nodes.nil?
         stubs(:discover)
       else

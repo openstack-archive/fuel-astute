@@ -27,20 +27,11 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     node_network_data = node['network_data'].nil? ? [] : node['network_data']
     interfaces = node['meta']['interfaces']
     network_data_puppet = calculate_networks(node_network_data, interfaces)
-    metadata = {
+    attrs_to_puppet = {
       'role' => node['role'],
       'uid'  => node['uid'],
       'network_data' => network_data_puppet.to_json
     }
-
-    attrs.each do |k, v|
-      if v.is_a? String
-        metadata[k] = v
-      else
-        # And it's the problem on the puppet side now to decode json
-        metadata[k] = v.to_json
-      end
-    end
 
     # Let's calculate interface settings we need for OpenStack:
     node_network_data.each do |iface|
@@ -51,48 +42,70 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       end
 
       if iface['name'].is_a?(String)
-        metadata["#{iface['name']}_interface"] = device
-        if iface['ip']
-#         metadata["#{iface['name']}_address"] = iface['ip'].split('/')[0]
-        end
+        attrs_to_puppet["#{iface['name']}_interface"] = device
       elsif iface['name'].is_a?(Array)
        iface['name'].each do |name|
-         metadata["#{name}_interface"] = device
-         if iface['ip']
-#            metadata["#{name}_address"] = iface['ip'].split('/')[0]
-         end
+         attrs_to_puppet["#{name}_interface"] = device
        end
       end
     end
-    # internal_address is required for HA..
-    #metadata['internal_address'] = node['network_data'].select{|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split('/')[0]
 
+    if attrs['novanetwork_parameters'] && \
+        attrs['novanetwork_parameters']['network_manager'] == 'VlanManager' && \
+        !attrs_to_puppet['fixed_interface']
 
-    if metadata['network_manager'] == 'VlanManager' && !metadata['fixed_interface']
-      metadata['fixed_interface'] = get_fixed_interface(node)
+      attrs_to_puppet['fixed_interface'] = get_fixed_interface(node)
     end
 
-    metadata
+    attrs_to_puppet.merge!(deep_copy(attrs))
+
+    attrs_to_puppet.each do |k, v|
+      unless v.is_a?(String) || v.is_a?(Integer)
+        attrs_to_puppet[k] = v.to_json
+      end
+    end
+
+    attrs_to_puppet
   end
 
   def deploy_piece(nodes, attrs, retries=2, change_node_status=true)
     return false unless validate_nodes(nodes)
-    @ctx.reporter.report nodes_status(nodes, 'deploying', {'progress' => 0})
+    
+    Astute.logger.info "#{@ctx.task_id}: Getting which nodes to deploy"
+    Astute.logger.debug "#{@ctx.task_id}: Running get_nodes_to_deploy() function:::"
+    nodes_to_deploy = get_nodes_to_deploy(nodes)
 
+    if nodes_to_deploy.empty?
+        Astute.logger.info "#{@ctx.task_id}: Returning from deployment stage. No nodes to deploy"
+        return
+    end
     Astute.logger.info "#{@ctx.task_id}: Calculation of required attributes to pass, include netw.settings"
-    nodes.each do |node|
+    @ctx.reporter.report nodes_status(nodes_to_deploy, 'deploying', {'progress' => 0})
+    nodes_to_deploy.each do |node|
       # Use predefined facts or create new.
       node['facts'] ||= create_facts(node, attrs)
       Astute::Metadata.publish_facts(@ctx, node['uid'], node['facts'])
     end
     Astute.logger.info "#{@ctx.task_id}: All required attrs/metadata passed via facts extension. Starting deployment."
 
-    Astute::PuppetdDeployer.deploy(@ctx, nodes, retries, change_node_status)
-    nodes_roles = nodes.map { |n| { n['uid'] => n['role'] } }
+    Astute::PuppetdDeployer.deploy(@ctx, nodes_to_deploy, retries, change_node_status)
+    nodes_roles = nodes_to_deploy.map { |n| { n['uid'] => n['role'] } }
     Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
   end
 
   private
+  def get_nodes_to_deploy(nodes)
+    nodes_to_deploy = []
+    nodes.each do |node|
+      if node['status'] != 'ready'
+        nodes_to_deploy << node
+      else
+        Astute.logger.info "#{@ctx.task_id}: Not adding node #{node['uid']} with hostname #{node['name']} as it does not require deploying."
+      end
+    end
+    nodes_to_deploy
+  end
+
   def get_fixed_interface(node)
     return node['vlan_interface'] if node['vlan_interface']
 
