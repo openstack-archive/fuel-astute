@@ -161,7 +161,7 @@ module Astute
       #if we are the last controller in deployment sequence and it is safe to
       #upload test virtual machine image
 
-      attrs['last_controller'] = ctrl_nodes.last['name']
+      attrs['last_controller'] = attrs['nodes'].select { |node| node['role'] == 'controller' }.last['name']
 
       Astute.logger.info "Starting deployment of primary controller"
       deploy_piece(primary_ctrl_nodes, attrs)
