@@ -119,6 +119,7 @@ module Astute
       if contain_errors?(result)
         err_msg = "Unknown error Stdout: #{stdout} Stderr: #{stderr}"
         error = get_error(result) || err_msg
+        Astute.logger.error(err_msg)
         report_error(error)
       else
         report_success(success_msg)

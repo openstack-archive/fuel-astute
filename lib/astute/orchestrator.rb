@@ -199,8 +199,11 @@ module Astute
       ctx = Context.new(task_id, reporter)
       begin
         Astute::RedhatChecker.new(ctx, credentials).check_redhat_credentials
+      rescue Astute::RedhatCheckingError => e
+        Astute.logger.error("Error #{e.message}")
+        raise StopIteration
       rescue Exception => e
-        Astute.logger.error("Error #{e.message} traceback #{e.format_backtrace}")
+        Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise StopIteration
       end
     end
@@ -209,8 +212,11 @@ module Astute
       ctx = Context.new(task_id, reporter)
       begin
         Astute::RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)
+      rescue Astute::RedhatCheckingError => e
+        Astute.logger.error("Error #{e.message}")
+        raise StopIteration
       rescue Exception => e
-        Astute.logger.error("Error #{e.message} traceback #{e.format_backtrace}")
+        Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise StopIteration
       end
     end
