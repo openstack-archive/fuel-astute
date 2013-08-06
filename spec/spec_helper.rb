@@ -66,4 +66,16 @@ module SpecHelpers
       stubs(:agent).returns('mc_stubbed_agent')
     end
   end
+
+  def mock_ctx(parser=nil)
+    parser ||= Astute::LogParser::NoParsing.new
+    ctx = mock
+    ctx.stubs(:task_id)
+    ctx.stubs(:deploy_log_parser).returns(parser)
+    reporter = mock
+    ctx.stubs(:reporter).returns(reporter)
+
+    ctx
+  end
+
 end
