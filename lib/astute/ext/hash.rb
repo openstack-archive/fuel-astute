@@ -1,0 +1,37 @@
+#    Copyright 2013 Mirantis, Inc.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+
+class Hash
+    
+  # The value of the existing keys are not overridden
+  def reverse_merge(another_hash)
+    another_hash.merge(self)
+  end
+  
+  def reverse_merge!(another_hash)
+    replace(reverse_merge(another_hash))
+  end
+  
+  def find_missing_keys(array)
+    array.select { |key| is_missing_key?(key) }
+    #array.all? { |key| !self[key].nil? }
+  end
+  
+  def is_missing_key?(key)
+    self[key].nil?
+    #array.all? { |key| !self[key].nil? }
+  end
+   
+end

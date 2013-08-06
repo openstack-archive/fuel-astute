@@ -1,0 +1,152 @@
+type: map
+mapping:
+  "task_uuid":
+    type: text
+  "engine":
+    type: map
+    mapping:
+      "url":
+        type: text
+        required: true
+      "username":
+        type: text
+        required: true
+      "password":
+        type: text
+        required: true
+  "nodes":
+    type: seq
+    sequence:
+      - type: map
+        mapping:
+          "id":
+            type: int
+            unique: yes
+          "uid":
+            type: int
+            unique: yes
+          "name":
+            type: text
+            required: true
+            unique: yes
+          "hostname":
+            type: text
+            required: true
+          "fqdn":
+            type: text
+          "profile":
+            type: text
+            required: true
+            enum: ["centos-x86_64", "ubuntu_1204_x86_64"]
+          "ip":
+            type: text
+          "mac":
+            type: text
+          "power_address":
+            type: text
+          "power_type":
+            type: text
+            required: true
+          "power_user":
+            type: text
+            required: true
+          "name_servers":
+            type: text
+            required: true
+          "power_pass":
+            type: text
+            required: true
+          "netboot_enabled":
+            type: text
+            required: true
+          "ks_meta":
+            type: map
+            mapping:
+              "mco_enable":
+                type: int
+                range: { min: 0, max: 1 }
+                required: true
+              "mco_vhost":
+                type: text
+                required: true
+              "mco_pskey":
+                type: text
+                required: true
+              "mco_user":
+                type: text
+                required: true
+              "mco_password":
+                type: text
+                required: true
+              "puppet_enable":
+                type: int
+                range: { min: 0, max: 1 }
+                required: true
+              "puppet_auto_setup":
+                type: int
+                range: { min: 0, max: 1 }
+                required: true
+              "puppet_master":
+                type: text
+                required: true
+              "mco_auto_setup":
+                type: int
+                range: { min: 0, max: 1 }
+                required: true
+              "auth_key":
+                type: text
+                required: true
+              "puppet_version":
+                type: text              
+              "install_log_2_syslog":
+                type: int
+                range: { min: 0, max: 1 }
+                required: true
+              "mco_connector":
+                type: text
+                required: true
+              "mco_host":
+                type: text
+                required: true
+              "ks_spaces":
+                type: text
+                required: true
+          "interfaces":
+            type: seq
+            sequence:
+              - type: map
+                mapping:
+                  "name":
+                    type: text
+                    required: true
+                    unique: yes
+                  "ip_address":
+                    type: text
+                    required: true
+                    unique: yes
+                  "netmask":
+                    type: text
+                    required: true
+                  "dns_name":
+                    type: text
+                    required: true
+                    unique: yes
+                  "static":
+                    type: text
+                    #range: { min: 0, max: 1 }
+                  "mac_address":
+                    type: text
+                    required: true
+                    unique: yes
+                  "onboot":
+                    type: text
+                    required: true
+                    enum: ['yes', 'no']
+                  "peerdns":
+                    type: text
+                    required: true
+                    enum: ['yes', 'no']
+                  "use_for_provision":
+                    type: bool
+                    default: false
+                    name: use_for_provision

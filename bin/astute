@@ -23,7 +23,7 @@ require 'optparse'
 require 'yaml'
 require 'astute'
 require 'astute/version'
-require 'astute/enviroment'
+require 'astute/cli/enviroment'
 
 class ConsoleReporter
   def report(msg)
@@ -64,8 +64,7 @@ end
 reporter = ConsoleReporter.new
 Astute.logger = Logger.new(STDOUT) if opts[:verbose]
 
-environment = Astute::Enviroment.load_file(opts[:filename])
-p environment['nodes'][0]['ip']
+environment = Astute::Cli::Enviroment.load_file(opts[:filename])
 
 deploy_engine = nil
 
