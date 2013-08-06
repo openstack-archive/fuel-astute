@@ -26,12 +26,10 @@ class Hash
   
   def find_missing_keys(array)
     array.select { |key| is_missing_key?(key) }
-    #array.all? { |key| !self[key].nil? }
   end
   
   def is_missing_key?(key)
     self[key].nil?
-    #array.all? { |key| !self[key].nil? }
   end
    
 end

@@ -47,7 +47,7 @@ module Astute
             )
         end
         missing_keys = node.find_missing_keys(['ip', 'power_address', 'mac', 'fqdn'])
-        if provision_eth.nil? && missing_keys.empty?
+        if provision_eth.nil? && !missing_keys.empty?
           raise "Please set 'use_for_provision' parameter for #{node['name']}
                  or set manually #{missing_keys.each {|k| p k}}"
         end
