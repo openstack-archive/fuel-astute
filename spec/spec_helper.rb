@@ -23,6 +23,7 @@ require 'rspec'
 require 'rspec/autorun'
 
 require File.join(File.dirname(__FILE__), '../lib/astute')
+Dir[File.join(File.dirname(__FILE__), 'unit/fixtures/*.rb')].each { |file| require file }
 
 # NOTE(mihgen): I hate to wait for unit tests to complete,
 #               resetting time to sleep significantly increases tests speed
