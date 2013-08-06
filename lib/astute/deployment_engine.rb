@@ -50,6 +50,8 @@ module Astute
           'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
           'internal_br'          => n['internal_br'],
           'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
+          'storage_address'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
+          'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['netmask'],
           'public_address'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['ip'].split(/\//)[0],
           'public_br'            => n['public_br'],
           'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
@@ -81,15 +83,16 @@ module Astute
       attrs['mp'] = [{'point' => '1', 'weight' => '1'},{'point'=>'2','weight'=>'2'}]
       mountpoints = ""
       attrs['mp'].each do |mountpoint|
-          mountpoints << "#{mountpoint['point']} #{mountpoint['weight']}\n"
+        mountpoints << "#{mountpoint['point']} #{mountpoint['weight']}\n"
       end
+
       Astute.logger.debug("#{nodes}")
       attrs['nodes'] = nodes.map do |n|
         {
           'fqdn'                 => n['fqdn'],
           'name'                 => n['fqdn'].split(/\./)[0],
           'role'                 => n['role'],
-          'mountpoints'          => mountpoints, 
+          'mountpoints'          => mountpoints,
           'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
           'internal_br'          => n['internal_br'],
           'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
@@ -124,7 +127,6 @@ module Astute
       primary_proxy_nodes = nodes.select {|n| n['role'] == 'primary-swift-proxy'}
       other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - \
         primary_proxy_nodes - quantum_nodes - storage_nodes - proxy_nodes
-      
 
       Astute.logger.info "Starting deployment of primary swift proxy"
       deploy_piece(primary_proxy_nodes, attrs)
@@ -160,8 +162,13 @@ module Astute
       #FIXME: add last_controller attribute to attributes hash in order to determine
       #if we are the last controller in deployment sequence and it is safe to
       #upload test virtual machine image
-      
-      attrs['last_controller'] = ctrl_nodes.last['name'] 
+
+      last_controller = ctrl_nodes.last
+      if last_controller['name']
+        attrs['last_controller'] = last_controller['name']
+      elsif last_controller['fqdn']
+        attrs['last_controller'] = last_controller['fqdn'].split(/\./)[0]
+      end
 
       Astute.logger.info "Starting deployment of primary controller"
       deploy_piece(primary_ctrl_nodes, attrs)

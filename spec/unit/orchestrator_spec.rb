@@ -418,4 +418,56 @@ describe Astute::Orchestrator do
 
   end
 
+
+  describe 'Red-hat checking' do
+    let(:credentials) do
+      {
+        'release_name' => 'RELEASE_NAME',
+        'redhat' => {
+          'username' => 'user',
+          'password' => 'password'
+        }
+      }
+    end
+
+    def mc_result(result)
+      [mock_mc_result({:data => result})]
+    end
+
+    def stub_rpc(stdout='')
+      mock_rpcclient.stubs(:execute).returns(mc_result(:exit_code => 0, :stdout => stdout, :stderr => ''))
+    end
+
+    describe '#check_redhat_credentials' do
+
+      it 'Should raise StopIteration in case of errors ' do
+        stub_rpc("Before\nInvalid username or password\nAfter")
+
+        expect do
+          @orchestrator.check_redhat_credentials(@reporter, @data['task_uuid'], credentials)
+        end.to raise_error(StopIteration)
+      end
+
+      it 'Should not raise errors ' do
+        stub_rpc
+        @orchestrator.check_redhat_credentials(@reporter, @data['task_uuid'], credentials)
+      end
+    end
+
+    describe '#check_redhat_licenses' do
+      it 'Should raise StopIteration in case of errors ' do
+        stub_rpc('{"openstack_licenses_physical_hosts_count":0}')
+
+        expect do
+          @orchestrator.check_redhat_licenses(@reporter, @data['task_uuid'], credentials)
+        end.to raise_error(StopIteration)
+      end
+
+      it 'Should not raise errors ' do
+        stub_rpc('{"openstack_licenses_physical_hosts_count":1}')
+        @orchestrator.check_redhat_licenses(@reporter, @data['task_uuid'], credentials)
+      end
+    end
+  end
+
 end

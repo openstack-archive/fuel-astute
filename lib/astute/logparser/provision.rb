@@ -54,7 +54,7 @@ module Astute
         pattern_spec['path_prefix'] ||= PATH_PREFIX.to_s
         pattern_spec['separator'] ||= SEPARATOR.to_s
 
-        hdd = node['meta']['disks'].select{|disk| not disk['removable']}[0] if node['meta'] && node['meta']['disks']
+        hdd = node['meta']['disks'].select{|disk| not disk['removable']}[0] rescue nil
         if hdd
           # Convert size from bytes to GB
           hdd_size = hdd['size'] / 10 ** 9
