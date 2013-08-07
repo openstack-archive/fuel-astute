@@ -110,7 +110,39 @@ mapping:
                 required: true
               "ks_spaces":
                 type: text
-                required: true
+              "ks_disks":
+                type: seq
+                sequence:
+                  - type: map
+                    mapping:
+                      "type":
+                        type: str
+                        required: true
+                        enum: [disk, vg]
+                      "id":
+                        type: text
+                        required: true
+                        unique: yes
+                      "size":
+                        type: int
+                        required: true
+                      "volumes":
+                        type: seq
+                        sequence:
+                          - type: map
+                            mapping:
+                              "type":
+                                type: text
+                                required: true
+                                enum: [lv, pv, partition, mbr]
+                              "mount":
+                                type: text
+                              "size":
+                                type: int
+                              "vg":
+                                type: text
+                              "name":
+                                type: text
           "interfaces":
             type: seq
             sequence:

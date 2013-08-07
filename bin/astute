@@ -64,7 +64,7 @@ end
 reporter = ConsoleReporter.new
 Astute.logger = Logger.new(STDOUT) if opts[:verbose]
 
-environment = Astute::Cli::Enviroment.load_file(opts[:filename])
+environment = Astute::Cli::Enviroment.new(opts[:filename])
 
 deploy_engine = nil
 

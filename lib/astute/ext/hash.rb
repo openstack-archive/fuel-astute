@@ -24,12 +24,12 @@ class Hash
     replace(reverse_merge(another_hash))
   end
   
-  def find_missing_keys(array)
-    array.select { |key| is_missing_key?(key) }
+  def absent_keys(array)
+    array.select { |key| absent?(key) }
   end
   
-  def is_missing_key?(key)
-    self[key].nil?
+  def absent?(key)
+    self[key].nil? || self[key].empty?
   end
    
 end
