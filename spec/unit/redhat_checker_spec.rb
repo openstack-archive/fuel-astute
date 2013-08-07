@@ -25,6 +25,7 @@ describe Astute::RedhatChecker do
     {
       'release_name' => 'RELEASE_NAME',
       'redhat' => {
+        'license_type' => 'rhsm',
         'username' => 'user',
         'password' => 'password'
       }
@@ -118,6 +119,7 @@ describe Astute::RedhatChecker do
         {
           'release_name' => 'RELEASE_NAME',
           'redhat' => {
+            'license_type' => 'rhn',
             'username' => 'user',
             'password' => 'password',
             'satellite' => 'satellite.server.com'

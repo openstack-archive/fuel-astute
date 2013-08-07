@@ -26,7 +26,7 @@ module Astute
       @username = Shellwords.escape(credentials['redhat']['username'])
       @password = Shellwords.escape(credentials['redhat']['password'])
       satellite = credentials['redhat']['satellite']
-      if satellite && !satellite.empty?
+      if credentials['redhat']['license_type'] == 'rhn' && satellite && !satellite.empty?
         @satellite_server = Shellwords.escape(satellite)
       end
 
