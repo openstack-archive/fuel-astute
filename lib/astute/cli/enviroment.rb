@@ -18,8 +18,6 @@ require 'astute/ext/hash'
 require 'astute/cli/enviroment'
 require 'astute/cli/yaml_validator'
 
-MB_TO_B = 1024 ** 2
-
 module Astute
   module Cli
     class Enviroment
@@ -114,7 +112,7 @@ module Astute
       # Example input for 'ks_disks' param: 
       # [{
       #   "type"=>"disk", 
-      #   "id"=>"disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0", 
+      #   "id"=>"disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0",
       #   "size"=>16384, 
       #   "volumes"=>[
       #     {
@@ -131,19 +129,15 @@ module Astute
       # }]
       # Example result for 'ks_spaces' param: [{\\\"type\":\"disk\",\"id\":\"disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0\",\"size\":16384,\"volumes\":[{\"type\":\"partition\",\"mount\":\"/boot\",\"size\":200},{\"type\":\"pv\",\"size\":16174,\"vg\":\"os\"}]}]
       def define_ks_spaces(node)
-        return unless node['ks_meta'].absent? 'ks_spaces'
+        if node['ks_meta'].present? 'ks_spaces'
+          node['ks_meta'].delete('ks_disks')
+          return
+        end
     
         if node['ks_meta'].absent? 'ks_disks'
           raise "Please set 'ks_disks' or 'ks_spaces' parameter in section ks_meta for #{node['name']}"
         end
     
-        # Convert size from megabytes to bytes
-        node['ks_meta']['ks_disks']. each do |disk|
-          disk['size'] *= MB_TO_B if disk['size']
-          disk['volumes'].each do |volume|
-            volume['size'] *= MB_TO_B if volume['size']
-          end
-        end
         node['ks_meta']['ks_spaces'] = node['ks_meta']['ks_disks'].to_json.gsub("\"", "\\\"")
         node['ks_meta'].delete('ks_disks')
       end

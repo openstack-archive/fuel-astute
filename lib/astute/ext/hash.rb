@@ -31,5 +31,9 @@ class Hash
   def absent?(key)
     self[key].nil? || self[key].empty?
   end
+  
+  def present?(key)
+    !absent?(key)
+  end
    
 end
