@@ -4,6 +4,7 @@ mapping:
     type: text
   "engine":
     type: map
+    required: true
     mapping:
       "url":
         type: text
@@ -16,6 +17,7 @@ mapping:
         required: true
   "nodes":
     type: seq
+    required: true
     sequence:
       - type: map
         mapping:
@@ -61,6 +63,7 @@ mapping:
             required: true
           "ks_meta":
             type: map
+            required: true
             mapping:
               "mco_enable":
                 type: int
@@ -114,6 +117,7 @@ mapping:
                 type: seq
                 sequence:
                   - type: map
+                    required: true
                     mapping:
                       "type":
                         type: str
@@ -125,7 +129,10 @@ mapping:
                         unique: yes
                       "size":
                         type: int
-                        required: true
+                      "min_size":
+                        type: int
+                      "label":
+                        type: text
                       "volumes":
                         type: seq
                         sequence:
@@ -134,7 +141,7 @@ mapping:
                               "type":
                                 type: text
                                 required: true
-                                enum: [lv, pv, partition, mbr]
+                                enum: [lv, pv, partition, mbr, raid, lvm_meta]
                               "mount":
                                 type: text
                               "size":
@@ -145,6 +152,7 @@ mapping:
                                 type: text
           "interfaces":
             type: seq
+            required: true
             sequence:
               - type: map
                 mapping:
