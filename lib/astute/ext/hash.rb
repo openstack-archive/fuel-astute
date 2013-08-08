@@ -29,7 +29,7 @@ class Hash
   end
   
   def absent?(key)
-    self[key].nil? || self[key].empty?
+    self[key].nil? || (self[key].respond_to?(:empty?) && self[key].empty?)
   end
   
   def present?(key)

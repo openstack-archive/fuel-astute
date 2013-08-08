@@ -31,6 +31,15 @@ class ConsoleReporter
   end
 end
 
+def report_and_exit(exception, verbose)
+  puts "Error: #{exception.inspect}"
+  unless verbose
+    puts "Hint: use astute with --verbose or check log (#{Astute::LOG_PATH}) for more details"
+  end
+  Astute.logger.error exception.format_backtrace
+  exit Astute::FAIL
+end
+
 opts = {}
 optparse = OptionParser.new do |o|
   o.banner = "Usage: bin/astute -c COMMAND -f FILENAME "
@@ -64,7 +73,12 @@ end
 reporter = ConsoleReporter.new
 Astute.logger = Logger.new(STDOUT) if opts[:verbose]
 
-environment = Astute::Cli::Enviroment.new(opts[:filename])
+
+begin
+  environment = Astute::Cli::Enviroment.new(opts[:filename])
+rescue Errno::ENOENT, Psych::SyntaxError, Astute::Cli::Enviroment::ValidationError => e
+  report_and_exit(e, opts[:verbose])
+end
 
 deploy_engine = nil
 
@@ -85,7 +99,7 @@ def console_provision(orchestrator, reporter, environment)
   res = orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
   if res == Astute::SUCCESS
     puts "restarting nodes..."
-    sleep 25
+    sleep 10
     puts "start watching progress"
     res = orchestrator.provision(reporter, environment['task_uuid'], environment['nodes'])
   end
@@ -108,9 +122,6 @@ begin
       res
     end
 rescue => e
-  result = Astute::FAIL
-  puts "Error: #{e.inspect}"
-  puts "Hint: use astute with --verbose or check log (#{Astute::LOG_PATH}) for more details" unless opts[:verbose]
-  Astute.logger.error e.backtrace.join("\n")
+  report_and_exit(e, opts[:verbose])
 end
 exit result

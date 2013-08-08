@@ -14,6 +14,76 @@ mapping:
         required: true
       "password":
         type: text
+        required: true  
+  "common_power_info":
+    type: map
+    mapping:
+      "power_type":
+        type: text
+        required: true
+      "power_user":
+        type: text
+        required: true
+      "power_pass":
+        type: text
+        required: true
+      "netboot_enabled":
+        type: text
+        required: true
+  "common_node_settings":
+    type: map
+    mapping:
+      "name_servers":
+        type: text
+        required: true
+  "common_ks_meta":
+    type: map
+    mapping:
+      "mco_enable":
+        type: int
+        range: { min: 0, max: 1 }
+        required: true
+      "mco_vhost":
+        type: text
+        required: true
+      "mco_pskey":
+        type: text
+        required: true
+      "mco_user":
+        type: text
+        required: true
+      "mco_password":
+        type: text
+        required: true
+      "puppet_enable":
+        type: int
+        range: { min: 0, max: 1 }
+        required: true
+      "puppet_auto_setup":
+        type: int
+        range: { min: 0, max: 1 }
+        required: true
+      "puppet_master":
+        type: text
+        required: true
+      "mco_auto_setup":
+        type: int
+        range: { min: 0, max: 1 }
+        required: true
+      "auth_key":
+        type: text
+        required: true
+      "puppet_version":
+        type: text              
+      "install_log_2_syslog":
+        type: int
+        range: { min: 0, max: 1 }
+        required: true
+      "mco_connector":
+        type: text
+        required: true
+      "mco_host":
+        type: text
         required: true
   "nodes":
     type: seq
@@ -48,19 +118,14 @@ mapping:
             type: text
           "power_type":
             type: text
-            required: true
           "power_user":
             type: text
-            required: true
           "name_servers":
             type: text
-            required: true
           "power_pass":
             type: text
-            required: true
           "netboot_enabled":
             type: text
-            required: true
           "ks_meta":
             type: map
             required: true
@@ -68,49 +133,36 @@ mapping:
               "mco_enable":
                 type: int
                 range: { min: 0, max: 1 }
-                required: true
               "mco_vhost":
                 type: text
-                required: true
               "mco_pskey":
                 type: text
-                required: true
               "mco_user":
                 type: text
-                required: true
               "mco_password":
                 type: text
-                required: true
               "puppet_enable":
                 type: int
                 range: { min: 0, max: 1 }
-                required: true
               "puppet_auto_setup":
                 type: int
                 range: { min: 0, max: 1 }
-                required: true
               "puppet_master":
                 type: text
-                required: true
               "mco_auto_setup":
                 type: int
                 range: { min: 0, max: 1 }
-                required: true
               "auth_key":
                 type: text
-                required: true
               "puppet_version":
                 type: text              
               "install_log_2_syslog":
                 type: int
                 range: { min: 0, max: 1 }
-                required: true
               "mco_connector":
                 type: text
-                required: true
               "mco_host":
                 type: text
-                required: true
               "ks_spaces":
                 type: text
               "ks_disks":
@@ -141,7 +193,7 @@ mapping:
                               "type":
                                 type: text
                                 required: true
-                                enum: [lv, pv, partition, mbr, raid, lvm_meta]
+                                enum: [lv, pv, partition, mbr, raid, lvm_meta, boot]
                               "mount":
                                 type: text
                               "size":
@@ -169,7 +221,6 @@ mapping:
                     required: true
                   "dns_name":
                     type: text
-                    required: true
                     unique: yes
                   "static":
                     type: text
