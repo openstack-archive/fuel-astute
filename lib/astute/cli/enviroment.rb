@@ -14,6 +14,7 @@
 
 require 'yaml'
 require 'json'
+require 'rest-client'
 require 'astute/ext/hash'
 require 'astute/cli/enviroment'
 require 'astute/cli/yaml_validator'
@@ -23,17 +24,48 @@ module Astute
     
     class Enviroment
       
+      POWER_INFO_KEYS       = ['power_type', 'power_user', 'power_pass', 'netboot_enabled']
+      ID_KEYS               = ['id', 'uid']
+      COMMON_NODE_KEYS      = ['name_servers']
+      KS_META_KEYS          = ['mco_enable', 'mco_vhost', 'mco_pskey', 'mco_user', 'puppet_enable',
+                               'install_log_2_syslog', 'mco_password', 'puppet_auto_setup', 'puppet_master',
+                               'mco_auto_setup', 'auth_key', 'puppet_version', 'mco_connector', 'mco_host']
+      PROVISIONING_NET_KEYS = ['ip', 'power_address', 'mac', 'fqdn']
+      
       def initialize(file)
         @config = YAML.load_file(file)
-        validate_env
-        convert_to_full_conf
+        response = RestClient.get 'http://localhost:8000/api/nodes'
+        @api_data = JSON.parse(response).freeze
+        to_full_config
       end
       
       def [](key)
         @config[key]
       end
-    
-      def validate_env
+  
+      private
+      
+      def to_full_config
+        validate_enviroment
+        
+        # Provision section
+        @config['nodes'].each do |node|
+          define_provisioning_network(node)
+          define_id_and_uid(node)
+          define_interfaces_and_interfaces_extra(node)
+          define_ks_spaces(node)
+          define_power_info(node)
+          define_ks_meta(node)
+          define_node_settings(node)
+        end
+        
+        p @config
+        
+        # Deploy section
+      end
+      
+      
+      def validate_enviroment
         validator = YamlValidator.new
         errors = validator.validate(@config)
       
@@ -47,88 +79,68 @@ module Astute
         end
       end
       
-      def convert_to_full_conf
-        # Provision section
-        @config['nodes'].each_with_index do |node, index|
-          node.reverse_merge!(
-            'id'  => index,
-            'uid' => index
-          )
-        
-          define_provision_network(node)
-          define_interfaces_and_interfaces_extra(node)
-          define_ks_spaces(node)
-          define_power_info(node)
-          define_ks_meta(node)
-          define_node_settings(node)
+      # Set for node uniq id and uid from Nailgun
+      def define_id_and_uid(node)
+        begin
+          id = @api_data.find{ |n| n['mac'] == node['mac'] }['id']
+        rescue
+          raise Enviroment::ValidationError, "Node #{node['name']} with mac adress #{node['mac']}
+                                              not find among discovered nodes"
         end
-        # Deploy section
+        
+        # This params set for node by Nailgun and should not be edit by user
+        node.merge!(
+          'id'  => id,
+          'uid' => id
+        )
       end
-  
-      private
+      
+      def define_parameters(node, config_group_name, keys, position=nil)
+        position ||= node
+        if @config[config_group_name]
+          config_group = @config[config_group_name]
+          keys.each do |key|
+            position.reverse_merge!(key => config_group[key])
+          end
+        end
+        
+        absent_keys = position.absent_keys(keys)
+        if !absent_keys.empty?
+          raise Enviroment::ValidationError, "Please set #{config_group_name} block or 
+                set params for #{node['name']} manually #{absent_keys.each {|k| p k}}"
+        end
+        @config.delete(config_group)
+      end
       
       # Add common params from common_node_settings to every node. Already certain parameters will not be changed.
       def define_node_settings(node)
-        if @config['common_node_settings']
-          meta = @config['common_node_settings']
-          params = ['name_servers']
-            
-          params.each {|param| node.reverse_merge!(param => meta[param]) } 
-        end
-        
-        absent_keys = node.absent_keys(params)
-        if !absent_keys.empty?
-          raise Enviroment::ValidationError, "Please set 'common_node_settings' block or 
-                set params for #{node['name']} manually #{absent_keys.each {|k| p k}}"
-        end
-        @config.delete('common_node_settings')
+        define_parameters(node, 'common_node_settings', COMMON_NODE_KEYS)
       end
-      
       
       # Add common params from common_power_info to every node. Already certain parameters will not be changed.
       def define_power_info(node)
-        if @config['common_power_info']
-          power_info = @config['common_power_info']
-          node.reverse_merge!(
-            'power_type'      => power_info['power_type'],
-            'power_user'      => power_info['power_user'],
-            'power_pass'      => power_info['power_pass'],
-            'netboot_enabled' => power_info['netboot_enabled']
-          )
-        end
-        
-        absent_keys = node.absent_keys(['power_type', 'power_user', 'power_pass', 'netboot_enabled'])
-        if !absent_keys.empty?
-          raise Enviroment::ValidationError, "Please set 'common_power_info' block or 
-                set params for #{node['name']} manually #{absent_keys.each {|k| p k}}"
-        end
-        @config.delete('common_power_info')
+        define_parameters(node, 'common_power_info', POWER_INFO_KEYS)
       end
       
       # Add common params from common_ks_meta to every node. Already certain parameters will not be changed.
       def define_ks_meta(node)
-        if @config['common_ks_meta']
-          ks_meta = @config['common_ks_meta']
-          params = ['mco_enable', 'mco_vhost', 'mco_pskey', 'mco_user', 'puppet_enable',
-            'install_log_2_syslog', 'mco_password', 'puppet_auto_setup', 'puppet_master',
-            'mco_auto_setup', 'auth_key', 'puppet_version', 'mco_connector', 'mco_host']
-            
-          params.each {|param| node['ks_meta'].reverse_merge!(param => ks_meta[param]) } 
-        end
-        
-        absent_keys = node['ks_meta'].absent_keys(params)
-        if !absent_keys.empty?
-          raise Enviroment::ValidationError, "Please set 'common_ks_meta' block or 
-                set params for #{node['name']} manually #{absent_keys.each {|k| p k}}"
-        end
-        @config.delete('common_ks_meta')
+        define_parameters(node, 'common_ks_meta', KS_META_KEYS, node['ks_meta'])
       end
       
       # Add duplicates params to node: ip, power_address, mac, fqdn
-      def define_provision_network(node)
+      def define_provisioning_network(node)
         provision_eth = node['interfaces'].find {|eth| eth['use_for_provision'] } rescue nil
-    
+        
         if provision_eth
+          if provision_eth.absent?('ip_address')
+            api_node = @api_data.find{ |n| n['mac'] == provision_eth['mac_address'] }
+            api_provision_eth = api_node['meta']['interfaces'].find { |n| n['mac'] == provision_eth['mac_address'] }
+            provision_eth['ip_address'] = api_provision_eth['ip'] 
+            provision_eth['netmask'] = api_provision_eth['netmask']
+          end
+
+          #define_parameters(node, 'use_for_provision', PROVISIONING_NET_KEYS)
+          
           node.reverse_merge!(
             'ip'            => provision_eth['ip_address'],
             'power_address' => provision_eth['ip_address'],
@@ -137,9 +149,10 @@ module Astute
           )
           provision_eth.delete('use_for_provision')
         end
+          
       
-        absent_keys = node.absent_keys(['ip', 'power_address', 'mac', 'fqdn'])
-        if provision_eth.nil? && !absent_keys.empty?
+        absent_keys = node.absent_keys(PROVISIONING_NET_KEYS)
+        if !absent_keys.empty?
           raise "Please set 'use_for_provision' parameter for #{node['name']}
                  or set manually #{absent_keys.each {|k| p k}}"
         end
@@ -157,7 +170,6 @@ module Astute
       #   eth0:
       #     onboot: 'yes'
       #     peerdns: 'no'
-    
       def define_interfaces_and_interfaces_extra(node)
         return if [node['interfaces'], node['extra_interfaces']].all? {|i| i.is_a?(Hash)}
       

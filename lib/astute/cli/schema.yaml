@@ -214,11 +214,9 @@ mapping:
                     unique: yes
                   "ip_address":
                     type: text
-                    required: true
                     unique: yes
                   "netmask":
                     type: text
-                    required: true
                   "dns_name":
                     type: text
                     unique: yes
