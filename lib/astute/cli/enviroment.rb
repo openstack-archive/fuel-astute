@@ -58,9 +58,6 @@ module Astute
           define_ks_meta(node)
           define_node_settings(node)
         end
-        
-        p @config
-        
         # Deploy section
       end
       
@@ -82,7 +79,7 @@ module Astute
       # Set for node uniq id and uid from Nailgun
       def define_id_and_uid(node)
         begin
-          id = @api_data.find{ |n| n['mac'] == node['mac'] }['id']
+          id = @api_data.find{ |n| n['mac'].upcase == node['mac'].upcase }['id']
         rescue
           raise Enviroment::ValidationError, "Node #{node['name']} with mac adress #{node['mac']}
                                               not find among discovered nodes"
@@ -133,8 +130,8 @@ module Astute
         
         if provision_eth
           if provision_eth.absent?('ip_address')
-            api_node = @api_data.find{ |n| n['mac'] == provision_eth['mac_address'] }
-            api_provision_eth = api_node['meta']['interfaces'].find { |n| n['mac'] == provision_eth['mac_address'] }
+            api_node = @api_data.find{ |n| n['mac'].upcase == provision_eth['mac_address'].upcase }
+            api_provision_eth = api_node['meta']['interfaces'].find { |n| n['mac'].upcase == provision_eth['mac_address'].upcase }
             provision_eth['ip_address'] = api_provision_eth['ip'] 
             provision_eth['netmask'] = api_provision_eth['netmask']
           end
