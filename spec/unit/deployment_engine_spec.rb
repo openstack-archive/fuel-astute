@@ -34,11 +34,22 @@ describe Astute::DeploymentEngine do
       attrs['last_controller'].should == only_controllers(Fixtures.ha_nodes).last['fqdn'].split(/\./)[0]
     end
 
-    it 'should assign primary-controller role for first node' do
+    it 'should assign primary-controller role for first node if primary-controller not set directly' do
       attrs = deployer.attrs_ha(Fixtures.ha_nodes, {})
-      primary = attrs['nodes'].select { |node| node['role'] == 'primary-controller' }[0]
+      primary = attrs['nodes'].find { |node| node['role'] == 'primary-controller' }
       primary.should_not be_nil
       primary['fqdn'].should == only_controllers(Fixtures.ha_nodes).first['fqdn']
+    end
+
+    it 'should not assign primary-controller role for first node if primary-controller set directly' do
+      nodes = Fixtures.ha_nodes
+      last_node = only_controllers(nodes).last
+      last_node['role'] = 'primary-controller'
+      attrs = deployer.attrs_ha(deep_copy(nodes), {})
+
+      primary = attrs['nodes'].select { |node| node['role'] == 'primary-controller' }
+      primary.length.should == 1
+      primary[0]['fqdn'].should == last_node['fqdn']
     end
 
   end
