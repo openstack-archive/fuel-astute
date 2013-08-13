@@ -5,6 +5,7 @@ mapping:
   "engine":
     type: map
     required: true
+    desc: Cobbler engine credentials
     mapping:
       "url":
         type: text
@@ -21,15 +22,20 @@ mapping:
       "power_type":
         type: text
         required: true
+        desc: Cobbler power-type. Consult cobbler documentation for available options.
       "power_user":
         type: text
         required: true
+        desc: Username for cobbler to manage power of this machine
       "power_pass":
         type: text
         required: true
+        desc: Password/credentials for cobbler to manage power of this machine
       "netboot_enabled":
         type: text
         required: true
+        desc: Disable/enable netboot for this node.
+        enum: ['0', '1']
   "common_node_settings":
     type: map
     mapping:
@@ -88,47 +94,60 @@ mapping:
   "nodes":
     type: seq
     required: true
+    desc: Array of nodes
     sequence:
       - type: map
         mapping:
           "id":
             type: int
             unique: yes
+            desc: MCollective node id in mcollective server.cfg
           "uid":
             type: int
             unique: yes
+            desc: UID of the node for deployment engine. Should be equal to `id`
           "name":
             type: text
             required: true
             unique: yes
+            desc: Name of the system in cobbler
           "hostname":
             type: text
             required: true
           "fqdn":
             type: text
+            desc: Fully-qualified domain name of the node
           "profile":
             type: text
             required: true
-            enum: ["centos-x86_64", "ubuntu_1204_x86_64"]
+            enum: ["centos-x86_64", "ubuntu_1204_x86_64", 'rhel-x86_64']
+            desc: Cobbler profile for the node.
           "ip":
             type: text
           "mac":
             type: text
           "power_address":
             type: text
+            desc: IP address of the device managing the node power state
           "power_type":
             type: text
+            desc: Cobbler power-type. Consult cobbler documentation for available options.
           "power_user":
             type: text
+            desc: Username for cobbler to manage power of this machine
           "name_servers":
             type: text
           "power_pass":
             type: text
+            desc: Password/credentials for cobbler to manage power of this machine
           "netboot_enabled":
             type: text
+            desc: Disable/enable netboot for this node.
+            enum: ['0', '1']
           "ks_meta":
             type: map
             required: true
+            desc: Kickstart metadata used during provisioning
             mapping:
               "mco_enable":
                 type: int

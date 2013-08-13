@@ -18,10 +18,24 @@ module Astute
   module Cli
     class YamlValidator < Kwalify::Validator
     
-      def initialize
-        gem_path =  Gem.loaded_specs['astute'].full_gem_path
-        schema_path = File.join(gem_path, 'lib', 'astute', 'cli', 'schema.yaml')
-        @schema = Kwalify::Yaml.load_file(schema_path)
+      def initialize(operation)
+        schemas = if [:deploy, :provision].include? operation
+          [operation]
+        elsif operation == :provision_and_deploy
+          [:provision, :deploy]
+        else
+          raise "Incorrect scheme for validation"
+        end
+        
+        schema_hashes = []
+        schema_dir_path = File.expand_path(File.dirname(__FILE__)) 
+        schemas.each do |schema_name|
+          schema_path = File.join(schema_dir_path, "#{schema_name}_schema.yaml")
+          schema_hashes << YAML.load_file(schema_path)
+        end
+        
+        #FIXME: key 'hostname:' is undefined for provision_and_deploy. Why?
+        @schema = schema_hashes.size == 1 ? schema_hashes.first : schema_hashes[0].deep_merge(schema_hashes[1])
         super(@schema)
       end
     

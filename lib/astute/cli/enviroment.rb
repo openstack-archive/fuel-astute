@@ -32,10 +32,9 @@ module Astute
                                'mco_auto_setup', 'auth_key', 'puppet_version', 'mco_connector', 'mco_host']
       PROVISIONING_NET_KEYS = ['ip', 'power_address', 'mac', 'fqdn']
       
-      def initialize(file)
+      def initialize(file, operation)
         @config = YAML.load_file(file)
-        response = RestClient.get 'http://localhost:8000/api/nodes'
-        @api_data = JSON.parse(response).freeze
+        validate_enviroment(operation)
         to_full_config
       end
       
@@ -46,8 +45,6 @@ module Astute
       private
       
       def to_full_config
-        validate_enviroment
-        
         # Provision section
         @config['nodes'].each do |node|
           define_provisioning_network(node)
@@ -57,13 +54,14 @@ module Astute
           define_power_info(node)
           define_ks_meta(node)
           define_node_settings(node)
+          define_disks_section(node)
         end
         # Deploy section
       end
       
       
-      def validate_enviroment
-        validator = YamlValidator.new
+      def validate_enviroment(operation)
+        validator = YamlValidator.new(operation)
         errors = validator.validate(@config)
       
         errors.each do |e|
@@ -76,20 +74,44 @@ module Astute
         end
       end
       
-      # Set for node uniq id and uid from Nailgun
-      def define_id_and_uid(node)
-        begin
-          id = @api_data.find{ |n| n['mac'].upcase == node['mac'].upcase }['id']
-        rescue
-          raise Enviroment::ValidationError, "Node #{node['name']} with mac adress #{node['mac']}
-                                              not find among discovered nodes"
+      # Get data about discovered nodes using FuelWeb API 
+      def find_node_api_data(node)
+        @api_data ||= begin
+          response = RestClient.get 'http://localhost:8000/api/nodes'
+          @api_data = JSON.parse(response).freeze
         end
+        @api_data.find{ |n| n['mac'].upcase == node['mac'].upcase }
+        return @api_data if @api_data
+        raise Enviroment::ValidationError, "Node #{node['name']} with mac adress #{node['mac']}
+                                            not find among discovered nodes"
+      end
+      
+      # Set uniq id and uid for node from Nailgun using FuelWeb API
+      def define_id_and_uid(node)
+        id = find_node_api_data(node)['id']
         
         # This params set for node by Nailgun and should not be edit by user
         node.merge!(
           'id'  => id,
           'uid' => id
         )
+      end
+      
+      
+      # Set meta/disks section for node. This data used in provision to calculate the percentage 
+      # completion of the installation process.
+      # Example result for node['meta']
+      # "disks": [
+      #   {
+      #     "model": "VBOX HARDDISK", 
+      #     "disk": "disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0", 
+      #     "name": "sda", 
+      #     "size": 17179869184
+      #   }...
+      # ]
+      def define_disks_section(node)
+        node['meta'] ||= {}
+        node['meta']['disks'] = find_node_api_data(node)['meta']['disks']
       end
       
       def define_parameters(node, config_group_name, keys, position=nil)
@@ -130,7 +152,7 @@ module Astute
         
         if provision_eth
           if provision_eth.absent?('ip_address')
-            api_node = @api_data.find{ |n| n['mac'].upcase == provision_eth['mac_address'].upcase }
+            api_node = find_node_api_data(node)
             api_provision_eth = api_node['meta']['interfaces'].find { |n| n['mac'].upcase == provision_eth['mac_address'].upcase }
             provision_eth['ip_address'] = api_provision_eth['ip'] 
             provision_eth['netmask'] = api_provision_eth['netmask']
@@ -150,8 +172,8 @@ module Astute
       
         absent_keys = node.absent_keys(PROVISIONING_NET_KEYS)
         if !absent_keys.empty?
-          raise "Please set 'use_for_provision' parameter for #{node['name']}
-                 or set manually #{absent_keys.each {|k| p k}}"
+          raise Enviroment::ValidationError, "Please set 'use_for_provision' parameter 
+                for #{node['name']} or set manually #{absent_keys.each {|k| p k}}"
         end
       end
     
@@ -160,7 +182,7 @@ module Astute
       #   eth0:
       #     ip_address: 10.20.0.188
       #     netmask: 255.255.255.0
-      #     dns_name: *fqdn
+      #     dns_name: controller-22.domain.tld
       #     static: '0'
       #     mac_address: 08:00:27:C2:06:DE
       # interfaces_extra:
@@ -209,7 +231,8 @@ module Astute
         end
     
         if node['ks_meta'].absent? 'ks_disks'
-          raise "Please set 'ks_disks' or 'ks_spaces' parameter in section ks_meta for #{node['name']}"
+          raise Enviroment::ValidationError, "Please set 'ks_disks' or 'ks_spaces' parameter 
+                in section ks_meta for #{node['name']}"
         end
     
         node['ks_meta']['ks_spaces'] = '"' + node['ks_meta']['ks_disks'].to_json.gsub("\"", "\\\"") + '"'

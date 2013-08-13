@@ -73,9 +73,8 @@ end
 reporter = ConsoleReporter.new
 Astute.logger = Logger.new(STDOUT) if opts[:verbose]
 
-
 begin
-  environment = Astute::Cli::Enviroment.new(opts[:filename])
+  environment = Astute::Cli::Enviroment.new(opts[:filename], opts[:command])
 rescue Errno::ENOENT, Psych::SyntaxError, Astute::Cli::Enviroment::ValidationError => e
   report_and_exit(e, opts[:verbose])
 end
@@ -92,7 +91,7 @@ if environment['attributes'] && environment['attributes']['deployment_engine']
 end
 
 if [:deploy, :provision, :provision_and_deploy].include? opts[:command]
-  orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
+  orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=true)
 end
 
 def console_provision(orchestrator, reporter, environment)
