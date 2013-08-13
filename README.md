@@ -1,7 +1,7 @@
 Astute
 ======
 
-Astute is orchestrator, which using data about nodes and deployment settings performs two things:
+Astute is orchestrator, which is using data about nodes and deployment settings performs two things:
 - provision
 - deploy
 
@@ -10,14 +10,14 @@ Provision
 
 OS installation on selected nodes.
 
-Provisioning is done using Cobbler. Astute orchestrator data about nodes and creates corresponding Cobbler systems using parameters specified in engine section of provision data. After the systems are created, it connects to Cobbler engine and reboots nodes according to the power management parameters of the node.
+Provisioning is done using Cobbler. Astute orchestrator collects data about nodes and creates corresponding Cobbler systems using parameters specified in engine section of provision data. After the systems are created, it connects to Cobbler engine and reboots nodes according to the power management parameters of the node.
 
 Deploy
 -----
 
 OpenStack installation in the desired configuration on the selected nodes.
 
-Astute use data about nodes and deployment settings and recalculates parameters needed for deployment. Calculated parameters are passed to the nodes being deployed by use of nailyfact MCollective agent that uploads these attributes to `/etc/naily.facts` file of the node. Then puppet parses this file using Facter plugin and uploads these facts into puppet. These facts are used during catalog compilation phase by puppet master. Finally catalog is executed and Astute orchestrator passes to the next node in deployment sequence. Fuel Library provides puppet modules for Astute.
+Astute uses data about nodes and deployment settings and recalculates parameters needed for deployment. Calculated parameters are passed to the nodes being deployed by use of nailyfact MCollective agent that uploads these attributes to `/etc/naily.facts` file of the node. Then puppet parses this file using Facter plugin and uploads these facts into puppet. These facts are used during catalog compilation phase by puppet master. Finally catalog is executed and Astute orchestrator passes to the next node in deployment sequence. Fuel Library provides puppet modules for Astute.
 
 Using as library
 -----
@@ -47,7 +47,7 @@ orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], en
 
 ```
 
-More information about expected content of environment please see here:
+More information about expected content of environment you can find here:
 http://docs.mirantis.com/fuel/3.1/installation-fuel-cli.html#yaml-high-level-structure
 
 Simple example of using Astute as library: https://github.com/Mirantis/astute/blob/master/bin/astute
@@ -65,7 +65,7 @@ Deploy:
 
     astute -f simple.yaml -c deploy
 
-More information about content of `simple.yaml` please see here: http://docs.mirantis.com/fuel/3.1/installation-fuel-cli.html#yaml-high-level-structure
+More information about content of `simple.yaml` you can find here: http://docs.mirantis.com/fuel/3.1/installation-fuel-cli.html#yaml-high-level-structure
 
 Additional materials
 -----
