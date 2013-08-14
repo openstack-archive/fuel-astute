@@ -6,6 +6,7 @@ mapping:
     type: seq
     required: true
     desc: Array of nodes
+    name: Nodes
     sequence:
       - type: map
         mapping:
@@ -53,6 +54,7 @@ mapping:
   "attributes":
     type: map
     required: true
+    name: Attributes
     desc: General parameters for deployment
     mapping:
       "deployment_id":
@@ -180,9 +182,9 @@ mapping:
           "admin_token":
             type: text
             required: true
+      # Quantum true
       "quantum_access":
         type: map
-        required: true
         desc: Credentials for Quantum Access
         mapping:
           "user_password":
@@ -213,14 +215,17 @@ mapping:
           "password":
             type: text
             required: true
-      # Quantum false
+      # CIDR (for quantum == true) or array if IPs (for quantum == false)
       "floating_network_range":
         type: any
-        desc: Used for creation of floating networks/IPs during deployment (for quantum == false)
-      # Quantum true
+        required: true
+        desc: |
+              Used for creation of floating networks/IPs during deployment.  
+              CIDR (for quantum == true) or array if IPs (for quantum == false)
       "fixed_network_range":
-        type: any
-        desc: CIDR for fixed network created during deployment (for quantum == true)
+        type: text
+        required: true
+        desc: CIDR for fixed network created during deployment
       "ntp_servers":
         type: seq
         required: true
