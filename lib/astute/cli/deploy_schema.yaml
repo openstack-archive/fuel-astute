@@ -37,6 +37,7 @@ mapping:
           "network_data":
             type: seq
             desc: Array of network interfaces hashes
+            required: true
             sequence:
               - type: map
                 mapping:
