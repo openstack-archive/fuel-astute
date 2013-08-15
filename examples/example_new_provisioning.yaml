@@ -28,7 +28,7 @@ common_ks_meta:
   install_log_2_syslog: 1
   mco_password: marionette
   puppet_auto_setup: 1
-  puppet_master: fuelweb.domain.tld
+  puppet_master: fuel.domain.tld
   mco_auto_setup: 1
   auth_key: ! '""'
   puppet_version: 2.7.19
