@@ -2,6 +2,8 @@
 nodes:
   - name: controller-5
     role: controller
+    public_br: br-ex
+    internal_br: br-mgmt
     interfaces:
       - name: eth2
         ip_address: 10.20.0.187
@@ -31,7 +33,7 @@ nodes:
     network_data:
       - name: public
         ip: 172.18.94.41
-        dev: eth0
+        dev: eth1
         netmask: 255.255.255.0
         gateway: 172.18.94.33
       - name:
@@ -40,6 +42,8 @@ nodes:
         ip: 10.20.0.45
         dev: eth0
         netmask: 255.255.255.0
+      - name: fixed
+        dev: eth2
 
 attributes:
   master_ip: 10.20.0.2
@@ -102,6 +106,5 @@ attributes:
   - controller
   ntp_servers:
   - pool.ntp.org
-  deployment_id: 1
   deployment_mode: multinode
   deployment_source: cli
