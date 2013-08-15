@@ -19,6 +19,9 @@ mapping:
           "fqdn":
             type: text
             desc: Fully-qualified domain name of the node
+          "default_gateway":
+            type: text
+            desc: Default gateway for network_data
           "role":
             type: text
             required: true
@@ -38,9 +41,9 @@ mapping:
               - type: map
                 mapping:
                   "name":
-                    type: text
-                    unique: true
-                    enum: ['management', 'public', 'storage', 'fixed']
+                    type: any
+                    #unique: true
+                    #enum: ['management', 'public', 'storage', 'fixed']
                     desc: Network type
                   "dev":
                     type: text
@@ -113,6 +116,10 @@ mapping:
       "start_guests_on_host_boot":
         type: bool
         required: true
+      "create_networks":
+        type: bool
+        required: true
+        desc: Whether to create fixed or floating networks
       "quantum": 
         type: bool
         required: true
@@ -275,6 +282,10 @@ mapping:
         type: text
         enum: ['false', 'default', 'exist', 'custom']
         desc: Use HTTP or HTTPS for OpenStack dashboard (Horizon)
+      "compute_scheduler_driver":
+        type: text
+        enum: ['nova.scheduler.multi.MultiScheduler']
+        desc: Nova scheduler driver class
       "use_unicast_corosync":
         type: bool
         default: false

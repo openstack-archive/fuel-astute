@@ -35,7 +35,7 @@ module Astute
       def initialize(file, operation)
         @config = YAML.load_file(file)
         validate_enviroment(operation)
-        to_full_config
+        to_full_config(operation)          
       end
       
       def [](key)
@@ -44,19 +44,30 @@ module Astute
   
       private
       
-      def to_full_config
-        # Provision section
+      def to_full_config(operation)
         @config['nodes'].each do |node|
+        
+          # Common section
+          node['meta'] ||= {}
           define_provisioning_network(node)
           define_id_and_uid(node)
-          define_interfaces_and_interfaces_extra(node)
-          define_ks_spaces(node)
-          define_power_info(node)
-          define_ks_meta(node)
-          define_node_settings(node)
-          define_disks_section(node)
+        
+          # Provision section
+          if [:provision, :provision_and_deploy].include? operation
+            define_interfaces_and_interfaces_extra(node)
+            define_ks_spaces(node)
+            define_power_info(node)
+            define_ks_meta(node)
+            define_node_settings(node)
+            define_disks_section(node)
+          end
+          
+          # Deploy section
+          if [:deploy, :provision_and_deploy].include? operation
+            define_meta_interfaces(node)
+            define_fqdn(node)
+          end  
         end
-        # Deploy section
       end
       
       
@@ -80,9 +91,11 @@ module Astute
           response = RestClient.get 'http://localhost:8000/api/nodes'
           @api_data = JSON.parse(response).freeze
         end
-        @api_data.find{ |n| n['mac'].upcase == node['mac'].upcase }
-        return @api_data if @api_data
-        raise Enviroment::ValidationError, "Node #{node['name']} with mac adress #{node['mac']}
+        if node['mac']
+         node = @api_data.find{ |n| n['mac'].upcase == node['mac'].upcase }
+         return node if node
+        end
+        raise Enviroment::ValidationError, "Node #{node['name']} with mac address #{node['mac']}
                                             not find among discovered nodes"
       end
       
@@ -110,7 +123,6 @@ module Astute
       #   }...
       # ]
       def define_disks_section(node)
-        node['meta'] ||= {}
         node['meta']['disks'] = find_node_api_data(node)['meta']['disks']
       end
       
@@ -152,8 +164,10 @@ module Astute
         
         if provision_eth
           if provision_eth.absent?('ip_address')
+            node['mac'] = provision_eth['mac_address']
             api_node = find_node_api_data(node)
-            api_provision_eth = api_node['meta']['interfaces'].find { |n| n['mac'].upcase == provision_eth['mac_address'].upcase }
+            
+            api_provision_eth = api_node['meta']['interfaces'].find { |n| n['mac'].to_s.upcase == provision_eth['mac_address'].to_s.upcase }
             provision_eth['ip_address'] = api_provision_eth['ip'] 
             provision_eth['netmask'] = api_provision_eth['netmask']
           end
@@ -196,6 +210,7 @@ module Astute
         interfaces_extra_interfaces = {}
         node['interfaces'].each do |eth|
           formated_interfaces[eth['name']] = eth
+          formated_interfaces[eth['name']].delete('name')
           interfaces_extra_interfaces[eth['name']] = {
             'onboot'  => eth['onboot'], 
             'peerdns' => eth['onboot']
@@ -203,6 +218,24 @@ module Astute
         end
         node['interfaces'] = formated_interfaces
         node['extra_interfaces'] = interfaces_extra_interfaces  
+      end
+      
+      # Add duplicate param 'fqdn' to node if it is not specified
+      def define_fqdn(node)
+        node['fqdn'] ||= find_node_api_data(node)['meta']['system']['fqdn']
+      end
+      
+      # Add meta/interfaces section for node:
+      # meta:
+      #   interfaces:
+      #   - name: eth0
+      #     ip: 10.20.0.95
+      #     netmask: 255.255.255.0
+      #     mac: 08:00:27:C2:06:DE
+      #     max_speed: 100
+      #     current_speed: 100
+      def define_meta_interfaces(node)   
+        node['meta']['interfaces'] = find_node_api_data(node)['meta']['interfaces']
       end
   
       # Generate 'ks_spaces' param from 'ks_disks' param in section 'ks_meta' 
