@@ -31,6 +31,8 @@ module Astute
                                'install_log_2_syslog', 'mco_password', 'puppet_auto_setup', 'puppet_master',
                                'mco_auto_setup', 'auth_key', 'puppet_version', 'mco_connector', 'mco_host']
       PROVISIONING_NET_KEYS = ['ip', 'power_address', 'mac', 'fqdn']
+      PROVISION_OPERATIONS = [:provision, :provision_and_deploy]
+      DEPLOY_OPERATIONS = [:deploy, :provision_and_deploy]
       
       def initialize(file, operation)
         @config = YAML.load_file(file)
@@ -53,7 +55,7 @@ module Astute
           define_id_and_uid(node)
         
           # Provision section
-          if [:provision, :provision_and_deploy].include? operation
+          if PROVISION_OPERATIONS.include? operation
             define_interfaces_and_interfaces_extra(node)
             define_ks_spaces(node)
             define_power_info(node)
@@ -63,10 +65,10 @@ module Astute
           end
           
           # Deploy section
-          if [:deploy, :provision_and_deploy].include? operation
+          if DEPLOY_OPERATIONS.include? operation
             define_meta_interfaces(node)
             define_fqdn(node)
-          end  
+          end
         end
       end
       
@@ -82,6 +84,17 @@ module Astute
         
         if errors.select {|e| !e.message.include?("is undefined") }.size > 0
           raise Enviroment::ValidationError, "Environment validation failed"
+        end
+        
+        if PROVISION_OPERATIONS.include? operation && @config['attributes']['quantum']
+          @config['nodes'].each do |node|
+            ['public_br', 'internal_br'].each do |br|
+              if node[br].nil? || node[br].empty?
+                raise Enviroment::ValidationError, "Node #{node['name'] || node['hostname']}
+                                            required 'public_br' and 'internal_br' when quantum is 'true'" 
+              end
+            end
+          end
         end
       end
       
@@ -161,12 +174,11 @@ module Astute
       # Add duplicates params to node: ip, power_address, mac, fqdn
       def define_provisioning_network(node)
         provision_eth = node['interfaces'].find {|eth| eth['use_for_provision'] } rescue nil
-        
+
         if provision_eth
           if provision_eth.absent?('ip_address')
             node['mac'] = provision_eth['mac_address']
             api_node = find_node_api_data(node)
-            
             api_provision_eth = api_node['meta']['interfaces'].find { |n| n['mac'].to_s.upcase == provision_eth['mac_address'].to_s.upcase }
             provision_eth['ip_address'] = api_provision_eth['ip'] 
             provision_eth['netmask'] = api_provision_eth['netmask']
