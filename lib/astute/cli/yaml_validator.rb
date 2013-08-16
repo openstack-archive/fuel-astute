@@ -50,18 +50,19 @@ module Astute
           require_field(value, path, errors, 'quantum', true, 'fixed_network_range')
           require_field(value, path, errors, 'quantum', true, 'quantum_access')
           #require_field(value, path, errors, 'quantum', false, 'floating_network_range')
-          floating_network_range = value['floating_network_range']
-          quantum = value['quantum']
-          if quantum
-            cidr = Regexp.new(CIDR_REGEXP)
-            if cidr.match(floating_network_range).nil?
-              msg = "'floating_network_range' is required CIDR notation when quantum is 'true'"
-              errors << Kwalify::ValidationError.new(msg, path)
-            end
+          if value['quantum']
+            is_cidr_notation?(value['floating_network_range'])
+            msg = "'floating_network_range' is required CIDR notation when quantum is 'true'"
+            errors << Kwalify::ValidationError.new(msg, path)
           elsif !floating_network_range.is_a?(Array)
             msg = "'floating_network_range' is required array of IPs when quantum is 'false'"
             errors << Kwalify::ValidationError.new(msg, path)
           end
+          if !is_cidr_notation?(value['fixed_network_range'])
+            msg = "'floating_network_range' is required CIDR notation"
+            errors << Kwalify::ValidationError.new(msg, path)
+          end
+          
         when 'Nodes'
           #require_field(value, path, errors, 'quantum', true, 'public_br')
           #require_field(value, path, errors, 'quantum', true, 'internal_br')
@@ -69,7 +70,12 @@ module Astute
       end
       
       private
-        
+      
+      def is_cidr_notation?(value)
+        cidr = Regexp.new(CIDR_REGEXP)
+        !cidr.match(value).nil?
+      end
+      
       def require_field(value, path, errors, condition_key, condition_value, key)
         return if value[condition_key] != condition_value
         field_value = value[key]

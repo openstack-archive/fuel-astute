@@ -32,10 +32,10 @@ mapping:
         required: true
         desc: Password/credentials for cobbler to manage power of this machine
       "netboot_enabled":
-        type: text
+        type: int
         required: true
         desc: Disable/enable netboot for this node.
-        enum: ['0', '1']
+        range: { min: 0, max: 1 }
   "common_node_settings":
     type: map
     mapping:

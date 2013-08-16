@@ -9,14 +9,14 @@ engine:
 
 # These parameters can be overridden in the specification of a particular node
 common_node_settings:
-  name_servers: ! '"10.20.0.2"'
+  name_servers: "10.20.0.2"
 
 # These parameters can be overridden in the specification of a particular node
 common_power_info:
   power_type: ssh
   power_user: root
   power_pass: /root/.ssh/bootstrap.rsa
-  netboot_enabled: '1'
+  netboot_enabled: 1
 
 # These parameters can be overridden in the specification of a particular node
 common_ks_meta:
@@ -30,7 +30,7 @@ common_ks_meta:
   puppet_auto_setup: 1
   puppet_master: fuel.domain.tld
   mco_auto_setup: 1
-  auth_key: ! '""'
+  auth_key: '""'
   puppet_version: 2.7.19
   mco_connector: rabbitmq
   mco_host: 10.20.0.2
