@@ -25,7 +25,7 @@ mapping:
           "role":
             type: text
             required: true
-            enum: ["primary-controller", "controller", "storage", "swift-proxy", "primary-swift-proxy"]
+            enum: ["primary-controller", "controller", "storage", "swift-proxy", "primary-swift-proxy", "compute", "quantum"]
           # Quantum true
           "public_br":
             type: text
