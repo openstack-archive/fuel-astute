@@ -40,6 +40,10 @@ def report_and_exit(exception, verbose)
   exit Astute::FAIL
 end
 
+def analize_deploy(status)
+  status.has_value?('error') ? Astute::FAIL : Astute::SUCCESS 
+end
+
 opts = {}
 optparse = OptionParser.new do |o|
   o.banner = "Usage: bin/astute -c COMMAND -f FILENAME "
@@ -108,13 +112,13 @@ result = Astute::SUCCESS
 begin
   result = case opts[:command]
     when :deploy
-      orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+      analize_deploy orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
     when :provision
       console_provision(orchestrator, reporter, environment)
     when :provision_and_deploy
       res = console_provision(orchestrator, reporter, environment)
       if res == Astute::SUCCESS
-        res = orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+        res = analize_deploy orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
       end
       res
     end

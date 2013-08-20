@@ -351,4 +351,7 @@ mapping:
       "debug":
         type: bool
         desc: How much information OpenStack provides when performing configuration (debug mode)
-        
+      "deployment_id":
+        type: int
+        required: true
+        desc: Deployment ID(for CI just set 1)

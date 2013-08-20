@@ -29,7 +29,7 @@ nodes:
         #netmask: 255.255.255.0
         dns_name: controller-8.domain.tld # fqdn
         static: 0
-        mac_address: 08:00:27:83:80:92 # mac
+        mac_address: 08:00:27:11:2D:DF # mac
         onboot: 'yes'
         peerdns: 'no'
         use_for_provision: true
@@ -115,3 +115,4 @@ attributes:
   - pool.ntp.org
   deployment_mode: multinode
   deployment_source: cli
+  deployment_id: 1

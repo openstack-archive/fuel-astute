@@ -100,7 +100,7 @@ module Astute
       Timeout::timeout(Astute.config.PUPPET_TIMEOUT) do
         puppetd = MClient.new(ctx, "puppetd", uids)
         puppetd.on_respond_timeout do |uids|
-          ctx.reporter.report('nodes' => uids.map{|uid| {'uid' => uid, 'status' => 'error', 'error_type' => 'deploy'}})
+          ctx.reporter_report('nodes' => uids.map{|uid| {'uid' => uid, 'status' => 'error', 'error_type' => 'deploy'}})
         end if change_node_status
         prev_summary = puppetd.last_run_summary
         puppetd_runonce(puppetd, uids)
@@ -151,7 +151,8 @@ module Astute
                                  "trace: #{e.format_backtrace}"
             end
           end
-          ctx.reporter.report('nodes' => nodes_to_report) if nodes_to_report.any?
+          
+          ctx.reporter_report('nodes' => nodes_to_report) if nodes_to_report.any?
 
           # we will iterate only over running nodes and those that we restart deployment for
           nodes_to_check = calc_nodes['running'] + nodes_to_retry

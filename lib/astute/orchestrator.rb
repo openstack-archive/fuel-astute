@@ -47,7 +47,7 @@ module Astute
         Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
       end
       deploy_engine_instance.deploy(nodes, attrs)
-      return SUCCESS
+      context.status
     end
 
     def fast_provision(reporter, engine_attrs, nodes)
