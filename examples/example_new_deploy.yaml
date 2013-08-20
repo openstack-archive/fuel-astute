@@ -1,6 +1,6 @@
 # Nodes
 nodes:
-  - name: controller-5
+  - name: controller-8
     role: controller
     public_br: br-ex
     internal_br: br-mgmt
@@ -8,42 +8,48 @@ nodes:
       - name: eth2
         ip_address: 10.20.0.187
         netmask: 255.255.255.0
-        static: '0'
+        static: 0
         mac_address: '08:00:27:31:09:34'
         onboot: 'no'
         peerdns: 'no'
+        network_name:
+          - fixed
       - name: eth1
         ip_address: 10.20.0.186
         netmask: 255.255.255.0
-        static: '0'
+        static: 0
         mac_address: 08:00:27:93:54:B0
         onboot: 'no'
         peerdns: 'no'
+        network_name:
+          - management
+          - storage
       - name: eth0
         #ip_address: 10.20.0.49 # ip, power_address
         #netmask: 255.255.255.0
-        dns_name: controller-5.domain.tld # fqdn
-        static: '0'
-        mac_address: 08:00:27:53:0B:6C # mac
+        dns_name: controller-8.domain.tld # fqdn
+        static: 0
+        mac_address: 08:00:27:83:80:92 # mac
         onboot: 'yes'
         peerdns: 'no'
         use_for_provision: true
-    #End data for provision
+        network_name:
+          - public
     default_gateway: 10.20.0.1
-    network_data:
-      - name: public
-        ip: 172.18.94.41
-        dev: eth1
-        netmask: 255.255.255.0
-        gateway: 172.18.94.33
-      - name:
-        - management
-        - storage
-        ip: 10.20.0.45
-        dev: eth0
-        netmask: 255.255.255.0
-      - name: fixed
-        dev: eth2
+    # network_data:
+    #   - name: public
+    #     ip: 172.18.94.41
+    #     dev: eth1
+    #     netmask: 255.255.255.0
+    #     gateway: 172.18.94.33
+    #   - name:
+    #     - management
+    #     - storage
+    #     ip: 10.20.0.45
+    #     dev: eth0
+    #     netmask: 255.255.255.0
+    #   - name: fixed
+    #     dev: eth2
 
 attributes:
   master_ip: 10.20.0.2
@@ -92,6 +98,7 @@ attributes:
     password: cinder
     user: cinder
   floating_network_range: 10.20.0.150/28
+  #fixed_network_range: CIDR
   fixed_network_range: 10.20.1.0/24
   base_syslog:
     syslog_port: '514'

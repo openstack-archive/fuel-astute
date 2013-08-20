@@ -141,9 +141,9 @@ mapping:
             type: text
             desc: Password/credentials for cobbler to manage power of this machine
           "netboot_enabled":
-            type: text
+            type: int
+            range: { min: 0, max: 1 }
             desc: Disable/enable netboot for this node.
-            enum: ['0', '1']
           "ks_meta":
             type: map
             required: true
@@ -240,8 +240,8 @@ mapping:
                     type: text
                     unique: yes
                   "static":
-                    type: text
-                    #range: { min: 0, max: 1 }
+                    type: int
+                    range: { min: 0, max: 1 }
                   "mac_address":
                     type: text
                     required: true

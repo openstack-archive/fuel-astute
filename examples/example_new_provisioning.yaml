@@ -6,7 +6,6 @@ engine:
   username: cobbler
   password: cobbler
 
-
 # These parameters can be overridden in the specification of a particular node
 common_node_settings:
   name_servers: "10.20.0.2"
@@ -37,9 +36,9 @@ common_ks_meta:
 
 # Nodes
 nodes:
-  - name: controller-5
-    hostname: controller-5.domain.tld
-    
+  - name: controller-8
+    hostname: controller-8.domain.tld
+
     # Data for provision
     profile: centos-x86_64
     ks_meta: 
@@ -95,23 +94,23 @@ nodes:
       - name: eth2
         ip_address: 10.20.0.187
         netmask: 255.255.255.0
-        static: '0'
+        static: 0
         mac_address: '08:00:27:31:09:34'
         onboot: 'no'
         peerdns: 'no'
       - name: eth1
         ip_address: 10.20.0.186
         netmask: 255.255.255.0
-        static: '0'
+        static: 0
         mac_address: 08:00:27:93:54:B0
         onboot: 'no'
         peerdns: 'no'
       - name: eth0
         #ip_address: 10.20.0.49 # ip, power_address
         #netmask: 255.255.255.0
-        dns_name: controller-22.domain.tld # fqdn
-        static: '0'
-        mac_address: 08:00:27:53:0B:6C # mac
+        dns_name: controller-8.domain.tld # fqdn
+        static: 1
+        mac_address: 08:00:27:83:80:92 # mac
         onboot: 'yes'
         peerdns: 'no'
         use_for_provision: true

@@ -26,6 +26,9 @@ mapping:
             type: text
             required: true
             enum: ["primary-controller", "controller", "storage", "swift-proxy", "primary-swift-proxy", "compute", "quantum"]
+          "status":
+            type: text
+            enum: ["ready", "provisioned", "discover"]          
           # Quantum true
           "public_br":
             type: text
@@ -34,10 +37,53 @@ mapping:
           "internal_br":
             type: text
             desc: Name of the internal bridge for Quantum-enabled configuration
+          "interfaces":
+            type: seq
+            required: true
+            sequence:
+              - type: map
+                mapping:
+                  "name":
+                    type: text
+                    required: true
+                    unique: yes
+                  "ip_address":
+                    type: text
+                    unique: yes
+                  "netmask":
+                    type: text
+                  "dns_name":
+                    type: text
+                    unique: yes
+                  "static":
+                    type: int
+                    range: { min: 0, max: 1 }
+                  "mac_address":
+                    type: text
+                    required: true
+                    unique: yes
+                  "onboot":
+                    type: text
+                    required: true
+                    enum: ['yes', 'no']
+                  "peerdns":
+                    type: text
+                    required: true
+                    enum: ['yes', 'no']
+                  "use_for_provision":
+                    type: bool
+                    default: false
+                    name: use_for_provision
+                  "network_name":
+                    type: seq
+                    desc: Array of OpenStack network names
+                    sequence:
+                      - type: text
+                        enum: ["public", "management", "storage", "fixed"]
+          # Full config block          
           "network_data":
             type: seq
             desc: Array of network interfaces hashes
-            required: true
             sequence:
               - type: map
                 mapping:

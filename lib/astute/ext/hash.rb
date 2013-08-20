@@ -36,6 +36,19 @@ class Hash
     !absent?(key)
   end
   
+  # def recursive_merge!(other)
+  #   other.keys.each do |k|
+  #     if self[k].is_a?(Array) && other[k].is_a?(Array)
+  #       self[k] += other[k]
+  #     elsif self[k].is_a?(Hash) && other[k].is_a?(Hash)
+  #       self[k].recursive_merge!(other[k])
+  #     else
+  #       self[k] = other[k]
+  #     end
+  #   end
+  #   self
+  # end
+  
   def deep_merge(other_hash)
     self.merge(other_hash) do |key, oldval, newval|
       oldval = oldval.to_hash if oldval.respond_to?(:to_hash)

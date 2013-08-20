@@ -34,10 +34,13 @@ module Astute
       PROVISION_OPERATIONS = [:provision, :provision_and_deploy]
       DEPLOY_OPERATIONS = [:deploy, :provision_and_deploy]
       
+      CIDR_REGEXP = '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|
+                    2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))$'
+      
       def initialize(file, operation)
         @config = YAML.load_file(file)
         validate_enviroment(operation)
-        to_full_config(operation)          
+        to_full_config(operation)
       end
       
       def [](key)
@@ -68,32 +71,65 @@ module Astute
           if DEPLOY_OPERATIONS.include? operation
             define_meta_interfaces(node)
             define_fqdn(node)
+            define_network_data(node)
           end
         end
       end
-      
       
       def validate_enviroment(operation)
         validator = YamlValidator.new(operation)
         errors = validator.validate(@config)
       
         errors.each do |e|
-          title = e.message.include?("is undefined") ? "WARNING" : "ERROR"
-          puts "#{title}: [#{e.path}] #{e.message}"
+          if e.message.include?("is undefined")
+            Astute.logger.debug "WARNING: [#{e.path}] #{e.message}"
+          else
+            Astute.logger.error "ERROR: [#{e.path}] #{e.message}"
+          end
         end
         
         if errors.select {|e| !e.message.include?("is undefined") }.size > 0
           raise Enviroment::ValidationError, "Environment validation failed"
         end
         
-        if PROVISION_OPERATIONS.include? operation && @config['attributes']['quantum']
-          @config['nodes'].each do |node|
-            ['public_br', 'internal_br'].each do |br|
-              if node[br].nil? || node[br].empty?
-                raise Enviroment::ValidationError, "Node #{node['name'] || node['hostname']}
-                                            required 'public_br' and 'internal_br' when quantum is 'true'" 
+        if DEPLOY_OPERATIONS.include?(operation)
+          if @config['attributes']['quantum']
+            @config['nodes'].each do |node|
+              ['public_br', 'internal_br'].each do |br|
+                if node[br].nil? || node[br].empty?
+                  raise Enviroment::ValidationError, "Node #{node['name'] || node['hostname']}
+                                              required 'public_br' and 'internal_br' when quantum is 'true'" 
+                end
               end
             end
+
+            errors = []
+            ['quantum_parameters', 'quantum_access'].each do |param|
+              errors << param unless @config['attributes'].present?(param)
+            end
+            errors.each do |field|
+              msg = "#{field} is required when quantim is true"
+              raise Enviroment::ValidationError, msg
+            end
+
+            if !is_cidr_notation?(@config['attributes']['floating_network_range'])
+              msg = "'floating_network_range' is required CIDR notation when quantum is 'true'"
+              raise Enviroment::ValidationError, msg
+            end
+          
+            if !is_cidr_notation?(@config['attributes']['floating_network_range'])
+              msg = "'floating_network_range' is required CIDR notation"
+              raise Enviroment::ValidationError, msg
+            end
+          else
+            if @config['attributes']['floating_network_range'].is_a?(Array)
+              msg = "'floating_network_range' is required array of IPs when quantum is 'false'"
+              raise Enviroment::ValidationError, msg
+            end
+          end
+          if !is_cidr_notation?(@config['attributes']['fixed_network_range'])
+            msg = "'fixed_network_range' is required CIDR notation"
+            raise Enviroment::ValidationError, msg
           end
         end
       end
@@ -105,8 +141,8 @@ module Astute
           @api_data = JSON.parse(response).freeze
         end
         if node['mac']
-         node = @api_data.find{ |n| n['mac'].upcase == node['mac'].upcase }
-         return node if node
+         api_node = @api_data.find{ |n| n['mac'].upcase == node['mac'].upcase }
+         return api_node if api_node
         end
         raise Enviroment::ValidationError, "Node #{node['name']} with mac address #{node['mac']}
                                             not find among discovered nodes"
@@ -249,6 +285,44 @@ module Astute
       def define_meta_interfaces(node)   
         node['meta']['interfaces'] = find_node_api_data(node)['meta']['interfaces']
       end
+      
+      # Add network_data section for node:
+      # network_data:
+      #   - dev: eth1
+      #     ip: 10.108.1.8
+      #     name: public
+      #     netmask: 255.255.255.0
+      #   - dev: eth0
+      #     ip: 10.108.0.8
+      #     name:
+      #     - management
+      #     - storage
+      def define_network_data(node)
+        return if node['network_data'].is_a?(Array) && !node['network_data'].empty?
+        
+        node['network_data'] = []
+        
+        # If define_interfaces_and_interfaces_extra was call or format of config is full
+        if node['interfaces'].is_a?(Hash)
+          node['interfaces'].each do |key, value|
+            node['network_data'] << {
+                'dev'     => key,
+                'ip'      => value['ip_address'],
+                'name'    => value['network_name'],
+                'netmask' => value['netmask']
+            }
+          end
+        else
+          node['interfaces'].each do |eth|
+            node['network_data'] << {
+                'dev'     => eth['name'],
+                'ip'      => eth['ip_address'],
+                'name'    => eth['network_name'],
+                'netmask' => eth['netmask']
+            }
+          end
+        end
+      end
   
       # Generate 'ks_spaces' param from 'ks_disks' param in section 'ks_meta' 
       # Example input for 'ks_disks' param: 
@@ -283,6 +357,12 @@ module Astute
         node['ks_meta']['ks_spaces'] = '"' + node['ks_meta']['ks_disks'].to_json.gsub("\"", "\\\"") + '"'
         node['ks_meta'].delete('ks_disks')
       end
+      
+      def is_cidr_notation?(value)
+        cidr = Regexp.new(CIDR_REGEXP)
+        !cidr.match(value).nil?
+      end
+      
     end # class end
     
     class Enviroment::ValidationError < StandardError; end
