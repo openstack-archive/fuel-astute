@@ -281,27 +281,39 @@ describe LogParser do
       default_opts = {
         :chunksize => 10000,
         :tmpdir => Dir::tmpdir,
+        :objects => [],
       }
       opts = default_opts.merge(given_opts)
       if !opts[:chunksize].instance_of?(Fixnum) || opts[:chunksize] <= 0
         raise "The 'chunksize' option should be a positive number"
       end
       raise "The 'tmpdir' option should be a path to a existent directory" if !opts[:tmpdir].instance_of?(String)
+      raise "The 'objects' option should be an array" if !opts[:objects].instance_of?(Array)
 
       dir = Dir::mktmpdir(nil, opts[:tmpdir])
+      opts[:objects] << dir
       chunk = 'A' * opts[:chunksize]
       while size >= opts[:chunksize]
-        Tempfile::open('prefix', dir){|file| file.write(chunk)}
+        file = Tempfile::new('prefix', dir)
+        file.write(chunk)
+        file.close
+        opts[:objects] << file
         size -= opts[:chunksize]
       end
-      Tempfile::open('prefix', dir){|file| file.write('A' * size)} if size > 0
+      if size > 0
+        file = Tempfile::new('prefix', dir)
+        file.write('A' * size)
+        file.close
+        opts[:objects] << file
+      end
 
-      return dir
+      return {:path => dir, :objects => opts[:objects]}
     end
 
     it "should correctly calculate size of directory" do
       size = 10**6
-      dir = create_dir_with_size(size)
+      dir_info = create_dir_with_size(size)
+      dir = dir_info[:path]
       nodes = [
         {:uid => '1',
           :path_items => [
@@ -321,19 +333,20 @@ describe LogParser do
 
     it "should correctly calculate size of nested directories" do
       size = 10**6
-      dir = create_dir_with_size(size)
-      create_dir_with_size(size, {:tmpdir => dir})
+      dir_info = create_dir_with_size(size)
+      dir = dir_info[:path]
+      dir_info = create_dir_with_size(size, {:tmpdir => dir, :objects => dir_info[:objects]})
       nodes = [
         {:uid => '1',
           :path_items => [
-            {:max_size => size*2,
+            {:max_size => size*4,
              :path => dir}
           ]
         }
       ]
       correct_progress = [
         {'uid' => '1',
-        'progress' => 100}
+        'progress' => 50}
       ]
       dirsize_parser = Astute::LogParser::DirSizeCalculation.new(nodes)
       dirsize_parser.progress_calculate(['1'], nil).should eql(correct_progress)
