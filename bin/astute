@@ -85,8 +85,6 @@ if environment['attributes'] && environment['attributes']['deployment_engine']
   case environment['attributes']['deployment_engine']
     when 'nailyfact'
       deploy_engine = Astute::DeploymentEngine::NailyFact
-    when 'simplepuppet'
-      deploy_engine = Astute::DeploymentEngine::SimplePuppet  # It just calls puppet and doesn't do any magic
   end
 end
 
