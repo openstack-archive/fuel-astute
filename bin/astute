@@ -100,7 +100,7 @@ def console_provision(orchestrator, reporter, environment)
   res = orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
   if res == Astute::SUCCESS
     puts "restarting nodes..."
-    sleep 10
+    sleep 5
     puts "start watching progress"
     res = orchestrator.provision(reporter, environment['task_uuid'], environment['nodes'])
   end
