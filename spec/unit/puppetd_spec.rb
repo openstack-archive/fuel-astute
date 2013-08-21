@@ -137,7 +137,7 @@ describe "Puppetd" do
         MClient.any_instance.unstub(:rpcclient)
       end
 
-      it "publishes error status for node if puppet failed" do
+      it "publishes error status for node if puppet failed (a full cycle)" do
         @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
         @rpcclient = mock_rpcclient(@nodes)
         @rpcclient.stubs(:last_run_summary).times(9).
@@ -155,7 +155,7 @@ describe "Puppetd" do
         Astute::PuppetdDeployer.deploy(@ctx, @nodes, 0)
       end
 
-      it "publishes error status for node if puppet failed" do
+      it "publishes error status for node if puppet failed (a cycle w/o idle states)" do
         @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
         @rpcclient = mock_rpcclient(@nodes)
         @rpcclient.stubs(:last_run_summary).times(6).
@@ -170,7 +170,7 @@ describe "Puppetd" do
         Astute::PuppetdDeployer.deploy(@ctx, @nodes, 0)
       end
 
-      it "publishes error status for node if puppet failed" do
+      it "publishes error status for node if puppet failed (a cycle w/o idle and finishing states)" do
         @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
         @rpcclient = mock_rpcclient(@nodes)
         @rpcclient.stubs(:last_run_summary).times(4).
@@ -183,7 +183,7 @@ describe "Puppetd" do
         Astute::PuppetdDeployer.deploy(@ctx, @nodes, 0)
       end
 
-      it "publishes error status for node if puppet failed" do
+      it "publishes error status for node if puppet failed (a cycle w/ one running state only)" do
         @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
         @rpcclient = mock_rpcclient(@nodes)
         @rpcclient.stubs(:last_run_summary).times(5).
@@ -197,7 +197,7 @@ describe "Puppetd" do
         Astute::PuppetdDeployer.deploy(@ctx, @nodes, 0)
       end
 
-      it "publishes error status for node if puppet failed" do
+      it "publishes error status for node if puppet failed (a cycle w/o any transitional states)" do
         @reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
         @rpcclient = mock_rpcclient(@nodes)
         @rpcclient.stubs(:last_run_summary).times(3).
