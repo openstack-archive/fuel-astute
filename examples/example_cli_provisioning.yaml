@@ -9,6 +9,7 @@ engine:
 # These parameters can be overridden in the specification of a particular node
 common_node_settings:
   name_servers: "10.20.0.2"
+  profile: centos-x86_64
 
 # These parameters can be overridden in the specification of a particular node
 common_power_info:
@@ -40,7 +41,6 @@ nodes:
     hostname: controller-8.domain.tld
 
     # Data for provision
-    profile: centos-x86_64
     ks_meta: 
       # ks_spaces:  '"[{"type": "disk", "id": "disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0",
       #  "volumes": [{"type": "boot", "size": 300}, {"mount": "/boot", "type": "raid", 
@@ -110,7 +110,7 @@ nodes:
         #netmask: 255.255.255.0
         dns_name: controller-8.domain.tld # fqdn
         static: 1
-        mac_address: 08:00:27:11:2D:DF # mac
+        mac_address: 08:00:27:1D:28:71 # mac
         onboot: 'yes'
         peerdns: 'no'
         use_for_provision: true

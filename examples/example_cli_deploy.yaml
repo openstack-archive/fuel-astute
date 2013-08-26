@@ -6,19 +6,17 @@ nodes:
     internal_br: br-mgmt
     interfaces:
       - name: eth2
-        ip_address: 10.20.0.187
-        netmask: 255.255.255.0
         static: 0
-        mac_address: '08:00:27:31:09:34'
+        mac_address: 08:00:27:D9:E9:FE
         onboot: 'no'
         peerdns: 'no'
         network_name:
           - fixed
       - name: eth1
-        ip_address: 10.20.0.186
-        netmask: 255.255.255.0
         static: 0
-        mac_address: 08:00:27:93:54:B0
+        ip_address: 10.20.1.114
+        netmask: 255.255.255.0
+        mac_address: 08:00:27:00:D1:2E
         onboot: 'no'
         peerdns: 'no'
         network_name:
@@ -27,7 +25,7 @@ nodes:
       - name: eth0
         dns_name: controller-8.domain.tld # fqdn
         static: 0
-        mac_address: 08:00:27:11:2D:DF # mac
+        mac_address: 08:00:27:1D:28:71 # mac
         onboot: 'yes'
         peerdns: 'no'
         use_for_provision: true
@@ -82,7 +80,7 @@ attributes:
     password: cinder
     user: cinder
   floating_network_range: 10.20.0.150/28
-  fixed_network_range: 10.20.1.0/24
+  fixed_network_range: 10.20.2.0/24
   base_syslog:
     syslog_port: '514'
     syslog_server: 10.20.0.2
