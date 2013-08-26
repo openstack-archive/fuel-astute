@@ -25,7 +25,7 @@ module Astute
       @deploy_log_parser = deploy_log_parser
     end
     
-    def reporter_report(data)
+    def report_and_update_status(data)
       if data['nodes']
         data['nodes'].each do |node|
           status.merge! node['uid'] => node['status'] if node['uid'] && node['status']
