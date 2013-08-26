@@ -32,7 +32,7 @@ class ConsoleReporter
 end
 
 def report_and_exit(exception, verbose)
-  puts "Error: #{exception.inspect}"
+  $stderr.puts "Error: #{exception.inspect}"
   unless verbose
     puts "Hint: use astute with --verbose or check log (#{Astute::LOG_PATH}) for more details"
   end

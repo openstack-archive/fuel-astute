@@ -17,6 +17,7 @@ require 'astute/ruby_removed_functions'
 require 'json'
 require 'logger'
 require 'shellwords'
+require 'active_support/all'
 
 require 'astute/ext/exception'
 require 'astute/ext/deep_copy'

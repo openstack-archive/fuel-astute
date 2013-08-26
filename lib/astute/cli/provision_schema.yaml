@@ -42,6 +42,10 @@ mapping:
       "name_servers":
         type: text
         required: true
+      "profile":
+        type: text
+        enum: ["centos-x86_64", "ubuntu_1204_x86_64", 'rhel-x86_64']
+        desc: Cobbler profile for the node.
   "common_ks_meta":
     type: map
     mapping:
@@ -119,7 +123,6 @@ mapping:
             desc: Fully-qualified domain name of the node
           "profile":
             type: text
-            required: true
             enum: ["centos-x86_64", "ubuntu_1204_x86_64", 'rhel-x86_64']
             desc: Cobbler profile for the node.
           "ip":

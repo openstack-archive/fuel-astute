@@ -13,7 +13,6 @@
 #    under the License.
 
 require 'yaml'
-require 'json'
 require 'rest-client'
 require 'astute/ext/hash'
 require 'astute/cli/enviroment'
@@ -26,11 +25,12 @@ module Astute
       
       POWER_INFO_KEYS       = ['power_type', 'power_user', 'power_pass', 'netboot_enabled']
       ID_KEYS               = ['id', 'uid']
-      COMMON_NODE_KEYS      = ['name_servers']
+      COMMON_NODE_KEYS      = ['name_servers', 'profile']
       KS_META_KEYS          = ['mco_enable', 'mco_vhost', 'mco_pskey', 'mco_user', 'puppet_enable',
                                'install_log_2_syslog', 'mco_password', 'puppet_auto_setup', 'puppet_master',
                                'mco_auto_setup', 'auth_key', 'puppet_version', 'mco_connector', 'mco_host']
-      PROVISIONING_NET_KEYS = ['ip', 'power_address', 'mac', 'fqdn']
+      NETWORK_KEYS          = ['ip', 'mac', 'fqdn']
+      PROVISIONING_NET_KEYS = ['power_address']
       PROVISION_OPERATIONS = [:provision, :provision_and_deploy]
       DEPLOY_OPERATIONS = [:deploy, :provision_and_deploy]
       
@@ -54,11 +54,12 @@ module Astute
         
           # Common section
           node['meta'] ||= {}
-          define_provisioning_network(node)
+          define_network_ids(node)
           define_id_and_uid(node)
         
           # Provision section
           if PROVISION_OPERATIONS.include? operation
+            define_power_address(node)
             define_interfaces_and_interfaces_extra(node)
             define_ks_spaces(node)
             define_power_info(node)
@@ -82,9 +83,10 @@ module Astute
       
         errors.each do |e|
           if e.message.include?("is undefined")
-            Astute.logger.debug "WARNING: [#{e.path}] #{e.message}"
+            Astute.logger.warn "[#{e.path}] #{e.message}"
           else
-            Astute.logger.error "ERROR: [#{e.path}] #{e.message}"
+            Astute.logger.error "[#{e.path}] #{e.message}"
+            $stderr.puts "[#{e.path}] #{e.message}"
           end
         end
         
@@ -105,7 +107,7 @@ module Astute
 
             errors = []
             ['quantum_parameters', 'quantum_access'].each do |param|
-              errors << param unless @config['attributes'].present?(param)
+              errors << param unless @config['attributes'][param].present?
             end
             errors.each do |field|
               msg = "#{field} is required when quantim is true"
@@ -159,7 +161,6 @@ module Astute
         )
       end
       
-      
       # Set meta/disks section for node. This data used in provision to calculate the percentage 
       # completion of the installation process.
       # Example result for node['meta']
@@ -207,36 +208,38 @@ module Astute
         define_parameters(node, 'common_ks_meta', KS_META_KEYS, node['ks_meta'])
       end
       
-      # Add duplicates params to node: ip, power_address, mac, fqdn
-      def define_provisioning_network(node)
-        provision_eth = node['interfaces'].find {|eth| eth['use_for_provision'] } rescue nil
+      # Add duplicates network params to node: ip, mac, fqdn
+      def define_network_ids(node)
+        network_eth = node['interfaces'].find {|eth| eth['use_for_provision'] } rescue nil
 
-        if provision_eth
-          if provision_eth.absent?('ip_address')
-            node['mac'] = provision_eth['mac_address']
+        if network_eth
+          if network_eth['ip_address'].blank?
+            node['mac'] = network_eth['mac_address']
             api_node = find_node_api_data(node)
-            api_provision_eth = api_node['meta']['interfaces'].find { |n| n['mac'].to_s.upcase == provision_eth['mac_address'].to_s.upcase }
-            provision_eth['ip_address'] = api_provision_eth['ip'] 
-            provision_eth['netmask'] = api_provision_eth['netmask']
+            api_provision_eth = api_node['meta']['interfaces'].find { |n| n['mac'].to_s.upcase == network_eth['mac_address'].to_s.upcase }
+            network_eth['ip_address'] = api_provision_eth['ip'] 
+            network_eth['netmask'] = api_provision_eth['netmask']
           end
-
-          #define_parameters(node, 'use_for_provision', PROVISIONING_NET_KEYS)
           
           node.reverse_merge!(
-            'ip'            => provision_eth['ip_address'],
-            'power_address' => provision_eth['ip_address'],
-            'mac'           => provision_eth['mac_address'],
-            'fqdn'          => provision_eth['dns_name']
+            'ip'            => network_eth['ip_address'],
+            'mac'           => network_eth['mac_address'],
+            'fqdn'          => network_eth['dns_name']
           )
-          provision_eth.delete('use_for_provision')
+          network_eth.delete('use_for_provision')
         end
-          
-      
-        absent_keys = node.absent_keys(PROVISIONING_NET_KEYS)
+        
+        absent_keys = node.absent_keys(NETWORK_KEYS)
         if !absent_keys.empty?
           raise Enviroment::ValidationError, "Please set 'use_for_provision' parameter 
                 for #{node['name']} or set manually #{absent_keys.each {|k| p k}}"
         end
+      end
+      
+       # Add duplicates network params to node: power_address
+      def define_power_address(node)
+        node['power_address'] = node['ip'] or raise Enviroment::ValidationError, "Please 
+                                set 'power_address' parameter for #{node['name']}"
       end
     
       # Extend blocks interfaces and interfaces_extra to old formats:
@@ -344,12 +347,12 @@ module Astute
       # }]
       # Example result for 'ks_spaces' param: "[{"type": "disk", "id": "disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0", "volumes": [{"type": "boot", "size": 300}, {"mount": "/boot", "type": "raid", "size": 200}, {"type": "lvm_meta", "name": "os", "size": 64}, {"size": 11264, "type": "pv", "vg": "os"}, {"type": "lvm_meta", "name": "image", "size": 64}, {"size": 4492, "type": "pv", "vg": "image"}], "size": 16384}]"
       def define_ks_spaces(node)
-        if node['ks_meta'].present? 'ks_spaces'
+        if node['ks_meta']['ks_spaces'].present?
           node['ks_meta'].delete('ks_disks')
           return
         end
     
-        if node['ks_meta'].absent? 'ks_disks'
+        if node['ks_meta']['ks_disks'].blank?
           raise Enviroment::ValidationError, "Please set 'ks_disks' or 'ks_spaces' parameter 
                 in section ks_meta for #{node['name']}"
         end

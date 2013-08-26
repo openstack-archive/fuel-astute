@@ -28,7 +28,7 @@ mapping:
             enum: ["primary-controller", "controller", "storage", "swift-proxy", "primary-swift-proxy", "compute", "quantum"]
           "status":
             type: text
-            enum: ["ready", "provisioned", "discover"]          
+            enum: ["ready", "provisioned", "provisioning", "discover"]
           # Quantum true
           "public_br":
             type: text
@@ -331,7 +331,7 @@ mapping:
         desc: Use HTTP or HTTPS for OpenStack dashboard (Horizon)
       "compute_scheduler_driver":
         type: text
-        enum: ['nova.scheduler.multi.MultiScheduler']
+        enum: ['nova.scheduler.multi.MultiScheduler', 'nova.scheduler.filter_scheduler.FilterScheduler']
         desc: Nova scheduler driver class
       "use_unicast_corosync":
         type: bool

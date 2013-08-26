@@ -15,33 +15,8 @@
 
 class Hash
     
-  # The value of the existing keys are not overridden
-  def reverse_merge(another_hash)
-    another_hash.merge(self)
-  end
-  
-  def reverse_merge!(another_hash)
-    replace(reverse_merge(another_hash))
-  end
-  
   def absent_keys(array)
-    array.select { |key| absent?(key) }
-  end
-  
-  def absent?(key)
-    self[key].nil? || (self[key].respond_to?(:empty?) && self[key].empty?)
-  end
-  
-  def present?(key)
-    !absent?(key)
-  end
-  
-  def deep_merge(other_hash)
-    self.merge(other_hash) do |key, oldval, newval|
-      oldval = oldval.to_hash if oldval.respond_to?(:to_hash)
-      newval = newval.to_hash if newval.respond_to?(:to_hash)
-      oldval.class.to_s == 'Hash' && newval.class.to_s == 'Hash' ? oldval.deep_merge(newval) : newval
-    end
+    array.select { |key| self[key].blank? }
   end
    
 end
