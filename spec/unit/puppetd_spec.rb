@@ -22,11 +22,8 @@ describe "Puppetd" do
 
   context "PuppetdDeployer" do
     before :each do
-      @ctx = mock
-      @ctx.stubs(:task_id)
       @reporter = mock('reporter')
-      @ctx.stubs(:reporter).returns(ProxyReporter::DeploymentProxyReporter.new(@reporter))
-      @ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::NoParsing.new)
+      @ctx = Context.new("task id", ProxyReporter::DeploymentProxyReporter.new(@reporter), Astute::LogParser::NoParsing.new)
     end
 
     it "reports ready status for node if puppet deploy finished successfully" do
