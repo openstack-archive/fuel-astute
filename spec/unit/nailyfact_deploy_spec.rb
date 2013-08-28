@@ -28,6 +28,7 @@ describe "NailyFact DeploymentEngine" do
 
       @data = Fixtures.common_attrs
       @data_ha = Fixtures.ha_attrs
+      @data_mr = Fixtures.multiroles_attrs
     end
 
     it "it should call valid method depends on attrs" do
@@ -57,6 +58,17 @@ describe "NailyFact DeploymentEngine" do
       Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes, instance_of(Fixnum), true).once
       Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
       @deploy_engine.deploy(@data['args']['nodes'], @data['args']['attributes'])
+    end
+    
+    it "multiroles for node should be support" do
+      @data_mr['args']['attributes']['deployment_mode'] = "multinode"
+
+      node_amount = @data_mr['args']['nodes'][0]['role'].size
+      # we got two calls, one for controller, and another for all(1) computes
+      Astute::Metadata.expects(:publish_facts).times(node_amount)
+      Astute::PuppetdDeployer.expects(:deploy).times(node_amount)
+      
+      @deploy_engine.deploy(@data_mr['args']['nodes'], @data_mr['args']['attributes'])
     end
 
     it "ha deploy should not raise any exception" do

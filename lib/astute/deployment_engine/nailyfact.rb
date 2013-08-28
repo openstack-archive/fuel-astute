@@ -16,6 +16,18 @@
 class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
   def deploy(nodes, attrs)
+    # Convert multi roles node to separate one role nodes
+    nodes.each do |node|
+      next unless node['role'].is_a?(Array)
+      
+      node['role'].each do |role|
+        new_node = deep_copy(node)
+        new_node['role'] = role
+        nodes << new_node
+      end
+      nodes.delete(node)
+    end
+
     attrs_for_mode = self.send("attrs_#{attrs['deployment_mode']}", nodes, attrs)
     super(nodes, attrs_for_mode)
   end
@@ -81,7 +93,6 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     @ctx.reporter.report(nodes_status(nodes_to_deploy, 'deploying', {'progress' => 0}))
 
     nodes_to_deploy.each do |node|
-      # Use predefined facts or create new.
       node['facts'] ||= create_facts(node, attrs)
       Astute::Metadata.publish_facts(@ctx, node['uid'], node['facts'])
     end
