@@ -25,13 +25,13 @@ module Astute
       @ctx = context
     end
 
-    def deploy(nodes, attrs)
-      # See implementation in subclasses, this may be everriden
-      attrs['deployment_mode'] ||= 'multinode'  # simple multinode deployment is the default
-      attrs['use_cinder'] ||= nodes.any?{|n| n['role'] == 'cinder'}
-      @ctx.deploy_log_parser.deploy_type = attrs['deployment_mode']
-      Astute.logger.info "Deployment mode #{attrs['deployment_mode']}"
-      result = self.send("deploy_#{attrs['deployment_mode']}", nodes, attrs)
+    def deploy(deployment_info)
+      # FIXME (eli): need to get rid all deployment_mode ifs from orchetrator
+      @ctx.deploy_log_parser.deploy_type = 'multinode' # attrs['deployment_mode']
+
+      # Astute.logger.info "Deployment mode #{attrs['deployment_mode']}"
+      mode = 'multinode' # attrs['deployment_mode']
+      self.send("deploy_#{mode}", deployment_info)
     end
 
     def method_missing(method, *args)
@@ -65,17 +65,17 @@ module Astute
     # This method is called by Ruby metaprogramming magic from deploy method
     # It should not contain any magic with attributes, and should not directly run any type of MC plugins
     # It does only support of deployment sequence. See deploy_piece implementation in subclasses.
-    def deploy_multinode(nodes, attrs)
+    def deploy_multinode(nodes)
       ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
       other_nodes = nodes - ctrl_nodes
 
       Astute.logger.info "Starting deployment of primary controller"
-      deploy_piece(ctrl_nodes, attrs)
+      deploy_piece(ctrl_nodes)
 
       Astute.logger.info "Starting deployment of other nodes"
-      deploy_piece(other_nodes, attrs)
+      deploy_piece(other_nodes)
 
-      return
+      nil
     end
 
     def attrs_ha(nodes, attrs)
@@ -183,15 +183,6 @@ module Astute
     end
 
     private
-    def select_ifaces(var,name)
-        result = false
-        if var.is_a?(Array)
-            result = true if var.include?(name)
-        elsif var.is_a?(String)
-            result = true if var == name
-        end
-    end
-
     def nodes_status(nodes, status, data_to_merge)
       {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
     end
@@ -204,50 +195,5 @@ module Astute
       return true
     end
 
-    def calculate_networks(data, hwinterfaces)
-      interfaces = {}
-      data ||= []
-      Astute.logger.info "calculate_networks function was provided with #{data.size} interfaces"
-      data.each do |net|
-        Astute.logger.debug "Calculating network for #{net.inspect}"
-        if net['vlan'] && net['vlan'] != 0
-          name = [net['dev'], net['vlan']].join('.')
-        else
-          name = net['dev']
-        end
-        unless interfaces.has_key?(name)
-          interfaces[name] = {'interface' => name, 'ipaddr' => []}
-        end
-        iface = interfaces[name]
-        if net['name'] == 'admin'
-          if iface['ipaddr'].size > 0
-            Astute.logger.error "Admin network interferes with openstack nets"
-          end
-          iface['ipaddr'] += ['dhcp']
-        else
-          if iface['ipaddr'].any?{|x| x == 'dhcp'}
-            Astute.logger.error "Admin network interferes with openstack nets"
-          end
-          if net['ip']
-            iface['ipaddr'] += [net['ip']]
-          end
-          if net['gateway'] && net['name'] =~ /^public$/i
-            iface['gateway'] = net['gateway']
-          end
-        end
-        Astute.logger.debug "Calculated network for interface: #{name}, data: #{iface.inspect}"
-      end
-      interfaces['lo'] = {'interface'=>'lo', 'ipaddr'=>['127.0.0.1/8']} unless interfaces.has_key?('lo')
-      hwinterfaces.each do |i|
-        unless interfaces.has_key?(i['name'])
-          interfaces[i['name']] = {'interface' => i['name'], 'ipaddr' => []}
-        end
-      end
-      interfaces.keys.each do |i|
-        interfaces[i]['ipaddr'] = 'none' if interfaces[i]['ipaddr'].size == 0
-        interfaces[i]['ipaddr'] = 'dhcp' if interfaces[i]['ipaddr'] == ['dhcp']
-      end
-      interfaces
-    end
   end
 end

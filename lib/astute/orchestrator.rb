@@ -32,21 +32,18 @@ module Astute
       end
     end
 
-    def deploy(up_reporter, task_id, nodes, attrs)
-      raise "Nodes to deploy are not provided!" if nodes.empty?
-      # Following line fixes issues with uids: it should always be string
-      nodes.map { |x| x['uid'] = x['uid'].to_s }  # NOTE: perform that on environment['nodes'] initialization
+    def deploy(up_reporter, task_id, deployment_info)
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter)
       log_parser = @log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
       context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
       begin
-        log_parser.prepare(nodes)
+        log_parser.prepare(deployment_info)
       rescue Exception => e
         Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
       end
-      deploy_engine_instance.deploy(nodes, attrs)
+      deploy_engine_instance.deploy(deployment_info)
       return SUCCESS
     end
 
@@ -93,9 +90,6 @@ module Astute
       nodes_up.each do |n|
         nodes << n unless ['provisioned', 'ready'].include?(n['status'])
       end
-
-      # Following line fixes issues with uids: it should always be string
-      nodes.map { |x| x['uid'] = x['uid'].to_s } # NOTE: perform that on environment['nodes'] initialization
 
       nodes_uids = nodes.map { |n| n['uid'] }
 
