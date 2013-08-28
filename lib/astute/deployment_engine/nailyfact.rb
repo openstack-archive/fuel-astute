@@ -15,6 +15,7 @@
 
 class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
+<<<<<<< HEAD
   def deploy(nodes, attrs)
     # Convert multi roles node to separate one role nodes
     fuel_nodes = []
@@ -60,28 +61,25 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
        end
       end
     end
+=======
+  # Just merge attributes of concrete node
+  # with attributes of cluster
+  def create_facts(node_attrs)
+    facts = deep_copy(node_attrs)
+>>>>>>> Move data preparation logic to nailgun
 
-    if attrs['novanetwork_parameters'] && \
-        attrs['novanetwork_parameters']['network_manager'] == 'VlanManager' && \
-        !attrs_to_puppet['fixed_interface']
-
-      attrs_to_puppet['fixed_interface'] = get_fixed_interface(node)
+    facts.each do |k, v|
+      facts[k] = v.to_json if v.is_a?(Hash) || v.is_a?(Array)
     end
 
-    attrs_to_puppet.merge!(deep_copy(attrs))
-
-    attrs_to_puppet.each do |k, v|
-      unless v.is_a?(String) || v.is_a?(Integer)
-        attrs_to_puppet[k] = v.to_json
-      end
-    end
-
-    attrs_to_puppet
+    facts
   end
 
-  def deploy_piece(nodes, attrs, retries=2, change_node_status=true)
+  def deploy_piece(nodes, retries=2, change_node_status=true)
     return false unless validate_nodes(nodes)
 
+    # FIXME (eli): This logic will be implemented in nailgun
+    # with order_of_deployment parameter
     nodes_to_deploy = get_nodes_to_deploy(nodes)
     if nodes_to_deploy.empty?
       Astute.logger.info "#{@ctx.task_id}: Returning from deployment stage. No nodes to deploy"
@@ -126,6 +124,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     nodes_to_deploy
   end
 
+<<<<<<< HEAD
   def get_fixed_interface(node)
     return node['vlan_interface'] if node['vlan_interface']
 
@@ -154,4 +153,6 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     nodes_array.find {|n| node['uid'] == n['uid'] }
   end
 
+=======
+>>>>>>> Move data preparation logic to nailgun
 end
