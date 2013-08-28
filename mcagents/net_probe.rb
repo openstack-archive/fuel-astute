@@ -43,10 +43,10 @@ module MCollective
 
       action "dhcp_discover" do
         validate :interfaces, String
-        format = conf.key?(:format) ? conf[:format] : "json"
-        timeout = conf.key?(:timeout) ? conf[:timeout] : 7
-
-        cmd = "dhcpcheck discover --format=#{format} --ifaces #{request[:interfaces]} --timeout=#{timeout}"
+        format = request.data.key?(:format) ? request.data[:format] : "json"
+        timeout = request.data.key?(:timeout) ? request.data[:timeout] : 7
+        interfaces = JSON.parse(request[:interfaces])
+        cmd = "dhcpcheck discover --format=#{format} --ifaces #{interfaces} --timeout=#{timeout}"
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
       end
 
