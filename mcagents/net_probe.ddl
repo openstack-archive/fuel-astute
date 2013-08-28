@@ -25,3 +25,7 @@ end
 action "echo", :description => "Silly echo" do
     display :always
 end
+
+action "dhcp_discover", :description => "Find dhcp server for provided interfaces" do
+    display :always
+end

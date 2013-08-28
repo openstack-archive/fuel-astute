@@ -41,6 +41,15 @@ module MCollective
         stop_frame_listeners
       end
 
+      action "dhcp_discover" do
+        validate :interfaces, String
+        format = conf.key?(:format) ? conf[:format] : "json"
+        timeout = conf.key?(:timeout) ? conf[:timeout] : 7
+
+        cmd = "dhcpcheck discover --format=#{format} --ifaces #{request[:interfaces]} --timeout=#{timeout}"
+        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+      end
+
       private
 
       def get_uid
