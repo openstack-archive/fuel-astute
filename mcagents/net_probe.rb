@@ -46,7 +46,8 @@ module MCollective
         format = request.data.key?(:format) ? request.data[:format] : "json"
         timeout = request.data.key?(:timeout) ? request.data[:timeout] : 7
         interfaces = JSON.parse(request[:interfaces])
-        cmd = "dhcpcheck discover --format=#{format} --ifaces #{interfaces} --timeout=#{timeout}"
+        parsed_interfaces = interfaces.kind_of?(Array) ? interfaces.join(' ') : interfaces
+        cmd = "dhcpcheck discover --format=#{format} --ifaces #{parsed_interfaces} --timeout=#{timeout}"
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
       end
 
