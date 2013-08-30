@@ -45,11 +45,10 @@ module MCollective
         validate :interfaces, String
         format = request.data.key?(:format) ? request.data[:format] : "json"
         timeout = request.data.key?(:timeout) ? request.data[:timeout] : 7
-        interfaces = JSON.parse(request[:interfaces])
-        parsed_interfaces = interfaces.kind_of?(Array) ? interfaces.join(' ') : interfaces
-        cmd = "dhcpcheck discover --format=#{format} --ifaces #{parsed_interfaces} --timeout=#{timeout}"
+        cmd = "dhcpcheck discover --format=#{format} --ifaces #{interfaces_to_string} --timeout=#{timeout}"
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
       end
+
 
       private
 
@@ -57,6 +56,14 @@ module MCollective
         File.open('/etc/nailgun_uid') do |fo|
           uid = fo.gets.chomp
           return uid
+        end
+      end
+
+      def interfaces_to_string
+        begin
+          return JSON.parse(request[:interfaces]).join(' ')
+        rescue
+          return request[:interfaces]
         end
       end
 
