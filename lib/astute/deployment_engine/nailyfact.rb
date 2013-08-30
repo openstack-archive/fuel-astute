@@ -92,15 +92,20 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     Astute.logger.info "#{@ctx.task_id}: Calculation of required attributes to pass, include netw.settings"
     @ctx.reporter.report(nodes_status(nodes_to_deploy, 'deploying', {'progress' => 0}))
 
-    nodes_to_deploy.each do |node|
-      node['facts'] ||= create_facts(node, attrs)
-      Astute::Metadata.publish_facts(@ctx, node['uid'], node['facts'])
-    end
-    Astute.logger.info "#{@ctx.task_id}: All required attrs/metadata passed via facts extension. Starting deployment."
+    # Prevent attempts to run several deploy on a single node. This is possible because one node 
+    # can perform multiple roles.
+    group_by_uniq_values(nodes_to_deploy).each do |nodes_group|
+      nodes_group.each do |node|
+        node['facts'] = create_facts(node, attrs)
+        Astute::Metadata.publish_facts(@ctx, node['uid'], node['facts'])
+      end
+      Astute.logger.info "#{@ctx.task_id}: Required attrs/metadata passed via facts extension. Starting deployment."
 
-    Astute::PuppetdDeployer.deploy(@ctx, nodes_to_deploy, retries, change_node_status)
-    nodes_roles = nodes_to_deploy.map { |n| { n['uid'] => n['role'] } }
-    Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
+      Astute::PuppetdDeployer.deploy(@ctx, nodes_group, retries, change_node_status)
+      
+      nodes_roles = nodes_group.map { |n| { n['uid'] => n['role'] } }
+      Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
+    end
   end
 
   private
@@ -123,6 +128,27 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
     Astute.logger.warn "Can not find vlan_interface for node #{node['uid']}"
     nil
+  end
+  
+  # Transform nodes source array to array of nodes arrays where subarray contain only uniq elements from source
+  # Source: [{'uid' => 1, 'role' => 'cinder'}, {'uid' => 2, 'role' => 'cinder'},   {'uid' => 2, 'role' => 'compute'}]
+  # Result: [[{'uid' =>1, 'role' => 'cinder'}, {'uid' => 2, 'role' => 'cinder'}], [{'uid' => 2, 'role' => 'compute'}]] 
+  def group_by_uniq_values(nodes_array)
+    nodes_array = deep_copy(nodes_array)
+    sub_arrays = []
+    while !nodes_array.empty?
+      sub_arrays << uniq_nodes(nodes_array)
+      uniq_nodes(nodes_array).clone.each {|e| nodes_array.slice!(nodes_array.index(e)) }
+    end
+    sub_arrays
+  end
+  
+  def uniq_nodes(nodes_array)
+    nodes_array.inject([]) { |result, node| result << node unless include_node?(result, node); result }
+  end
+  
+  def include_node?(nodes_array, node)
+    nodes_array.find {|n| node['uid'] == n['uid'] }
   end
 
 end
