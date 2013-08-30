@@ -26,10 +26,8 @@ module Astute
       def progress_calculate(uids_to_calc, nodes)
         # Just create correct pattern for each node and then call parent method.
         uids_to_calc.each do |uid|
-          node = nodes.select {|n| n['uid'] == uid}[0]
-          unless @nodes_states[uid]
-            @nodes_states[uid] = get_pattern_for_node(node)
-          end
+          node = nodes.find {|n| n['uid'] == uid}
+          @nodes_states[uid] ||= get_pattern_for_node(node)
         end
         super(uids_to_calc, nodes)
       end

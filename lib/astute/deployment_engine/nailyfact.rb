@@ -95,6 +95,12 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     # Prevent attempts to run several deploy on a single node. This is possible because one node 
     # can perform multiple roles.
     group_by_uniq_values(nodes_to_deploy).each do |nodes_group|
+      begin
+        @ctx.deploy_log_parser.prepare(nodes_group)
+      rescue Exception => e
+        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
+      end
+      
       nodes_group.each do |node|
         node['facts'] = create_facts(node, attrs)
         Astute::Metadata.publish_facts(@ctx, node['uid'], node['facts'])
