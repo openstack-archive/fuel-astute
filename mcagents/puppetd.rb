@@ -157,7 +157,7 @@ module MCollective
       end
 
       def runonce_background
-        cmd = [@puppetd, "--onetime", "--ignorecache", "--debug", "--logdest", 'syslog']
+        cmd = [@puppetd, "--onetime", "--ignorecache", "--logdest", 'syslog']
 
         unless request[:forcerun]
           if @splaytime && @splaytime > 0

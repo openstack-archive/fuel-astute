@@ -106,10 +106,11 @@ module Astute
         }
       end
 
+      ctrl_nodes = attrs['nodes'].select {|n| n['role'] == 'controller'}
       if attrs['nodes'].select { |node| node['role'] == 'primary-controller' }.empty?
-        ctrl_nodes = attrs['nodes'].select {|n| n['role'] == 'controller'}
         ctrl_nodes[0]['role'] = 'primary-controller'
       end
+      attrs['last_controller'] = ctrl_nodes.last['name']
 
       attrs
     end
@@ -158,17 +159,6 @@ module Astute
       primary_proxy_nodes = nodes.select {|n| n['role'] == 'primary-swift-proxy'}
       other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - \
         primary_proxy_nodes - quantum_nodes
-
-      #FIXME: add last_controller attribute to attributes hash in order to determine
-      #if we are the last controller in deployment sequence and it is safe to
-      #upload test virtual machine image
-
-      last_controller = ctrl_nodes.last
-      if last_controller['name']
-        attrs['last_controller'] = last_controller['name']
-      elsif last_controller['fqdn']
-        attrs['last_controller'] = last_controller['fqdn'].split(/\./)[0]
-      end
 
       Astute.logger.info "Starting deployment of primary controller"
       deploy_piece(primary_ctrl_nodes, attrs)
