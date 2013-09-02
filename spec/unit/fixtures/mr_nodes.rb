@@ -21,7 +21,7 @@ module Fixtures
       {
         "mac" => "52:54:00:0E:88:88",
         "status" => "provisioned",
-        "uid" => "4",
+        "uid" => "6",
         "error_type" => nil,
         "fqdn" => "controller_compute-4.mirantis.com",
         "network_data" => [
@@ -62,7 +62,7 @@ module Fixtures
             "brd" => "172.16.1.255"
           }
         ],
-        "id" => 4,
+        "id" => 6,
         "ip" => "10.20.0.205",
         "role" => 
           [

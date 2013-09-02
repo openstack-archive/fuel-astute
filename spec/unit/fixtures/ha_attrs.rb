@@ -18,7 +18,7 @@ module Fixtures
   def self.ha_attrs
     attrs = common_attrs
 
-    attrs['args']['nodes'] = common_nodes + ha_nodes
+    attrs['args']['nodes'] = ha_nodes
     attrs['args']['attributes']['deployment_mode'] = "ha"
     attrs['args']['attributes']['management_vip'] = "192.168.0.111"
     attrs['args']['attributes']['public_vip'] = "240.0.1.111"

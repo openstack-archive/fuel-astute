@@ -20,9 +20,9 @@ module Fixtures
       {
         "mac" => "52:54:00:0E:B8:F5",
         "status" => "provisioning",
-        "uid" => "devnailgun.mirantis.com",
+        "uid" => "1",
         "error_type" => nil,
-        "fqdn" => "devnailgun.mirantis.com",
+        "fqdn" => "controller-1.mirantis.com",
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -66,7 +66,7 @@ module Fixtures
         "status" => "provisioning",
         "uid" => 2,
         "error_type" => nil,
-        "fqdn" => "slave-2.mirantis.com",
+        "fqdn" => "compute-2.mirantis.com",
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -114,7 +114,7 @@ module Fixtures
         "status" => "provisioning",
         "uid" => 3,
         "error_type" => nil,
-        "fqdn" => "slave-3.mirantis.com",
+        "fqdn" => "compute-3.mirantis.com",
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
