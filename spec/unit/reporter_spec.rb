@@ -25,7 +25,7 @@ describe "ProxyReporter" do
                              {'status' => 'deploying', 'uid' => '2',
                               'progress' => 54}]}
       @up_reporter = mock('up_reporter')
-      @reporter = ProxyReporter.new(@up_reporter)
+      @reporter = ProxyReporter::DeploymentProxyReporter.new(@up_reporter)
     end
 
     it "reports first-come data" do

@@ -19,6 +19,7 @@ SimpleCov.start
 
 require 'tempfile'
 require 'tmpdir'
+require 'fileutils'
 require 'date'
 require 'yaml'
 require 'rspec'
@@ -26,6 +27,7 @@ require 'rspec'
 require 'rspec/autorun'
 
 require File.join(File.dirname(__FILE__), '../lib/astute')
+Dir[File.join(File.dirname(__FILE__), 'unit/fixtures/*.rb')].each { |file| require file }
 
 # NOTE(mihgen): I hate to wait for unit tests to complete,
 #               resetting time to sleep significantly increases tests speed
@@ -46,7 +48,10 @@ module SpecHelpers
       stubs(:progress=)
       unless timeout.nil?
         expects(:timeout=).with(timeout)
+      else
+        stubs(:timeout=)
       end
+
       if discover_nodes.nil?
         stubs(:discover)
       else
@@ -65,4 +70,16 @@ module SpecHelpers
       stubs(:agent).returns('mc_stubbed_agent')
     end
   end
+
+  def mock_ctx(parser=nil)
+    parser ||= Astute::LogParser::NoParsing.new
+    ctx = mock
+    ctx.stubs(:task_id)
+    ctx.stubs(:deploy_log_parser).returns(parser)
+    reporter = mock
+    ctx.stubs(:reporter).returns(reporter)
+
+    ctx
+  end
+
 end

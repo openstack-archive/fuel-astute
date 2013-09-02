@@ -39,34 +39,26 @@ module Astute
       raise "Method #{method} is not implemented for #{self.class}"
     end
 
-    def attrs_singlenode(nodes, attrs)
-      ctrl_management_ip = nodes[0]['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip']
-      ctrl_public_ip = nodes[0]['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip']
-      attrs['controller_node_address'] = ctrl_management_ip.split('/')[0]
-      attrs['controller_node_public'] = ctrl_public_ip.split('/')[0]
-      attrs
-    end
-
-    def deploy_singlenode(nodes, attrs)
-      # TODO(mihgen) some real stuff is needed
-      Astute.logger.info "Starting deployment of single node OpenStack"
-      deploy_piece(nodes, attrs)
-    end
-
     # we mix all attrs and prepare them for Puppet
     # Works for multinode deployment mode
     def attrs_multinode(nodes, attrs)
-      ctrl_nodes = attrs['controller_nodes']
-      # TODO(mihgen): we should report error back if there are not enough metadata passed
-      ctrl_management_ips = []
-      ctrl_public_ips = []
-      ctrl_nodes.each do |n|
-        ctrl_management_ips << n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip']
-        ctrl_public_ips << n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip']
+      attrs['nodes'] = nodes.map do |n|
+        {
+          'fqdn'                 => n['fqdn'],
+          'name'                 => n['fqdn'].split(/\./)[0],
+          'role'                 => n['role'],
+          'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
+          'internal_br'          => n['internal_br'],
+          'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
+          'storage_address'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
+          'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['netmask'],
+          'public_address'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['ip'].split(/\//)[0],
+          'public_br'            => n['public_br'],
+          'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
+          'default_gateway'      => n['default_gateway']
+        }
       end
-
-      attrs['controller_node_address'] = ctrl_management_ips[0].split('/')[0]
-      attrs['controller_node_public'] = ctrl_public_ips[0].split('/')[0]
+      # TODO(mihgen): we should report error back if there are not enough metadata passed
       attrs
     end
 
@@ -74,62 +66,92 @@ module Astute
     # It should not contain any magic with attributes, and should not directly run any type of MC plugins
     # It does only support of deployment sequence. See deploy_piece implementation in subclasses.
     def deploy_multinode(nodes, attrs)
-      deploy_ha_full(nodes, attrs)
+      ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
+      other_nodes = nodes - ctrl_nodes
+
+      Astute.logger.info "Starting deployment of primary controller"
+      deploy_piece(ctrl_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of other nodes"
+      deploy_piece(other_nodes, attrs)
+
+      return
     end
 
     def attrs_ha(nodes, attrs)
-      # TODO(mihgen): we should report error back if there are not enough metadata passed
-      ctrl_nodes = attrs['controller_nodes']
-      ctrl_manag_addrs = {}
-      ctrl_public_addrs = {}
-      ctrl_storage_addrs = {}
-      ctrl_nodes.each do |n|
-        # current puppet modules require `hostname -s`
-        hostname = n['fqdn'].split(/\./)[0]
-        ctrl_manag_addrs.merge!({hostname =>
-                   n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0]})
-        ctrl_public_addrs.merge!({hostname =>
-                   n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0]})
-        ctrl_storage_addrs.merge!({hostname =>
-                   n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0]})
+      # we use the same set of mount points for all storage nodes
+      attrs['mp'] = [{'point' => '1', 'weight' => '1'},{'point'=>'2','weight'=>'2'}]
+      mountpoints = ""
+      attrs['mp'].each do |mountpoint|
+        mountpoints << "#{mountpoint['point']} #{mountpoint['weight']}\n"
       end
 
-      attrs['nodes'] = ctrl_nodes.map do |n|
+      Astute.logger.debug("#{nodes}")
+      attrs['nodes'] = nodes.map do |n|
         {
+          'fqdn'                 => n['fqdn'],
           'name'                 => n['fqdn'].split(/\./)[0],
-          'role'                 => 'controller',
-          'internal_address'     => n['network_data'].select {|nd| nd['name'] == 'management'}[0]['ip'].split(/\//)[0],
-          'public_address'       => n['network_data'].select {|nd| nd['name'] == 'public'}[0]['ip'].split(/\//)[0],
-          'mountpoints'          => "1 1\n2 2",
-          'zone'                 => n['id'],
-          'storage_local_net_ip' => n['network_data'].select {|nd| nd['name'] == 'storage'}[0]['ip'].split(/\//)[0],
+          'role'                 => n['role'],
+          'mountpoints'          => mountpoints,
+          'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
+          'internal_br'          => n['internal_br'],
+          'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
+          'public_address'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['ip'].split(/\//)[0],
+          'public_br'            => n['public_br'],
+          'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
+          'swift_zone'           => n['id'],
+          'storage_address'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
+          'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['netmask'],
+          'default_gateway'      => n['default_gateway']
         }
       end
-      attrs['nodes'].first['role'] = 'primary-controller'
-      attrs['ctrl_hostnames'] = ctrl_nodes.map {|n| n['fqdn'].split(/\./)[0]}
-      attrs['master_hostname'] = ctrl_nodes[0]['fqdn'].split(/\./)[0]
-      attrs['ctrl_public_addresses'] = ctrl_public_addrs
-      attrs['ctrl_management_addresses'] = ctrl_manag_addrs
-      attrs['ctrl_storage_addresses'] = ctrl_storage_addrs
+
+      ctrl_nodes = attrs['nodes'].select {|n| n['role'] == 'controller'}
+      if attrs['nodes'].select { |node| node['role'] == 'primary-controller' }.empty?
+        ctrl_nodes[0]['role'] = 'primary-controller'
+      end
+      attrs['last_controller'] = ctrl_nodes.last['name']
+
       attrs
     end
 
-    def deploy_ha(nodes, attrs)
-      deploy_ha_full(nodes, attrs)
-    end
-
-    def deploy_ha_compact(nodes, attrs)
-      deploy_ha_full(nodes, attrs)
-    end
+    alias :attrs_ha_full  :attrs_ha
+    alias :attrs_ha_compact :attrs_ha
 
     def deploy_ha_full(nodes, attrs)
       primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
       ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
-      unless primary_ctrl_nodes.any?
-        if ctrl_nodes.size > 1
-          primary_ctrl_nodes = [ctrl_nodes.shift]
-        end
-      end
+      compute_nodes = nodes.select {|n| n['role'] == 'compute'}
+      quantum_nodes = nodes.select {|n| n['role'] == 'quantum'}
+      storage_nodes = nodes.select {|n| n['role'] == 'storage'}
+      proxy_nodes = nodes.select {|n| n['role'] == 'swift-proxy'}
+      primary_proxy_nodes = nodes.select {|n| n['role'] == 'primary-swift-proxy'}
+      other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - \
+        primary_proxy_nodes - quantum_nodes - storage_nodes - proxy_nodes
+
+      Astute.logger.info "Starting deployment of primary swift proxy"
+      deploy_piece(primary_proxy_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of non-primary swift proxies"
+      deploy_piece(proxy_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of swift storages"
+      deploy_piece(storage_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of primary controller"
+      deploy_piece(primary_ctrl_nodes, attrs)
+
+      Astute.logger.info "Starting deployment of all controllers one by one"
+      ctrl_nodes.each {|n| deploy_piece([n], attrs)}
+
+      Astute.logger.info "Starting deployment of other nodes"
+      deploy_piece(other_nodes, attrs)
+      return
+    end
+
+    def deploy_ha_compact(nodes, attrs)
+      primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
+      ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
       compute_nodes = nodes.select {|n| n['role'] == 'compute'}
       quantum_nodes = nodes.select {|n| n['role'] == 'quantum'}
       storage_nodes = nodes.select {|n| n['role'] == 'storage'}
@@ -139,23 +161,37 @@ module Astute
         primary_proxy_nodes - quantum_nodes
 
       Astute.logger.info "Starting deployment of primary controller"
-      deploy_piece(primary_ctrl_nodes, attrs, 0, false)
+      deploy_piece(primary_ctrl_nodes, attrs)
 
       Astute.logger.info "Starting deployment of all controllers one by one"
       ctrl_nodes.each {|n| deploy_piece([n], attrs)}
-
-      Astute.logger.info "Starting deployment of 1st controller and 1st proxy"
-      deploy_piece(primary_ctrl_nodes + primary_proxy_nodes, attrs)
-
-      Astute.logger.info "Starting deployment of quantum nodes"
-      deploy_piece(quantum_nodes, attrs)
 
       Astute.logger.info "Starting deployment of other nodes"
       deploy_piece(other_nodes, attrs)
       return
     end
 
+    alias :deploy_ha :deploy_ha_compact
+
+    def attrs_rpmcache(nodes, attrs)
+      attrs
+    end
+
+    def deploy_rpmcache(nodes, attrs)
+      Astute.logger.info "Starting release downloading"
+      deploy_piece(nodes, attrs, 0)
+    end
+
     private
+    def select_ifaces(var,name)
+        result = false
+        if var.is_a?(Array)
+            result = true if var.include?(name)
+        elsif var.is_a?(String)
+            result = true if var == name
+        end
+    end
+
     def nodes_status(nodes, status, data_to_merge)
       {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
     end

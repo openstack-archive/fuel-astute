@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 #    Copyright 2013 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,7 +15,8 @@
 #    under the License.
 
 
-# -*- coding: utf-8 -*-
+require 'erb'
+
 module Astute
   module LogParser
     LOG_PORTION = 10000
@@ -32,6 +35,93 @@ module Astute
 
       def progress_calculate(*args)
         []
+      end
+    end
+
+    class DirSizeCalculation
+      attr_reader :nodes
+
+      def initialize(nodes)
+        @nodes = nodes.map{|n| n.dup}
+        @nodes.each{|node| node[:path_items] = weight_reassignment(node[:path_items])}
+      end
+
+      def deploy_type=(*args)
+        # Because we mimic the DeploymentParser, we should define all auxiliary method
+        # even they do nothing.
+      end
+
+      def progress_calculate(uids_to_calc, nodes)
+        uids_to_calc.map do |uid|
+          node = @nodes.find{|n| n[:uid] == uid}
+          node[:path_items] ||= []
+          progress = 0
+          node[:path_items].each do |item|
+            size = recursive_size(item[:path])
+            sub_progress = 100 * size / item[:max_size]
+            sub_progress = 0 if sub_progress < 0
+            sub_progress = 100 if sub_progress > 100
+            progress += sub_progress * item[:weight]
+          end
+          {'uid' => uid, 'progress' => progress.to_i}
+        end
+      end
+
+      private
+      def recursive_size(path, opts={})
+        return File.size?(path).to_i if not File.directory?(path)
+
+        total_size = 0
+        Dir[File.join("#{path}", '**/*')].each do |f|
+          # Option :files_only used when you want to calculate total size of
+          # regular files only. The default :files_only is false, so the function will
+          # include inode size of each dir (4096 bytes in most cases) to total value
+          # as the unix util 'du' does it.
+          total_size += File.size?(f).to_i if File.file?(f) || ! opts[:files_only]
+        end
+        total_size
+      end
+
+      def weight_reassignment(items)
+        # The finction normalizes the weights of each item in order to make sum of
+        # all weights equal to one.
+        # It divides items as wighted and unweighted depending on the existence of
+        # the :weight key in the item.
+        #   - Each unweighted item will be weighted as a one N-th part of the total number of items.
+        #   - All weights of weighted items are summed up and then each weighted item
+        #     gets a new weight as a multiplication of a relative weight among all
+        #     weighted items and the ratio of the number of the weighted items to
+        #     the total number of items.
+        # E.g. we have four items: one with weight 0.5, another with weight 1.5, and
+        # two others as unweighted. All unweighted items will get the weight 1/4.
+        # Weight's sum of weighted items is 2. So the first item will get the weight:
+        # (relative weight 0.5/2) * (weighted items ratio 2/4) = 1/8.
+        # Finally all items will be normalised with next weights:
+        # 1/8, 3/8, 1/4, and 1/4.
+
+        ret_items = items.reject do |item|
+          weight = item[:weight]
+          # Save an item if it unweighted.
+          next if weight.nil?
+          raise "Weight should be a non-negative number" unless [Fixnum, Float].include?(weight.class) && weight >= 0
+          # Drop an item if it weighted as zero.
+          item[:weight] == 0
+        end
+        return [] if ret_items.empty?
+        ret_items.map!{|n| n.dup}
+
+        partial_weight = 1.0 / ret_items.length
+        weighted_items = ret_items.select{|n| n[:weight]}
+        weighted_sum = 0.0
+        weighted_items.each{|n| weighted_sum += n[:weight]}
+        weighted_sum = weighted_sum * ret_items.length / weighted_items.length if weighted_items.any?
+        raise "Unexpectedly a summary weight of weighted items is a non-positive" if weighted_items.any? && weighted_sum <= 0
+        ret_items.each do |item|
+          weight = item[:weight]
+          item[:weight] = weight ? weight / weighted_sum : partial_weight
+        end
+
+        ret_items
       end
     end
 
@@ -54,12 +144,12 @@ module Astute
             node_pattern_spec = Marshal.load(Marshal.dump(@pattern_spec))
             @nodes_states[uid] = node_pattern_spec
           end
-          path = "#{@pattern_spec['path_prefix']}#{node['fqdn']}/#{@pattern_spec['filename']}"
-
+          erb_path = @pattern_spec['path_format']
+          path = ERB.new(erb_path).result(binding())
           begin
             progress = (get_log_progress(path, node_pattern_spec)*100).to_i # Return percent of progress
           rescue Exception => e
-            Astute.logger.warn "Some error occurred when calculate progress for node '#{uid}': #{e.message}, trace: #{e.backtrace.inspect}"
+            Astute.logger.warn "Some error occurred when calculate progress for node '#{uid}': #{e.message}, trace: #{e.format_backtrace}"
             progress = 0
           end
 
