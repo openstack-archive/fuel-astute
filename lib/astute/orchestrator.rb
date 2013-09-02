@@ -41,6 +41,7 @@ module Astute
       context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
+      deploy_engine_instance.deploy(nodes, attrs)
       return SUCCESS
     end
 
