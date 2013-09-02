@@ -109,6 +109,7 @@ module Astute
       ctrl_nodes = attrs['nodes'].select {|n| n['role'] == 'controller'}
       if attrs['nodes'].select { |node| node['role'] == 'primary-controller' }.empty?
         ctrl_nodes[0]['role'] = 'primary-controller'
+        nodes[0]['role'] = 'primary-controller'
       end
       attrs['last_controller'] = ctrl_nodes.last['name']
 
