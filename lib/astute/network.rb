@@ -61,8 +61,8 @@ module Astute
         net_probe.discover(:nodes => [node['uid'].to_s])
         response = net_probe.check_dhcp(:interfaces => data_to_send.to_json)
         result = result + JSON.parse(response)
-
       end
+      {'nodes': result}.to_json
     end
 
     private
