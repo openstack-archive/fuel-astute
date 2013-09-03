@@ -27,10 +27,10 @@ module Astute
 
     def deploy(deployment_info)
       # FIXME (eli): need to get rid all deployment_mode ifs from orchetrator
-      @ctx.deploy_log_parser.deploy_type = 'multinode' # attrs['deployment_mode']
+      @ctx.deploy_log_parser.deploy_type = 'ha_full' # attrs['deployment_mode']
 
       # Astute.logger.info "Deployment mode #{attrs['deployment_mode']}"
-      mode = 'multinode' # attrs['deployment_mode']
+      mode = 'ha_full' # attrs['deployment_mode']
       self.send("deploy_#{mode}", deployment_info)
     end
 
@@ -117,7 +117,7 @@ module Astute
     alias :attrs_ha_full  :attrs_ha
     alias :attrs_ha_compact :attrs_ha
 
-    def deploy_ha_full(nodes, attrs)
+    def deploy_ha_full(nodes)
       primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
       ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
       compute_nodes = nodes.select {|n| n['role'] == 'compute'}
@@ -129,22 +129,22 @@ module Astute
         primary_proxy_nodes - quantum_nodes - storage_nodes - proxy_nodes
 
       Astute.logger.info "Starting deployment of primary swift proxy"
-      deploy_piece(primary_proxy_nodes, attrs)
+      deploy_piece(primary_proxy_nodes)
 
       Astute.logger.info "Starting deployment of non-primary swift proxies"
-      deploy_piece(proxy_nodes, attrs)
+      deploy_piece(proxy_nodes)
 
       Astute.logger.info "Starting deployment of swift storages"
-      deploy_piece(storage_nodes, attrs)
+      deploy_piece(storage_nodes)
 
       Astute.logger.info "Starting deployment of primary controller"
-      deploy_piece(primary_ctrl_nodes, attrs)
+      deploy_piece(primary_ctrl_nodes)
 
       Astute.logger.info "Starting deployment of all controllers one by one"
-      ctrl_nodes.each {|n| deploy_piece([n], attrs)}
+      ctrl_nodes.each {|n| deploy_piece([n])}
 
       Astute.logger.info "Starting deployment of other nodes"
-      deploy_piece(other_nodes, attrs)
+      deploy_piece(other_nodes)
       return
     end
 
