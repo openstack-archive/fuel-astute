@@ -52,17 +52,20 @@ module Astute
     end
 
 
-    def self.check_network(ctx, nodes)
+    def self.check_dhcp(ctx, nodes)
       uids = nodes.map { |node| node['uid'].to_s }
       net_probe = MClient.new(ctx, "net_probe", uids)
       result = []
       nodes.each do |node|
-        data_to_send = make_interfaces_to_send(node['networks'])
+        data_to_send = make_interfaces_to_send(node['networks'], joined=false).to_json
         net_probe.discover(:nodes => [node['uid'].to_s])
-        response = net_probe.check_dhcp(:interfaces => data_to_send.to_json)
-        result = result + JSON.parse(response)
+        Astute.logger.debug "data #{data_to_send}"
+        response = net_probe.dhcp_discover(:interfaces => data_to_send)
+        Astute.logger.debug "response #{response}"
+        result = result + response
       end
-      {'nodes': result}.to_json
+      Astute.logger.debug "data is ready to be send #{result}"
+      {'nodes' => result}.to_json
     end
 
     private
@@ -90,10 +93,14 @@ module Astute
       end
     end
 
-    def self.make_interfaces_to_send(networks)
+    def self.make_interfaces_to_send(networks, joined=true)
       data_to_send = {}
       networks.each do |network|
-        data_to_send[network['iface']] = network['vlans'].join(",")
+        if joined
+          data_to_send[network['iface']] = network['vlans'].join(",")
+        else
+          data_to_send[network['iface']] = network['vlans']
+        end
       end
 
       data_to_send
