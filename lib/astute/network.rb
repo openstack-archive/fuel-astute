@@ -51,6 +51,20 @@ module Astute
       {'nodes' => result}
     end
 
+
+    def self.check_network(ctx, nodes)
+      uids = nodes.map { |node| node['uid'].to_s }
+      net_probe = MClient.new(ctx, "net_probe", uids)
+      result = []
+      nodes.each do |node|
+        data_to_send = make_interfaces_to_send(node['networks'])
+        net_probe.discover(:nodes => [node['uid'].to_s])
+        response = net_probe.check_dhcp(:interfaces => data_to_send.to_json)
+        result = result + JSON.parse(response)
+
+      end
+    end
+
     private
     def self.start_frame_listeners(ctx, net_probe, nodes)
       nodes.each do |node|
