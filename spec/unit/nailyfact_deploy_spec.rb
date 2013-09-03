@@ -60,15 +60,69 @@ describe "NailyFact DeploymentEngine" do
       @deploy_engine.deploy(@data['args']['nodes'], @data['args']['attributes'])
     end
     
-    it "multiroles for node should be support" do
-      @data_mr['args']['attributes']['deployment_mode'] = "multinode"
-
-      node_amount = @data_mr['args']['nodes'][0]['role'].size
-      # we got two calls, one for controller, and another for all(1) computes
-      Astute::Metadata.expects(:publish_facts).times(node_amount)
-      Astute::PuppetdDeployer.expects(:deploy).times(node_amount)
+    context 'multiroles support' do     
+      before(:each) do
+        @data_mr['args']['attributes']['deployment_mode'] = "multinode"
+        # This role have same priority for multinode mode
+        @data_mr['args']['nodes'][0]['role'] = ['compute', 'cinder'] 
+      end
       
-      @deploy_engine.deploy(@data_mr['args']['nodes'], @data_mr['args']['attributes'])
+      let(:compute_nodes) do 
+        compute_nodes = @data_mr['args']['nodes'].select{|n| n['role'].include? 'compute'}
+        deep_copy(compute_nodes).each{ |n| n['role'] = 'compute'}
+      end
+    
+      let(:node_amount) { @data_mr['args']['nodes'][0]['role'].size }
+      
+      it "multiroles for node should be support" do
+        @data_mr['args']['nodes'][0]['role'] = ['controller', 'compute'] 
+
+        controller_nodes = @data_mr['args']['nodes'].select{|n| n['role'].include? 'controller'}
+        controller_nodes = deep_copy(controller_nodes).each{ |n| n['role'] = 'controller'}
+        
+        # we got two calls, one for controller, and another for all(1) computes
+        Astute::Metadata.expects(:publish_facts).times(node_amount)
+        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes, instance_of(Fixnum), true).once
+        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
+      
+        @deploy_engine.deploy(@data_mr['args']['nodes'], @data_mr['args']['attributes'])
+      end
+    
+      let(:cinder_nodes) do 
+        cinder_nodes = @data_mr['args']['nodes'].select{|n| n['role'].include? 'cinder'}
+        deep_copy(cinder_nodes).each{ |n| n['role'] = 'cinder'}
+      end
+    
+      it "roles with the same priority for one node should deploy in series" do
+        @ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::ParseDeployLogs.new("multinode"))
+      
+        # we got two calls, one for compute, and another for cinder
+        Astute::Metadata.expects(:publish_facts).times(node_amount)
+        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
+        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, cinder_nodes, instance_of(Fixnum), true).once
+      
+        @deploy_engine.deploy(@data_mr['args']['nodes'], @data_mr['args']['attributes'])
+      end
+    
+      it "should prepare log parsing for every deploy call because node may be deployed several times" do
+        Astute::Metadata.expects(:publish_facts).times(node_amount)
+        @ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
+        @ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
+      
+        Astute::PuppetdDeployer.expects(:deploy).times(2)
+       
+        @deploy_engine.deploy(@data_mr['args']['nodes'], @data_mr['args']['attributes'])
+      end
+    
+      it "should generate and publish facts for every deploy call because node may be deployed several times" do        
+        @ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
+        @ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
+        Astute::Metadata.expects(:publish_facts).times(node_amount)
+      
+        Astute::PuppetdDeployer.expects(:deploy).times(2)
+       
+        @deploy_engine.deploy(@data_mr['args']['nodes'], @data_mr['args']['attributes'])
+      end
     end
 
     it "ha deploy should not raise any exception" do
