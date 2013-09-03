@@ -6,6 +6,5 @@ coverage
 coverage.data
 
 # Need only on local machine for gem 
-Gemfile
 Gemfile.lock
 docs/_build
