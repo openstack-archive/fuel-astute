@@ -18,6 +18,7 @@ require 'timeout'
 
 module Astute
   class DeploymentEngine
+
     def initialize(context)
       if self.class.superclass.name == 'Object'
         raise "Instantiation of this superclass is not allowed. Please subclass from #{self.class.name}."
@@ -27,39 +28,15 @@ module Astute
 
     def deploy(deployment_info)
       # FIXME (eli): need to get rid all deployment_mode ifs from orchetrator
-      @ctx.deploy_log_parser.deploy_type = 'ha_full' # attrs['deployment_mode']
+      deployment_mode = deployment_info[0]['deployment_mode']
 
-      # Astute.logger.info "Deployment mode #{attrs['deployment_mode']}"
-      mode = 'ha_full' # attrs['deployment_mode']
-      self.send("deploy_#{mode}", deployment_info)
+      @ctx.deploy_log_parser.deploy_type = deployment_mode
+      self.send("deploy_#{deployment_mode}", deployment_info)
     end
 
     def method_missing(method, *args)
       Astute.logger.error "Method #{method} is not implemented for #{self.class}, raising exception."
       raise "Method #{method} is not implemented for #{self.class}"
-    end
-
-    # we mix all attrs and prepare them for Puppet
-    # Works for multinode deployment mode
-    def attrs_multinode(nodes, attrs)
-      attrs['nodes'] = nodes.map do |n|
-        {
-          'fqdn'                 => n['fqdn'],
-          'name'                 => n['fqdn'].split(/\./)[0],
-          'role'                 => n['role'],
-          'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
-          'internal_br'          => n['internal_br'],
-          'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
-          'storage_address'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
-          'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['netmask'],
-          'public_address'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['ip'].split(/\//)[0],
-          'public_br'            => n['public_br'],
-          'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
-          'default_gateway'      => n['default_gateway']
-        }
-      end
-      # TODO(mihgen): we should report error back if there are not enough metadata passed
-      attrs
     end
 
     # This method is called by Ruby metaprogramming magic from deploy method
@@ -77,45 +54,6 @@ module Astute
 
       nil
     end
-
-    def attrs_ha(nodes, attrs)
-      # we use the same set of mount points for all storage nodes
-      attrs['mp'] = [{'point' => '1', 'weight' => '1'},{'point'=>'2','weight'=>'2'}]
-      mountpoints = ""
-      attrs['mp'].each do |mountpoint|
-        mountpoints << "#{mountpoint['point']} #{mountpoint['weight']}\n"
-      end
-
-      Astute.logger.debug("#{nodes}")
-      attrs['nodes'] = nodes.map do |n|
-        {
-          'fqdn'                 => n['fqdn'],
-          'name'                 => n['fqdn'].split(/\./)[0],
-          'role'                 => n['role'],
-          'mountpoints'          => mountpoints,
-          'internal_address'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['ip'].split(/\//)[0],
-          'internal_br'          => n['internal_br'],
-          'internal_netmask'     => n['network_data'].select {|nd| select_ifaces(nd['name'], 'management')}[0]['netmask'],
-          'public_address'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['ip'].split(/\//)[0],
-          'public_br'            => n['public_br'],
-          'public_netmask'       => n['network_data'].select {|nd| select_ifaces(nd['name'], 'public')}[0]['netmask'],
-          'swift_zone'           => n['id'],
-          'storage_address'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['ip'].split(/\//)[0],
-          'storage_netmask'      => n['network_data'].select {|nd| select_ifaces(nd['name'], 'storage')}[0]['netmask'],
-          'default_gateway'      => n['default_gateway']
-        }
-      end
-      ctrl_nodes = attrs['nodes'].select { |n| n['role'] == 'controller' }
-      if attrs['nodes'].select { |node| node['role'] == 'primary-controller' }.empty?
-        ctrl_nodes[0]['role'] = nodes[0]['role'] = 'primary-controller'
-      end
-      attrs['last_controller'] = ctrl_nodes.last['name']
-
-      attrs
-    end
-
-    alias :attrs_ha_full  :attrs_ha
-    alias :attrs_ha_compact :attrs_ha
 
     def deploy_ha_full(nodes)
       primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
@@ -145,10 +83,11 @@ module Astute
 
       Astute.logger.info "Starting deployment of other nodes"
       deploy_piece(other_nodes)
-      return
+
+      nil
     end
 
-    def deploy_ha_compact(nodes, attrs)
+    def deploy_ha_compact(nodes)
       primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
       ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
       compute_nodes = nodes.select {|n| n['role'] == 'compute'}
@@ -160,38 +99,15 @@ module Astute
         primary_proxy_nodes - quantum_nodes
 
       Astute.logger.info "Starting deployment of primary controller"
-      deploy_piece(primary_ctrl_nodes, attrs)
+      deploy_piece(primary_ctrl_nodes)
 
       Astute.logger.info "Starting deployment of all controllers one by one"
-      ctrl_nodes.each {|n| deploy_piece([n], attrs)}
+      ctrl_nodes.each {|n| deploy_piece([n])}
 
       Astute.logger.info "Starting deployment of other nodes"
-      deploy_piece(other_nodes, attrs)
-      return
-    end
+      deploy_piece(other_nodes)
 
-    alias :deploy_ha :deploy_ha_compact
-
-    def attrs_rpmcache(nodes, attrs)
-      attrs
-    end
-
-    def deploy_rpmcache(nodes, attrs)
-      Astute.logger.info "Starting release downloading"
-      deploy_piece(nodes, attrs, 0)
-    end
-
-    private
-    def nodes_status(nodes, status, data_to_merge)
-      {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
-    end
-
-    def validate_nodes(nodes)
-      if nodes.empty?
-        Astute.logger.info "#{@ctx.task_id}: Nodes to deploy are not provided. Do nothing."
-        return false
-      end
-      return true
+      nil
     end
 
   end
