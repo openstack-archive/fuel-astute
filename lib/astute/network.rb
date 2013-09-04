@@ -55,17 +55,16 @@ module Astute
     def self.check_dhcp(ctx, nodes)
       uids = nodes.map { |node| node['uid'].to_s }
       net_probe = MClient.new(ctx, "net_probe", uids)
-      result = []
+      result = {}
       nodes.each do |node|
         data_to_send = make_interfaces_to_send(node['networks'], joined=false).to_json
         net_probe.discover(:nodes => [node['uid'].to_s])
-        Astute.logger.debug "data #{data_to_send}"
         response = net_probe.dhcp_discover(:interfaces => data_to_send)
-        Astute.logger.debug "response #{response}"
-        result = result + response
+        Astute.logger.debug "Response is ready to be send #{response}"
+        result[response[0][:sender]] = JSON.parse(response[0][:data][:out])
       end
       Astute.logger.debug "data is ready to be send #{result}"
-      {'nodes' => result}.to_json
+      {'nodes' => result}
     end
 
     private
@@ -117,6 +116,7 @@ module Astute
         }
       end
     end
+
 
     def self.check_vlans_by_traffic(uids, data)
       data.map do |iface, vlans|
