@@ -159,19 +159,22 @@ module Astute
 
     def download_release(up_reporter, task_id, release_info)
       raise "Release information not provided!" if release_info.empty?
+
       attrs = {'deployment_mode' => 'rpmcache',
                'deployment_id' => 'rpmcache'}
       facts = {'rh_username' => release_info['username'],
                'rh_password' => release_info['password']}
       facts.merge!(attrs)
+
       if release_info['license_type'] == 'rhn'
         facts.merge!(
           {'use_satellite' => 'true',
            'sat_hostname' => release_info['satellite'],
            'activation_key' => release_info['activation_key']})
       end
-      nodes = [{'uid' => 'master', 'facts' => facts}]
-      proxy_reporter = ProxyReporter::DLReleaseProxyReporter.new(up_reporter, nodes.size)
+      facts['uid'] = 'master'
+      facts = [facts]
+      proxy_reporter = ProxyReporter::DLReleaseProxyReporter.new(up_reporter, facts.size)
       #FIXME: These parameters should be propagated from Nailgun. Maybe they should be saved
       #       in Release.json.
       nodes_to_parser = [
@@ -185,7 +188,7 @@ module Astute
       context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for release download."
-      deploy_engine_instance.deploy(nodes, attrs)
+      deploy_engine_instance.deploy_piece(facts, 0)
       proxy_reporter.report({'status' => 'ready', 'progress' => 100})
     end
 
