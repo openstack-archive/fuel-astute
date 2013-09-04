@@ -15,7 +15,6 @@
 
 class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
-<<<<<<< HEAD
   def deploy(nodes, attrs)
     # Convert multi roles node to separate one role nodes
     fuel_nodes = []
@@ -32,41 +31,10 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     super(fuel_nodes, attrs_for_mode)
   end
 
-  def create_facts(node, attrs)
-    # calculate_networks method is common and you can find it in superclass
-    # if node['network_data'] is undefined, we use empty list because we later try to iterate over it
-    #   otherwise we will get KeyError
-    node_network_data = node['network_data'].nil? ? [] : node['network_data']
-    interfaces = node['meta']['interfaces']
-    network_data_puppet = calculate_networks(node_network_data, interfaces)
-    attrs_to_puppet = {
-      'role' => node['role'],
-      'uid'  => node['uid'],
-      'network_data' => network_data_puppet.to_json
-    }
-
-    # Let's calculate interface settings we need for OpenStack:
-    node_network_data.each do |iface|
-      device = if iface['vlan'] && iface['vlan'] > 0
-        [iface['dev'], iface['vlan']].join('.')
-      else
-        iface['dev']
-      end
-
-      if iface['name'].is_a?(String)
-        attrs_to_puppet["#{iface['name']}_interface"] = device
-      elsif iface['name'].is_a?(Array)
-       iface['name'].each do |name|
-         attrs_to_puppet["#{name}_interface"] = device
-       end
-      end
-    end
-=======
   # Just merge attributes of concrete node
   # with attributes of cluster
   def create_facts(node_attrs)
     facts = deep_copy(node_attrs)
->>>>>>> Move data preparation logic to nailgun
 
     facts.each do |k, v|
       facts[k] = v.to_json if v.is_a?(Hash) || v.is_a?(Array)
@@ -123,14 +91,6 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
     nodes_to_deploy
   end
-
-<<<<<<< HEAD
-  def get_fixed_interface(node)
-    return node['vlan_interface'] if node['vlan_interface']
-
-    Astute.logger.warn "Can not find vlan_interface for node #{node['uid']}"
-    nil
-  end
   
   # Transform nodes source array to array of nodes arrays where subarray contain only uniq elements from source
   # Source: [{'uid' => 1, 'role' => 'cinder'}, {'uid' => 2, 'role' => 'cinder'},   {'uid' => 2, 'role' => 'compute'}]
@@ -153,6 +113,4 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     nodes_array.find {|n| node['uid'] == n['uid'] }
   end
 
-=======
->>>>>>> Move data preparation logic to nailgun
 end
