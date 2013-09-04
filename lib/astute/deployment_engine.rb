@@ -110,5 +110,17 @@ module Astute
       nil
     end
 
+    def validate_nodes(nodes)
+      if nodes.empty?
+        Astute.logger.info "#{@ctx.task_id}: Nodes to deploy are not provided. Do nothing."
+        return false
+      end
+      return true
+    end
+
+    def nodes_status(nodes, status, data_to_merge)
+      {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
+    end
+
   end
 end
