@@ -17,19 +17,18 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
   def deploy(nodes, attrs)
     # Convert multi roles node to separate one role nodes
-    nodes.each do |node|
-      next unless node['role'].is_a?(Array)
-      
-      node['role'].each do |role|
+    fuel_nodes = []
+    nodes = nodes.each do |node|
+      node['roles'].each do |role|
         new_node = deep_copy(node)
         new_node['role'] = role
-        nodes << new_node
+        new_node.delete('roles')
+        fuel_nodes << new_node
       end
-      nodes.delete(node)
     end
-
-    attrs_for_mode = self.send("attrs_#{attrs['deployment_mode']}", nodes, attrs)
-    super(nodes, attrs_for_mode)
+    
+    attrs_for_mode = self.send("attrs_#{attrs['deployment_mode']}", fuel_nodes, attrs)
+    super(fuel_nodes, attrs_for_mode)
   end
 
   def create_facts(node, attrs)

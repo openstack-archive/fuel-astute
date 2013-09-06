@@ -59,7 +59,7 @@ module Fixtures
         ],
         "id" => 1,
         "ip" => "10.20.0.200",
-        "role" => "controller",
+        "roles" => ["controller"],
         'meta' => meta
       }, {
         "mac" => "52:54:00:50:91:DD",
@@ -107,7 +107,7 @@ module Fixtures
         ],
         "id" => 2,
         "ip" => "10.20.0.221",
-        "role" => "compute",
+        "roles" => ["compute"],
         'meta' => meta
       }, {
         "mac" => "52:54:00:C3:2C:28",
@@ -155,7 +155,7 @@ module Fixtures
         ],
         "id" => 3,
         "ip" => "10.20.0.68",
-        "role" => "compute",
+        "roles" => ["compute"],
         'meta' => meta
       }
     ]

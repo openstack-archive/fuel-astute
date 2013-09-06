@@ -19,9 +19,11 @@ module Fixtures
     attrs = common_attrs
 
     attrs['args']['nodes'] = ha_nodes
+    
     attrs['args']['attributes']['deployment_mode'] = "ha"
     attrs['args']['attributes']['management_vip'] = "192.168.0.111"
     attrs['args']['attributes']['public_vip'] = "240.0.1.111"
+    attrs['args']["controller_nodes"] = controller_nodes(attrs['args']['nodes'])
 
     attrs
   end
