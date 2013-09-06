@@ -20,9 +20,9 @@ module Fixtures
       {
         "mac" => "52:54:00:0E:B8:F5",
         "status" => "provisioning",
-        "uid" => "devnailgun.mirantis.com",
+        "uid" => "1",
         "error_type" => nil,
-        "fqdn" => "devnailgun.mirantis.com",
+        "fqdn" => "controller-1.mirantis.com",
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -59,14 +59,14 @@ module Fixtures
         ],
         "id" => 1,
         "ip" => "10.20.0.200",
-        "role" => "controller",
+        "roles" => ["controller"],
         'meta' => meta
       }, {
         "mac" => "52:54:00:50:91:DD",
         "status" => "provisioning",
         "uid" => 2,
         "error_type" => nil,
-        "fqdn" => "slave-2.mirantis.com",
+        "fqdn" => "compute-2.mirantis.com",
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -107,14 +107,14 @@ module Fixtures
         ],
         "id" => 2,
         "ip" => "10.20.0.221",
-        "role" => "compute",
+        "roles" => ["compute"],
         'meta' => meta
       }, {
         "mac" => "52:54:00:C3:2C:28",
         "status" => "provisioning",
         "uid" => 3,
         "error_type" => nil,
-        "fqdn" => "slave-3.mirantis.com",
+        "fqdn" => "compute-3.mirantis.com",
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -155,7 +155,7 @@ module Fixtures
         ],
         "id" => 3,
         "ip" => "10.20.0.68",
-        "role" => "compute",
+        "roles" => ["compute"],
         'meta' => meta
       }
     ]

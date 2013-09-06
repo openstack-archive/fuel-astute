@@ -21,7 +21,7 @@ module Fixtures
       {
         "mac" => "52:54:00:0E:88:88",
         "status" => "provisioned",
-        "uid" => "4",
+        "uid" => "6",
         "error_type" => nil,
         "fqdn" => "controller_compute-4.mirantis.com",
         "network_data" => [
@@ -62,9 +62,9 @@ module Fixtures
             "brd" => "172.16.1.255"
           }
         ],
-        "id" => 4,
+        "id" => 6,
         "ip" => "10.20.0.205",
-        "role" => 
+        "roles" => 
           [
             "controller",
             "compute"
@@ -72,9 +72,7 @@ module Fixtures
         'meta' => meta
       }
     ]
-    controller_nodes = attrs['args']['nodes'].select{|n| n['role'].include?('controller')}.map { |e| deep_copy e }
-    controller_nodes.each {|n| n['role'] = 'controller' }
-    attrs['args']['controller_nodes'] = controller_nodes
+    attrs['args']['controller_nodes'] = controller_nodes(attrs['args']['nodes'])
     attrs
   end
 

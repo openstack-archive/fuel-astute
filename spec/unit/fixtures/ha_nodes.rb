@@ -63,7 +63,7 @@ module Fixtures
         ],
         "id" => 4,
         "ip" => "10.20.0.205",
-        "role" => "controller",
+        "roles" => ["controller"],
         'meta' => meta
       },
       {
@@ -112,7 +112,7 @@ module Fixtures
         ],
         "id" => 5,
         "ip" => "10.20.0.206",
-        "role" => "controller",
+        "roles" => ["controller"],
         'meta' => meta
       }
     ]

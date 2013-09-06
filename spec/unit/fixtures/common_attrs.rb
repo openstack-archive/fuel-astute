@@ -48,11 +48,18 @@ module Fixtures
         },
         "task_uuid" => "19d99029-350a-4c9c-819c-1f294cf9e741",
         "nodes" => Fixtures.common_nodes,
-        "controller_nodes" => Fixtures.common_nodes.select { |node| node['role'] == 'controller'}
+        "controller_nodes" => controller_nodes(Fixtures.common_nodes)
       },
       "method" => "deploy",
       "respond_to" => "deploy_resp"
     }
   end
-
+  
+  def self.controller_nodes(nodes)
+    controller_nodes = nodes.select{|n| n['roles'].include?('controller')}.map { |e| deep_copy e }
+    controller_nodes.each do |n| 
+      n['role'] = 'controller'
+      n.delete('roles')
+    end
+  end
 end
