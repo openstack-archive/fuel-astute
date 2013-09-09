@@ -13,6 +13,10 @@
 #    under the License.
 
 
-module Astute
-  VERSION = '0.0.2'
+class Hash
+    
+  def absent_keys(array)
+    array.select { |key| self[key].blank? }
+  end
+   
 end

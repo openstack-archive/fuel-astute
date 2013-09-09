@@ -42,7 +42,7 @@ module Astute
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
       deploy_engine_instance.deploy(nodes, attrs)
-      return SUCCESS
+      context.status
     end
 
     def fast_provision(reporter, engine_attrs, nodes)

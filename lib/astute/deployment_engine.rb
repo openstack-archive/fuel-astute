@@ -31,7 +31,7 @@ module Astute
       attrs['use_cinder'] ||= nodes.any?{|n| n['role'] == 'cinder'}
       @ctx.deploy_log_parser.deploy_type = attrs['deployment_mode']
       Astute.logger.info "Deployment mode #{attrs['deployment_mode']}"
-      result = self.send("deploy_#{attrs['deployment_mode']}", nodes, attrs)
+      self.send("deploy_#{attrs['deployment_mode']}", nodes, attrs)
     end
 
     def method_missing(method, *args)

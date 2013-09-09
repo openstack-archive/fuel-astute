@@ -23,11 +23,25 @@ require 'optparse'
 require 'yaml'
 require 'astute'
 require 'astute/version'
+require 'astute/cli/enviroment'
 
 class ConsoleReporter
   def report(msg)
     puts msg.inspect
   end
+end
+
+def report_and_exit(exception, verbose)
+  $stderr.puts "Error: #{exception.inspect}"
+  unless verbose
+    puts "Hint: use astute with --verbose or check log (#{Astute::LOG_PATH}) for more details"
+  end
+  Astute.logger.error exception.format_backtrace
+  exit Astute::FAIL
+end
+
+def analize_deploy(status)
+  status.has_value?('error') ? Astute::FAIL : Astute::SUCCESS 
 end
 
 opts = {}
@@ -63,7 +77,11 @@ end
 reporter = ConsoleReporter.new
 Astute.logger = Logger.new(STDOUT) if opts[:verbose]
 
-environment = YAML.load_file(opts[:filename])
+begin
+  environment = Astute::Cli::Enviroment.new(opts[:filename], opts[:command])
+rescue Errno::ENOENT, Psych::SyntaxError, Astute::Cli::Enviroment::ValidationError => e
+  report_and_exit(e, opts[:verbose])
+end
 
 deploy_engine = nil
 
@@ -71,13 +89,11 @@ if environment['attributes'] && environment['attributes']['deployment_engine']
   case environment['attributes']['deployment_engine']
     when 'nailyfact'
       deploy_engine = Astute::DeploymentEngine::NailyFact
-    when 'simplepuppet'
-      deploy_engine = Astute::DeploymentEngine::SimplePuppet  # It just calls puppet and doesn't do any magic
   end
 end
 
 if [:deploy, :provision, :provision_and_deploy].include? opts[:command]
-  orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
+  orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=true)
 end
 
 def console_provision(orchestrator, reporter, environment)
@@ -85,6 +101,7 @@ def console_provision(orchestrator, reporter, environment)
   if res == Astute::SUCCESS
     puts "restarting nodes..."
     sleep 5
+    puts "start watching progress"
     res = orchestrator.provision(reporter, environment['task_uuid'], environment['nodes'])
   end
   res
@@ -95,20 +112,17 @@ result = Astute::SUCCESS
 begin
   result = case opts[:command]
     when :deploy
-      orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+      analize_deploy orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
     when :provision
       console_provision(orchestrator, reporter, environment)
     when :provision_and_deploy
       res = console_provision(orchestrator, reporter, environment)
       if res == Astute::SUCCESS
-        res = orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+        res = analize_deploy orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
       end
       res
     end
 rescue => e
-  result = Astute::FAIL
-  puts "Error: #{e.inspect}"
-  puts "Hint: use astute with --verbose or check log (#{Astute::LOG_PATH}) for more details" unless opts[:verbose]
-  Astute.logger.error e.backtrace.join("\n")
+  report_and_exit(e, opts[:verbose])
 end
 exit result
