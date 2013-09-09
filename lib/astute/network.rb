@@ -55,20 +55,21 @@ module Astute
     def self.check_dhcp(ctx, nodes)
       uids = nodes.map { |node| node['uid'].to_s }
       net_probe = MClient.new(ctx, "net_probe", uids)
-      result = {}
+      result = []
       nodes.each do |node|
         data_to_send = make_interfaces_to_send(node['networks'], joined=false).to_json
         net_probe.discover(:nodes => [node['uid'].to_s])
-        Astute.logger.debug "prepared data is ready to be send #{data_to_send}"
         response = net_probe.dhcp_discover(:interfaces => data_to_send)
-        Astute.logger.debug "Response is ready to be send #{response}"
+        node_result = {:uid => response[0][:sender],
+                       :status=>'ready'}
         begin
-          result[response[0][:sender]] = JSON.parse(response[0][:data][:out])
+          node_result[:data] = JSON.parse(response[0][:data][:out])
         rescue
-          next
+          node_result[:status] = 'error'
+          node_result[:error_msg] = 'Received corrupted data from dhcp-checker.'
         end
+        result << node_result
       end
-      Astute.logger.debug "data is ready to be send #{result}"
       {'nodes' => result}
     end
 

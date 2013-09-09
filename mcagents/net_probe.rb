@@ -59,14 +59,6 @@ module MCollective
         end
       end
 
-      def interfaces_to_string
-        begin
-          return JSON.parse(request[:interfaces]).join(' ')
-        rescue
-          return request[:interfaces]
-        end
-      end
-
       def start_frame_listeners
         validate :interfaces, String
         config = {
