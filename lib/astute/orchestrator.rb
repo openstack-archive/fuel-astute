@@ -159,8 +159,8 @@ module Astute
       NodesRemover.new(Context.new(task_id, reporter), nodes).remove
     end
 
-    def dump_environment(reporter, task_id)
-      Dump.dump_environment(Context.new(task_id, reporter))
+    def dump_environment(reporter, task_id, lastdump)
+      Dump.dump_environment(Context.new(task_id, reporter), lastdump)
     end
 
     def verify_networks(reporter, task_id, nodes)

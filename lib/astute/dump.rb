@@ -15,18 +15,33 @@
 
 module Astute
   module Dump
-    def self.dump_environment(ctx)
+    def self.dump_environment(ctx, lastdump)
       timeout = 500
       shell = MClient.new(ctx, 'execute_shell_command', ['master'])
       begin
         Timeout.timeout(timeout) do
-          response = shell.execute(:cmd => "/opt/nailgun/bin/nailgun_dump").first
-          report_error("Error while dumping environment") unless response
-          return response
+          result = shell.execute(
+            :cmd => "/opt/nailgun/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}").first
+          Astute.logger.debug("#{ctx.task_id}: \
+stdout: #{result[:data][:stdout]} stderr: #{result[:data][:stderr]} \
+exit code: #{result[:data][:exit_code]}")
+          if result[:data][:exit_code] == 0
+            Astute.logger.info("#{ctx.task_id}: Snapshot is done. Result: #{result[:data][:stdout]}")
+            report_success(ctx, result[:data][:stdout].rstrip)
+          else
+            Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code")
+            report_error(ctx, "exit code: #{result[:data][:exit_code]} stderr: #{result[:data][:stderr]}")
+          end
         end
       rescue Timeout::Error
-        Astute.logger.warn("Dump is timed out")
-        report_error("Dump is timed out")
+        msg = "Dump is timed out"
+        Astute.logger.error("#{ctx.task_id}: #{msg}")
+        report_error(ctx, msg)
+      rescue Exception => e
+        msg = "Exception occured during dump task: message: #{e.message} \
+trace: #{e.backtrace.inspect}"
+        Astute.logger.error("#{ctx.task_id}: #{msg}")
+        report_error(ctx, msg)
       end
     end
 
