@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec', '2.13.0'
   s.add_development_dependency 'mocha', '0.13.3'
 
-  s.files   = Dir.glob("{bin,lib,spec}/**/*")
+  s.files   = Dir.glob("{bin,lib,spec,examples}/**/*")
   s.executables = ['astute']
   s.require_path = 'lib'
 end
