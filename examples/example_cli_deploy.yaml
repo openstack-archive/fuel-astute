@@ -1,7 +1,8 @@
 # Nodes
 nodes:
   - name: controller-8
-    role: controller
+    roles: 
+      - controller
     public_br: br-ex
     internal_br: br-mgmt
     interfaces:

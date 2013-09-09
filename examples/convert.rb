@@ -87,7 +87,7 @@ nodes.each do |node,macaddr|
     result['id'] = id
     result['uid'] = uid
     result['name_servers'] = master_ip
-    result['role'] = role
+    result['roles'] = [role]
     result['fqdn'] = cobbler_dnsname
     system_disk=json_node['meta']['disks'].select {|disk| disk['name'] == 'vda'}.first
     cinder_disk=json_node['meta']['disks'].select {|disk| disk['name'] == 'vdb'}.first

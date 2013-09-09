@@ -22,10 +22,14 @@ mapping:
           "default_gateway":
             type: text
             desc: Default gateway for network_data
-          "role":
-            type: text
+          "roles":
+            type: seq
             required: true
-            enum: ["primary-controller", "controller", "storage", "swift-proxy", "primary-swift-proxy", "compute", "quantum"]
+            desc: Array of roles
+            sequence:
+              - type: text
+                required: true
+                enum: ["primary-controller", "controller", "storage", "swift-proxy", "primary-swift-proxy", "compute", "quantum"]
           "status":
             type: text
             enum: ["ready", "provisioned", "provisioning", "discover"]
