@@ -46,7 +46,11 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
     end
     
-    nodes_to_deploy.each { |node| Astute::Metadata.publish_facts @ctx, node['uid'], create_facts(node) }
+    nodes_to_deploy.each do |node| 
+      Astute::Metadata.publish_facts @ctx, node['uid'], create_facts(node)
+      #FIXME: Debug call
+      Astute.logger.error(create_facts(node))
+    end
     Astute.logger.info "#{@ctx.task_id}: Required attrs/metadata passed via facts extension. Starting deployment."
 
     Astute::PuppetdDeployer.deploy(@ctx, nodes_to_deploy, retries, change_node_status)

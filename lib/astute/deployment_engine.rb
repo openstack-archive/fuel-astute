@@ -63,5 +63,9 @@ module Astute
       nodes_array.find { |n| node['uid'] == n['uid'] }
     end
     
+    def nodes_status(nodes, status, data_to_merge)
+      {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
+    end
+
   end
 end
