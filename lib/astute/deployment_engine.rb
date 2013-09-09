@@ -12,10 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-require 'json'
-require 'timeout'
-
 module Astute
   class DeploymentEngine
 
@@ -27,100 +23,45 @@ module Astute
     end
 
     def deploy(deployment_info)
-      # FIXME (eli): need to get rid all deployment_mode ifs from orchetrator
-      deployment_mode = deployment_info[0]['deployment_mode']
-
-      @ctx.deploy_log_parser.deploy_type = deployment_mode
-      self.send("deploy_#{deployment_mode}", deployment_info)
+      # Sort by priority (the lower the number, the higher the priority) and send groups to deploy
+      deployment_info.sort_by { |f| f['priority'] }.group_by{ |f| f['priority'] }.each do |priority, nodes|
+        # Prevent attempts to run several deploy on a single node. This is possible because one node 
+        # can perform multiple roles.
+        group_by_uniq_values(nodes).each { |nodes_group| deploy_piece(nodes_group) }
+      end
     end
-
-    def method_missing(method, *args)
-      Astute.logger.error "Method #{method} is not implemented for #{self.class}, raising exception."
-      raise "Method #{method} is not implemented for #{self.class}"
-    end
-
-    # This method is called by Ruby metaprogramming magic from deploy method
-    # It should not contain any magic with attributes, and should not directly run any type of MC plugins
-    # It does only support of deployment sequence. See deploy_piece implementation in subclasses.
-    def deploy_multinode(nodes)
-      ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
-      other_nodes = nodes - ctrl_nodes
-
-      Astute.logger.info "Starting deployment of primary controller"
-      deploy_piece(ctrl_nodes)
-
-      Astute.logger.info "Starting deployment of other nodes"
-      deploy_piece(other_nodes)
-
-      nil
-    end
-
-    def deploy_ha_full(nodes)
-      primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
-      ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
-      compute_nodes = nodes.select {|n| n['role'] == 'compute'}
-      quantum_nodes = nodes.select {|n| n['role'] == 'quantum'}
-      storage_nodes = nodes.select {|n| n['role'] == 'storage'}
-      proxy_nodes = nodes.select {|n| n['role'] == 'swift-proxy'}
-      primary_proxy_nodes = nodes.select {|n| n['role'] == 'primary-swift-proxy'}
-      other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - \
-        primary_proxy_nodes - quantum_nodes - storage_nodes - proxy_nodes
-
-      Astute.logger.info "Starting deployment of primary swift proxy"
-      deploy_piece(primary_proxy_nodes)
-
-      Astute.logger.info "Starting deployment of non-primary swift proxies"
-      deploy_piece(proxy_nodes)
-
-      Astute.logger.info "Starting deployment of swift storages"
-      deploy_piece(storage_nodes)
-
-      Astute.logger.info "Starting deployment of primary controller"
-      deploy_piece(primary_ctrl_nodes)
-
-      Astute.logger.info "Starting deployment of all controllers one by one"
-      ctrl_nodes.each {|n| deploy_piece([n])}
-
-      Astute.logger.info "Starting deployment of other nodes"
-      deploy_piece(other_nodes)
-
-      nil
-    end
-
-    def deploy_ha_compact(nodes)
-      primary_ctrl_nodes = nodes.select {|n| n['role'] == 'primary-controller'}
-      ctrl_nodes = nodes.select {|n| n['role'] == 'controller'}
-      compute_nodes = nodes.select {|n| n['role'] == 'compute'}
-      quantum_nodes = nodes.select {|n| n['role'] == 'quantum'}
-      storage_nodes = nodes.select {|n| n['role'] == 'storage'}
-      proxy_nodes = nodes.select {|n| n['role'] == 'swift-proxy'}
-      primary_proxy_nodes = nodes.select {|n| n['role'] == 'primary-swift-proxy'}
-      other_nodes = nodes - ctrl_nodes - primary_ctrl_nodes - \
-        primary_proxy_nodes - quantum_nodes
-
-      Astute.logger.info "Starting deployment of primary controller"
-      deploy_piece(primary_ctrl_nodes)
-
-      Astute.logger.info "Starting deployment of all controllers one by one"
-      ctrl_nodes.each {|n| deploy_piece([n])}
-
-      Astute.logger.info "Starting deployment of other nodes"
-      deploy_piece(other_nodes)
-
-      nil
-    end
+    
+    protected
 
     def validate_nodes(nodes)
-      if nodes.empty?
-        Astute.logger.info "#{@ctx.task_id}: Nodes to deploy are not provided. Do nothing."
-        return false
+      return true if nodes.present?
+      
+      Astute.logger.info "#{@ctx.task_id}: Nodes to deploy are not provided. Do nothing."
+      false
+    end
+    
+    private
+    
+    # Transform nodes source array to array of nodes arrays where subarray contain only uniq elements from source
+    # Source: [{'uid' => 1, 'role' => 'cinder'}, {'uid' => 2, 'role' => 'cinder'},   {'uid' => 2, 'role' => 'compute'}]
+    # Result: [[{'uid' =>1, 'role' => 'cinder'}, {'uid' => 2, 'role' => 'cinder'}], [{'uid' => 2, 'role' => 'compute'}]] 
+    def group_by_uniq_values(nodes_array)
+      nodes_array = deep_copy(nodes_array)
+      sub_arrays = []
+      while !nodes_array.empty?
+        sub_arrays << uniq_nodes(nodes_array)
+        uniq_nodes(nodes_array).clone.each {|e| nodes_array.slice!(nodes_array.index(e)) }
       end
-      return true
+      sub_arrays
     end
-
-    def nodes_status(nodes, status, data_to_merge)
-      {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
+  
+    def uniq_nodes(nodes_array)
+      nodes_array.inject([]) { |result, node| result << node unless include_node?(result, node); result }
     end
-
+  
+    def include_node?(nodes_array, node)
+      nodes_array.find { |n| node['uid'] == n['uid'] }
+    end
+    
   end
 end
