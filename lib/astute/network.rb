@@ -62,11 +62,12 @@ module Astute
         response = net_probe.dhcp_discover(:interfaces => data_to_send)
         node_result = {:uid => response[0][:sender],
                        :status=>'ready'}
-        begin
+        if not response[0][:data][:out].empty?
+          Astute.logger.debug("DHCP checker received: node: #{node['uid']} response: #{response}")
           node_result[:data] = JSON.parse(response[0][:data][:out])
-        rescue
+        elsif not response[0][:data][:error].empty?
           node_result[:status] = 'error'
-          node_result[:error_msg] = 'Received corrupted data from dhcp-checker.'
+          node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
         end
         result << node_result
       end
