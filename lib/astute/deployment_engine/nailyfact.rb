@@ -45,8 +45,8 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     rescue Exception => e
       Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
     end
-    
-    nodes_to_deploy.each do |node| 
+
+    nodes_to_deploy.each do |node|
       Astute::Metadata.publish_facts @ctx, node['uid'], create_facts(node)
       #FIXME: Debug call
       Astute.logger.error(create_facts(node))

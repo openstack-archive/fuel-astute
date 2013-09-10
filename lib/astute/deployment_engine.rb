@@ -23,9 +23,11 @@ module Astute
     end
 
     def deploy(deployment_info)
-      # Sort by priority (the lower the number, the higher the priority) and send groups to deploy
+      # Sort by priority (the lower the number, the higher the priority)
+      # and send groups to deploy
       deployment_info.sort_by { |f| f['priority'] }.group_by{ |f| f['priority'] }.each do |priority, nodes|
-        # Prevent attempts to run several deploy on a single node. This is possible because one node
+        # Prevent attempts to run several deploy on a single node.
+        # This is possible because one node
         # can perform multiple roles.
         group_by_uniq_values(nodes).each { |nodes_group| deploy_piece(nodes_group) }
       end
@@ -34,7 +36,7 @@ module Astute
     protected
 
     def validate_nodes(nodes)
-      return true if nodes.present?
+      return true unless nodes.empty?
 
       Astute.logger.info "#{@ctx.task_id}: Nodes to deploy are not provided. Do nothing."
       false
