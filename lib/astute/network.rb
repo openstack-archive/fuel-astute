@@ -62,10 +62,10 @@ module Astute
         response = net_probe.dhcp_discover(:interfaces => data_to_send)
         node_result = {:uid => response[0][:sender],
                        :status=>'ready'}
-        if not response[0][:data][:out].empty?
+        if response[0][:data].has_key?(:out) and not response[0][:data][:out].empty?
           Astute.logger.debug("DHCP checker received: node: #{node['uid']} response: #{response}")
           node_result[:data] = JSON.parse(response[0][:data][:out])
-        elsif not response[0][:data][:error].empty?
+        elsif response[0][:data].has_key?(:error) and not response[0][:data][:error].empty?
           node_result[:status] = 'error'
           node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
         end
