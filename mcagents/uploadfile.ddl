@@ -1,5 +1,5 @@
-metadata  :name           => "upload_file",
-		      :description    => "File upload agent",
+metadata  :name           => "uploadfile",
+		      :description    => "Text file upload agent",
 		      :author         => "Mirantis Inc",
 		      :license        => "Apache License 2.0",
 		      :version        => "0.1",
@@ -10,7 +10,7 @@ action "upload",	:description => "upload file" do
 	display :failed
 
   input :path,
-        :prompt      => "Path to save file",
+        :prompt      => "Path to save text file",
         :description => "Where should file be saved?",
         :type        => :string,
         :validation  => '^.+$',
@@ -21,6 +21,7 @@ action "upload",	:description => "upload file" do
         :prompt      => "File content",
         :description => "What should be contained in file?",
         :type        => :string,
+        :validation  => '^.+$',
         :optional    => false,
         :maxlength   => 0
 

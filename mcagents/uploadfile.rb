@@ -16,10 +16,10 @@ require 'fileutils'
 
 module MCollective
   module Agent
-    class UploadFile < RPC::Agent
+    class Uploadfile < RPC::Agent
       
       action 'upload' do
-        # this action is used to distribute file from
+        # this action is used to distribute text file from
         # master node to all managed nodes
 
         validate :path, :shellsafe
@@ -31,16 +31,16 @@ module MCollective
           path = request.data[:path]
           dir  = File.dirname path
           
-          if !Dir.exist?(dir) && !request.data[:parents]
+          if !File.directory?(dir) && !request.data[:parents]
             reply.fail! "Directory #{dir} does not exist! Use parents=true to force upload."
           end
 
-          if File.exist? path && !request.data[:overwrite]
+          if File.exist?(path) && !request.data[:overwrite]
             reply.fail! "File #{path} already exist! Use overwrite=true to force upload."
           end
 
           # first create target directory on managed server
-          FileUtils.mkdir_p dir unless File.exist? path
+          FileUtils.mkdir_p(dir) unless File.directory?(dir)
 
           # then create file and save their content
           File.open(path, 'w') { |file| file.write(request.data[:content]) }
