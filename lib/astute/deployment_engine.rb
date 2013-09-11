@@ -34,7 +34,7 @@ module Astute
       attrs['use_cinder'] ||= nodes.any?{|n| n['role'] == 'cinder'}
       @ctx.deploy_log_parser.deploy_type = attrs['deployment_mode']
       
-      generate_and_upload_ssh_keys(%w(nova mysql ceph), nodes.map{ |n| n['uid'] }, attrs['deployment_id'])
+      generate_and_upload_ssh_keys(%w(nova mysql ceph), nodes.map{ |n| n['uid'] }.uniq, attrs['deployment_id'])
       
       Astute.logger.info "Deployment mode #{attrs['deployment_mode']}"
       self.send("deploy_#{attrs['deployment_mode']}", nodes, attrs)
