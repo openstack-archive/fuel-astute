@@ -15,6 +15,9 @@
 
 require 'json'
 require 'timeout'
+require 'fileutils'
+
+KEY_DIR = "/var/lib/astute"
 
 module Astute
   class DeploymentEngine
@@ -30,6 +33,9 @@ module Astute
       attrs['deployment_mode'] ||= 'multinode'  # simple multinode deployment is the default
       attrs['use_cinder'] ||= nodes.any?{|n| n['role'] == 'cinder'}
       @ctx.deploy_log_parser.deploy_type = attrs['deployment_mode']
+      
+      generate_and_upload_ssh_keys(%w(nova mysql ceph), nodes.map{ |n| n['uid'] }.uniq, attrs['deployment_id'])
+      
       Astute.logger.info "Deployment mode #{attrs['deployment_mode']}"
       self.send("deploy_#{attrs['deployment_mode']}", nodes, attrs)
     end
@@ -182,6 +188,35 @@ module Astute
     end
 
     private
+    
+    # Generate and upload ssh keys from master node to all cluster nodes. Will be used by puppet
+    # after to connect nodes between themselves 
+    def generate_and_upload_ssh_keys(key_names, node_uids, deployment_id)
+      upload_mclient = MClient.new(@ctx, "uploadfile", node_uids)
+      
+      key_names.each do |key_name|
+        generate_ssh_key(key_name, deployment_id)
+        [key_name, key_name + ".pub"].each do |ssh_key|
+          source_path = File.join(KEY_DIR, deployment_id.to_s, key_name, ssh_key)
+          destination_path = File.join(KEY_DIR, key_name, ssh_key)
+          content = File.read(source_path)
+          upload_mclient.upload(:path => destination_path, :content => content, :overwrite => true, :parents => true)
+        end
+      end
+    end
+    
+    def generate_ssh_key(key_name, deployment_id, overwrite=false)
+      dir_path = File.join(KEY_DIR, deployment_id.to_s, key_name)
+      key_path = File.join(dir_path, key_name)
+      FileUtils.mkdir_p dir_path
+      return if File.exist?(key_path) && !overwrite
+      
+      # Generate 2 keys(<name> and <name>.pub) and save it to <KEY_DIR>/<name>/
+      File.delete key_path if File.exist? key_path
+      result = system("ssh-keygen -b 2048 -t rsa -N '' -f #{key_path}")
+      raise "Could not generate ssh key!" unless result
+    end
+    
     def select_ifaces(var,name)
         result = false
         if var.is_a?(Array)

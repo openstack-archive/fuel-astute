@@ -43,11 +43,12 @@ describe "NailyFact DeploymentEngine" do
 
     it "it should call valid method depends on attrs" do
       nodes = [{'uid' => 1, 'role' => 'controller'}]
-      attrs = {'deployment_mode' => 'ha'}
+      attrs = {'deployment_mode' => 'ha', 'deployment_id' => '1'}
       attrs_modified = attrs.merge({'some' => 'somea'})
 
       @deploy_engine.expects(:attrs_ha).with(nodes, attrs).returns(attrs_modified)
       @deploy_engine.expects(:deploy_ha).with(nodes, attrs_modified)
+      @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), nodes.map {|n| n['uid'] }, attrs['deployment_id'])
       # All implementations of deploy_piece go to subclasses
       @deploy_engine.respond_to?(:deploy_piece).should be_true
       
@@ -69,6 +70,10 @@ describe "NailyFact DeploymentEngine" do
       it "should not raise any exception" do
         deploy_data['args']['attributes']['deployment_mode'] = "multinode"
         Astute::Metadata.expects(:publish_facts).times(deploy_data['args']['nodes'].size)
+        
+        uniq_nodes_uid = deploy_data['args']['nodes'].map {|n| n['uid'] }.uniq
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
+        
         # we got two calls, one for controller, and another for all computes
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes, instance_of(Fixnum), true).once
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
@@ -92,6 +97,8 @@ describe "NailyFact DeploymentEngine" do
         
         # we got two calls, one for controller, and another for all(1) computes
         Astute::Metadata.expects(:publish_facts).times(node_amount)
+        uniq_nodes_uid = deploy_data['args']['nodes'].map {|n| n['uid'] }.uniq
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes, instance_of(Fixnum), true).once
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
       
@@ -101,6 +108,8 @@ describe "NailyFact DeploymentEngine" do
       it "roles with the same priority for one node should deploy in series" do
         @ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::ParseDeployLogs.new("multinode"))
       
+        uniq_nodes_uid = deploy_data['args']['nodes'].map {|n| n['uid'] }.uniq
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
         # we got two calls, one for compute, and another for cinder
         Astute::Metadata.expects(:publish_facts).times(node_amount)
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
@@ -113,7 +122,9 @@ describe "NailyFact DeploymentEngine" do
         Astute::Metadata.expects(:publish_facts).times(node_amount)
         @ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
         @ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
-      
+        
+        uniq_nodes_uid = deploy_data['args']['nodes'].map {|n| n['uid'] }.uniq
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
         Astute::PuppetdDeployer.expects(:deploy).times(2)
        
         @deploy_engine.deploy(deploy_data['args']['nodes'], deploy_data['args']['attributes'])
@@ -123,6 +134,9 @@ describe "NailyFact DeploymentEngine" do
         @ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
         @ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
         Astute::Metadata.expects(:publish_facts).times(node_amount)
+        
+        uniq_nodes_uid = deploy_data['args']['nodes'].map {|n| n['uid'] }.uniq
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
       
         Astute::PuppetdDeployer.expects(:deploy).times(2)
        
@@ -142,6 +156,9 @@ describe "NailyFact DeploymentEngine" do
         primary_controller['role'] = 'primary-controller'
         primary_controller.delete('roles')
         
+        uniq_nodes_uid = deploy_data['args']['nodes'].map {|n| n['uid'] }.uniq
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
+        
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [primary_controller], 2, true).once
         controller_nodes.each do |n|
           Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 2, true).once
@@ -154,7 +171,12 @@ describe "NailyFact DeploymentEngine" do
       it "ha deploy should not raise any exception if there are only one controller" do
         Astute::Metadata.expects(:publish_facts).at_least_once
         Astute::PuppetdDeployer.expects(:deploy).once
+        
         ctrl = deploy_data['args']['nodes'].find { |n| n['roles'].include? 'controller' }
+        
+        uniq_nodes_uid = [ctrl].map {|n| n['uid'] }.uniq
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
+        
         @deploy_engine.deploy([ctrl], deploy_data['args']['attributes'])
       end
     end
