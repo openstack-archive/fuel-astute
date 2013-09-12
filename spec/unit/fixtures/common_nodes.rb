@@ -23,6 +23,8 @@ module Fixtures
         "uid" => "1",
         "error_type" => nil,
         "fqdn" => "controller-1.mirantis.com",
+        "role" => "controller",
+        "priority" => 10,
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -59,7 +61,6 @@ module Fixtures
         ],
         "id" => 1,
         "ip" => "10.20.0.200",
-        "roles" => ["controller"],
         'meta' => meta
       }, {
         "mac" => "52:54:00:50:91:DD",
@@ -67,6 +68,8 @@ module Fixtures
         "uid" => 2,
         "error_type" => nil,
         "fqdn" => "compute-2.mirantis.com",
+        "role" => "compute",
+        "priority" => 100,
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -107,7 +110,6 @@ module Fixtures
         ],
         "id" => 2,
         "ip" => "10.20.0.221",
-        "roles" => ["compute"],
         'meta' => meta
       }, {
         "mac" => "52:54:00:C3:2C:28",
@@ -115,6 +117,8 @@ module Fixtures
         "uid" => 3,
         "error_type" => nil,
         "fqdn" => "compute-3.mirantis.com",
+        "role" => "compute",
+        "priority" => 100,
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -155,7 +159,6 @@ module Fixtures
         ],
         "id" => 3,
         "ip" => "10.20.0.68",
-        "roles" => ["compute"],
         'meta' => meta
       }
     ]

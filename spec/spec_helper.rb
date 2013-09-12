@@ -84,11 +84,7 @@ module SpecHelpers
   
   # Transform fixtures from nailgun format node['roles'] array to node['role'] string
   def nodes_with_role(data, role)
-    role_nodes = data['args']['nodes'].select { |n| n['roles'].include? role }
-    deep_copy(role_nodes).each do |n| 
-      n['role'] = role
-      n.delete('roles')
-    end
+    data.select { |n| n['role'] == role }
   end
 
 end
