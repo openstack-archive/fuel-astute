@@ -28,17 +28,17 @@ module Astute
 
     def deploy(deployment_info)
       raise "Deployment info are not provided!" if deployment_info.blank?
-      
+
       @ctx.deploy_log_parser.deploy_type = deployment_info.first['deployment_mode']
       Astute.logger.info "Deployment mode #{@ctx.deploy_log_parser.deploy_type}"
-      
+
       # Generate and upload ssh keys from master node to all cluster nodes.
       # Will be used by puppet after to connect nodes between themselves.
-      generate_and_upload_ssh_keys(%w(nova mysql ceph), 
-                                   deployment_info.map{ |n| n['uid'] }.uniq, 
+      generate_and_upload_ssh_keys(%w(nova mysql ceph),
+                                   deployment_info.map{ |n| n['uid'] }.uniq,
                                    deployment_info.first['deployment_id']
                                   )
-      
+
       # Sort by priority (the lower the number, the higher the priority)
       # and send groups to deploy
       deployment_info.sort_by { |f| f['priority'] }.group_by{ |f| f['priority'] }.each do |priority, nodes|
