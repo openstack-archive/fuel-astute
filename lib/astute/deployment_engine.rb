@@ -41,7 +41,7 @@ module Astute
 
       # Sort by priority (the lower the number, the higher the priority)
       # and send groups to deploy
-      deployment_info.sort_by { |f| f['priority'] }.group_by{ |f| f['priority'] }.each do |priority, nodes|
+      deployment_info.sort_by { |f| f['priority'] }.group_by{ |f| f['priority'] }.each do |_, nodes|
         # Prevent attempts to run several deploy on a single node.
         # This is possible because one node
         # can perform multiple roles.
