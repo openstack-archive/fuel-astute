@@ -123,7 +123,7 @@ describe LogParser do
       Dir.mktmpdir do |dir|
         # Create temp log files and structures.
         pattern_spec['path_prefix'] = "#{dir}/"
-        path = "#{pattern_spec['path_prefix']}#{node['ip']}/#{pattern_spec['filename']}"
+        path = "#{pattern_spec['path_prefix']}#{node['fqdn']}/#{pattern_spec['filename']}"
         Dir.mkdir(File.dirname(File.dirname(path)))
         Dir.mkdir(File.dirname(path))
         node['file'] = File.open(path, 'w')
@@ -192,7 +192,7 @@ describe LogParser do
         # Create temp log files and structures.
         pattern_spec['path_prefix'] = "#{dir}/"
         nodes.each do |node|
-          path = "#{pattern_spec['path_prefix']}#{node['ip']}/#{pattern_spec['filename']}"
+          path = "#{pattern_spec['path_prefix']}#{node['fqdn']}/#{pattern_spec['filename']}"
           Dir.mkdir(File.dirname(path))
           node['file'] = File.open(path, 'w')
           src_filename = File.join(File.dirname(__FILE__), "..", "example-logs", node['src_filename'])
