@@ -42,13 +42,12 @@ module MCollective
       end
 
       action "dhcp_discover" do
-        validate :interfaces, String
-        format = request.data.key?(:format) ? request.data[:format] : "json"
-        timeout = request.data.key?(:timeout) ? request.data[:timeout] : 7
-        cmd = "dhcpcheck vlans '#{request[:interfaces]}' --timeout=#{timeout} --format=#{format} "
+        interfaces = request[:interfaces][get_uid]
+        format = request.data[:format] || "json"
+        timeout = request.data[:timeout] || 7
+        cmd = "dhcpcheck vlans '#{interfaces}' --timeout=#{timeout} --format=#{format} "
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
       end
-
 
       private
 
