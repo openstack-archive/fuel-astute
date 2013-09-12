@@ -1,0 +1,100 @@
+# Nodes
+nodes:
+  - name: controller-8
+    roles: 
+      - controller
+    public_br: br-ex
+    internal_br: br-mgmt
+    interfaces:
+      - name: eth2
+        static: 0
+        mac_address: 08:00:27:D9:E9:FE
+        onboot: 'no'
+        peerdns: 'no'
+        network_name:
+          - fixed
+      - name: eth1
+        static: 0
+        ip_address: 10.20.1.114
+        netmask: 255.255.255.0
+        mac_address: 08:00:27:00:D1:2E
+        onboot: 'no'
+        peerdns: 'no'
+        network_name:
+          - management
+          - storage
+      - name: eth0
+        dns_name: controller-8.domain.tld # fqdn
+        static: 0
+        mac_address: 08:00:27:1D:28:71 # mac
+        onboot: 'yes'
+        peerdns: 'no'
+        use_for_provision: true
+        network_name:
+          - public
+    default_gateway: 10.20.0.1
+
+attributes:
+  master_ip: 10.20.0.2
+  use_cow_images: true
+  libvirt_type: kvm
+  dns_nameservers:
+    - 10.20.0.2
+  verbose: true
+  debug: true
+  auto_assign_floating_ip: true
+  start_guests_on_host_boot: true
+  create_networks: true
+  compute_scheduler_driver: nova.scheduler.multi.MultiScheduler
+  quantum: true
+  management_vip: 10.20.1.200
+  public_vip: 10.20.0.200
+  quantum_parameters:
+    tenant_network_type: gre
+    segment_range: 300:500
+    metadata_proxy_shared_secret: quantum
+  mysql:
+    root_password: root
+  glance:
+    db_password: glance
+    user_password: glance
+  swift:
+    user_password: swift_pass
+  nova:
+    db_password: nova
+    user_password: nova
+  access:
+    password: admin
+    user: admin
+    tenant: admin
+    email: admin@example.org
+  keystone:
+    db_password: keystone
+    admin_token: nova
+  quantum_access:
+    user_password: quantum
+    db_password: quantum
+  rabbit:
+    password: nova
+    user: nova
+  cinder:
+    password: cinder
+    user: cinder
+  floating_network_range: 10.20.0.150/28
+  fixed_network_range: 10.20.2.0/24
+  base_syslog:
+    syslog_port: '514'
+    syslog_server: 10.20.0.2
+  syslog:
+    syslog_port: '514'
+    syslog_transport: udp
+    syslog_server: ''
+  use_unicast_corosync: false
+  horizon_use_ssl: 'false'
+  cinder_nodes:
+  - controller
+  ntp_servers:
+  - pool.ntp.org
+  deployment_mode: multinode
+  deployment_source: cli
+  deployment_id: 1

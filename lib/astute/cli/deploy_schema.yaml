@@ -1,0 +1,361 @@
+type: map
+mapping:
+  "task_uuid":
+    type: text
+  "nodes":
+    type: seq
+    required: true
+    desc: Array of nodes
+    name: Nodes
+    sequence:
+      - type: map
+        mapping:
+          "id":
+            type: int
+            unique: yes
+          "uid":
+            type: int
+            unique: yes
+          "fqdn":
+            type: text
+            desc: Fully-qualified domain name of the node
+          "default_gateway":
+            type: text
+            desc: Default gateway for network_data
+          "roles":
+            type: seq
+            required: true
+            desc: Array of roles
+            sequence:
+              - type: text
+                required: true
+                enum: ["primary-controller", "controller", "storage", "swift-proxy", "primary-swift-proxy", "compute", "quantum"]
+          "status":
+            type: text
+            enum: ["ready", "provisioned", "provisioning", "discover"]
+          # Quantum true
+          "public_br":
+            type: text
+            desc: Name of the public bridge for Quantum-enabled configuration
+          # Quantum true
+          "internal_br":
+            type: text
+            desc: Name of the internal bridge for Quantum-enabled configuration
+          "interfaces":
+            type: seq
+            required: true
+            sequence:
+              - type: map
+                mapping:
+                  "name":
+                    type: text
+                    required: true
+                    unique: yes
+                  "ip_address":
+                    type: text
+                    unique: yes
+                  "netmask":
+                    type: text
+                  "dns_name":
+                    type: text
+                    unique: yes
+                  "static":
+                    type: int
+                    range: { min: 0, max: 1 }
+                  "mac_address":
+                    type: text
+                    required: true
+                    unique: yes
+                  "onboot":
+                    type: text
+                    required: true
+                    enum: ['yes', 'no']
+                  "peerdns":
+                    type: text
+                    required: true
+                    enum: ['yes', 'no']
+                  "use_for_provision":
+                    type: bool
+                    default: false
+                    name: use_for_provision
+                  "network_name":
+                    type: seq
+                    desc: Array of OpenStack network names
+                    sequence:
+                      - type: text
+                        enum: ["public", "management", "storage", "fixed"]
+          # Full config block          
+          "network_data":
+            type: seq
+            desc: Array of network interfaces hashes
+            sequence:
+              - type: map
+                mapping:
+                  "name":
+                    type: any
+                    #unique: true
+                    #enum: ['management', 'public', 'storage', 'fixed']
+                    desc: Network type
+                  "dev":
+                    type: text
+                  "ip":
+                    type: text
+                  "netmask":
+                    type: text
+                  "gateway":
+                    type: text
+                
+  "attributes":
+    type: map
+    required: true
+    name: Attributes
+    desc: General parameters for deployment
+    mapping:
+      "deployment_id":
+        type: int
+        desc: Id of deployment used do differentiate environments
+      "deployment_source":
+        type: text
+        enum: ['cli', 'web']
+        required: true
+      "management_vip":
+        type: text
+        required: true
+        desc: "Virtual IP address for internal services (MySQL, AMQP, internal OpenStack endpoints)"
+      "public_vip":
+        type: text
+        required: true
+        desc: "Virtual IP address for public services: Horizon, public OpenStack endpoints"
+      "master_ip":
+        type: text
+        required: true
+        desc: IP of puppet master
+      "deployment_mode":
+        type: text
+        enum: ['ha', 'ha_full', 'multinode']
+        desc:
+        required: true
+      "access":
+        type: map
+        required: true
+        mapping:
+          "password":
+            type: text
+            required: true
+          "user":
+            type: text
+            required: true
+          "tenant":
+            type: text
+            required: true
+          "email":
+            type: text
+            required: true
+      "use_cow_images":
+        type: bool
+        required: true
+        desc: Whether to use cow images
+      "auto_assign_floating_ip":
+        type: bool
+        required: true
+        desc: Whether to assign floating IPs automatically
+      "libvirt_type":
+        type: text
+        enum: [qemu, kvm]
+        required: true
+        desc: "Nova libvirt hypervisor type. Values: qemu|kvm"
+      "start_guests_on_host_boot":
+        type: bool
+        required: true
+      "create_networks":
+        type: bool
+        required: true
+        desc: Whether to create fixed or floating networks
+      "quantum": 
+        type: bool
+        required: true
+      # Quantum true
+      "quantum_parameters":
+        type: map
+        mapping:
+          "tenant_network_type":
+            type: text
+            enum: ['gre', 'vlan']
+            required: true
+            desc: "Which type of network segmentation to use. Values: gre|vlan"
+          "segment_range":
+            type: text
+            required: true
+            desc: "Range of IDs for network segmentation. Consult Quantum documentation."
+          "metadata_proxy_shared_secret":
+            type: text
+            required: true
+            desc: Shared secret for metadata proxy services
+      "mysql":
+        type: map
+        required: true
+        desc: Credentials for MySQL
+        mapping:
+          "root_password":
+            type: text
+            required: true
+      "swift":
+        type: map
+        required: true
+        desc: Credentials for Swift
+        mapping:
+          "user_password":
+            type: text
+            required: true
+      "glance":
+        type: map
+        required: true
+        desc: Credentials for Glance
+        mapping:
+          "user_password":
+            type: text
+            required: true
+          "db_password":
+            type: text
+            required: true
+      "nova":
+        type: map
+        required: true
+        desc: Credentials for Nova
+        mapping:
+          "user_password":
+            type: text
+            required: true
+          "db_password":
+            type: text
+            required: true
+      "keystone":
+        type: map
+        required: true
+        desc: Credentials for Keystone
+        mapping:
+          "db_password":
+            type: text
+            required: true
+          "admin_token":
+            type: text
+            required: true
+      # Quantum true
+      "quantum_access":
+        type: map
+        desc: Credentials for Quantum Access
+        mapping:
+          "user_password":
+            type: text
+            required: true
+          "db_password":
+            type: text
+            required: true
+      "rabbit":
+        type: map
+        required: true
+        desc: Credentials for RabbitMQ
+        mapping:
+          "user":
+            type: text
+            required: true
+          "password":
+            type: text
+            required: true
+      "cinder":
+        type: map
+        required: true
+        desc: Credentials for Cinder
+        mapping:
+          "user":
+            type: text
+            required: true
+          "password":
+            type: text
+            required: true
+      # CIDR (for quantum == true) or array if IPs (for quantum == false)
+      "floating_network_range":
+        type: any
+        required: true
+        desc: |
+              Used for creation of floating networks/IPs during deployment.  
+              CIDR (for quantum == true) or array if IPs (for quantum == false)
+      "fixed_network_range":
+        type: text
+        required: true
+        desc: CIDR for fixed network created during deployment
+      "ntp_servers":
+        type: seq
+        required: true
+        desc: Array of ntp servers
+        sequence:
+          - type: "text"
+            required: true
+      "dns_nameservers":
+        type: seq
+        required: true
+        desc: Array of DNS servers configured during deployment phase
+        sequence:
+          - type: "text"
+            required: true
+      "cinder_nodes":
+        type: seq
+        desc: | 
+          Array of nodes to use as cinder-volume backends. Values: 'all'|<hostname>|
+          <internal IP address of node>|'controller'|<node_role>"
+        sequence:
+          - type: "text"
+            required: true
+      "base_syslog":
+        type: map
+        required: true
+        desc: Main syslog server configuration
+        mapping:
+          "syslog_server":
+            type: text
+            required: true
+          "syslog_port":
+            type: text
+            required: true
+      "syslog":
+        type: map
+        required: true
+        desc: Additional syslog servers configuration
+        mapping:
+          "syslog_port":
+            type: text
+          "syslog_transport":
+            type: text
+            enum: ['tcp', 'udp']
+          "syslog_server":
+            type: text
+      "horizon_use_ssl":
+        type: text
+        enum: ['false', 'default', 'exist', 'custom']
+        desc: Use HTTP or HTTPS for OpenStack dashboard (Horizon)
+      "compute_scheduler_driver":
+        type: text
+        enum: ['nova.scheduler.multi.MultiScheduler', 'nova.scheduler.filter_scheduler.FilterScheduler']
+        desc: Nova scheduler driver class
+      "use_unicast_corosync":
+        type: bool
+        default: false
+        desc: | 
+          Fuel uses Corosync and Pacemaker cluster engines for HA scenarios, thus 
+          requiring consistent multicast networking. Sometimes it is not possible to configure 
+          multicast in your network. In this case, you can tweak Corosync to use unicast addressing 
+          by setting use_unicast_corosync variable to true.
+      "auth_key":
+        type: text
+      "network_manager":
+        type: text  
+      "verbose":
+        type: bool
+        desc: How much information OpenStack provides when performing configuration (verbose mode)
+      "debug":
+        type: bool
+        desc: How much information OpenStack provides when performing configuration (debug mode)
+      "deployment_id":
+        type: int
+        required: true
+        desc: Deployment ID(for CI just set 1)

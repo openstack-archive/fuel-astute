@@ -51,6 +51,29 @@ module Astute
       {'nodes' => result}
     end
 
+
+    def self.check_dhcp(ctx, nodes)
+      uids = nodes.map { |node| node['uid'].to_s }
+      net_probe = MClient.new(ctx, "net_probe", uids)
+      result = []
+      nodes.each do |node|
+        data_to_send = make_interfaces_to_send(node['networks'], joined=false).to_json
+        net_probe.discover(:nodes => [node['uid'].to_s])
+        response = net_probe.dhcp_discover(:interfaces => data_to_send)
+        node_result = {:uid => response[0][:sender],
+                       :status=>'ready'}
+        if response[0][:data].has_key?(:out) and not response[0][:data][:out].empty?
+          Astute.logger.debug("DHCP checker received: node: #{node['uid']} response: #{response}")
+          node_result[:data] = JSON.parse(response[0][:data][:out])
+        elsif response[0][:data].has_key?(:error) and not response[0][:data][:error].empty?
+          node_result[:status] = 'error'
+          node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
+        end
+        result << node_result
+      end
+      {'nodes' => result}
+    end
+
     private
     def self.start_frame_listeners(ctx, net_probe, nodes)
       nodes.each do |node|
@@ -76,10 +99,14 @@ module Astute
       end
     end
 
-    def self.make_interfaces_to_send(networks)
+    def self.make_interfaces_to_send(networks, joined=true)
       data_to_send = {}
       networks.each do |network|
-        data_to_send[network['iface']] = network['vlans'].join(",")
+        if joined
+          data_to_send[network['iface']] = network['vlans'].join(",")
+        else
+          data_to_send[network['iface']] = network['vlans']
+        end
       end
 
       data_to_send
@@ -96,6 +123,7 @@ module Astute
         }
       end
     end
+
 
     def self.check_vlans_by_traffic(uids, data)
       data.map do |iface, vlans|

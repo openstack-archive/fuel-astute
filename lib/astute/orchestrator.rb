@@ -38,13 +38,9 @@ module Astute
       context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
-      begin
-        log_parser.prepare(deployment_info)
-      rescue Exception => e
-        Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
-      end
+      
       deploy_engine_instance.deploy(deployment_info)
-      return SUCCESS
+      context.status
     end
 
     def fast_provision(reporter, engine_attrs, nodes)
@@ -155,6 +151,10 @@ module Astute
 
     def verify_networks(reporter, task_id, nodes)
       Network.check_network(Context.new(task_id, reporter), nodes)
+    end
+
+    def check_dhcp(reporter, task_id, nodes)
+      Network.check_dhcp(Context.new(task_id, reporter), nodes)
     end
 
     def download_release(up_reporter, task_id, release_info)

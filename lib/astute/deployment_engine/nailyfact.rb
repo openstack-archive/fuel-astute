@@ -15,7 +15,7 @@
 require 'json'
 
 class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
-
+  
   # Just merge attributes of concrete node
   # with attributes of cluster
   def create_facts(node_attrs)
@@ -41,7 +41,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     @ctx.reporter.report(nodes_status(nodes_to_deploy, 'deploying', {'progress' => 0}))
 
     begin
-      @ctx.deploy_log_parser.prepare(nodes_group)
+      @ctx.deploy_log_parser.prepare(nodes_to_deploy)
     rescue Exception => e
       Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
     end
