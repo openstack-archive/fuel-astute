@@ -23,6 +23,8 @@ module Fixtures
         "uid" => "4",
         "error_type" => nil,
         "fqdn" => "controller-4.mirantis.com",
+        "role" => "primary-controller",
+        "priority" => 0,
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -63,7 +65,6 @@ module Fixtures
         ],
         "id" => 4,
         "ip" => "10.20.0.205",
-        "roles" => ["controller"],
         'meta' => meta
       },
       {
@@ -72,6 +73,8 @@ module Fixtures
         "uid" => "5",
         "error_type" => nil,
         "fqdn" => "controller-5.mirantis.com",
+        "role" => "controller",
+        "priority" => 50,
         "network_data" => [
           {
             "gateway" => "192.168.0.1",
@@ -112,7 +115,6 @@ module Fixtures
         ],
         "id" => 5,
         "ip" => "10.20.0.206",
-        "roles" => ["controller"],
         'meta' => meta
       }
     ]

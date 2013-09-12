@@ -17,7 +17,10 @@ module Astute
   module LogParser
     module Patterns
       def self.get_default_pattern(key)
-        return Marshal.load(Marshal.dump(@default_patterns[key]))
+        pattern_key = key
+        pattern_key = 'default' unless @default_patterns.has_key?(key)
+
+        deep_copy(@default_patterns[pattern_key])
       end
 
       def self.list_default_patterns
@@ -531,6 +534,12 @@ module Astute
         },
 
         'puppet-log-components-list-singlenode-cinder' => {
+          'type' => 'count-lines',
+          'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
+          'expected_line_number' => 345
+        },
+
+        'default' => {
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'expected_line_number' => 345

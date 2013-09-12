@@ -12,17 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-require File.join(File.dirname(__FILE__), '../spec_helper')
-
-describe Astute::DeploymentEngine do
-  include SpecHelpers
-  
-  context '#deploy' do
-    xit 'generate and upload ssh keys'
-    xit 'deploy nodes by order'
-    xit 'multiroles for node should be support'
-    xit 'should prevent several parallel deploy in one node'
+module Fixtures
+  def self.ha_deploy
+    deploy_info = Fixtures.common_attrs('ha', Fixtures.ha_nodes)
+    deploy_info.each do |node|
+      node.merge(
+        'management_vip' => "192.168.0.111"     
+      )
+    end
   end
-
 end

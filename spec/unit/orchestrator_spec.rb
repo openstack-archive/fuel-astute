@@ -141,16 +141,15 @@ describe Astute::Orchestrator do
   end
 
   it "it calls deploy method with valid arguments" do
-    nodes = [{'uid' => 1}]
-    attrs = {'a' => 'b'}
+    nodes = [{'uid' => 1, 'roles' => 'controller'}]
     Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
-                                                     with([{'uid' => '1'}], attrs)
-    @orchestrator.deploy(@reporter, 'task_uuid', nodes, attrs)
+                                                     with(nodes)
+    @orchestrator.deploy(@reporter, 'task_uuid', nodes)
   end
 
   it "deploy method raises error if nodes list is empty" do
-    expect {@orchestrator.deploy(@reporter, 'task_uuid', [], {})}.
-                          to raise_error(/Nodes to deploy are not provided!/)
+    expect {@orchestrator.deploy(@reporter, 'task_uuid', [])}.
+                          to raise_error(/Deployment info are not provided!/)
   end
 
   it "remove_nodes try to call MCAgent multiple times on error" do
