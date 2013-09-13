@@ -18,6 +18,7 @@ module Fixtures
   def self.common_attrs(deployment_mode, nodes)
     nodes.each do |node|
       node.merge(
+        "deployment_id" => 1,
         "storage_network_range" => "172.16.0.0/24",
         "auto_assign_floating_ip" => false,
         "mysql" => {
