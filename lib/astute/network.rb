@@ -50,9 +50,8 @@ module Astute
 
       {'nodes' => result}
     end
-
-
-    def self.check_dhcp(ctx, nodes)
+    
+   def self.check_dhcp(ctx, nodes)
       uids = nodes.map { |node| node['uid'].to_s }
       net_probe = MClient.new(ctx, "net_probe", uids)
 
@@ -68,7 +67,7 @@ module Astute
         if response[:data][:out] and response[:data][:out].any?
           Astute.logger.debug("DHCP checker received: #{response}")
           node_result[:data] = JSON.parse(response[:data][:out])
-        elsif if response[:data][:error] and response[:data][:error].any?
+        elsif response[:data][:error] and response[:data][:error].any?
           Astute.logger.debug("DHCP checker errred with: #{response}")
           node_result[:status] = 'error'
           node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
