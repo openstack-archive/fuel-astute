@@ -43,6 +43,9 @@ module Astute
       send_probing_frames(ctx, net_probe, nodes)
       ctx.reporter.report({'progress' => 60})
 
+      dhcp_result = check_dhcp(nodes)
+      ctx.reporter.report_to_subtask('check_dhcp', dhcp_result)
+
       net_probe.discover(:nodes => uids)
       stats = net_probe.get_probing_info
       result = format_result(stats)
@@ -50,8 +53,8 @@ module Astute
 
       {'nodes' => result}
     end
-    
-   def self.check_dhcp(ctx, nodes)
+
+   def self.check_dhcp(nodes)
       uids = nodes.map { |node| node['uid'].to_s }
       net_probe = MClient.new(ctx, "net_probe", uids)
 
