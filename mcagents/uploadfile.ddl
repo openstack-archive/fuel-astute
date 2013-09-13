@@ -13,7 +13,7 @@ action "upload",	:description => "upload file" do
         :prompt      => "Path to save text file",
         :description => "Where should file be saved?",
         :type        => :string,
-        :validation  => '^.+$',
+        :validation  => :shellsafe,
         :optional    => false,
         :maxlength   => 256
 
