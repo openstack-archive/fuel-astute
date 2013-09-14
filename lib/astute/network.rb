@@ -62,8 +62,7 @@ module Astute
         data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'], joined=false).to_json
       end
 
-      result = []
-      net_probe.dhcp_discover(:interfaces => data_to_send).each do |response|
+      result = net_probe.dhcp_discover(:interfaces => data_to_send).map do |response|
         node_result = {:uid => response[:sender],
                        :status=>'ready'}
         if response[:data][:out] and response[:data][:out].any?
@@ -73,8 +72,12 @@ module Astute
           Astute.logger.debug("DHCP checker errred with: #{response}")
           node_result[:status] = 'error'
           node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
+        else
+          Astute.logger.debug("DHCP checker received empty response: #{response}")
+          node_result[:status] = 'error'
+          node_result[:error_msg] = 'Empty response from node. Check logs for details'
         end
-        result << node_result
+        node_result
       end
       {'nodes' => result}
     end
