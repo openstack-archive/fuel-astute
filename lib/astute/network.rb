@@ -63,22 +63,9 @@ module Astute
       end
 
       result = net_probe.dhcp_discover(:interfaces => data_to_send).map do |response|
-        node_result = {:uid => response[:sender],
-                       :status=>'ready'}
-        if response[:data][:out] and response[:data][:out].any?
-          Astute.logger.debug("DHCP checker received: #{response}")
-          node_result[:data] = JSON.parse(response[:data][:out])
-        elsif response[:data][:error] and response[:data][:error].any?
-          Astute.logger.debug("DHCP checker errred with: #{response}")
-          node_result[:status] = 'error'
-          node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
-        else
-          Astute.logger.debug("DHCP checker received empty response: #{response}")
-          node_result[:status] = 'error'
-          node_result[:error_msg] = 'Empty response from node. Check logs for details'
-        end
-        node_result
+        format_dhcp_response(response)
       end
+
       {'nodes' => result}
     end
 
@@ -118,6 +105,24 @@ module Astute
       end
 
       data_to_send
+    end
+
+    def self.format_dhcp_response(response)
+      node_result = {:uid => response[:sender],
+                     :status=>'ready'}
+      if response[:data][:out] and response[:data][:out].any?
+        Astute.logger.debug("DHCP checker received: #{response}")
+        node_result[:data] = JSON.parse(response[:data][:out])
+      elsif response[:data][:error] and response[:data][:error].any?
+        Astute.logger.debug("DHCP checker errred with: #{response}")
+        node_result[:status] = 'error'
+        node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
+      else
+        Astute.logger.debug("DHCP checker received empty response: #{response}")
+        node_result[:status] = 'error'
+        node_result[:error_msg] = 'Empty response from node. Check logs for details'
+      end
+      node_result
     end
 
     def self.format_result(stats)
