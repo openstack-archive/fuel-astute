@@ -43,15 +43,17 @@ module Astute
       context.status
     end
 
-    def fast_provision(reporter, engine_attrs, nodes)
-      raise "Nodes to provision are not provided!" if nodes.empty?
+    def provision(reporter, engine_attrs, nodes_for_provision)
+      raise "Nodes to provision are not provided!" if nodes_for_provision.empty?
+      
+      # We need only those which are not ready/provisioned yet
+      nodes = nodes_for_provision.select { |n| !['provisioned', 'ready'].include?(n['status']) }
 
       engine = create_engine(engine_attrs, reporter)
-
       begin
+        add_nodes_to_cobbler(engine, nodes)
         reboot_events = reboot_nodes(engine, nodes)
         failed_nodes  = check_reboot_nodes(engine, reboot_events)
-
       rescue RuntimeError => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
@@ -59,14 +61,13 @@ module Astute
                           'error' => 'Cobbler error',
                           'progress' => 100
                         })
-        raise StopIteration
+        raise e
       ensure
         engine.sync
       end
 
       if failed_nodes.empty?
         report_result({}, reporter)
-        return SUCCESS
       else
         Astute.logger.error("Nodes failed to reboot: #{failed_nodes.inspect}")
         reporter.report({
@@ -74,18 +75,12 @@ module Astute
                           'error' => "Nodes failed to reboot: #{failed_nodes.inspect}",
                           'progress' => 100
                         })
-        raise StopIteration
+        raise e
       end
     end
 
-    def provision(reporter, task_id, nodes_up)
-      raise "Nodes to provision are not provided!" if nodes_up.empty?
-
-      # We need only those which are not ready/provisioned yet
-      nodes = []
-      nodes_up.each do |n|
-        nodes << n unless ['provisioned', 'ready'].include?(n['status'])
-      end
+    def watch_provision_progress(reporter, task_id, nodes)
+      raise "Nodes to provision are not provided!" if nodes.empty?
 
       nodes_uids = nodes.map { |n| n['uid'] }
 
@@ -198,10 +193,10 @@ module Astute
         Astute::RedhatChecker.new(ctx, credentials).check_redhat_credentials
       rescue Astute::RedhatCheckingError => e
         Astute.logger.error("Error #{e.message}")
-        raise StopIteration
+        raise e
       rescue Exception => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
-        raise StopIteration
+        raise e
       end
     end
 
@@ -211,10 +206,10 @@ module Astute
         Astute::RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)
       rescue Astute::RedhatCheckingError => e
         Astute.logger.error("Error #{e.message}")
-        raise StopIteration
+        raise e
       rescue Exception => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
-        raise StopIteration
+        raise e
       end
     end
 
@@ -236,23 +231,23 @@ module Astute
     end
 
     def create_engine(engine_attrs, reporter)
+      raise "Settings for Cobbler must be set" if engine_attrs.blank?
+      
       begin
         Astute.logger.info("Trying to instantiate cobbler engine: #{engine_attrs.inspect}")
         Astute::Provision::Cobbler.new(engine_attrs)
-      rescue
+      rescue => e
         Astute.logger.error("Error occured during cobbler initializing")
-
         reporter.report({
                           'status' => 'error',
                           'error' => 'Cobbler can not be initialized',
                           'progress' => 100
                         })
-        raise StopIteration
+        raise e
       end
     end
 
-    def reboot_nodes(engine, nodes)
-      reboot_events = {}
+    def add_nodes_to_cobbler(engine, nodes)
       nodes.each do |node|
         begin
           Astute.logger.info("Adding #{node['name']} into cobbler")
@@ -262,6 +257,12 @@ module Astute
           Astute.logger.error("Error occured while adding system #{node['name']} to cobbler")
           raise e
         end
+      end # end iteration
+    end
+        
+    def reboot_nodes(engine, nodes)
+      reboot_events = {}
+      nodes.each do |node|
         Astute.logger.debug("Trying to reboot node: #{node['name']}")
         reboot_events[node['name']] = engine.power_reboot(node['name'])
       end

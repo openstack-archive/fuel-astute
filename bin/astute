@@ -97,14 +97,11 @@ if [:deploy, :provision, :provision_and_deploy].include? opts[:command]
 end
 
 def console_provision(orchestrator, reporter, environment)
-  res = orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
-  if res == Astute::SUCCESS
-    puts "restarting nodes..."
-    sleep 5
-    puts "start watching progress"
-    res = orchestrator.provision(reporter, environment['task_uuid'], environment['nodes'])
-  end
-  res
+  orchestrator.provision(reporter, environment['engine'], environment['nodes'])
+  puts "restarting nodes..."
+  sleep 5
+  puts "start watching progress"
+  orchestrator.watch_provision_progress(reporter, environment['task_uuid'], environment['nodes'])
 end
 
 result = Astute::SUCCESS

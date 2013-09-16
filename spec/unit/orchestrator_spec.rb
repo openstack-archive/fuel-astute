@@ -215,10 +215,10 @@ describe Astute::Orchestrator do
     res.should eql({'nodes' => [{'uid' => '1'}, {'uid' => '2'}]})
   end
 
-  it "remove_nodes do not fail if any of nodes failed"
+  xit "remove_nodes do not fail if any of nodes failed"
 
-  before(:all) do
-    @data = {
+  let(:data) do
+    {
       "engine"=>{
         "url"=>"http://localhost/cobbler_api",
         "username"=>"cobbler",
@@ -266,33 +266,31 @@ describe Astute::Orchestrator do
           }
         }
       ]
-    }.freeze
+    }
   end
-
-  describe '#fast_provision' do
-
+  
+  describe '#provision' do
+    
     context 'cobler cases' do
       it "raise error if cobler settings empty" do
-        expect {@orchestrator.fast_provision(@reporter, {}, @data['nodes'])}.
-                              to raise_error(StopIteration)
+        expect {@orchestrator.provision(@reporter, {}, data['nodes'])}.
+                              to raise_error(/Settings for Cobbler must be set/)
       end
     end
 
     context 'node state cases' do
       before(:each) do
-
         remote = mock() do
           stubs(:call)
           stubs(:call).with('login', 'cobbler', 'cobbler').returns('remotetoken')
         end
-        @tmp = XMLRPC::Client
         XMLRPC::Client = mock() do
           stubs(:new).returns(remote)
         end
       end
 
       it "raises error if nodes list is empty" do
-        expect {@orchestrator.fast_provision(@reporter, @data['engine'], {})}.
+        expect {@orchestrator.provision(@reporter, data['engine'], {})}.
                               to raise_error(/Nodes to provision are not provided!/)
       end
 
@@ -301,13 +299,28 @@ describe Astute::Orchestrator do
           expects(:power_reboot).with('controller-1')
         end
         @orchestrator.stubs(:check_reboot_nodes).returns([])
-        @orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])
+        @orchestrator.provision(@reporter, data['engine'], data['nodes'])
+      end
+      
+      it "should not provision nodes that ready for deploy" do
+        nodes = deep_copy data['nodes']
+        nodes << {'uid' => '2', 'status' => 'ready'}
+        nodes << {'uid' => '3', 'status' => 'provisioned'}
+        
+        engine = mock
+        engine.stubs(:sync)
+        @orchestrator.stubs(:create_engine).returns(engine)
+        @orchestrator.stubs(:reboot_nodes).returns([])
+        @orchestrator.stubs(:check_reboot_nodes).returns([])
+        
+        @orchestrator.expects(:add_nodes_to_cobbler).with(engine, data['nodes'])
+        
+        @orchestrator.provision(@reporter, data['engine'], nodes)
       end
 
       before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:power_reboot).returns(333) }
 
       context 'node reboot success' do
-
         before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:event_status).
                                                    returns([Time.now.to_f, 'controller-1', 'complete'])}
 
@@ -315,47 +328,44 @@ describe Astute::Orchestrator do
           Astute::Provision::Cobbler.any_instance.stubs(:event_status).
                                                   returns([Time.now.to_f, 'controller-1', 'complete'])
 
-          @orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])
+          @orchestrator.provision(@reporter, data['engine'], data['nodes'])
         end
 
         it "report about success" do
           @reporter.expects(:report).with({'status' => 'ready', 'progress' => 100}).returns(true)
-          @orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])
+          @orchestrator.provision(@reporter, data['engine'], data['nodes'])
         end
 
         it "sync engine state" do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
           end
-          @orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])
+          @orchestrator.provision(@reporter, data['engine'], data['nodes'])
         end
-
       end
 
       context 'node reboot fail' do
         before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:event_status).
                                                                 returns([Time.now.to_f, 'controller-1', 'failed'])}
-
         it "should sync engine state" do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
           end
           begin
-            @orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])
+            @orchestrator.provision(@reporter, data['engine'], data['nodes'])
           rescue
           end
         end
 
         it "raise error if failed node find" do
-          expect {@orchestrator.fast_provision(@reporter, @data['engine'], @data['nodes'])}.to raise_error(StopIteration)
+          expect {@orchestrator.provision(@reporter, data['engine'], data['nodes'])}.to raise_error(TypeError)
         end
-
       end
 
     end
   end
 
-  describe '#provision' do
+  describe '#watch_provision_progress' do
 
     before(:each) do
       # Disable sleeping in test env (doubles the test speed)
@@ -365,36 +375,36 @@ describe Astute::Orchestrator do
     end
 
     it "raises error if nodes list is empty" do
-      expect {@orchestrator.provision(@reporter, @data['task_uuid'], {})}.
+      expect {@orchestrator.watch_provision_progress(@reporter, data['task_uuid'], {})}.
                             to raise_error(/Nodes to provision are not provided!/)
     end
 
     it "prepare provision log for parsing" do
       Astute::LogParser::ParseProvisionLogs.any_instance do
-        expects(:prepare).with(@data['nodes']).once
+        expects(:prepare).with(data['nodes']).once
       end
       @orchestrator.stubs(:report_about_progress).returns()
       @orchestrator.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
 
-      @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
+      @orchestrator.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
     end
 
     it "ignore problem with parsing provision log" do
       Astute::LogParser::ParseProvisionLogs.any_instance do
-        stubs(:prepare).with(@data['nodes']).raises
+        stubs(:prepare).with(data['nodes']).raises
       end
 
       @orchestrator.stubs(:report_about_progress).returns()
       @orchestrator.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
 
-      @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
+      @orchestrator.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
     end
 
     it 'provision nodes using mclient' do
       @orchestrator.stubs(:report_about_progress).returns()
       @orchestrator.expects(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
 
-      @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
+      @orchestrator.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
     end
 
     it "fail if timeout of provisioning is exceeded" do
@@ -412,7 +422,7 @@ describe Astute::Orchestrator do
                                                             'error_type' => 'provision'}]}
 
       @reporter.expects(:report).with(error_mgs).once
-      @orchestrator.provision(@reporter, @data['task_uuid'], @data['nodes'])
+      @orchestrator.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
     end
 
   end
@@ -439,32 +449,32 @@ describe Astute::Orchestrator do
 
     describe '#check_redhat_credentials' do
 
-      it 'Should raise StopIteration in case of errors ' do
+      it 'should raise StopIteration in case of errors ' do
         stub_rpc("Before\nInvalid username or password\nAfter")
 
         expect do
-          @orchestrator.check_redhat_credentials(@reporter, @data['task_uuid'], credentials)
-        end.to raise_error(StopIteration)
+          @orchestrator.check_redhat_credentials(@reporter, data['task_uuid'], credentials)
+        end.to raise_error(/Invalid username or password/)
       end
 
-      it 'Should not raise errors ' do
+      it 'should not raise errors' do
         stub_rpc
-        @orchestrator.check_redhat_credentials(@reporter, @data['task_uuid'], credentials)
+        @orchestrator.check_redhat_credentials(@reporter, data['task_uuid'], credentials)
       end
     end
 
     describe '#check_redhat_licenses' do
-      it 'Should raise StopIteration in case of errors ' do
+      it 'should raise StopIteration in case of errors ' do
         stub_rpc('{"openstack_licenses_physical_hosts_count":0}')
 
         expect do
-          @orchestrator.check_redhat_licenses(@reporter, @data['task_uuid'], credentials)
-        end.to raise_error(StopIteration)
+          @orchestrator.check_redhat_licenses(@reporter, data['task_uuid'], credentials)
+        end.to raise_error(/Could not find any valid Red Hat OpenStack subscriptions/)
       end
 
-      it 'Should not raise errors ' do
+      it 'should not raise errors ' do
         stub_rpc('{"openstack_licenses_physical_hosts_count":1}')
-        @orchestrator.check_redhat_licenses(@reporter, @data['task_uuid'], credentials)
+        @orchestrator.check_redhat_licenses(@reporter, data['task_uuid'], credentials)
       end
     end
   end
