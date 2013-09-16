@@ -40,10 +40,11 @@ module Astute
       start_frame_listeners(ctx, net_probe, nodes)
       ctx.reporter.report({'progress' => 30})
 
+      net_probe.discover(:nodes => uids)
+      ctx.reporter.report_to_subtask('check_dhcp', check_dhcp(net_probe, nodes))
+
       send_probing_frames(ctx, net_probe, nodes)
       ctx.reporter.report({'progress' => 60})
-
-      ctx.reporter.report_to_subtask('check_dhcp', check_dhcp(nodes))
 
       net_probe.discover(:nodes => uids)
       stats = net_probe.get_probing_info
@@ -53,10 +54,7 @@ module Astute
       {'nodes' => result}
     end
 
-   def self.check_dhcp(nodes)
-      uids = nodes.map { |node| node['uid'].to_s }
-      net_probe = MClient.new(ctx, "net_probe", uids)
-
+   def self.check_dhcp(net_probe, nodes)
       data_to_send = {}
       nodes.each do |node|
         data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'], joined=false).to_json
@@ -110,15 +108,15 @@ module Astute
     def self.format_dhcp_response(response)
       node_result = {:uid => response[:sender],
                      :status=>'ready'}
-      if response[:data][:out] and response[:data][:out].any?
-        Astute.logger.debug("DHCP checker received: #{response}")
+      if response[:data][:out] and ! response[:data][:out].empty?
+        Astute.logger.debug("DHCP checker received: #{response.inspect}")
         node_result[:data] = JSON.parse(response[:data][:out])
-      elsif response[:data][:error] and response[:data][:error].any?
-        Astute.logger.debug("DHCP checker errred with: #{response}")
+      elsif response[:data][:error] and ! response[:data][:error].empty?
+        Astute.logger.debug("DHCP checker errred with: #{response.inspect}")
         node_result[:status] = 'error'
         node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
       else
-        Astute.logger.debug("DHCP checker received empty response: #{response}")
+        Astute.logger.debug("DHCP checker received empty response: #{response.inspect}")
         node_result[:status] = 'error'
         node_result[:error_msg] = 'Empty response from node. Check logs for details'
       end
