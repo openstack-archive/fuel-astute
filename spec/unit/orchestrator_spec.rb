@@ -66,7 +66,7 @@ describe Astute::Orchestrator do
       rpcclient = mock_rpcclient(nodes)
 
       rpcclient.expects(:get_probing_info).once.returns([mc_res1, mc_res2])
-      rpcclient.expects(:discover_dhcp)
+      rpcclient.expects(:dhcp_discover)
       nodes.each do |node|
         rpcclient.expects(:discover).with(:nodes => [node['uid']]).at_least_once
 
