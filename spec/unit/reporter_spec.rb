@@ -200,6 +200,67 @@ describe "ProxyReporter" do
       @up_reporter.expects(:report).never
       msgs.each {|msg| @reporter.report(msg)}
     end
+    
+    context 'multiroles' do
+      let(:up_reporter) { mock('up_reporter') }
+      let(:nodes) { [{'uid' => 1, 'role' => 'controller'}, {'uid' => 1, 'role' => 'compute'}] }
+      before(:each) do
+        @reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, nodes)
+      end
+      
+      it 'send final status only once for all node roles"' do
+        msgs = [ {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'progress' => 100, 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'compute'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}]}
+               ]
+        up_reporter.expects(:report).with(msgs[0])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 25, 'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 75, 'role' => 'compute'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}])
+        up_reporter.expects(:report).never
+        
+        msgs.each {|msg| @reporter.report(msg)}
+      end
+      
+      it 'send final error status for node if any of roles get error deploy status' do
+        msgs = [ {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 50, 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'compute'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}]}
+               ]
+                 
+        up_reporter.expects(:report).with(msgs[0])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 75, 'role' => 'compute'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 100, 'role' => 'compute'}])
+        up_reporter.expects(:report).never
+        
+        msgs.each {|msg| @reporter.report(msg)}        
+      end
+      
+      it 'should not fail if no progress info was send' do
+        msgs = [ {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'role' => 'compute'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'role' => 'compute'}]}
+               ]
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0,  'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}])
+        up_reporter.expects(:report).never
+
+        msgs.each {|msg| @reporter.report(msg)}
+      end
+      
+    end
 
   end
 end
