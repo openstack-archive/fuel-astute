@@ -31,6 +31,7 @@ require 'astute/puppetd'
 require 'astute/rpuppet'
 require 'astute/deployment_engine/nailyfact'
 require 'astute/cobbler'
+require 'astute/dump'
 
 module Astute
   autoload 'Context', 'astute/context'
