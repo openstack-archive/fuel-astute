@@ -89,6 +89,29 @@ describe Astute::Orchestrator do
       res.should eql(expected)
     end
 
+    it "dhcp check returns expected info" do
+      nodes = make_nodes(1, 2)
+      json_output = JSON.dump({'iface'=>'eth1',
+                                'mac'=> 'ff:fa:1f:er:ds:as'})
+      res1 = {
+        :data => {:out => json_output},
+        :sender => "1"}
+      res2 = {
+        :data => {:out => json_output},
+        :sender => "2"}
+
+      rpcclient = mock_rpcclient(nodes)
+
+      rpcclient.expects(:dhcp_discover).at_least_once.returns([res1, res2])
+
+      rpcclient.discover(:nodes => ['1', '2'])
+      res = Astute::Network.check_dhcp(rpcclient, nodes)
+
+      expected = {"nodes" => [{:status=>"ready", :uid=>"1", :data=>{"iface"=>"eth1", "mac"=>"ff:fa:1f:er:ds:as"}},
+                             {:status=>"ready", :uid=>"2", :data=>{"iface"=>"eth1", "mac"=>"ff:fa:1f:er:ds:as"}}]}
+      res.should eql(expected)
+    end
+
     it "returns error if nodes list is empty" do
       res = @orchestrator.verify_networks(@reporter, 'task_uuid', [])
       res.should eql({'status' => 'error', 'error' => "Network verification requires a minimum of two nodes."})
