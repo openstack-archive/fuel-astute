@@ -108,10 +108,10 @@ module Astute
     def self.format_dhcp_response(response)
       node_result = {:uid => response[:sender],
                      :status=>'ready'}
-      if response[:data][:out] and ! response[:data][:out].empty?
+      if response[:data][:out].present?
         Astute.logger.debug("DHCP checker received: #{response.inspect}")
         node_result[:data] = JSON.parse(response[:data][:out])
-      elsif response[:data][:error] and ! response[:data][:error].empty?
+      elsif response[:data][:error].present?
         Astute.logger.debug("DHCP checker errred with: #{response.inspect}")
         node_result[:status] = 'error'
         node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'

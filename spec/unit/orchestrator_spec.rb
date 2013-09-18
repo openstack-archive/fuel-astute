@@ -66,7 +66,6 @@ describe Astute::Orchestrator do
       rpcclient = mock_rpcclient(nodes)
 
       rpcclient.expects(:get_probing_info).once.returns([mc_res1, mc_res2])
-      rpcclient.expects(:dhcp_discover)
       nodes.each do |node|
         rpcclient.expects(:discover).with(:nodes => [node['uid']]).at_least_once
 
@@ -81,6 +80,7 @@ describe Astute::Orchestrator do
           with(:interfaces => data_to_send.to_json).
           returns([mc_valid_res]*2)
       end
+      Astute::Network.expects(:check_dhcp)
       Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
 
       res = @orchestrator.verify_networks(@reporter, 'task_uuid', nodes)
