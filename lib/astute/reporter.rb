@@ -28,9 +28,13 @@ STATES = {
 module Astute
   module ProxyReporter
     class DeploymentProxyReporter
-      def initialize(up_reporter)
+      def initialize(up_reporter, deployment_info=[], is_deploy=false)
         @up_reporter = up_reporter
         @nodes = []
+        deployment_info.select { |node| node['status'] != 'ready' }.each do |di|
+          @nodes << {'uid' => di['id'], 'role' => di['role']}
+        end
+        @is_deploy = is_deploy
       end
 
       def report(data)
@@ -74,7 +78,7 @@ module Astute
       def update_saved_nodes(new_nodes)
         # Update nodes attributes in @nodes.
         new_nodes.each do |node|
-          saved_node = @nodes.select {|x| x['uid'] == node['uid']}.first  # NOTE: use nodes hash
+          saved_node = @nodes.find { |n| n['uid'] == node['uid'] && n['role'] == node['role'] }
           if saved_node
             node.each {|k, v| saved_node[k] = v}
           else
@@ -90,8 +94,10 @@ module Astute
           err << "Status provided #{node['status']} is not supported" unless STATES[node['status']]
         elsif node['progress']
           err << "progress value provided, but no status"
-        end
+        end  
+        err << "Node role is not provided" if @is_deploy && !node['role']
         err << "Node uid is not provided" unless node['uid']
+        
         if err.any?
           msg = "Validation of node: #{node.inspect} for report failed: #{err.join('; ')}."
           Astute.logger.error(msg)
@@ -100,15 +106,16 @@ module Astute
 
         # Validate progress field.
         if node['progress']
-          if node['progress'] > 100
+          calculate_multiroles_node_progress(node) if @is_deploy
+          node['progress'] = case
+          when node['progress'] > 100
             Astute.logger.warn("Passed report for node with progress > 100: "\
                                 "#{node.inspect}. Adjusting progress to 100.")
-            node['progress'] = 100
-          end
-          if node['progress'] < 0
+            100
+          when node['progress'] < 0
             Astute.logger.warn("Passed report for node with progress < 0: "\
                                 "#{node.inspect}. Adjusting progress to 0.")
-            node['progress'] = 0
+            0
           end
         end
         if node['status'] && ['provisioned', 'ready'].include?(node['status']) && node['progress'] != 100
@@ -118,7 +125,7 @@ module Astute
         end
 
         # Comparison with previous state.
-        saved_node = @nodes.select {|x| x['uid'] == node['uid']}.first
+        saved_node = @nodes.find { |x| x['uid'] == node['uid'] && x['role'] == node['role'] }
         if saved_node
           saved_status = STATES[saved_node['status']].to_i
           node_status = STATES[node['status']] || saved_status
@@ -144,6 +151,39 @@ module Astute
 
         node
       end
+      
+      # Proportionally reduce the progress on the number of roles. For example 
+      # node have 3 roles and already success deploy first role and now deploying 
+      # second(50%). Overall progress of the operation for node is 
+      # 50 / 3 + 1 * 100 / 3 = 49 
+      # Based on the fact that each part makes the same contribution to the 
+      # progress, we calculate it as 100/3 = 33% for every finished(success or 
+      # fail) role
+      def calculate_multiroles_node_progress(node)
+        roles_of_nodes = @nodes.select { |n| n['uid'] == node['uid'] }
+        all_roles = roles_of_nodes.size
+        return if all_roles == 1 # calculation should only be done for multi roles
+        
+        finish_roles = roles_of_nodes.select { |n| ['ready', 'error'].include? n['status'] }.size
+        return if finish_roles == all_roles # already done all work
+        
+        # recalculate progress for node
+        node['progress'] = node['progress']/all_roles + 100 * finish_roles/all_roles
+        
+        # save final state if exist
+        if ['ready', 'error'].include? node['status']
+          roles_of_nodes.find { |n| n['role'] == node['role'] }['status'] = node['status']
+        end
+
+        if all_roles - finish_roles != 1
+          # block 'ready' or 'error' status for node if not all roles deployed
+          node['status'] = 'deploying'
+        else
+          node['status'] = roles_of_nodes.select{ |n| n['status'] == 'error' }.empty? ? 'ready' : 'error'
+          node['progress'] = 100
+        end
+      end
+      
     end
 
     class DLReleaseProxyReporter <DeploymentProxyReporter

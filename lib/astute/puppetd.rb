@@ -91,7 +91,10 @@ module Astute
     public
     def self.deploy(ctx, nodes, retries=2, change_node_status=true)
       # TODO: can we hide retries, ignore_failure into @ctx ?
-      uids = nodes.map {|n| n['uid']}
+      uids = nodes.map { |n| n['uid'] }
+      nodes_roles = {}
+      nodes.each { |n| nodes_roles[n['uid']] = n['role'] }
+      
       # Keep info about retries for each node
       node_retries = {}
       uids.each {|x| node_retries.merge!({x => retries}) }
@@ -100,7 +103,10 @@ module Astute
       Timeout::timeout(Astute.config.PUPPET_TIMEOUT) do
         puppetd = MClient.new(ctx, "puppetd", uids)
         puppetd.on_respond_timeout do |uids|
-          ctx.report_and_update_status('nodes' => uids.map{|uid| {'uid' => uid, 'status' => 'error', 'error_type' => 'deploy'}})
+          nodes = uids.map do |uid|
+            { 'uid' => uid, 'status' => 'error', 'error_type' => 'deploy', 'role' => nodes_roles[uid] }
+          end
+          ctx.report_and_update_status('nodes' => nodes)
         end if change_node_status
         prev_summary = puppetd.last_run_summary
         puppetd_runonce(puppetd, uids)
@@ -112,7 +118,11 @@ module Astute
 
           # At least we will report about successfully deployed nodes
           nodes_to_report = []
-          nodes_to_report.concat(calc_nodes['succeed'].map { |n| {'uid' => n, 'status' => 'ready'} }) if change_node_status
+          if change_node_status
+            nodes_to_report.concat(calc_nodes['succeed'].map do |uid| 
+              { 'uid' => uid, 'status' => 'ready', 'role' => nodes_roles[uid] }
+            end)
+          end
 
           # Process retries
           nodes_to_retry = []
@@ -143,7 +153,7 @@ module Astute
               if nodes_progress.any?
                 Astute.logger.debug "Got progress for nodes: #{nodes_progress.inspect}"
                 # Nodes with progress are running, so they are not included in nodes_to_report yet
-                nodes_progress.map! {|x| x.merge!({'status' => 'deploying'})}
+                nodes_progress.map! { |x| x.merge!('status' => 'deploying', 'role' => nodes_roles[x['uid']]) }
                 nodes_to_report += nodes_progress
               end
             rescue Exception => e
