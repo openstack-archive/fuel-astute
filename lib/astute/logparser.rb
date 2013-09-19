@@ -146,7 +146,7 @@ module Astute
           path = ERB.new(erb_path).result(binding())
           begin
             progress = (get_log_progress(path, node_pattern_spec)*100).to_i # Return percent of progress
-          rescue Exception => e
+          rescue => e
             Astute.logger.warn "Some error occurred when calculate progress for node '#{uid}': #{e.message}, trace: #{e.format_backtrace}"
             progress = 0
           end

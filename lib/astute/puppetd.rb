@@ -146,7 +146,7 @@ module Astute
                 nodes_progress.map! {|x| x.merge!({'status' => 'deploying'})}
                 nodes_to_report += nodes_progress
               end
-            rescue Exception => e
+            rescue => e
               Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, "\
                                  "trace: #{e.format_backtrace}"
             end

@@ -194,7 +194,7 @@ module Astute
       rescue Astute::RedhatCheckingError => e
         Astute.logger.error("Error #{e.message}")
         raise e
-      rescue Exception => e
+      rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
       end
@@ -207,7 +207,7 @@ module Astute
       rescue Astute::RedhatCheckingError => e
         Astute.logger.error("Error #{e.message}")
         raise e
-      rescue Exception => e
+      rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
       end
@@ -227,7 +227,7 @@ module Astute
       time = Time.now.to_f
       block.call
       time = time + sleep_time - Time.now.to_f
-      sleep (time) if time > 0
+      sleep(time) if time > 0
     end
 
     def create_engine(engine_attrs, reporter)
@@ -261,12 +261,10 @@ module Astute
     end
         
     def reboot_nodes(engine, nodes)
-      reboot_events = {}
-      nodes.each do |node|
+      nodes.inject({}) do |reboot_events, node|
         Astute.logger.debug("Trying to reboot node: #{node['name']}")
-        reboot_events[node['name']] = engine.power_reboot(node['name'])
+        reboot_events.merge(node['name'] => engine.power_reboot(node['name']))
       end
-      reboot_events
     end
 
     def check_reboot_nodes(engine, reboot_events)
