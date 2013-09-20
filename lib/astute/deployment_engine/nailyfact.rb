@@ -12,20 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require 'json'
+require 'yaml'
 
 class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
   # Just merge attributes of concrete node
   # with attributes of cluster
   def create_facts(node_attrs)
-    facts = deep_copy(node_attrs)
-
-    facts.each do |k, v|
-      facts[k] = v.to_json if v.is_a?(Hash) || v.is_a?(Array)
-    end
-
-    facts
+    {'settings' => node_attrs.to_yaml}
   end
 
   def deploy_piece(nodes, retries=2, change_node_status=true)
