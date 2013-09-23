@@ -43,11 +43,8 @@ module Astute
       context.status
     end
 
-    def provision(reporter, engine_attrs, nodes_for_provision)
-      raise "Nodes to provision are not provided!" if nodes_for_provision.empty?
-      
-      # We need only those which are not ready/provisioned yet
-      nodes = nodes_for_provision.select { |n| !['provisioned', 'ready'].include?(n['status']) }
+    def provision(reporter, engine_attrs, nodes)
+      raise "Nodes to provision are not provided!" if nodes.empty?
 
       engine = create_engine(engine_attrs, reporter)
       begin

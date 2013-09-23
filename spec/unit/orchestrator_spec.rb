@@ -301,22 +301,6 @@ describe Astute::Orchestrator do
         @orchestrator.stubs(:check_reboot_nodes).returns([])
         @orchestrator.provision(@reporter, data['engine'], data['nodes'])
       end
-      
-      it "should not provision nodes that ready for deploy" do
-        nodes = deep_copy data['nodes']
-        nodes << {'uid' => '2', 'status' => 'ready'}
-        nodes << {'uid' => '3', 'status' => 'provisioned'}
-        
-        engine = mock
-        engine.stubs(:sync)
-        @orchestrator.stubs(:create_engine).returns(engine)
-        @orchestrator.stubs(:reboot_nodes).returns([])
-        @orchestrator.stubs(:check_reboot_nodes).returns([])
-        
-        @orchestrator.expects(:add_nodes_to_cobbler).with(engine, data['nodes'])
-        
-        @orchestrator.provision(@reporter, data['engine'], nodes)
-      end
 
       before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:power_reboot).returns(333) }
 
