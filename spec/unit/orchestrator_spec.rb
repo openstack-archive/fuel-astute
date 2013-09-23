@@ -454,7 +454,7 @@ describe Astute::Orchestrator do
 
         expect do
           @orchestrator.check_redhat_credentials(@reporter, data['task_uuid'], credentials)
-        end.to raise_error(/Invalid username or password/)
+        end.to raise_error(StopIteration)
       end
 
       it 'should not raise errors' do
@@ -469,7 +469,7 @@ describe Astute::Orchestrator do
 
         expect do
           @orchestrator.check_redhat_licenses(@reporter, data['task_uuid'], credentials)
-        end.to raise_error(/Could not find any valid Red Hat OpenStack subscriptions/)
+        end.to raise_error(StopIteration)
       end
 
       it 'should not raise errors ' do

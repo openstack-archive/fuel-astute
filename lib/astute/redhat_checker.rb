@@ -17,7 +17,7 @@
 
 module Astute
 
-  class RedhatCheckingError < Exception; end
+  class RedhatCheckingError < StandardError; end
 
   class RedhatChecker
 

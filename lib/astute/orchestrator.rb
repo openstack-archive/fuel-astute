@@ -193,7 +193,7 @@ module Astute
         Astute::RedhatChecker.new(ctx, credentials).check_redhat_credentials
       rescue Astute::RedhatCheckingError => e
         Astute.logger.error("Error #{e.message}")
-        raise e
+        raise StopIteration
       rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
@@ -206,7 +206,7 @@ module Astute
         Astute::RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)
       rescue Astute::RedhatCheckingError => e
         Astute.logger.error("Error #{e.message}")
-        raise e
+        raise StopIteration
       rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
