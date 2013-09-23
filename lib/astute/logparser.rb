@@ -141,9 +141,10 @@ module Astute
           node = nodes.find {|n| n['uid'] == uid}
           @nodes_states[uid] ||= deep_copy @pattern_spec
           node_pattern_spec = @nodes_states[uid]
-          
+
           erb_path = node_pattern_spec['path_format']
           path = ERB.new(erb_path).result(binding())
+
           begin
             progress = (get_log_progress(path, node_pattern_spec)*100).to_i # Return percent of progress
           rescue Exception => e
