@@ -19,12 +19,6 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
   def deploy_piece(nodes, retries=2, change_node_status=true)
     return false unless validate_nodes(nodes)
 
-    if nodes.empty?
-      Astute.logger.info "#{@ctx.task_id}: Returning from deployment stage. No nodes to deploy"
-      return
-    end
-
-    Astute.logger.info "#{@ctx.task_id}: Calculation of required attributes to pass, include netw.settings"
     @ctx.reporter.report(nodes_status(nodes, 'deploying', {'progress' => 0}))
 
     begin
@@ -33,14 +27,23 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
     end
 
-    nodes.each do |node|
-      upload_mclient = MClient.new(@ctx, "uploadfile", [node['uid']])
-      upload_mclient.upload(:path => '/etc/naily.facts', :content => create_facts(node), :overwrite => true, :parents => true)
-    end
+    nodes.each { |node| upload_facts(node) }
     Astute.logger.info "#{@ctx.task_id}: Required attrs/metadata passed via facts extension. Starting deployment."
 
     Astute::PuppetdDeployer.deploy(@ctx, nodes, retries, change_node_status)
     nodes_roles = nodes.map { |n| {n['uid'] => n['role']} }
     Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
   end
+
+  private
+
+  def upload_facts(node)
+    Astute.logger.info  "#{@ctx.task_id}: storing metadata for node uid=#{node['uid']}"
+    Astute.logger.debug "#{@ctx.task_id}: stores metadata: #{node.to_yaml}"
+
+    # This is synchronious RPC call, so we are sure that data were sent and processed remotely
+    upload_mclient = Astute::MClient.new(@ctx, "uploadfile", [node['uid']])
+    upload_mclient.upload(:path => '/etc/astute.yaml', :content => node.to_yaml, :overwrite => true, :parents => true)
+  end
+
 end
