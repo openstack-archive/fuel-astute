@@ -57,7 +57,7 @@ describe "NailyFact DeploymentEngine" do
         Astute::Metadata.expects(:publish_facts).times(deploy_data.size)
         
         uniq_nodes_uid = deploy_data.map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
         
         # we got two calls, one for controller (high priority), and another for all computes (same low priority)
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes, instance_of(Fixnum), true).once
@@ -83,7 +83,7 @@ describe "NailyFact DeploymentEngine" do
         @ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
         
         uniq_nodes_uid = deploy_data.map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
         Astute::PuppetdDeployer.expects(:deploy).times(2)
        
         @deploy_engine.deploy(deploy_data)
@@ -95,7 +95,7 @@ describe "NailyFact DeploymentEngine" do
         Astute::Metadata.expects(:publish_facts).times(node_amount)
         
         uniq_nodes_uid = deploy_data.map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
       
         Astute::PuppetdDeployer.expects(:deploy).times(2)
        
@@ -112,7 +112,7 @@ describe "NailyFact DeploymentEngine" do
         Astute::Metadata.expects(:publish_facts).at_least_once
         
         uniq_nodes_uid = deploy_data.map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
         
         primary_controller = deploy_data.find { |n| n['role'] == 'primary-controller' }
         Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [primary_controller], 2, true).once
@@ -132,7 +132,7 @@ describe "NailyFact DeploymentEngine" do
         ctrl = deploy_data.find { |n| n['role'] == 'controller' }
         
         uniq_nodes_uid = [ctrl].map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(%w(nova mysql ceph), uniq_nodes_uid, nil)
+        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
         
         @deploy_engine.deploy([ctrl])
       end

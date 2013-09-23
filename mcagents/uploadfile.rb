@@ -21,32 +21,22 @@ module MCollective
       action 'upload' do
         # this action is used to distribute text file from
         # master node to all managed nodes
-
-        validate :path, :shellsafe
-        validate :content, :string
-        validate :overwrite, :boolean
-        validate :parents, :boolean
-
-        begin
-          path = request.data[:path]
-          dir  = File.dirname path
-          
-          if !File.directory?(dir) && !request.data[:parents]
-            reply.fail! "Directory #{dir} does not exist! Use parents=true to force upload."
-          end
-
-          if File.exist?(path) && !request.data[:overwrite]
-            reply.fail! "File #{path} already exist! Use overwrite=true to force upload."
-          end
-
-          # first create target directory on managed server
-          FileUtils.mkdir_p(dir) unless File.directory?(dir)
-
-          # then create file and save their content
-          File.open(path, 'w') { |file| file.write(request.data[:content]) }
-        rescue => e
-          reply.fail! e.to_s
+        path = request.data[:path]
+        dir  = File.dirname path
+        
+        if !File.directory?(dir) && !request.data[:parents]
+          reply.fail! "Directory #{dir} does not exist! Use parents=true to force upload."
         end
+
+        if File.exist?(path) && !request.data[:overwrite]
+          reply.fail! "File #{path} already exist! Use overwrite=true to force upload."
+        end
+
+        # first create target directory on managed server
+        FileUtils.mkdir_p(dir) unless File.directory?(dir)
+
+        # then create file and save their content
+        File.open(path, 'w') { |file| file.write(request.data[:content]) }
         reply[:msg] = "File was uploaded!"
       end
 

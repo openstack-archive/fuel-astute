@@ -34,8 +34,7 @@ module Astute
 
       # Generate and upload ssh keys from master node to all cluster nodes.
       # Will be used by puppet after to connect nodes between themselves.
-      generate_and_upload_ssh_keys(%w(nova mysql ceph),
-                                   deployment_info.map{ |n| n['uid'] }.uniq,
+      generate_and_upload_ssh_keys(deployment_info.map{ |n| n['uid'] }.uniq,
                                    deployment_info.first['deployment_id']
                                   )
 
@@ -89,17 +88,11 @@ module Astute
     end
     
     # Generate and upload ssh keys from master node to all cluster nodes.
-    def generate_and_upload_ssh_keys(key_names, node_uids, deployment_id)
-      upload_mclient = MClient.new(@ctx, "uploadfile", node_uids)
-      
-      key_names.each do |key_name|
+    def generate_and_upload_ssh_keys(node_uids, deployment_id)
+      raise "Deployment_id is missing" unless deployment_id
+      Astute.config.PUPPET_SSH_KEYS.each do |key_name|
         generate_ssh_key(key_name, deployment_id)
-        [key_name, key_name + ".pub"].each do |ssh_key|
-          source_path = File.join(KEY_DIR, deployment_id.to_s, key_name, ssh_key)
-          destination_path = File.join(KEY_DIR, key_name, ssh_key)
-          content = File.read(source_path)
-          upload_mclient.upload(:path => destination_path, :content => content, :overwrite => true, :parents => true)
-        end
+        upload_ssh_key(node_uids, key_name, deployment_id)
       end
     end
     
@@ -113,6 +106,16 @@ module Astute
       File.delete key_path if File.exist? key_path
       result = system("ssh-keygen -b 2048 -t rsa -N '' -f #{key_path}")
       raise "Could not generate ssh key!" unless result
+    end
+    
+    def upload_ssh_key(node_uids, key_name, deployment_id, overwrite=false)
+      upload_mclient = MClient.new(@ctx, "uploadfile", node_uids)
+      [key_name, key_name + ".pub"].each do |ssh_key|
+        source_path = File.join(KEY_DIR, deployment_id.to_s, key_name, ssh_key)
+        destination_path = File.join(KEY_DIR, key_name, ssh_key)
+        content = File.read(source_path)
+        upload_mclient.upload(:path => destination_path, :content => content, :overwrite => true, :parents => true)
+      end
     end
 
     def nodes_status(nodes, status, data_to_merge)
