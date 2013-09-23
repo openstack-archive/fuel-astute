@@ -89,10 +89,13 @@ describe Astute::Orchestrator do
       res.should eql(expected)
     end
 
-    it "dhcp check returns expected info" do
+    it "dhcp check should return expected info" do
       nodes = make_nodes(1, 2)
-      json_output = JSON.dump({'iface'=>'eth1',
-                                'mac'=> 'ff:fa:1f:er:ds:as'})
+      expected_data = [{'iface'=>'eth1',
+                        'mac'=> 'ff:fa:1f:er:ds:as'},
+                       {'iface'=>'eth2',
+                        'mac'=> 'ee:fa:1f:er:ds:as'}]
+      json_output = JSON.dump(expected_data)
       res1 = {
         :data => {:out => json_output},
         :sender => "1"}
@@ -107,8 +110,8 @@ describe Astute::Orchestrator do
       rpcclient.discover(:nodes => ['1', '2'])
       res = Astute::Network.check_dhcp(rpcclient, nodes)
 
-      expected = {"nodes" => [{:status=>"ready", :uid=>"1", :data=>{"iface"=>"eth1", "mac"=>"ff:fa:1f:er:ds:as"}},
-                             {:status=>"ready", :uid=>"2", :data=>{"iface"=>"eth1", "mac"=>"ff:fa:1f:er:ds:as"}}]}
+      expected = {"nodes" => [{:status=>"ready", :uid=>"1", :data=>expected_data},
+                              {:status=>"ready", :uid=>"2", :data=>expected_data}]}
       res.should eql(expected)
     end
 
