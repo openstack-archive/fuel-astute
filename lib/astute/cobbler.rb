@@ -208,7 +208,7 @@ module Astute
 
           # skiping not valid item options
           unless valid_field?(k)
-            Astute.logger.debug("Key #{k} is not valid. Will be skipped.")
+            Astute.logger.warn("Key #{k} is not valid. Will be skipped.")
             next
           end
 
@@ -217,7 +217,7 @@ module Astute
           if k == 'ks_meta'
             if v.kind_of?(Hash)
               v.each do |ks_meta_key, ks_meta_value|
-                ks_meta << " #{ks_meta_key}=#{ks_meta_value}"
+                ks_meta << " #{ks_meta_key}=#{serialize_cobbler_value(ks_meta_value)}"
               end
             elsif v.kind_of?(String)
               ks_meta << " #{v}"
@@ -243,6 +243,14 @@ module Astute
         end # each do |k, v|
         ch.store('ks_meta', ks_meta.strip) if ks_meta.strip.length > 0
         ch
+      end
+
+      def serialize_cobbler_value(value)
+        if value.kind_of?(Hash) || value.kind_of?(Array)
+          return "\"#{value.to_json.gsub('"', '\"')}\""
+        end
+
+        value
       end
 
       def aliased(k)
