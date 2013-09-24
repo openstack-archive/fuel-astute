@@ -524,27 +524,35 @@ module Astute
         'puppet-log-components-list-ha-cinder' => {
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
-          'expected_line_number' => 345
+          'expected_line_number' => 345,
+          'filename' => 'puppet-agent.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>"
         },
 
         'puppet-log-components-list-multinode-cinder' => {
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
-          'expected_line_number' => 345
+          'expected_line_number' => 345,
+          'filename' => 'puppet-agent.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>"
         },
 
         'puppet-log-components-list-singlenode-cinder' => {
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
-          'expected_line_number' => 345
+          'expected_line_number' => 345,
+          'filename' => 'puppet-agent.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>"
         },
 
         'default' => {
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
-          'expected_line_number' => 345
+          'expected_line_number' => 345,
+          'filename' => 'puppet-agent.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>"
         },
       }
     end
-	end
+  end
 end
