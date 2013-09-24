@@ -42,7 +42,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
     begin
       @ctx.deploy_log_parser.prepare(nodes_to_deploy)
-    rescue Exception => e
+    rescue => e
       Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
     end
 

@@ -45,12 +45,11 @@ describe Cobbler do
   end
 
   it "should be able to be initialized with 'host', 'port', 'path'" do
-    host = "host.domain.tld"
-    port = "1234"
-    path = "/api"
     username = 'user'
     password = 'pass'
-
+    host = "host.domain.tld"
+    path = "/api"
+    port = "1234"
     remote = mock() do
       expects(:call).with('login', username, password)
     end
@@ -78,8 +77,10 @@ describe Cobbler do
       XMLRPC::Client = mock() do
         stubs(:new).returns(remote)
       end
-
-      @data = {
+    end
+    
+    let(:data) do
+      {
         'profile' => 'centos-x86_64',
         'power_type' => 'ssh',
         'power_user' => 'root',
@@ -146,7 +147,7 @@ describe Cobbler do
     end
 
     it "item_from_hash should modify item with cobblerized data" do
-      cobblerized_data = Astute::Provision::Cobsh.new(@data.merge({'what' => 'system', 'name' => 'name'})).cobblerized
+      cobblerized_data = Astute::Provision::Cobsh.new(data.merge({'what' => 'system', 'name' => 'name'})).cobblerized
       cobbler = Astute::Provision::Cobbler.new
       cobbler.stubs(:get_item_id).with('system', 'name').returns('itemid')
       cobblerized_data.each do |opt, value|
@@ -160,11 +161,11 @@ describe Cobbler do
                                       'remotetoken'
                                       )
       end
-      cobbler.item_from_hash('system', 'name', @data, :item_preremove => true)
+      cobbler.item_from_hash('system', 'name', data, :item_preremove => true)
     end
 
     it "item_from_hash should modify 'system' interfaces with cobblerized['interfaces']" do
-      cobblerized_data = Astute::Provision::Cobsh.new(@data.merge({'what' => 'system', 'name' => 'name'})).cobblerized
+      cobblerized_data = Astute::Provision::Cobsh.new(data.merge({'what' => 'system', 'name' => 'name'})).cobblerized
       cobbler = Astute::Provision::Cobbler.new
       cobbler.stubs(:get_item_id).with('system', 'name').returns('itemid')
       cobbler.remote.expects(:call).with(
@@ -173,7 +174,7 @@ describe Cobbler do
                                     'modify_interface',
                                     cobblerized_data['interfaces'],
                                     'remotetoken')
-      cobbler.item_from_hash('system', 'name', @data, :item_preremove => true)
+      cobbler.item_from_hash('system', 'name', data, :item_preremove => true)
     end
 
   end
