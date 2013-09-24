@@ -32,10 +32,7 @@ module Astute
       
       def initialize(up_reporter, deployment_info=[])
         @up_reporter = up_reporter
-        # TODO(warpc): Move common check on 'ready' status to orchestrator.rb
-        @nodes = deployment_info.select { |node| node['status'] != 'ready' }.inject([]) do |nodes, di|
-          nodes << {'uid' => di['uid'], 'role' => di['role']}
-        end
+        @nodes = deployment_info.inject([]) { |nodes, di| nodes << {'uid' => di['uid'], 'role' => di['role']} }
         @deploy = deployment_info.present?
       end
 
