@@ -33,7 +33,7 @@ module Astute
     end
 
     def deploy(up_reporter, task_id, deployment_info)
-      proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter)
+      proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, deployment_info)
       log_parser = @log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
       context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)

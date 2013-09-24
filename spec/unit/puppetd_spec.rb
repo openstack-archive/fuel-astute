@@ -27,7 +27,7 @@ describe "Puppetd" do
       Context.new("task id", ProxyReporter::DeploymentProxyReporter.new(reporter), Astute::LogParser::NoParsing.new)
     end
     
-    let(:nodes) { [{'uid' => '1'}] }
+    let(:nodes) { [{'uid' => '1', 'role' => 'compute'}] }
     
     let(:rpcclient) { mock_rpcclient(nodes) }
     
@@ -110,7 +110,7 @@ describe "Puppetd" do
       it "reports ready status for node if puppet deploy finished successfully" do
         prepare_mcollective_env
         
-        reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'ready', 'progress' => 100}])
+        reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}])
         rpcclient.expects(:runonce).at_least_once.returns([mock_mc_result(last_run_result)])
         
         Astute::PuppetdDeployer.deploy(ctx, nodes, retries=0)
@@ -124,6 +124,27 @@ describe "Puppetd" do
         
         Astute::PuppetdDeployer.deploy(ctx, nodes, retries=0, change_node_status=false)
       end
+      
+      context 'multiroles behavior' do
+        let(:nodes) { [{'uid' => '1', 'role' => 'compute'}] }
+        let(:nodes_multiroles) { [{'uid' => '1', 'role' => 'controller'}] }
+        before(:each) do
+          @ctx = Context.new("task id", 
+                             ProxyReporter::DeploymentProxyReporter.new(reporter, nodes + nodes_multiroles), 
+                             Astute::LogParser::NoParsing.new
+                            )
+        end
+        
+        it "it should not send final status before all roles of node will deploy" do
+          prepare_mcollective_env
+          
+          reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}])          
+          rpcclient.expects(:runonce).at_least_once.returns([mock_mc_result(last_run_result)])
+        
+          Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0)
+        end
+      end
+      
     end
 
     context "puppet state transitions" do
@@ -152,7 +173,7 @@ describe "Puppetd" do
           returns([ mock_mc_result(last_run_result_fail) ]).then.
           returns([ mock_mc_result(last_run_failed) ])
         
-        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1', 'role' => 'compute'}])
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
         
@@ -168,7 +189,7 @@ describe "Puppetd" do
           returns([ mock_mc_result(last_run_result_fail) ]).then.
           returns([ mock_mc_result(last_run_failed) ])
         
-        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1', 'role' => 'compute'}])
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
         
@@ -182,7 +203,7 @@ describe "Puppetd" do
           returns([ mock_mc_result(last_run_result_running) ]).then.
           returns([ mock_mc_result(last_run_failed) ])
         
-        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1', 'role' => 'compute'}])
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
         
@@ -197,7 +218,7 @@ describe "Puppetd" do
           returns([ mock_mc_result(last_run_result_fail) ]).then.
           returns([ mock_mc_result(last_run_failed) ])
         
-        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1', 'role' => 'compute'}])
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
         
@@ -210,7 +231,7 @@ describe "Puppetd" do
           returns([ mock_mc_result(last_run_result) ]).then.
           returns([ mock_mc_result(last_run_failed) ])
         
-        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1'}])
+        reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1', 'role' => 'compute'}])
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
         
@@ -248,7 +269,7 @@ describe "Puppetd" do
           returns([rpcclient_fail]).then.
           returns([rpcclient_succeed])
       
-      reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'ready', 'progress' => 100}])
+      reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}])
       rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])
 
       MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
