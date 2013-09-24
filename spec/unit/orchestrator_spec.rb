@@ -80,11 +80,38 @@ describe Astute::Orchestrator do
           with(:interfaces => data_to_send.to_json).
           returns([mc_valid_res]*2)
       end
+      Astute::Network.expects(:check_dhcp)
       Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
 
       res = @orchestrator.verify_networks(@reporter, 'task_uuid', nodes)
       expected = {"nodes" => [{"networks" => [{"iface"=>"eth0", "vlans"=>[100]}], "uid"=>"1"},
           {"networks"=>[{"iface"=>"eth0", "vlans"=>[100, 101]}], "uid"=>"2"}]}
+      res.should eql(expected)
+    end
+
+    it "dhcp check should return expected info" do
+      nodes = make_nodes(1, 2)
+      expected_data = [{'iface'=>'eth1',
+                        'mac'=> 'ff:fa:1f:er:ds:as'},
+                       {'iface'=>'eth2',
+                        'mac'=> 'ee:fa:1f:er:ds:as'}]
+      json_output = JSON.dump(expected_data)
+      res1 = {
+        :data => {:out => json_output},
+        :sender => "1"}
+      res2 = {
+        :data => {:out => json_output},
+        :sender => "2"}
+
+      rpcclient = mock_rpcclient(nodes)
+
+      rpcclient.expects(:dhcp_discover).at_least_once.returns([res1, res2])
+
+      rpcclient.discover(:nodes => ['1', '2'])
+      res = Astute::Network.check_dhcp(rpcclient, nodes)
+
+      expected = {"nodes" => [{:status=>"ready", :uid=>"1", :data=>expected_data},
+                              {:status=>"ready", :uid=>"2", :data=>expected_data}]}
       res.should eql(expected)
     end
 
