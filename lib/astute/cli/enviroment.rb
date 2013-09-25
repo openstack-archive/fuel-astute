@@ -31,8 +31,7 @@ module Astute
                                'mco_auto_setup', 'auth_key', 'puppet_version', 'mco_connector', 'mco_host']
       NETWORK_KEYS          = ['ip', 'mac', 'fqdn']
       PROVISIONING_NET_KEYS = ['power_address']
-      PROVISION_OPERATIONS = [:provision, :provision_and_deploy]
-      DEPLOY_OPERATIONS = [:deploy, :provision_and_deploy]
+      PROVISION_OPERATIONS  = [:provision]
       
       CIDR_REGEXP = '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|
                     2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))$'
@@ -53,12 +52,12 @@ module Astute
         @config['nodes'].each do |node|
         
           # Common section
-          node['meta'] ||= {}
-          define_network_ids(node)
           define_id_and_uid(node)
         
           # Provision section
           if PROVISION_OPERATIONS.include? operation
+            node['meta'] ||= {}
+            define_network_ids(node)
             define_power_address(node)
             define_interfaces_and_interfaces_extra(node)
             define_ks_spaces(node)
@@ -66,13 +65,6 @@ module Astute
             define_ks_meta(node)
             define_node_settings(node)
             define_disks_section(node)
-          end
-          
-          # Deploy section
-          if DEPLOY_OPERATIONS.include? operation
-            define_meta_interfaces(node)
-            define_fqdn(node)
-            define_network_data(node)
           end
         end
       end
@@ -92,47 +84,6 @@ module Astute
         
         if errors.select {|e| !e.message.include?("is undefined") }.size > 0
           raise Enviroment::ValidationError, "Environment validation failed"
-        end
-        
-        if DEPLOY_OPERATIONS.include?(operation)
-          if @config['attributes']['quantum']
-            @config['nodes'].each do |node|
-              ['public_br', 'internal_br'].each do |br|
-                if node[br].nil? || node[br].empty?
-                  raise Enviroment::ValidationError, "Node #{node['name'] || node['hostname']}
-                                              required 'public_br' and 'internal_br' when quantum is 'true'" 
-                end
-              end
-            end
-
-            errors = []
-            ['quantum_parameters', 'quantum_access'].each do |param|
-              errors << param unless @config['attributes'][param].present?
-            end
-            errors.each do |field|
-              msg = "#{field} is required when quantim is true"
-              raise Enviroment::ValidationError, msg
-            end
-
-            if !is_cidr_notation?(@config['attributes']['floating_network_range'])
-              msg = "'floating_network_range' is required CIDR notation when quantum is 'true'"
-              raise Enviroment::ValidationError, msg
-            end
-          
-            if !is_cidr_notation?(@config['attributes']['floating_network_range'])
-              msg = "'floating_network_range' is required CIDR notation"
-              raise Enviroment::ValidationError, msg
-            end
-          else
-            if @config['attributes']['floating_network_range'].is_a?(Array)
-              msg = "'floating_network_range' is required array of IPs when quantum is 'false'"
-              raise Enviroment::ValidationError, msg
-            end
-          end
-          if !is_cidr_notation?(@config['attributes']['fixed_network_range'])
-            msg = "'fixed_network_range' is required CIDR notation"
-            raise Enviroment::ValidationError, msg
-          end
         end
       end
       

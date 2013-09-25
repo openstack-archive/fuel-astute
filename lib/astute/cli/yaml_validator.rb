@@ -19,13 +19,7 @@ module Astute
     class YamlValidator < Kwalify::Validator
     
       def initialize(operation)
-        schemas = if [:deploy, :provision].include? operation
-          [operation]
-        elsif operation == :provision_and_deploy
-          [:provision, :deploy]
-        else
-          raise "Incorrect scheme for validation"
-        end
+        [:provision].include?(operation) ? schemas = [operation] : raise("Incorrect scheme for validation")
         
         schema_hashes = []
         schema_dir_path = File.expand_path(File.dirname(__FILE__))
