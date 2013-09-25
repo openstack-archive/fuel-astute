@@ -86,7 +86,7 @@ module Astute
     def include_node?(nodes_array, node)
       nodes_array.find { |n| node['uid'] == n['uid'] }
     end
-    
+
     # Generate and upload ssh keys from master node to all cluster nodes.
     def generate_and_upload_ssh_keys(node_uids, deployment_id)
       raise "Deployment_id is missing" unless deployment_id
@@ -95,19 +95,19 @@ module Astute
         upload_ssh_key(node_uids, key_name, deployment_id)
       end
     end
-    
+
     def generate_ssh_key(key_name, deployment_id, overwrite=false)
       dir_path = File.join(KEY_DIR, deployment_id.to_s, key_name)
       key_path = File.join(dir_path, key_name)
       FileUtils.mkdir_p dir_path
       return if File.exist?(key_path) && !overwrite
-      
+
       # Generate 2 keys(<name> and <name>.pub) and save it to <KEY_DIR>/<name>/
       File.delete key_path if File.exist? key_path
       result = system("ssh-keygen -b 2048 -t rsa -N '' -f #{key_path}")
       raise "Could not generate ssh key!" unless result
     end
-    
+
     def upload_ssh_key(node_uids, key_name, deployment_id, overwrite=false)
       upload_mclient = MClient.new(@ctx, "uploadfile", node_uids)
       [key_name, key_name + ".pub"].each do |ssh_key|
@@ -119,7 +119,11 @@ module Astute
     end
 
     def nodes_status(nodes, status, data_to_merge)
-      {'nodes' => nodes.map { |n| {'uid' => n['uid'], 'status' => status}.merge(data_to_merge) }}
+      {
+        'nodes' => nodes.map do |n|
+          {'uid' => n['uid'], 'status' => status, 'role' => n['role']}.merge(data_to_merge)
+        end
+      }
     end
 
   end
