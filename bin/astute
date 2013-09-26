@@ -41,7 +41,7 @@ def report_and_exit(exception, verbose)
 end
 
 def analize_deploy(status)
-  status.has_value?('error') ? Astute::FAIL : Astute::SUCCESS 
+  status.has_value?('error') ? Astute::FAIL : Astute::SUCCESS
 end
 
 opts = {}
@@ -59,7 +59,7 @@ optparse = OptionParser.new do |o|
   o.on_tail("-h", "--help", "Show this message") { puts o; exit }
 
   o.on_tail("--version", "Show version") { puts Astute::VERSION; exit }
-  
+
   o.on("-c", "--command COMMAND", [:provision],
                                     "Select operation: provision") do |c|
     opts[:command] = c
