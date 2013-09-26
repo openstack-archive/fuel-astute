@@ -41,7 +41,7 @@ def report_and_exit(exception, verbose)
 end
 
 def analize_deploy(status)
-  status.has_value?('error') ? Astute::FAIL : Astute::SUCCESS 
+  status.has_value?('error') ? Astute::FAIL : Astute::SUCCESS
 end
 
 opts = {}
@@ -59,13 +59,13 @@ optparse = OptionParser.new do |o|
   o.on_tail("-h", "--help", "Show this message") { puts o; exit }
 
   o.on_tail("--version", "Show version") { puts Astute::VERSION; exit }
-  
-  o.on("-c", "--command COMMAND", [:provision, :deploy, :provision_and_deploy],
-                                    "Select operation: provision, deploy or provision_and_deploy") do |c|
+
+  o.on("-c", "--command COMMAND", [:provision],
+                                    "Select operation: provision") do |c|
     opts[:command] = c
   end
-  
 end
+
 optparse.parse!(ARGV)
 
 if opts[:filename].nil?
@@ -83,8 +83,6 @@ rescue Errno::ENOENT, Psych::SyntaxError, Astute::Cli::Enviroment::ValidationErr
   report_and_exit(e, opts[:verbose])
 end
 
-deploy_engine = nil
-
 if environment['attributes'] && environment['attributes']['deployment_engine']
   case environment['attributes']['deployment_engine']
     when 'nailyfact'
@@ -92,9 +90,8 @@ if environment['attributes'] && environment['attributes']['deployment_engine']
   end
 end
 
-if [:deploy, :provision, :provision_and_deploy].include? opts[:command]
-  orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=true)
-end
+deploy_engine ||= nil
+orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=true)
 
 def console_provision(orchestrator, reporter, environment)
   orchestrator.provision(reporter, environment['engine'], environment['nodes'])
@@ -104,22 +101,8 @@ def console_provision(orchestrator, reporter, environment)
   orchestrator.watch_provision_progress(reporter, environment['task_uuid'], environment['nodes'])
 end
 
-result = Astute::SUCCESS
-
 begin
-  result = case opts[:command]
-    when :deploy
-      analize_deploy orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
-    when :provision
-      console_provision(orchestrator, reporter, environment)
-    when :provision_and_deploy
-      res = console_provision(orchestrator, reporter, environment)
-      if res == Astute::SUCCESS
-        res = analize_deploy orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
-      end
-      res
-    end
+  exit console_provision(orchestrator, reporter, environment) if opts[:command] == :provision
 rescue => e
   report_and_exit(e, opts[:verbose])
 end
-exit result

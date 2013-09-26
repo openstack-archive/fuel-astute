@@ -37,13 +37,13 @@ deploy_engine = Astute::DeploymentEngine::NailyFact
 orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
 
 # Add systems to cobbler, reboot and start installation process.
-orchestrator.fast_provision(reporter, environment['engine'], environment['nodes'])
+orchestrator.provision(reporter, environment['engine'], environment['nodes'])
 
 # Observation OS installation 
-orchestrator.provision(reporter, environment['task_uuid'], environment['nodes'])
+orchestrator.watch_provision_progress(reporter, environment['task_uuid'], environment['nodes'])
 
 # Deploy OpenStack
-orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'], environment['attributes'])
+orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'])
 
 ```
 
@@ -53,17 +53,12 @@ http://docs.mirantis.com/fuel/3.1/installation-fuel-cli.html#yaml-high-level-str
 Simple example of using Astute as library: https://github.com/Mirantis/astute/blob/master/bin/astute
 
 
-
 Using as CLI
 -----
 
 Provision:
     
     astute -f simple.yaml -c provision
-    
-Deploy:
-
-    astute -f simple.yaml -c deploy
 
 More information about content of `simple.yaml` you can find here: http://docs.mirantis.com/fuel/3.1/installation-fuel-cli.html#yaml-high-level-structure
 
