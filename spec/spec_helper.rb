@@ -76,12 +76,14 @@ module SpecHelpers
     ctx = mock
     ctx.stubs(:task_id)
     ctx.stubs(:deploy_log_parser).returns(parser)
-    reporter = mock
+    reporter = mock() do
+      stubs(:report)
+    end
     ctx.stubs(:reporter).returns(reporter)
 
     ctx
   end
-  
+
   # Transform fixtures from nailgun format node['roles'] array to node['role'] string
   def nodes_with_role(data, role)
     data.select { |n| n['role'] == role }
