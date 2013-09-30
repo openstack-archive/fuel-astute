@@ -17,34 +17,45 @@ require File.join(File.dirname(__FILE__), '../spec_helper')
 
 describe "NailyFact DeploymentEngine" do
   include SpecHelpers
-  
+
   context "When deploy is called, " do
-    before(:each) do
-      @ctx = mock
-      @ctx.stubs(:task_id)
-      @ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::NoParsing.new)
+    let(:ctx) do
+      ctx = mock
+      ctx.stubs(:task_id)
+      ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::NoParsing.new)
       reporter = mock
-      @ctx.stubs(:reporter).returns(reporter)
       reporter.stubs(:report)
-      @deploy_engine = Astute::DeploymentEngine::NailyFact.new(@ctx)
+      up_reporter = Astute::ProxyReporter::DeploymentProxyReporter.new(reporter, deploy_data)
+      ctx.stubs(:reporter).returns(up_reporter)
+      ctx
     end
-    
+
+    let(:deploy_engine) do
+      Astute::DeploymentEngine::NailyFact.new(ctx)
+    end
+
     let(:controller_nodes) do
       nodes_with_role(deploy_data, 'controller')
     end
-    
-    let(:compute_nodes) do 
+
+    let(:compute_nodes) do
       nodes_with_role(deploy_data, 'compute')
     end
-    
-    let(:cinder_nodes) do 
+
+    let(:cinder_nodes) do
       nodes_with_role(deploy_data, 'cinder')
     end
-    
+
     context 'log parsing' do
-      xit "it should not raise an exception if deployment mode is unknown" do
-        nodes = [{'uid' => 1, 'role' => 'controller', 'deployment_mode' => 'unknown'}]
-        expect {@deploy_engine.deploy(nodes)}.to_not raise_exception(/Method attrs_unknown is not implemented/)
+      let(:deploy_data) do
+        [{'uid' => 1, 'role' => 'controller', 'deployment_mode' => 'unknown', 'deployment_id' => '123'}]
+      end
+
+      it "it should not raise an exception if deployment mode is unknown" do
+        deploy_engine.stubs(:generate_and_upload_ssh_keys).with([1], deploy_data.first['deployment_id'])
+        Astute::Metadata.stubs(:publish_facts).times(deploy_data.size)
+        Astute::PuppetdDeployer.stubs(:deploy).with(ctx, deploy_data, instance_of(Fixnum), true).once
+        expect {deploy_engine.deploy(deploy_data)}.to_not raise_exception
       end
     end
 
@@ -55,17 +66,17 @@ describe "NailyFact DeploymentEngine" do
 
       it "should not raise any exception" do
         Astute::Metadata.expects(:publish_facts).times(deploy_data.size)
-        
-        uniq_nodes_uid = deploy_data.map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
-        
+
+        uniq_nodes_uid = deploy_data.map { |n| n['uid'] }.uniq
+        deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
+
         # we got two calls, one for controller (high priority), and another for all computes (same low priority)
-        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, controller_nodes, instance_of(Fixnum), true).once
-        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
-        @deploy_engine.deploy(deploy_data)
+        Astute::PuppetdDeployer.expects(:deploy).with(ctx, controller_nodes, instance_of(Fixnum), true).once
+        Astute::PuppetdDeployer.expects(:deploy).with(ctx, compute_nodes, instance_of(Fixnum), true).once
+        deploy_engine.deploy(deploy_data)
       end
     end
-    
+
     context 'multiroles support' do
       let(:deploy_data) do
         data = Fixtures.multi_deploy
@@ -74,35 +85,35 @@ describe "NailyFact DeploymentEngine" do
         cinder_node['role'] = 'cinder'
         [compute_node, cinder_node]
       end
-    
+
       let(:node_amount) { deploy_data.size }
-    
+
       it "should prepare log parsing for every deploy call because node may be deployed several times" do
         Astute::Metadata.expects(:publish_facts).times(node_amount)
-        @ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
-        @ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
-        
+        ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
+        ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
+
         uniq_nodes_uid = deploy_data.map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
+        deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
         Astute::PuppetdDeployer.expects(:deploy).times(2)
-       
-        @deploy_engine.deploy(deploy_data)
+
+        deploy_engine.deploy(deploy_data)
       end
-    
-      it "should generate and publish facts for every deploy call because node may be deployed several times" do        
-        @ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
-        @ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
+
+      it "should generate and publish facts for every deploy call because node may be deployed several times" do
+        ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
+        ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
         Astute::Metadata.expects(:publish_facts).times(node_amount)
-        
+
         uniq_nodes_uid = deploy_data.map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
-      
+        deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
+
         Astute::PuppetdDeployer.expects(:deploy).times(2)
-       
-        @deploy_engine.deploy(deploy_data)
+
+        deploy_engine.deploy(deploy_data)
       end
     end
-    
+
     context 'ha deploy' do
       let(:deploy_data) do
         Fixtures.ha_deploy
@@ -110,31 +121,31 @@ describe "NailyFact DeploymentEngine" do
 
       it "ha deploy should not raise any exception" do
         Astute::Metadata.expects(:publish_facts).at_least_once
-        
+
         uniq_nodes_uid = deploy_data.map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
-        
+        deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
+
         primary_controller = deploy_data.find { |n| n['role'] == 'primary-controller' }
-        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [primary_controller], 2, true).once
-        
+        Astute::PuppetdDeployer.expects(:deploy).with(ctx, [primary_controller], 2, true).once
+
         controller_nodes.each do |n|
-          Astute::PuppetdDeployer.expects(:deploy).with(@ctx, [n], 2, true).once
+          Astute::PuppetdDeployer.expects(:deploy).with(ctx, [n], 2, true).once
         end
-        Astute::PuppetdDeployer.expects(:deploy).with(@ctx, compute_nodes, instance_of(Fixnum), true).once
-      
-        @deploy_engine.deploy(deploy_data)
+        Astute::PuppetdDeployer.expects(:deploy).with(ctx, compute_nodes, instance_of(Fixnum), true).once
+
+        deploy_engine.deploy(deploy_data)
       end
 
       it "ha deploy should not raise any exception if there are only one controller" do
         Astute::Metadata.expects(:publish_facts).at_least_once
         Astute::PuppetdDeployer.expects(:deploy).once
-        
+
         ctrl = deploy_data.find { |n| n['role'] == 'controller' }
-        
+
         uniq_nodes_uid = [ctrl].map {|n| n['uid'] }.uniq
-        @deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
-        
-        @deploy_engine.deploy([ctrl])
+        deploy_engine.expects(:generate_and_upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
+
+        deploy_engine.deploy([ctrl])
       end
     end
 
