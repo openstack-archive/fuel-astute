@@ -214,7 +214,7 @@ module Astute
 
           # here we don't store ks_meta directly in ch (cobblerized hash)
           # instead we just append ks_meta value to store it later
-          if k == 'ks_meta'
+          if ['ks_meta', 'kernel_options'].include?(k)
             if v.kind_of?(Hash)
               v.each do |ks_meta_key, ks_meta_value|
                 ks_meta << " #{ks_meta_key}=#{serialize_cobbler_value(ks_meta_value)}"
