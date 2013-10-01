@@ -231,8 +231,8 @@ module Astute
 
           ch.store(k, v)
         end # each do |k, v|
-        ch.store('ks_meta', ks_meta.strip) if ks_meta.strip.length > 0
-        ch.store('kernel_options', kernel_options.strip) if kernel_options.strip.length > 0
+        ch.store('ks_meta', ks_meta.strip) unless ks_meta.strip.empty?
+        ch.store('kernel_options', kernel_options.strip) unless kernel_options.strip.empty?
         ch
       end
 
