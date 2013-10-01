@@ -196,7 +196,8 @@ module Astute
       def cobblerized
         Astute.logger.debug("Cobblerizing hash: #{inspect}")
         ch = {}
-        ks_meta = ""
+        ks_meta = ''
+        kernel_options = ''
 
         each do |k, v|
           k = aliased(k)
@@ -212,19 +213,8 @@ module Astute
             next
           end
 
-          # here we don't store ks_meta directly in ch (cobblerized hash)
-          # instead we just append ks_meta value to store it later
-          if k == 'ks_meta'
-            if v.kind_of?(Hash)
-              v.each do |ks_meta_key, ks_meta_value|
-                ks_meta << " #{ks_meta_key}=#{serialize_cobbler_value(ks_meta_value)}"
-              end
-            elsif v.kind_of?(String)
-              ks_meta << " #{v}"
-            else
-              raise "Wrong ks_meta format. It must be Hash or String"
-            end
-          end
+          ks_meta = serialize_cobbler_parameter(v) if 'ks_meta' == k
+          kernel_options = serialize_cobbler_parameter(v) if 'kernel_options' == k
 
           # special handling for system interface fields
           # which are the only objects in cobbler that will ever work this way
@@ -241,8 +231,24 @@ module Astute
 
           ch.store(k, v)
         end # each do |k, v|
-        ch.store('ks_meta', ks_meta.strip) if ks_meta.strip.length > 0
+        ch.store('ks_meta', ks_meta.strip) unless ks_meta.strip.empty?
+        ch.store('kernel_options', kernel_options.strip) unless kernel_options.strip.empty?
         ch
+      end
+
+      def serialize_cobbler_parameter(param)
+        serialized_param = ''
+        if param.kind_of?(Hash)
+          param.each do |ks_meta_key, ks_meta_value|
+            serialized_param << " #{ks_meta_key}=#{serialize_cobbler_value(ks_meta_value)}"
+          end
+        elsif param.kind_of?(String)
+          param
+        else
+          raise CobblerError, "Wrong param format. It must be Hash or String: '#{param}'"
+        end
+
+        serialized_param
       end
 
       def serialize_cobbler_value(value)
