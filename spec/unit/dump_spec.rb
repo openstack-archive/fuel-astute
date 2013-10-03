@@ -14,75 +14,67 @@
 
 
 require File.join(File.dirname(__FILE__), '../spec_helper')
-include Astute::Dump
 
 describe 'dump_environment' do
   include SpecHelpers
-
+  
+  before(:each) { @tmp = Astute::MClient }
+  after(:each)  { Astute::MClient = @tmp }
+  
+  let(:ctx) { mock_ctx() }
+  
   it "should call execute method with nailgun_dump as cmd" do
-    ctx = mock_ctx()
     lastdump = "LASTDUMP"
+    ctx = mock_ctx()
+    
     agent = mock() do
       expects(:execute).with({:cmd => "/opt/nailgun/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}"}).\
       returns([{:data => {:exit_code => 0, :stdout => "stdout", :stderr => "stderr"}}])
     end
-
-    tmp = Astute::MClient
+    
     Astute::MClient = mock() do
       expects(:new).with(ctx, 'execute_shell_command', ['master']).returns(agent)
     end
     Astute::Dump.dump_environment(ctx, lastdump)
-    Astute::MClient = tmp
   end
 
   it "should report success if shell agent returns 0" do
-    ctx = mock_ctx()
     agent = mock() do
       expects(:execute).returns([{:data => {:exit_code => 0, :stdout => "stdout"}}])
     end
-    tmp = Astute::MClient
     Astute::MClient = mock() do
       stubs(:new).returns(agent)
     end
     Astute::Dump.expects(:report_success)
     Astute::Dump.dump_environment(ctx, nil)
-    Astute::MClient = tmp
   end
 
   it "should report error if shell agent returns not 0" do
-    ctx = mock_ctx()
     agent = mock() do
       expects(:execute).returns([{:data => {:exit_code => 1, :stderr => "stderr"}}])
     end
-    tmp = Astute::MClient
     Astute::MClient = mock() do
       stubs(:new).returns(agent)
     end
     Astute::Dump.expects(:report_error).with(ctx, "exit code: 1 stderr: stderr")
     Astute::Dump.dump_environment(ctx, nil)
-    Astute::MClient = tmp
   end
 
   it "should report error if shell agent times out" do
-    ctx = mock_ctx()
     agent = mock() do
       expects(:execute).raises(Timeout::Error)
     end
-    tmp = Astute::MClient
     Astute::MClient = mock() do
       stubs(:new).returns(agent)
     end
     Astute::Dump.expects(:report_error).with(ctx, "Dump is timed out")
     Astute::Dump.dump_environment(ctx, nil)
-    Astute::MClient = tmp
   end
 
   it "should report error if any other exception occured" do
-    ctx = mock_ctx()
     agent = mock() do
       expects(:execute).raises(Exception, "MESSAGE")
     end
-    tmp = Astute::MClient
     Astute::MClient = mock() do
       stubs(:new).returns(agent)
     end
@@ -90,6 +82,5 @@ describe 'dump_environment' do
       c == ctx && msg =~ /Exception occured during dump task: message: MESSAGE/
     end
     Astute::Dump.dump_environment(ctx, nil)
-    Astute::MClient = tmp
   end
 end
