@@ -31,22 +31,6 @@ describe "MCollective" do
       check_mcollective_result(stats)
       stats[0].results[:data][:msg].should eql("Hello, it is my reply: #{data_to_send}")
     end
-
-    it "it should update facts file with new key-value and could get it back" do
-      data_to_send = {"anykey" => rand(2**30).to_s, "other" => "static"}
-      mc = rpcclient("nailyfact")
-      mc.progress = false
-      mc.discover(:nodes => [NODE])
-      stats = mc.post(:value => data_to_send.to_json)
-      check_mcollective_result(stats)
-
-      stats = mc.get(:key => "anykey")
-      check_mcollective_result(stats)
-      stats[0].results[:data][:value].should eql(data_to_send['anykey'])
-      stats = mc.get(:key => "other")
-      check_mcollective_result(stats)
-      stats[0].results[:data][:value].should eql(data_to_send['other'])
-    end
   end
 end
 
