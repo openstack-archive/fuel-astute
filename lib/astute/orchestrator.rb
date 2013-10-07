@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+require 'astute/validator'
+
 module Astute
   class Orchestrator
     def initialize(deploy_engine=nil, log_parsing=false)
@@ -43,8 +45,9 @@ module Astute
       context.status
     end
 
-    def provision(reporter, engine_attrs, nodes)
+    def provision(reporter, engine_attrs, nodes, strong_validation = true)
       raise "Nodes to provision are not provided!" if nodes.empty?
+      validate_provision_attrs(engine_attrs, nodes, strong_validation)
 
       engine = create_engine(engine_attrs, reporter)
       begin
@@ -308,6 +311,12 @@ module Astute
         Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.format_backtrace}"
       end
     end
-
+    
+    private
+    
+    def validate_provision_attrs(engine_attrs, nodes, do_raise = true)
+      Validator.new(:provision).validate_data({'engine' => engine_attrs, 'nodes' => nodes}, do_raise)
+    end
+    
   end
 end

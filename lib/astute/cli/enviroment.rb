@@ -38,7 +38,6 @@ module Astute
       
       def initialize(file, operation)
         @config = YAML.load_file(file)
-        validate_enviroment(operation)
         to_full_config(operation)
       end
       
@@ -60,30 +59,11 @@ module Astute
             define_network_ids(node)
             define_power_address(node)
             define_interfaces_and_interfaces_extra(node)
-            define_ks_spaces(node)
             define_power_info(node)
             define_ks_meta(node)
             define_node_settings(node)
             define_disks_section(node)
           end
-        end
-      end
-      
-      def validate_enviroment(operation)
-        validator = YamlValidator.new(operation)
-        errors = validator.validate(@config)
-      
-        errors.each do |e|
-          if e.message.include?("is undefined")
-            Astute.logger.warn "[#{e.path}] #{e.message}"
-          else
-            Astute.logger.error "[#{e.path}] #{e.message}"
-            $stderr.puts "[#{e.path}] #{e.message}"
-          end
-        end
-        
-        if errors.select {|e| !e.message.include?("is undefined") }.size > 0
-          raise Enviroment::ValidationError, "Environment validation failed"
         end
       end
       
@@ -276,40 +256,6 @@ module Astute
             }
           end
         end
-      end
-  
-      # Generate 'ks_spaces' param from 'ks_disks' param in section 'ks_meta' 
-      # Example input for 'ks_disks' param: 
-      # [{
-      #   "type"=>"disk", 
-      #   "id"=>"disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0",
-      #   "size"=>16384, 
-      #   "volumes"=>[
-      #     {
-      #       "type"=>"boot", 
-      #       "size"=>300
-      #     }, 
-      #     {
-      #       "type"=>"pv", 
-      #       "size"=>16174, 
-      #       "vg"=>"os"
-      #     }
-      #   ]
-      # }]
-      # Example result for 'ks_spaces' param: "[{"type": "disk", "id": "disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0", "volumes": [{"type": "boot", "size": 300}, {"mount": "/boot", "type": "raid", "size": 200}, {"type": "lvm_meta", "name": "os", "size": 64}, {"size": 11264, "type": "pv", "vg": "os"}, {"type": "lvm_meta", "name": "image", "size": 64}, {"size": 4492, "type": "pv", "vg": "image"}], "size": 16384}]"
-      def define_ks_spaces(node)
-        if node['ks_meta']['ks_spaces'].present?
-          node['ks_meta'].delete('ks_disks')
-          return
-        end
-    
-        if node['ks_meta']['ks_disks'].blank?
-          raise Enviroment::ValidationError, "Please set 'ks_disks' or 'ks_spaces' parameter 
-                in section ks_meta for #{node['name']}"
-        end
-    
-        node['ks_meta']['ks_spaces'] = '"' + node['ks_meta']['ks_disks'].to_json.gsub("\"", "\\\"") + '"'
-        node['ks_meta'].delete('ks_disks')
       end
       
       def is_cidr_notation?(value)
