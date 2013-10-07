@@ -25,6 +25,10 @@ require 'astute'
 require 'astute/version'
 require 'astute/cli/enviroment'
 
+SUCCESS = 0
+FAIL = 1
+ERROR_CODE_COMMAND_USAGE = 64
+
 class ConsoleReporter
   def report(msg)
     puts msg.inspect
@@ -37,11 +41,12 @@ def report_and_exit(exception, verbose)
     puts "Hint: use astute with --verbose or check log (#{Astute::LOG_PATH}) for more details"
   end
   Astute.logger.error exception.format_backtrace
-  exit Astute::FAIL
+  exit FAIL
 end
 
-def analize_deploy(status)
-  status.has_value?('error') ? Astute::FAIL : Astute::SUCCESS
+def exit_code(status)
+  status.each { |node| return FAIL if node['status'] == 'error' }
+  SUCCESS
 end
 
 opts = {}
@@ -70,7 +75,6 @@ optparse.parse!(ARGV)
 
 if opts[:filename].nil?
   puts optparse
-  ERROR_CODE_COMMAND_USAGE = 64
   exit ERROR_CODE_COMMAND_USAGE
 end
 
@@ -98,7 +102,7 @@ def console_provision(orchestrator, reporter, environment)
   puts "restarting nodes..."
   sleep 5
   puts "start watching progress"
-  orchestrator.watch_provision_progress(reporter, environment['task_uuid'], environment['nodes'])
+  exit_code orchestrator.watch_provision_progress(reporter, environment['task_uuid'], environment['nodes'])
 end
 
 begin

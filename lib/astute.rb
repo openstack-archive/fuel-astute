@@ -43,8 +43,6 @@ module Astute
   LogParser.autoload :ParseProvisionLogs, 'astute/logparser/provision'
   LogParser.autoload :Patterns, 'astute/logparser/parser_patterns'
 
-  SUCCESS = 0
-  FAIL = 1
   LOG_PATH = '/var/log/astute.log'
 
   def self.logger
