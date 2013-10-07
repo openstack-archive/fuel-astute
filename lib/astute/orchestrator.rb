@@ -38,7 +38,7 @@ module Astute
       context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = @deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
-      
+
       deploy_engine_instance.deploy(deployment_info)
       context.status
     end
@@ -79,40 +79,27 @@ module Astute
     def watch_provision_progress(reporter, task_id, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
 
-      nodes_uids = nodes.map { |n| n['uid'] }
-
-      provisionLogParser = @log_parsing ? LogParser::ParseProvisionLogs.new : LogParser::NoParsing.new
+      provision_log_parser = @log_parsing ? LogParser::ParseProvisionLogs.new : LogParser::NoParsing.new
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(reporter)
-      sleep_not_greater_than(10) do # Wait while nodes going to reboot
-        Astute.logger.info "Starting OS provisioning for nodes: #{nodes_uids.join(',')}"
-        begin
-          provisionLogParser.prepare(nodes)
-        rescue => e
-          Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
-        end
-      end
-      nodes_not_booted = nodes_uids.clone
+
+      prepare_logs_for_parsing(provision_log_parser, nodes)
+
+      nodes_not_booted = nodes.map{ |n| n['uid'] }
       begin
         Timeout.timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
           catch :done do
             while true
               sleep_not_greater_than(5) do
-                types = node_type(proxy_reporter, task_id, nodes, 2)
-                types.each { |t| Astute.logger.debug("Got node types: uid=#{t['uid']} type=#{t['node_type']}") }
-
-                Astute.logger.debug("Not target nodes will be rejected")
-                target_uids = types.reject{|n| n['node_type'] != 'target'}.map{|n| n['uid']}
-                nodes_not_booted -= types.map { |n| n['uid'] }
-                Astute.logger.debug "Not provisioned: #{nodes_not_booted.join(',')}, got target OSes: #{target_uids.join(',')}"
+                nodes_types = node_type(proxy_reporter, task_id, nodes, 2)
+                target_uids, nodes_not_booted = analize_node_types(nodes_types, nodes_not_booted)
 
                 if nodes.length == target_uids.length
                   Astute.logger.info "All nodes #{target_uids.join(',')} are provisioned."
                   throw :done
-                else
-                  Astute.logger.debug("Nodes list length is not equal to target nodes list length: #{nodes.length} != #{target_uids.length}")
                 end
 
-                report_about_progress(proxy_reporter, provisionLogParser, nodes_uids, target_uids, nodes)
+                Astute.logger.debug("Nodes list length is not equal to target nodes list length: #{nodes.length} != #{target_uids.length}")
+                report_about_progress(proxy_reporter, provision_log_parser, target_uids, nodes)
               end
             end
           end
@@ -126,15 +113,15 @@ module Astute
                                                   'error_msg' => msg,
                                                   'progress' => 100,
                                                   'error_type' => 'provision'} }
-        proxy_reporter.report({'status' => 'error', 'error' => msg, 'nodes' => error_nodes})
-        return FAIL
+        proxy_reporter.report('status' => 'error', 'error' => msg, 'nodes' => error_nodes)
+        error_nodes
       end
 
       nodes_progress = nodes.map do |n|
         {'uid' => n['uid'], 'progress' => 100, 'status' => 'provisioned'}
       end
-      proxy_reporter.report({'nodes' => nodes_progress})
-      return SUCCESS
+      proxy_reporter.report('nodes' => nodes_progress)
+      nodes_progress
     end
 
     def remove_nodes(reporter, task_id, nodes)
@@ -220,6 +207,27 @@ module Astute
       reporter.report(status)
     end
 
+    def prepare_logs_for_parsing(provision_log_parser, nodes)
+      sleep_not_greater_than(10) do # Wait while nodes going to reboot
+        Astute.logger.info "Starting OS provisioning for nodes: #{nodes.map{ |n| n['uid'] }.join(',')}"
+        begin
+          provision_log_parser.prepare(nodes)
+        rescue => e
+          Astute.logger.warn "Some error occurred when prepare LogParser: #{e.message}, trace: #{e.format_backtrace}"
+        end
+      end
+    end
+
+    def analize_node_types(types, nodes_not_booted)
+      types.each { |t| Astute.logger.debug("Got node types: uid=#{t['uid']} type=#{t['node_type']}") }
+      target_uids = types.reject{ |n| n['node_type'] != 'target' }.map{ |n| n['uid'] }
+      Astute.logger.debug("Not target nodes will be rejected")
+
+      nodes_not_booted -= types.map { |n| n['uid'] }
+      Astute.logger.debug "Not provisioned: #{nodes_not_booted.join(',')}, got target OSes: #{target_uids.join(',')}"
+      return target_uids, nodes_not_booted
+    end
+
     def sleep_not_greater_than(sleep_time, &block)
       time = Time.now.to_f
       block.call
@@ -229,7 +237,7 @@ module Astute
 
     def create_engine(engine_attrs, reporter)
       raise "Settings for Cobbler must be set" if engine_attrs.blank?
-      
+
       begin
         Astute.logger.info("Trying to instantiate cobbler engine: #{engine_attrs.inspect}")
         Astute::Provision::Cobbler.new(engine_attrs)
@@ -256,7 +264,7 @@ module Astute
         end
       end # end iteration
     end
-        
+
     def reboot_nodes(engine, nodes)
       nodes.inject({}) do |reboot_events, node|
         Astute.logger.debug("Trying to reboot node: #{node['name']}")
@@ -292,9 +300,9 @@ module Astute
       failed_nodes
     end
 
-    def report_about_progress(reporter, provisionLogParser, nodes_uids, target_uids, nodes)
+    def report_about_progress(reporter, provision_log_parser, target_uids, nodes)
       begin
-        nodes_progress = provisionLogParser.progress_calculate(nodes_uids, nodes)
+        nodes_progress = provision_log_parser.progress_calculate(nodes.map{ |n| n['uid'] }, nodes)
         nodes_progress.each do |n|
           if target_uids.include?(n['uid'])
             n['progress'] = 100
