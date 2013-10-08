@@ -193,11 +193,19 @@ describe Astute::DeploymentEngine do
         File.stubs(:read).returns("private key").then.returns("public key")
         mclient.expects(:upload).with(:path => File.join(Engine::KEY_DIR, 'nova', 'nova'),
                                       :content => "private key",
+                                      :user_owner => 'root',
+                                      :group_owner => 'root',
+                                      :permissions => '0600',
+                                      :dir_permissions => '0700',
                                       :overwrite => true,
                                       :parents => true
                                      )
         mclient.expects(:upload).with(:path => File.join(Engine::KEY_DIR, 'nova', 'nova.pub'),
                                       :content => "public key",
+                                      :user_owner => 'root',
+                                      :group_owner => 'root',
+                                      :permissions => '0600',
+                                      :dir_permissions => '0700',
                                       :overwrite => true,
                                       :parents => true
                                      )

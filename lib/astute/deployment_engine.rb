@@ -114,7 +114,15 @@ module Astute
         source_path = File.join(KEY_DIR, deployment_id.to_s, key_name, ssh_key)
         destination_path = File.join(KEY_DIR, key_name, ssh_key)
         content = File.read(source_path)
-        upload_mclient.upload(:path => destination_path, :content => content, :overwrite => true, :parents => true)
+        upload_mclient.upload(:path => destination_path, 
+                              :content => content,
+                              :user_owner => 'root',
+                              :group_owner => 'root',
+                              :permissions => '0600',
+                              :dir_permissions => '0700',
+                              :overwrite => true,
+                              :parents => true
+                             )
       end
     end
 

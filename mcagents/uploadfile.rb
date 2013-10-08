@@ -34,9 +34,15 @@ module MCollective
 
         # first create target directory on managed server
         FileUtils.mkdir_p(dir) unless File.directory?(dir)
+        FileUtils.chmod(request.data[:dir_permissions].to_i(8), dir) if request.data[:dir_permissions]
 
         # then create file and save their content
         File.open(path, 'w') { |file| file.write(request.data[:content]) }
+        
+        # Set user owner, group owner and permissions
+        FileUtils.chown request.data[:user_owner], request.data[:group_owner], path
+        FileUtils.chmod request.data[:permissions].to_i(8), path
+        
         reply[:msg] = "File was uploaded!"
       end
 
