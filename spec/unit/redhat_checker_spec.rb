@@ -208,6 +208,22 @@ describe Astute::RedhatChecker do
         redhat_checker.check_redhat_licenses(nodes)
       end
 
+      it 'should report message if user does not have licenses at all' do
+        execute_returns({:exit_code => 0,
+          :stdout => '{"openstack_licenses_physical_hosts_count":0}'})
+
+        err_msg = 'Could not find any valid Red Hat ' + \
+        'OpenStack subscriptions. Contact your Red Hat sales representative ' + \
+        'to get the proper subscriptions associated with your account: ' + \
+        'https://access.redhat.com/site/solutions/368643 . If you are still ' + \
+        'encountering issues, contact Mirantis Support.'
+
+        should_report_once({'status' => 'error', 'error' => err_msg, 'progress' => 100})
+
+        nodes = [1, 2, 3, 4]
+        expect { redhat_checker.check_redhat_licenses(nodes) }.to raise_error(Astute::RedhatCheckingError)
+      end
+
     end
   end
 end

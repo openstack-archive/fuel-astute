@@ -38,7 +38,7 @@ module Astute
       @user_does_not_have_licenses = 'Could not find any valid Red Hat ' + \
         'OpenStack subscriptions. Contact your Red Hat sales representative ' + \
         'to get the proper subscriptions associated with your account: '+ \
-        'https://access.redhat.com/site/solutions/368643. If you are still ' + \
+        'https://access.redhat.com/site/solutions/368643 . If you are still ' + \
         'encountering issues, contact Mirantis Support.'
 
       @not_enough_licenses = "Your account has only %d licenses " + \
