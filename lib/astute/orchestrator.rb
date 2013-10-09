@@ -13,6 +13,9 @@
 #    under the License.
 
 module Astute
+
+  class CirrorError < StandardError; end
+
   class Orchestrator
     def initialize(deploy_engine=nil, log_parsing=false)
       @deploy_engine = deploy_engine || Astute::DeploymentEngine::NailyFact
@@ -40,6 +43,8 @@ module Astute
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
 
       deploy_engine_instance.deploy(deployment_info)
+      upload_cirros_image(deployment_info, context)
+
       context.status
     end
 
@@ -205,6 +210,79 @@ module Astute
       result = {} unless result.instance_of?(Hash)
       status = default_result.merge(result)
       reporter.report(status)
+    end
+
+    def upload_cirros_image(deployment_info, context)
+      #FIXME: update context status to multirole support: possible situation where one of the
+      #       roles of node fail but if last status - success, we try to run code below.
+      if context.status.has_value?('error')
+        Astute.logger.warn "Disabling the upload of disk image because deploy ended with an error"
+        return
+      end
+
+      controller = deployment_info.find { |n| n['role'] == 'primary-controller' }
+      controller = deployment_info.find { |n| n['role'] == 'controller' } unless controller
+      if controller.nil?
+        Astute.logger.debug("Could not find controller! Possible adding a new node to the existing cluster?")
+        return
+      end
+
+      os = {
+        'os_tenant_name'    => controller['access']['tenant'],
+        'os_username'       => controller['access']['user'],
+        'os_password'       => controller['access']['password'],
+        'os_auth_url'       => "http://#{controller['management_vip'] || '127.0.0.1'}:5000/v2.0/",
+        'disk_format'       => 'raw',
+        'container_format'  => 'ovf',
+        'public'            => 'true',
+        'img_name'          => 'TestVM',
+        'os_name'           => 'cirros'
+      }
+
+      os['img_path'] = case controller['cobbler']['profile']
+                         when 'centos-x86_64'
+                           '/opt/vm/cirros-x86_64-disk.img'
+                         when 'rhel-x86_64'
+                           '/opt/vm/cirros-x86_64-disk.img'
+                         when 'ubuntu_1204_x86_64'
+                           '/usr/share/cirros-testvm/cirros-x86_64-disk.img'
+                         else
+                           raise CirrorError, "Unknow system #{controller['cobbler']['profile']}"
+                       end
+
+      cmd = "/usr/bin/glance -N #{os['os_auth_url']} -T #{os['os_tenant_name']} \
+             -I #{os['os_username']} -K #{os['os_password']} index && \
+             (/usr/bin/glance -N #{os['os_auth_url']} -T #{os['os_tenant_name']} \
+             -I #{os['os_username']} -K #{os['os_password']} index | grep #{os['img_name']}) \
+            "
+      response = run_shell_command(context, Array(controller['uid']), cmd)
+      if response[:data][:exit_code] == 0
+        Astute.logger.debug "Image already added to stack"
+      else
+        cmd = "/usr/bin/glance -N #{os['os_auth_url']} -T #{os['os_tenant_name']} \
+               -I #{os['os_username']} -K #{os['os_password']} add name=#{os['img_name']} \
+               is_public=#{os['public']} container_format=#{os['container_format']} \
+               disk_format=#{os['disk_format']} distro=#{os['os_name']} < #{os['img_path']} \
+              "
+        response = run_shell_command(context, Array(controller['uid']), cmd)
+        if response[:data][:exit_code] == 0
+          Astute.logger.info("#{context.task_id}: Upload cirros image is done")
+        else
+          msg = 'Upload cirros image failed'
+          Astute.logger.error("#{context.task_id}: #{msg}")
+          raise CirrorError, msg
+        end
+      end
+    end
+
+    def run_shell_command(context, node_uids, cmd)
+      shell = MClient.new(context, 'execute_shell_command', node_uids)
+      response = shell.execute(:cmd => cmd).first
+      Astute.logger.debug("#{context.task_id}: cmd: #{cmd}
+                                               stdout: #{response[:data][:stdout]}
+                                               stderr: #{response[:data][:stderr]}
+                                               exit code: #{response[:data][:exit_code]}")
+      response
     end
 
     def prepare_logs_for_parsing(provision_log_parser, nodes)
