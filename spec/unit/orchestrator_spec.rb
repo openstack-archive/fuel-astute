@@ -168,9 +168,10 @@ describe Astute::Orchestrator do
   end
 
   it "it calls deploy method with valid arguments" do
-    nodes = [{'uid' => 1, 'roles' => 'controller'}]
+    nodes = [{'uid' => 1, 'role' => 'controller'}]
     Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
                                                      with(nodes)
+    @orchestrator.stubs(:upload_cirros_image).returns(nil)
     @orchestrator.deploy(@reporter, 'task_uuid', nodes)
   end
 
@@ -295,9 +296,9 @@ describe Astute::Orchestrator do
       ]
     }
   end
-  
+
   describe '#provision' do
-    
+
     context 'cobler cases' do
       it "raise error if cobler settings empty" do
         expect {@orchestrator.provision(@reporter, {}, data['nodes'])}.
