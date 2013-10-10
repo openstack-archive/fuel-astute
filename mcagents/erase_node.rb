@@ -39,8 +39,9 @@ module MCollective
         prevent_discover unless dry_run
 
         begin
-          boot_device = get_boot_device
-          erase_data(boot_device, 512) unless dry_run
+          get_boot_devices.each do |dev|
+            erase_data(dev) unless dry_run
+          end
           reply[:erased] = true
         rescue Exception => e
           reply[:erased] = false
@@ -66,7 +67,19 @@ module MCollective
         end
       end
 
-      def get_boot_device
+      def get_boot_devices
+        raise "Path /sys/block does not exist" unless File.exists?("/sys/block")
+        Dir["/sys/block/*"].inject([]) do |blocks, block_device_dir|
+          basename_dir = File.basename(block_device_dir)
+          major = `udevadm info --query=property --name=#{basename_dir} | grep MAJOR`.strip.split(/\=/)[-1]
+          if File.exists?("/sys/block/#{basename_dir}/removable")
+            removable = File.open("/sys/block/#{basename_dir}/removable"){|f| f.read_nonblock(1024).strip}
+          end
+          blocks << basename_dir if major =~ /^(8|3)$/ && removable =~ /^0$/
+        end
+      end
+
+      def get_boot_device_obsolete
         dev_map = '/boot/grub/device.map'
         grub_conf = '/boot/grub/grub.conf'
         # Look boot device at GRUB device.map file
@@ -107,7 +120,11 @@ module MCollective
         ret
       end
 
-      def erase_data(file, length, offset=0)
+      def erase_data(dev, length=1, offset=0)
+        system("dd if=/dev/zero of=/dev/#{dev} bs=1M count=#{length} skip=#{offset}")
+      end
+
+      def erase_data_obsolete(file, length, offset=0)
         fd = open(file, 'w')
         fd.seek(offset)
         ret = fd.syswrite("\000"*length)
