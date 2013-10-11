@@ -28,7 +28,7 @@ module Astute
       end
 
       @default_patterns = {
-        'anaconda-log-supposed-time-baremetal' => # key for default baremetal provision pattern
+        'centos-anaconda-log-supposed-time-baremetal' => # key for default baremetal provision pattern
           {'type' => 'supposed-time',
           'chunk_size' => 10000,
           'date_format' => '%Y-%m-%dT%H:%M:%S',
@@ -36,7 +36,7 @@ module Astute
           'pattern_list' => [
             {'pattern' => 'Running anaconda script', 'supposed_time' => 60},
             {'pattern' => 'moving (1) to step enablefilesystems', 'supposed_time' => 3},
-            {'pattern' => "notifying kernel of 'change' event on device", 'hdd_size_multiplier' => 0.3},
+            {'pattern' => "notifying kernel of 'change' event on device", 'supposed_time' => 6},
             {'pattern' => 'Preparing to install packages', 'supposed_time' => 9},
             {'pattern' => 'Installing glibc-common-2.12', 'supposed_time' => 9},
             {'pattern' => 'Installing bash-4.1.2', 'supposed_time' => 11},
@@ -52,7 +52,7 @@ module Astute
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
           },
 
-        'anaconda-log-supposed-time-kvm' => # key for default kvm provision pattern
+        'centos-anaconda-log-supposed-time-kvm' => # key for default kvm provision pattern
           {'type' => 'supposed-time',
           'chunk_size' => 10000,
           'date_format' => '%Y-%m-%dT%H:%M:%S',
@@ -60,7 +60,7 @@ module Astute
           'pattern_list' => [
             {'pattern' => 'Running anaconda script', 'supposed_time' => 60},
             {'pattern' => 'moving (1) to step enablefilesystems', 'supposed_time' => 3},
-            {'pattern' => "notifying kernel of 'change' event on device", 'hdd_size_multiplier' => 1.5},
+            {'pattern' => "notifying kernel of 'change' event on device", 'supposed_time' => 30},
             {'pattern' => 'Preparing to install packages', 'supposed_time' => 12},
             {'pattern' => 'Installing glibc-common-2.12', 'supposed_time' => 15},
             {'pattern' => 'Installing bash-4.1.2', 'supposed_time' => 15},
@@ -74,7 +74,23 @@ module Astute
             ].reverse,
           'filename' => 'install/anaconda.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
-          },
+        },
+
+        'ubuntu-provisioning' =>
+          {'type' => 'supposed-time',
+          'chunk_size' => 10000,
+          'date_format' => '%Y-%m-%dT%H:%M:%S',
+          'date_regexp' => '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
+          'pattern_list' => [
+            {'pattern' => 'Selecting previously unselected package base-passwd', 'supposed_time' => 20},
+            {'pattern' => 'Unpacking replacement perl-base', 'supposed_time' => 5},
+            {'pattern' => 'Setting up makedev', 'supposed_time' => 5},
+            {'pattern' => 'Setting up util-linux', 'supposed_time' => 5},
+            {'pattern' => 'Processing triggers for initramfs-tools', 'supposed_time' => 20},
+            ].reverse,
+          'filename' => 'debootstrap.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
+        },
 
         'puppet-log-components-list-ha-controller' =>   # key for default HA deploy pattern
           {'type' => 'components-list',

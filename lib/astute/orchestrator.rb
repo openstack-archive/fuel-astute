@@ -93,7 +93,7 @@ module Astute
       begin
         Timeout.timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
           catch :done do
-            while true
+            loop do
               sleep_not_greater_than(5) do
                 nodes_types = node_type(proxy_reporter, task_id, nodes, 2)
                 target_uids, nodes_not_booted = analize_node_types(nodes_types, nodes_not_booted)

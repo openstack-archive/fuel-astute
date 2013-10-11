@@ -128,28 +128,34 @@ module Astute
     class ParseNodeLogs
       attr_reader :pattern_spec
 
-      def initialize(pattern_spec)
-        @nodes_states = {}
-        @pattern_spec = pattern_spec
+      def initialize
+        @pattern_spec = {}
         @pattern_spec['path_prefix'] ||= PATH_PREFIX.to_s
         @pattern_spec['separator'] ||= SEPARATOR.to_s
+        @nodes_patterns = {}
       end
 
       def progress_calculate(uids_to_calc, nodes)
         nodes_progress = []
+
+        patterns = patterns_for_nodes(nodes, uids_to_calc)
         uids_to_calc.each do |uid|
           node = nodes.find {|n| n['uid'] == uid}
-          @nodes_states[uid] ||= deep_copy @pattern_spec
-          node_pattern_spec = @nodes_states[uid]
+          @nodes_patterns[uid] ||= patterns[uid]
+          node_pattern_spec = @nodes_patterns[uid]
+          # FIXME(eli): this var is required for binding() below
+          @pattern_spec = @nodes_patterns[uid]
 
           erb_path = node_pattern_spec['path_format']
           path = ERB.new(erb_path).result(binding())
 
+          progress = 0
           begin
-            progress = (get_log_progress(path, node_pattern_spec)*100).to_i # Return percent of progress
+            # Return percent of progress
+            progress = (get_log_progress(path, node_pattern_spec) * 100).to_i
           rescue => e
-            Astute.logger.warn "Some error occurred when calculate progress for node '#{uid}': #{e.message}, trace: #{e.format_backtrace}"
-            progress = 0
+            Astute.logger.warn "Some error occurred when calculate progress " \
+              "for node '#{uid}': #{e.message}, trace: #{e.format_backtrace}"
           end
 
           nodes_progress << {
@@ -157,22 +163,35 @@ module Astute
             'progress' => progress
           }
         end
+
         nodes_progress
       end
 
       def prepare(nodes)
-        @nodes_states = {}
+        patterns = patterns_for_nodes(nodes)
         nodes.each do |node|
-          path = "#{@pattern_spec['path_prefix']}#{node['ip']}/#{@pattern_spec['filename']}"
-          File.open(path, 'a') {|fo| fo.write @pattern_spec['separator'] } if File.writable?(path)
+          pattern = patterns[node['uid']]
+          path = "#{pattern['path_prefix']}#{node['ip']}/#{pattern['filename']}"
+          File.open(path, 'a') { |fo| fo.write pattern['separator'] } if File.writable?(path)
         end
       end
 
-      def pattern_spec= (pattern_spec)
-        initialise(pattern_spec) # NOTE: bug?
+      # Get patterns for selected nodes
+      # if uids_to_calc is nil, then
+      # patterns for all nodes will be returned
+      def patterns_for_nodes(nodes, uids_to_calc=nil)
+        uids_to_calc = nodes.map { |node| node['uid'] } if uids_to_calc.nil?
+        nodes_to_calc = nodes.select { |node| uids_to_calc.include?(node['uid']) }
+
+        patterns = {}
+        nodes_to_calc.map do |node|
+          patterns[node['uid']] = get_pattern_for_node(node)
+        end
+
+        patterns
       end
 
-    private
+      private
 
       def get_log_progress(path, node_pattern_spec)
         unless File.readable?(path)
