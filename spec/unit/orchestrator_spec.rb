@@ -128,122 +128,194 @@ describe Astute::Orchestrator do
     end
   end
 
-  it "must be able to return node type" do
-    nodes = [{'uid' => '1'}]
-    res = {:data => {:node_type => 'target'},
-           :sender=>"1"}
+  describe '#node_type' do
+    it "must be able to return node type" do
+      nodes = [{'uid' => '1'}]
+      res = {:data => {:node_type => 'target'},
+             :sender=>"1"}
 
-    mc_res = mock_mc_result(res)
-    mc_timeout = 5
+      mc_res = mock_mc_result(res)
+      mc_timeout = 5
 
-    rpcclient = mock_rpcclient(nodes, mc_timeout)
-    rpcclient.expects(:get_type).once.returns([mc_res])
+      rpcclient = mock_rpcclient(nodes, mc_timeout)
+      rpcclient.expects(:get_type).once.returns([mc_res])
 
-    types = @orchestrator.node_type(@reporter, 'task_uuid', nodes, mc_timeout)
-    types.should eql([{"node_type"=>"target", "uid"=>"1"}])
+      types = @orchestrator.node_type(@reporter, 'task_uuid', nodes, mc_timeout)
+      types.should eql([{"node_type"=>"target", "uid"=>"1"}])
+    end
   end
 
-  it "in remove_nodes, it returns empty list if nodes are not provided" do
-    res = @orchestrator.remove_nodes(@reporter, 'task_uuid', [])
-    res.should eql({'nodes' => []})
+  describe '#remove_nodes' do
+    it "in remove_nodes, it returns empty list if nodes are not provided" do
+      res = @orchestrator.remove_nodes(@reporter, 'task_uuid', [])
+      res.should eql({'nodes' => []})
+    end
+
+    it "remove_nodes cleans nodes and reboots them" do
+      removed_hash = {:sender => '1',
+                      :data => {:rebooted => true}}
+      error_hash = {:sender => '2',
+                    :data => {:rebooted => false, :error_msg => 'Could not reboot'}}
+      nodes = [{'uid' => 1}, {'uid' => 2}]
+
+      rpcclient = mock_rpcclient
+      mc_removed_res = mock_mc_result(removed_hash)
+      mc_error_res = mock_mc_result(error_hash)
+
+      rpcclient.expects(:erase_node).at_least_once.with(:reboot => true).returns([mc_removed_res, mc_error_res])
+
+      res = @orchestrator.remove_nodes(@reporter, 'task_uuid', nodes)
+      res.should eql({'nodes' => [{'uid' => '1'}], 'status' => 'error',
+                      'error_nodes' => [{"uid"=>"2", "error"=>"RPC method 'erase_node' failed "\
+                                                              "with message: Could not reboot"}]})
+    end
+
+    it "remove_nodes try to call MCAgent multiple times on error" do
+      removed_hash = {:sender => '1',
+                      :data => {:rebooted => true}}
+      error_hash = {:sender => '2',
+                    :data => {:rebooted => false, :error_msg => 'Could not reboot'}}
+      nodes = [{'uid' => 1}, {'uid' => 2}]
+
+      rpcclient = mock_rpcclient(nodes)
+      mc_removed_res = mock_mc_result(removed_hash)
+      mc_error_res = mock_mc_result(error_hash)
+
+      retries = Astute.config[:MC_RETRIES]
+      retries.should == 5
+      rpcclient.expects(:discover).with(:nodes => ['2']).times(retries)
+      rpcclient.expects(:erase_node).times(retries + 1).with(:reboot => true).returns([mc_removed_res, mc_error_res]).then.returns([mc_error_res])
+
+      res = @orchestrator.remove_nodes(@reporter, 'task_uuid', nodes)
+      res.should eql({'nodes' => [{'uid' => '1'}], 'status' => 'error',
+                      'error_nodes' => [{"uid"=>"2", "error"=>"RPC method 'erase_node' failed "\
+                                                              "with message: Could not reboot"}]})
+    end
+
+    it "remove_nodes try to call MCAgent multiple times on no response" do
+      removed_hash = {:sender => '2', :data => {:rebooted => true}}
+      then_removed_hash = {:sender => '3', :data => {:rebooted => true}}
+      nodes = [{'uid' => 1}, {'uid' => 2}, {'uid' => 3}]
+
+      rpcclient = mock_rpcclient(nodes)
+      mc_removed_res = mock_mc_result(removed_hash)
+      mc_then_removed_res = mock_mc_result(then_removed_hash)
+
+      retries = Astute.config[:MC_RETRIES]
+      rpcclient.expects(:discover).with(:nodes => %w(1 3)).times(1)
+      rpcclient.expects(:discover).with(:nodes => %w(1)).times(retries - 1)
+      rpcclient.expects(:erase_node).times(retries + 1).with(:reboot => true).
+          returns([mc_removed_res]).then.returns([mc_then_removed_res]).then.returns([])
+
+      res = @orchestrator.remove_nodes(@reporter, 'task_uuid', nodes)
+      res['nodes'] = res['nodes'].sort_by{|n| n['uid'] }
+      res.should eql({'nodes' => [{'uid' => '2'}, {'uid' => '3'}],
+                      'inaccessible_nodes' => [{'uid'=>'1', 'error'=>'Node not answered by RPC.'}]})
+    end
+
+    it "remove_nodes and returns early if retries were successful" do
+      removed_hash = {:sender => '1', :data => {:rebooted => true}}
+      then_removed_hash = {:sender => '2', :data => {:rebooted => true}}
+      nodes = [{'uid' => 1}, {'uid' => 2}]
+
+      rpcclient = mock_rpcclient(nodes)
+      mc_removed_res = mock_mc_result(removed_hash)
+      mc_then_removed_res = mock_mc_result(then_removed_hash)
+
+      retries = Astute.config[:MC_RETRIES]
+      retries.should_not == 2
+      rpcclient.expects(:discover).with(:nodes => %w(2)).times(1)
+      rpcclient.expects(:erase_node).times(2).with(:reboot => true).
+          returns([mc_removed_res]).then.returns([mc_then_removed_res])
+
+      res = @orchestrator.remove_nodes(@reporter, 'task_uuid', nodes)
+      res['nodes'] = res['nodes'].sort_by{|n| n['uid'] }
+      res.should eql({'nodes' => [{'uid' => '1'}, {'uid' => '2'}]})
+    end
+
+    xit "remove_nodes do not fail if any of nodes failed"
+
   end
 
-  it "remove_nodes cleans nodes and reboots them" do
-    removed_hash = {:sender => '1',
-                    :data => {:rebooted => true}}
-    error_hash = {:sender => '2',
-                  :data => {:rebooted => false, :error_msg => 'Could not reboot'}}
-    nodes = [{'uid' => 1}, {'uid' => 2}]
+  describe '#deploy' do
+    it "it calls deploy method with valid arguments" do
+      nodes = [{'uid' => 1, 'role' => 'controller'}]
+      Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
+                                                       with(nodes)
+      @orchestrator.stubs(:upload_cirros_image).returns(nil)
+      @orchestrator.deploy(@reporter, 'task_uuid', nodes)
+    end
 
-    rpcclient = mock_rpcclient
-    mc_removed_res = mock_mc_result(removed_hash)
-    mc_error_res = mock_mc_result(error_hash)
+    it "deploy method raises error if nodes list is empty" do
+      expect {@orchestrator.deploy(@reporter, 'task_uuid', [])}.
+                            to raise_error(/Deployment info are not provided!/)
+    end
 
-    rpcclient.expects(:erase_node).at_least_once.with(:reboot => true).returns([mc_removed_res, mc_error_res])
+    describe '#upload_cirros_image' do
+      let(:ctx) do
+        ctx = mock
+        ctx.stubs(:task_id)
+        ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::NoParsing.new)
+        reporter = mock
+        reporter.stubs(:report)
+        up_reporter = Astute::ProxyReporter::DeploymentProxyReporter.new(reporter, deploy_data)
+        ctx.stubs(:reporter).returns(up_reporter)
+        ctx
+      end
 
-    res = @orchestrator.remove_nodes(@reporter, 'task_uuid', nodes)
-    res.should eql({'nodes' => [{'uid' => '1'}], 'status' => 'error',
-                    'error_nodes' => [{"uid"=>"2", "error"=>"RPC method 'erase_node' failed "\
-                                                            "with message: Could not reboot"}]})
+      let(:deploy_data) { [ {'uid' => 1, 'role' => 'controller', 'access' => {},
+                             'cobbler' => {'profile' => 'centos-x86_64'}
+                            },
+                            {'uid' => 2, 'role' => 'compute'}
+                          ]
+                        }
+
+      it 'should not add cirros image if deploy fail' do
+        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
+        ctx.expects(:status).returns(1 => 'error', 2 => 'success')
+        expect(@orchestrator.send(:upload_cirros_image, deploy_data, ctx)).to be_nil
+      end
+
+      it 'should not add image again if we only add new nodes to existing cluster' do
+        deploy_data = [{'uid' => 2, 'role' => 'compute'}]
+        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
+        ctx.expects(:status).returns(2 => 'success')
+        expect(@orchestrator.send(:upload_cirros_image, deploy_data, ctx)).to be_nil
+      end
+
+      it 'should raise error if system profile not recognized' do
+        nodes_data = deploy_data.clone
+        nodes_data.first['cobbler']['profile'] = 'unknown'
+        ctx.expects(:status).returns(1 => 'success', 2 => 'success')
+        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(nodes_data)
+        expect {@orchestrator.send(:upload_cirros_image, nodes_data, ctx)}.to raise_error(Astute::CirrosError, /Unknow system/)
+      end
+
+      it 'should not add new image if it already added' do
+        ctx.expects(:status).returns(1 => 'success', 2 => 'success')
+        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
+        @orchestrator.stubs(:run_shell_command).returns(:data => {:exit_code => 0})
+        expect(@orchestrator.send(:upload_cirros_image, deploy_data, ctx)).to be_true
+      end
+
+      it 'should add new image if cluster deploy success and no image was added before' do
+        ctx.expects(:status).returns(1 => 'success', 2 => 'success')
+        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
+        @orchestrator.stubs(:run_shell_command).returns(:data => {:exit_code => 1}).
+                                                then.returns(:data => {:exit_code => 0})
+        expect(@orchestrator.send(:upload_cirros_image, deploy_data, ctx)).to be_true
+      end
+
+      it 'should raise exception when cluster deploy success and no image was added before and fail to add image' do
+        ctx.expects(:status).returns(1 => 'success', 2 => 'success')
+        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
+        @orchestrator.stubs(:run_shell_command).returns(:data => {:exit_code => 1}).
+                                                then.returns(:data => {:exit_code => 1})
+        expect {@orchestrator.send(:upload_cirros_image, deploy_data, ctx)}.to raise_error(Astute::CirrosError, 'Upload cirros image failed')
+      end
+
+    end #'upload_cirros_image'
   end
-
-  it "it calls deploy method with valid arguments" do
-    nodes = [{'uid' => 1, 'role' => 'controller'}]
-    Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
-                                                     with(nodes)
-    @orchestrator.stubs(:upload_cirros_image).returns(nil)
-    @orchestrator.deploy(@reporter, 'task_uuid', nodes)
-  end
-
-  it "deploy method raises error if nodes list is empty" do
-    expect {@orchestrator.deploy(@reporter, 'task_uuid', [])}.
-                          to raise_error(/Deployment info are not provided!/)
-  end
-
-  it "remove_nodes try to call MCAgent multiple times on error" do
-    removed_hash = {:sender => '1',
-                    :data => {:rebooted => true}}
-    error_hash = {:sender => '2',
-                  :data => {:rebooted => false, :error_msg => 'Could not reboot'}}
-    nodes = [{'uid' => 1}, {'uid' => 2}]
-
-    rpcclient = mock_rpcclient(nodes)
-    mc_removed_res = mock_mc_result(removed_hash)
-    mc_error_res = mock_mc_result(error_hash)
-
-    retries = Astute.config[:MC_RETRIES]
-    retries.should == 5
-    rpcclient.expects(:discover).with(:nodes => ['2']).times(retries)
-    rpcclient.expects(:erase_node).times(retries + 1).with(:reboot => true).returns([mc_removed_res, mc_error_res]).then.returns([mc_error_res])
-
-    res = @orchestrator.remove_nodes(@reporter, 'task_uuid', nodes)
-    res.should eql({'nodes' => [{'uid' => '1'}], 'status' => 'error',
-                    'error_nodes' => [{"uid"=>"2", "error"=>"RPC method 'erase_node' failed "\
-                                                            "with message: Could not reboot"}]})
-  end
-
-  it "remove_nodes try to call MCAgent multiple times on no response" do
-    removed_hash = {:sender => '2', :data => {:rebooted => true}}
-    then_removed_hash = {:sender => '3', :data => {:rebooted => true}}
-    nodes = [{'uid' => 1}, {'uid' => 2}, {'uid' => 3}]
-
-    rpcclient = mock_rpcclient(nodes)
-    mc_removed_res = mock_mc_result(removed_hash)
-    mc_then_removed_res = mock_mc_result(then_removed_hash)
-
-    retries = Astute.config[:MC_RETRIES]
-    rpcclient.expects(:discover).with(:nodes => %w(1 3)).times(1)
-    rpcclient.expects(:discover).with(:nodes => %w(1)).times(retries - 1)
-    rpcclient.expects(:erase_node).times(retries + 1).with(:reboot => true).
-        returns([mc_removed_res]).then.returns([mc_then_removed_res]).then.returns([])
-
-    res = @orchestrator.remove_nodes(@reporter, 'task_uuid', nodes)
-    res['nodes'] = res['nodes'].sort_by{|n| n['uid'] }
-    res.should eql({'nodes' => [{'uid' => '2'}, {'uid' => '3'}],
-                    'inaccessible_nodes' => [{'uid'=>'1', 'error'=>'Node not answered by RPC.'}]})
-  end
-
-  it "remove_nodes and returns early if retries were successful" do
-    removed_hash = {:sender => '1', :data => {:rebooted => true}}
-    then_removed_hash = {:sender => '2', :data => {:rebooted => true}}
-    nodes = [{'uid' => 1}, {'uid' => 2}]
-
-    rpcclient = mock_rpcclient(nodes)
-    mc_removed_res = mock_mc_result(removed_hash)
-    mc_then_removed_res = mock_mc_result(then_removed_hash)
-
-    retries = Astute.config[:MC_RETRIES]
-    retries.should_not == 2
-    rpcclient.expects(:discover).with(:nodes => %w(2)).times(1)
-    rpcclient.expects(:erase_node).times(2).with(:reboot => true).
-        returns([mc_removed_res]).then.returns([mc_then_removed_res])
-
-    res = @orchestrator.remove_nodes(@reporter, 'task_uuid', nodes)
-    res['nodes'] = res['nodes'].sort_by{|n| n['uid'] }
-    res.should eql({'nodes' => [{'uid' => '1'}, {'uid' => '2'}]})
-  end
-
-  xit "remove_nodes do not fail if any of nodes failed"
 
   let(:data) do
     {
