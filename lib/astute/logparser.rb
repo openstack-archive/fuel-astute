@@ -50,6 +50,11 @@ module Astute
         # Because we mimic the DeploymentParser, we should define all auxiliary method
         # even they do nothing.
       end
+      
+      def prepare(nodes)
+        # Because we mimic the DeploymentParser, we should define all auxiliary method
+        # even they do nothing.
+      end
 
       def progress_calculate(uids_to_calc, nodes)
         uids_to_calc.map do |uid|
