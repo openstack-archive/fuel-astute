@@ -43,7 +43,12 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
     # This is synchronious RPC call, so we are sure that data were sent and processed remotely
     upload_mclient = Astute::MClient.new(@ctx, "uploadfile", [node['uid']])
-    upload_mclient.upload(:path => '/etc/astute.yaml', :content => node.to_yaml, :overwrite => true, :parents => true)
+    upload_mclient.upload(:path => '/etc/astute.yaml',
+                          :content => node.to_yaml,
+                          :overwrite => true,
+                          :parents => true,
+                          :permissions => '0600'
+                         )
   end
 
 end
