@@ -21,6 +21,7 @@ require 'active_support/all'
 
 require 'astute/ext/exception'
 require 'astute/ext/deep_copy'
+require 'astute/exceptions'
 require 'astute/config'
 require 'astute/logparser'
 require 'astute/orchestrator'
