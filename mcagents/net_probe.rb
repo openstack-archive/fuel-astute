@@ -44,8 +44,9 @@ module MCollective
       action "dhcp_discover" do
         interfaces = request[:interfaces][get_uid]
         format = request.data[:format] || "json"
-        timeout = request.data[:timeout] || 7
-        cmd = "dhcpcheck vlans '#{interfaces}' --timeout=#{timeout} --format=#{format} "
+        timeout = request.data[:timeout] || 2
+        repeat = request.data[:repeat] || 1
+        cmd = "dhcpcheck vlans '#{interfaces}' --timeout=#{timeout} --format=#{format} --repeat=#{repeat} "
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
       end
 
