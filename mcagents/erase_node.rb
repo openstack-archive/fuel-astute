@@ -75,7 +75,9 @@ module MCollective
           if File.exists?("/sys/block/#{basename_dir}/removable")
             removable = File.open("/sys/block/#{basename_dir}/removable"){|f| f.read_nonblock(1024).strip}
           end
-          blocks << basename_dir if major =~ /^(8|3)$/ && removable =~ /^0$/
+          # look at https://github.com/torvalds/linux/blob/master/Documentation/devices.txt
+          blocks << basename_dir if major =~ /^(3|8|202|252)$/ && removable =~ /^0$/
+          blocks
         end
       end
 
