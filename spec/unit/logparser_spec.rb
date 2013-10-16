@@ -459,4 +459,53 @@ describe LogParser do
       dirsize_parser.nodes.should_not eql(nodes)
     end
   end
+
+  context "Correct profile for logparsing" do
+    let(:deploy_parser) { Astute::LogParser::ParseProvisionLogs.new }
+
+
+    it 'should not raise error if system is CentOS' do
+      node = {
+        'uid' => '1',
+        'cobbler' => {
+          'profile' => 'centos-x86_64'
+        }
+      }
+      pattern_spec = deploy_parser.get_pattern_for_node(node)
+      expect(pattern_spec['filename']).to be_eql "install/anaconda.log"
+    end
+
+    it 'should not raise error if system is RedHat' do
+      node = {
+        'uid' => '1',
+        'cobbler' => {
+          'profile' => 'rhel-x86_64'
+        }
+      }
+      pattern_spec = deploy_parser.get_pattern_for_node(node)
+      expect(pattern_spec['filename']).to be_eql "install/anaconda.log"
+    end
+
+    it 'should not raise error if system is Ubuntu' do
+      node = {
+        'uid' => '1',
+        'cobbler' => {
+          'profile' => 'ubuntu_1204_x86_64'
+        }
+      }
+      pattern_spec = deploy_parser.get_pattern_for_node(node)
+      expect(pattern_spec['filename']).to be_eql "main-menu.log"
+    end
+
+    it 'should raise error if system unknown' do
+      node = {
+        'uid' => '1',
+        'cobbler' => {
+          'profile' => 'unknown'
+        }
+      }
+      expect { deploy_parser.get_pattern_for_node(node) }.to raise_error(Astute::ParseProvisionLogsError)
+    end
+  end
+
 end
