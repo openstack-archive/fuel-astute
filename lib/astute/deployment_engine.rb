@@ -44,7 +44,10 @@ module Astute
         # Prevent attempts to run several deploy on a single node.
         # This is possible because one node
         # can perform multiple roles.
-        group_by_uniq_values(nodes).each { |nodes_group| deploy_piece(nodes_group) }
+        group_by_uniq_values(nodes).each do |nodes_group|
+          # Prevent deploy too many nodes at once
+          nodes_group.each_slice(Astute.config[:MAX_NODES_PER_CALL]) { |part| deploy_piece(part) }
+        end
       end
     end
 
@@ -114,7 +117,7 @@ module Astute
         source_path = File.join(KEY_DIR, deployment_id.to_s, key_name, ssh_key)
         destination_path = File.join(KEY_DIR, key_name, ssh_key)
         content = File.read(source_path)
-        upload_mclient.upload(:path => destination_path, 
+        upload_mclient.upload(:path => destination_path,
                               :content => content,
                               :user_owner => 'root',
                               :group_owner => 'root',
