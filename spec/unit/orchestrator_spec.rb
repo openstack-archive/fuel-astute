@@ -111,7 +111,8 @@ describe Astute::Orchestrator do
       res = Astute::Network.check_dhcp(rpcclient, nodes)
 
       expected = {"nodes" => [{:status=>"ready", :uid=>"1", :data=>expected_data},
-                              {:status=>"ready", :uid=>"2", :data=>expected_data}]}
+                              {:status=>"ready", :uid=>"2", :data=>expected_data}],
+                  "status"=> "ready"}
       res.should eql(expected)
     end
 
