@@ -64,7 +64,7 @@ module Astute
         format_dhcp_response(response)
       end
 
-      {'nodes' => result}
+      {'nodes' => result, 'status'=> 'ready'}
     end
 
     private
@@ -115,10 +115,6 @@ module Astute
         Astute.logger.debug("DHCP checker errred with: #{response.inspect}")
         node_result[:status] = 'error'
         node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
-      else
-        Astute.logger.debug("DHCP checker received empty response: #{response.inspect}")
-        node_result[:status] = 'error'
-        node_result[:error_msg] = 'Empty response from node. Check logs for details'
       end
       node_result
     end
