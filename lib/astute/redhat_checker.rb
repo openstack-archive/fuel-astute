@@ -17,8 +17,6 @@
 
 module Astute
 
-  class RedhatCheckingError < StandardError; end
-
   class RedhatChecker
 
     def initialize(ctx, credentials)
