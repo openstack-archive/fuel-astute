@@ -270,6 +270,14 @@ module Astute
         else
           msg = 'Upload cirros image failed'
           Astute.logger.error("#{context.task_id}: #{msg}")
+          context.report_and_update_status('nodes' => [
+                                            {'uid' => controller['uid'],
+                                             'status' => 'error',
+                                             'error_type' => 'deploy',
+                                             'role' => controller['role']
+                                            }
+                                           ]
+                                          )
           raise CirrosError, msg
         end
       end

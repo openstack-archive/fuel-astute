@@ -307,8 +307,15 @@ describe Astute::Orchestrator do
         expect(@orchestrator.send(:upload_cirros_image, deploy_data, ctx)).to be_true
       end
 
-      it 'should raise exception when cluster deploy success and no image was added before and fail to add image' do
+      it 'should send node error status for controller and raise if deploy success and no image was added before and fail to add image' do
         ctx.expects(:status).returns(1 => 'success', 2 => 'success')
+        ctx.expects(:report_and_update_status).with('nodes' => [{
+                                                        'uid' => 1,
+                                                        'role' => 'controller',
+                                                        'status' => 'error',
+                                                        'error_type' => 'deploy'
+                                                        }]
+                                                   )
         Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
         @orchestrator.stubs(:run_shell_command).returns(:data => {:exit_code => 1}).
                                                 then.returns(:data => {:exit_code => 1})
