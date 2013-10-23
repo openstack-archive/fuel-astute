@@ -37,6 +37,8 @@ module Astute
       generate_and_upload_ssh_keys(deployment_info.map{ |n| n['uid'] }.uniq,
                                    deployment_info.first['deployment_id']
                                   )
+      # Sync puppet manifests and modules to every node (emulate puppet master)
+      sync_puppet_manifests(deployment_info)
 
       # Sort by priority (the lower the number, the higher the priority)
       # and send groups to deploy
@@ -90,6 +92,20 @@ module Astute
       nodes_array.find { |n| node['uid'] == n['uid'] }
     end
 
+    # Sync puppet manifests and modules to every node
+    def sync_puppet_manifests(deployment_info)
+      sync_mclient = MClient.new(@ctx, "puppetsync", deployment_info.map{ |n| n['uid'] }.uniq)
+      master_ip = deployment_info.first['master_ip']
+      # Paths /puppet/modules and /puppet/manifests/ in master node set by FUEL
+      # Check fuel source code /deployment/puppet/nailgun/manifests/puppetsync.pp
+      sync_mclient.rsync(:modules_source => "rsync://#{master_ip}:/puppet/modules/",
+                         :manifests_source => "rsync://#{master_ip}:/puppet/manifests/"
+                        )
+    rescue => e
+      Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
+      raise e
+    end
+
     # Generate and upload ssh keys from master node to all cluster nodes.
     def generate_and_upload_ssh_keys(node_uids, deployment_id)
       raise "Deployment_id is missing" unless deployment_id
@@ -97,6 +113,9 @@ module Astute
         generate_ssh_key(key_name, deployment_id)
         upload_ssh_key(node_uids, key_name, deployment_id)
       end
+    rescue => e
+      Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
+      raise e
     end
 
     def generate_ssh_key(key_name, deployment_id, overwrite=false)
