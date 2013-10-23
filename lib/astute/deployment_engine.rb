@@ -32,11 +32,23 @@ module Astute
       @ctx.deploy_log_parser.deploy_type = deployment_info.first['deployment_mode']
       Astute.logger.info "Deployment mode #{@ctx.deploy_log_parser.deploy_type}"
 
-      # Generate and upload ssh keys from master node to all cluster nodes.
-      # Will be used by puppet after to connect nodes between themselves.
-      generate_and_upload_ssh_keys(deployment_info.map{ |n| n['uid'] }.uniq,
-                                   deployment_info.first['deployment_id']
-                                  )
+      begin
+        # Generate ssh keys to future uploading to all cluster nodes
+        generate_ssh_keys(deployment_info.first['deployment_id'])
+
+        # Prevent to prepare too many nodes at once
+        deployment_info.uniq { |n| n['uid'] }.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |part|
+          # Upload ssh keys from master node to all cluster nodes.
+          # Will be used by puppet after to connect nodes between themselves.
+          upload_ssh_keys(part.map{ |n| n['uid'] }, part.first['deployment_id'])
+
+          # Sync puppet manifests and modules to every node (emulate puppet master)
+          sync_puppet_manifests(part)
+        end
+      rescue => e
+        Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
+        raise e
+      end
 
       # Sort by priority (the lower the number, the higher the priority)
       # and send groups to deploy
@@ -90,42 +102,49 @@ module Astute
       nodes_array.find { |n| node['uid'] == n['uid'] }
     end
 
-    # Generate and upload ssh keys from master node to all cluster nodes.
-    def generate_and_upload_ssh_keys(node_uids, deployment_id)
+    # Sync puppet manifests and modules to every node
+    def sync_puppet_manifests(deployment_info)
+      sync_mclient = MClient.new(@ctx, "puppetsync", deployment_info.map{ |n| n['uid'] }.uniq)
+      master_ip = deployment_info.first['master_ip']
+      # Paths /puppet/modules and /puppet/manifests/ in master node set by FUEL
+      # Check fuel source code /deployment/puppet/nailgun/manifests/puppetsync.pp
+      sync_mclient.rsync(:modules_source => "rsync://#{master_ip}:/puppet/modules/",
+                         :manifests_source => "rsync://#{master_ip}:/puppet/manifests/"
+                        )
+    end
+
+    def generate_ssh_keys(deployment_id, overwrite=false)
       raise "Deployment_id is missing" unless deployment_id
       Astute.config.PUPPET_SSH_KEYS.each do |key_name|
-        generate_ssh_key(key_name, deployment_id)
-        upload_ssh_key(node_uids, key_name, deployment_id)
+        dir_path = File.join(KEY_DIR, deployment_id.to_s, key_name)
+        key_path = File.join(dir_path, key_name)
+        FileUtils.mkdir_p dir_path
+        return if File.exist?(key_path) && !overwrite
+
+        # Generate 2 keys(<name> and <name>.pub) and save it to <KEY_DIR>/<name>/
+        File.delete key_path if File.exist? key_path
+        result = system("ssh-keygen -b 2048 -t rsa -N '' -f #{key_path}")
+        raise "Could not generate ssh key!" unless result
       end
     end
 
-    def generate_ssh_key(key_name, deployment_id, overwrite=false)
-      dir_path = File.join(KEY_DIR, deployment_id.to_s, key_name)
-      key_path = File.join(dir_path, key_name)
-      FileUtils.mkdir_p dir_path
-      return if File.exist?(key_path) && !overwrite
-
-      # Generate 2 keys(<name> and <name>.pub) and save it to <KEY_DIR>/<name>/
-      File.delete key_path if File.exist? key_path
-      result = system("ssh-keygen -b 2048 -t rsa -N '' -f #{key_path}")
-      raise "Could not generate ssh key!" unless result
-    end
-
-    def upload_ssh_key(node_uids, key_name, deployment_id, overwrite=false)
-      upload_mclient = MClient.new(@ctx, "uploadfile", node_uids)
-      [key_name, key_name + ".pub"].each do |ssh_key|
-        source_path = File.join(KEY_DIR, deployment_id.to_s, key_name, ssh_key)
-        destination_path = File.join(KEY_DIR, key_name, ssh_key)
-        content = File.read(source_path)
-        upload_mclient.upload(:path => destination_path,
-                              :content => content,
-                              :user_owner => 'root',
-                              :group_owner => 'root',
-                              :permissions => '0600',
-                              :dir_permissions => '0700',
-                              :overwrite => true,
-                              :parents => true
-                             )
+    def upload_ssh_keys(node_uids, deployment_id, overwrite=false)
+      Astute.config.PUPPET_SSH_KEYS.each do |key_name|
+        upload_mclient = MClient.new(@ctx, "uploadfile", node_uids)
+        [key_name, key_name + ".pub"].each do |ssh_key|
+          source_path = File.join(KEY_DIR, deployment_id.to_s, key_name, ssh_key)
+          destination_path = File.join(KEY_DIR, key_name, ssh_key)
+          content = File.read(source_path)
+          upload_mclient.upload(:path => destination_path,
+                                :content => content,
+                                :user_owner => 'root',
+                                :group_owner => 'root',
+                                :permissions => '0600',
+                                :dir_permissions => '0700',
+                                :overwrite => true,
+                                :parents => true
+                               )
+        end
       end
     end
 
