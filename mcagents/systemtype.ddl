@@ -4,7 +4,7 @@ metadata    :name        => "systemtype",
             :license     => "Apache License 2.0",
             :version     => "0.0.1",
             :url         => 'http://www.mirantis.com/',
-            :timeout     => 40
+            :timeout     => 60
 
 action "get_type", :description => "Get the type" do
     display :always

@@ -35,17 +35,25 @@ describe Astute::DeploymentEngine do
   let(:deployer) { Engine.new(ctx) }
 
   describe '#deploy' do
+
+    before(:each) do
+      deployer.stubs(:generate_ssh_keys)
+      deployer.stubs(:upload_ssh_keys)
+      deployer.stubs(:sync_puppet_manifests)
+    end
+
     it 'should generate and upload ssh keys' do
       nodes = [{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}, {'uid' => 1}]
       deployer.stubs(:deploy_piece)
 
-      deployer.expects(:generate_and_upload_ssh_keys).with([1,2], nodes.first['deployment_id'])
+      deployer.expects(:generate_ssh_keys).with(nodes.first['deployment_id'])
+      deployer.expects(:upload_ssh_keys).with([1,2], nodes.first['deployment_id']).returns()
+      deployer.expects(:sync_puppet_manifests).with([{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}])
 
       deployer.deploy(nodes)
     end
 
     it 'deploy nodes by order' do
-      deployer.stubs(:generate_and_upload_ssh_keys)
       nodes = [{'uid' => 1, 'priority' => 10}, {'uid' => 2, 'priority' => 0}, {'uid' => 1, 'priority' => 15}]
 
       deployer.expects(:deploy_piece).with([{'uid' => 2, 'priority' => 0}])
@@ -56,7 +64,6 @@ describe Astute::DeploymentEngine do
     end
 
     it 'nodes with same priority should be deploy at parallel' do
-      deployer.stubs(:generate_and_upload_ssh_keys)
       nodes = [{'uid' => 1, 'priority' => 10}, {'uid' => 2, 'priority' => 0}, {'uid' => 3, 'priority' => 10}]
 
       deployer.expects(:deploy_piece).with([{'uid' => 2, 'priority' => 0}])
@@ -66,7 +73,6 @@ describe Astute::DeploymentEngine do
     end
 
     it 'node with several roles with same priority should not run at parallel' do
-      deployer.stubs(:generate_and_upload_ssh_keys)
       nodes = [
         {'uid' => 1, 'priority' => 10, 'role' => 'compute'},
         {'uid' => 2, 'priority' => 0, 'role' => 'primary-controller'},
@@ -81,7 +87,6 @@ describe Astute::DeploymentEngine do
     end
 
     it 'node with several roles with same priority should not run at parallel, but diffirent nodes should' do
-      deployer.stubs(:generate_and_upload_ssh_keys)
       nodes = [
         {'uid' => 1, 'priority' => 10, 'role' => 'compute'},
         {'uid' => 3, 'priority' => 10, 'role' => 'compute'},
@@ -108,7 +113,10 @@ describe Astute::DeploymentEngine do
 
       it 'number of nodes running in parallel should be limit' do
         Astute.config.MAX_NODES_PER_CALL = 1
-        deployer.stubs(:generate_and_upload_ssh_keys)
+        deployer.stubs(:generate_ssh_keys)
+        deployer.stubs(:upload_ssh_keys)
+        deployer.stubs(:sync_puppet_manifests)
+
         nodes = [
           {'uid' => 1, 'priority' => 10, 'role' => 'compute'},
           {'uid' => 3, 'priority' => 10, 'role' => 'compute'},
@@ -131,17 +139,41 @@ describe Astute::DeploymentEngine do
 
   end
 
-  describe '#generate_and_upload_ssh_keys' do
+  describe '#sync_puppet_manifests' do
+    before(:each) do
+      deployer.stubs(:deploy_piece)
+      deployer.stubs(:generate_ssh_keys)
+      deployer.stubs(:upload_ssh_keys)
+    end
+
+    let(:nodes) { [{'uid' => 1, 'deployment_id' => 1, 'master_ip' => '10.20.0.2'}, {'uid' => 2}] }
+
+    it "should sync puppet modules and manifests mcollective client 'puppetsync'" do
+      mclient = mock_rpcclient(nodes)
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(mclient)
+      Astute::MClient.any_instance.stubs(:log_result).returns(mclient)
+      Astute::MClient.any_instance.stubs(:check_results_with_retries).returns(mclient)
+
+      master_ip = nodes.first['master_ip']
+      mclient.expects(:rsync).with(:modules_source => "rsync://#{master_ip}:/puppet/modules/",
+                                   :manifests_source => "rsync://#{master_ip}:/puppet/manifests/"
+                                   )
+      deployer.deploy(nodes)
+    end
+  end
+
+  describe '#generation and uploading of ssh keys' do
     before(:each) do
       Astute.config.PUPPET_SSH_KEYS = ['nova']
       deployer.stubs(:deploy_piece)
+      deployer.stubs(:sync_puppet_manifests)
     end
 
     let(:nodes) { [{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}] }
 
     it 'should use Astute.config to get the ssh names that need to generate' do
-      deployer.expects(:generate_ssh_key).with('nova', nodes.first['deployment_id'])
-      deployer.expects(:upload_ssh_key).with([1, 2], 'nova', nodes.first['deployment_id'])
+      deployer.expects(:generate_ssh_keys).with(nodes.first['deployment_id'])
+      deployer.expects(:upload_ssh_keys).with([1, 2], nodes.first['deployment_id'])
       deployer.deploy(nodes)
     end
 
@@ -152,7 +184,7 @@ describe Astute::DeploymentEngine do
 
     context 'generation of ssh keys' do
       before(:each) do
-        deployer.stubs(:upload_ssh_key).with([1, 2], 'nova', nodes.first['deployment_id'])
+        deployer.stubs(:upload_ssh_keys).with([1, 2], nodes.first['deployment_id'])
       end
 
       it 'should save files in correct place: KEY_DIR/<name of key>/' do
@@ -207,7 +239,7 @@ describe Astute::DeploymentEngine do
 
     context 'upload ssh keys' do
       before(:each) do
-        deployer.stubs(:generate_ssh_key)
+        deployer.stubs(:generate_ssh_keys)
       end
 
       it "should upload ssh keys using mcollective client 'uploadfile'" do
