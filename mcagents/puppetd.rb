@@ -24,8 +24,8 @@ module MCollective
     #                        /var/lib/puppet/state/state.yaml
     #    puppetd.lockfile  - Where to find the lock file; defaults to
     #                        /var/lib/puppet/state/puppetdlock
-    #    puppetd.puppetd   - Where to find the puppet agent binary; defaults to
-    #                        /usr/bin/puppet agent
+    #    puppetd.puppetd   - Where to find the puppet binary; defaults to
+    #                        /usr/bin/puppet apply
     #    puppetd.summary   - Where to find the summary file written by Puppet
     #                        2.6.8 and newer; defaults to
     #                        /var/lib/puppet/state/last_run_summary.yaml
@@ -34,10 +34,13 @@ module MCollective
     class Puppetd<RPC::Agent
       def startup_hook
         @splaytime = @config.pluginconf["puppetd.splaytime"].to_i || 0
-        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/var/lib/puppet/state/puppetdlock"
+        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/puppetdlock"
         @statefile = @config.pluginconf["puppetd.statefile"] || "/var/lib/puppet/state/state.yaml"
         @pidfile = @config.pluginconf["puppet.pidfile"] || "/var/run/puppet/agent.pid"
-        @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/bin/puppet agent"
+        @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/sbin/daemonize -a -e /var/log/puppet/puppet.err \
+                                                                                 -o /var/log/puppet/puppet.log \
+                                                                                 -l #{@lockfile} \
+                                                                                 /usr/bin/puppet apply /etc/puppet/manifests/site.pp"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
       end
 
@@ -134,30 +137,30 @@ module MCollective
         set_status
         case (reply[:status])
         when 'disabled' then     # can't run
-          reply.fail "Empty Lock file exists; puppet agent is disabled."
+          reply.fail "Empty Lock file exists; puppet is disabled."
 
         when 'running' then      # can't run two simultaniously
-          reply.fail "Lock file and PID file exist; puppet agent is running."
+          reply.fail "Lock file and PID file exist; puppet is running."
 
         when 'idling' then       # signal daemon
           pid = puppet_agent_pid
           begin
             ::Process.kill('USR1', pid)
-            reply[:output] = "Signalled daemonized puppet agent to run (process #{pid}); " + (reply[:output] || '')
+            reply[:output] = "Signalled daemonized puppet to run (process #{pid}); " + (reply[:output] || '')
           rescue => ex
-            reply.fail "Failed to signal the puppet agent daemon (process #{pid}): #{ex}"
+            reply.fail "Failed to signal the puppet daemon (process #{pid}): #{ex}"
           end
 
         when 'stopped' then      # just run
           runonce_background
 
         else
-          reply.fail "Unknown puppet agent status: #{reply[:status]}"
+          reply.fail "Unknown puppet status: #{reply[:status]}"
         end
       end
 
       def runonce_background
-        cmd = [@puppetd, "--onetime", "--ignorecache", "--logdest", 'syslog']
+        cmd = [@puppetd, "--logdest", 'syslog']
 
         unless request[:forcerun]
           if @splaytime && @splaytime > 0

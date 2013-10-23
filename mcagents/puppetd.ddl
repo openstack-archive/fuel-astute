@@ -1,5 +1,5 @@
 metadata    :name        => "puppetd",
-            :description => "Run puppet agent, get its status, and enable/disable it",
+            :description => "Run puppet, get its status, and enable/disable it",
             :author      => "R.I.Pienaar",
             :license     => "Apache License 2.0",
             :version     => "1.8",
@@ -29,13 +29,13 @@ action "last_run_summary", :description => "Get a summary of the last puppet run
            :display_as => "Versions"
 end
 
-action "enable", :description => "Enable puppet agent" do
+action "enable", :description => "Enable puppet" do
     output :output,
            :description => "String indicating status",
            :display_as => "Status"
 end
 
-action "disable", :description => "Disable puppet agent" do
+action "disable", :description => "Disable puppet" do
     output :output,
            :description => "String indicating status",
            :display_as => "Status"
@@ -51,38 +51,38 @@ action "runonce", :description => "Invoke a single puppet run" do
     #    :maxlength   => 5
 
     output :output,
-           :description => "Output from puppet agent",
+           :description => "Output from puppet",
            :display_as => "Output"
 end
 
-action "status", :description => "Get puppet agent's status" do
+action "status", :description => "Get puppet status" do
     display :always
 
     output :status,
-           :description => "The status of the puppet agent: disabled, running, idling or stopped",
+           :description => "The status of the puppet: disabled, running, idling or stopped",
            :display_as => "Status"
 
     output :enabled,
-           :description => "Whether puppet agent is enabled",
+           :description => "Whether puppet is enabled",
            :display_as => "Enabled"
 
     output :running,
-           :description => "Whether puppet agent is running",
+           :description => "Whether puppet is running",
            :display_as => "Running"
 
     output :idling,
-           :description => "Whether puppet agent is idling",
+           :description => "Whether puppet is idling",
            :display_as => "Idling"
 
     output :stopped,
-           :description => "Whether puppet agent is stopped",
+           :description => "Whether puppet is stopped",
            :display_as => "Stopped"
 
     output :lastrun,
-           :description => "When puppet agent last ran",
+           :description => "When puppet last ran",
            :display_as => "Last Run"
 
     output :output,
-           :description => "String displaying agent status",
+           :description => "String displaying puppet status",
            :display_as => "Status"
 end
