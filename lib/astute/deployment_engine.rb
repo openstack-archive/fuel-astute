@@ -37,6 +37,8 @@ module Astute
       generate_and_upload_ssh_keys(deployment_info.map{ |n| n['uid'] }.uniq,
                                    deployment_info.first['deployment_id']
                                   )
+      # Sync puppet manifests and modules to every node (emulate puppet master)
+      sync_puppet_manifests(deployment_info)
 
       # Sort by priority (the lower the number, the higher the priority)
       # and send groups to deploy
@@ -88,6 +90,17 @@ module Astute
 
     def include_node?(nodes_array, node)
       nodes_array.find { |n| node['uid'] == n['uid'] }
+    end
+
+    # Sync puppet manifests and modules to every node
+    def sync_puppet_manifests(deployment_info)
+      sync_mclient = MClient.new(@ctx, "puppetsync", deployment_info.map{ |n| n['uid'] }.uniq)
+      master_ip = deployment_info.first['master_ip']
+      # Paths /puppet/modules and /puppet/manifests/ in master node set by FUEL
+      # Check fuel source code /deployment/puppet/nailgun/manifests/puppetsync.pp
+      sync_mclient.rsync(:modules_source => "rsync://#{master_ip}:/puppet/modules/",
+                         :manifests_source => "rsync://#{master_ip}:/puppet/manifests/"
+                        )
     end
 
     # Generate and upload ssh keys from master node to all cluster nodes.

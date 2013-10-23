@@ -34,10 +34,13 @@ module MCollective
     class Puppetd<RPC::Agent
       def startup_hook
         @splaytime = @config.pluginconf["puppetd.splaytime"].to_i || 0
-        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/var/lib/puppet/state/puppetdlock"
+        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/puppetdlock"
         @statefile = @config.pluginconf["puppetd.statefile"] || "/var/lib/puppet/state/state.yaml"
         @pidfile = @config.pluginconf["puppet.pidfile"] || "/var/run/puppet/agent.pid"
-        @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/bin/puppet agent"
+        @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/sbin/daemonize -a -e /var/log/puppet/puppet.err \
+                                                                                 -o /var/log/puppet/puppet.log \
+                                                                                 -p #{@lockfile} \
+                                                                                 /usr/bin/puppet apply /etc/puppet/manifests/site.pp"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
       end
 
@@ -157,7 +160,7 @@ module MCollective
       end
 
       def runonce_background
-        cmd = [@puppetd, "--onetime", "--ignorecache", "--logdest", 'syslog']
+        cmd = [@puppetd, "--logdest", 'syslog']
 
         unless request[:forcerun]
           if @splaytime && @splaytime > 0
