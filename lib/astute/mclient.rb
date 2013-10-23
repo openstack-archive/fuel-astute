@@ -27,6 +27,7 @@ module Astute
       @nodes = nodes.map { |n| n.to_s } if nodes
       @check_result = check_result
       @retries = Astute.config.MC_RETRIES
+      #FIXME: this timeout does not work
       @timeout = timeout
       initialize_mclient
     end
@@ -87,14 +88,16 @@ module Astute
       failed = @mc_res.select{|x| x.results[:statuscode] != 0 }
       if failed.any?
         err_msg += "MCollective call failed in agent '#{@agent}', "\
-                     "method '#{method}', failed nodes: #{failed.map{|x| x.results[:sender]}.join(',')} \n"
+                     "method '#{method}', failed nodes: \n"
+        failed.each do |n|
+          err_msg += "ID: #{n.results[:sender]} - Reason: #{n.results[:statusmsg]}\n"
+        end
       end
       unless err_msg.empty?
         Astute.logger.error err_msg
         raise "#{@task_id}: #{err_msg}"
       end
     end
-
 
     def mc_send(*args)
       @mc.send(*args)
