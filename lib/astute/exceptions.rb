@@ -17,4 +17,6 @@ module Astute
   class AstuteError < StandardError; end
   # Provisioning log errors
   class ParseProvisionLogsError < AstuteError; end
+  # Redhat related exception
+  class RedhatCheckingError < AstuteError; end
 end
