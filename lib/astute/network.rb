@@ -60,7 +60,7 @@ module Astute
         data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'], joined=false).to_json
       end
 
-      result = net_probe.dhcp_discover(:interfaces => data_to_send).map do |response|
+      result = net_probe.dhcp_discover(:interfaces => data_to_send, :timeout => 10).map do |response|
         format_dhcp_response(response)
       end
 
