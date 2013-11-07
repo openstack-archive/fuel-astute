@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.email   = ['mscherbakov@mirantis.com']
 
   s.add_dependency 'activesupport', '3.0.10'
-  s.add_dependency 'mcollective-client', '2.3.1'
+  s.add_dependency 'mcollective-client', '>= 2.3.1'
   s.add_dependency 'symboltable', '1.0.2'
   s.add_dependency 'rest-client', '~> 1.6.7'
   s.add_dependency 'kwalify', '~> 0.7.2'
