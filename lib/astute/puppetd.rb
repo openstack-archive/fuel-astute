@@ -42,7 +42,7 @@ module Astute
       while Time.now.to_i - started < Astute.config.PUPPET_FADE_TIMEOUT
         puppetd.discover(:nodes => uids)
         last_run = puppetd.last_run_summary
-        running_uids = last_run.select {|x| x.results[:data][:status] != 'stopped'}.map {|n| n.results[:sender]}
+        running_uids = last_run.select {|x| ['running', 'idling'].include?(x.results[:data][:status]) }.map {|n| n.results[:sender]}
         stopped_uids = uids - running_uids
         # If stopped_uids is empty this cycle will not be called.
         stopped_uids.each do |uid|
@@ -66,7 +66,7 @@ module Astute
       # If Puppet had crashed before it got a catalog (e.g. certificate problems),
       #   it didn't update last_run_summary file and switched to 'stopped' state.
 
-      stopped = last_run.select {|x| x.results[:data][:status] == 'stopped'}
+      stopped = last_run.select { |x| ['stopped', 'disabled'].include? x.results[:data][:status] }
 
       # Select all finished nodes which not failed and changed last_run time.
       succeed_nodes = stopped.select { |n|
@@ -84,7 +84,7 @@ module Astute
 
       nodes_to_check = running_nodes + succeed_nodes + error_nodes
       unless nodes_to_check.size == last_run.size
-        raise "Shoud never happen. Internal error in nodes statuses calculation. Statuses calculated for: #{nodes_to_check.inspect},"
+        raise "Should never happen. Internal error in nodes statuses calculation. Statuses calculated for: #{nodes_to_check.inspect},"
                     "nodes passed to check statuses of: #{last_run.map {|n| n.results[:sender]}}"
       end
       {'succeed' => succeed_nodes, 'error' => error_nodes, 'running' => running_nodes}
@@ -96,7 +96,7 @@ module Astute
       uids = nodes.map { |n| n['uid'] }
       nodes_roles = {}
       nodes.each { |n| nodes_roles[n['uid']] = n['role'] }
-      
+
       # Keep info about retries for each node
       node_retries = {}
       uids.each {|x| node_retries.merge!({x => retries}) }
@@ -110,6 +110,7 @@ module Astute
           end
           ctx.report_and_update_status('nodes' => nodes)
         end if change_node_status
+
         prev_summary = puppetd.last_run_summary
         puppetd_runonce(puppetd, uids, nodes)
         nodes_to_check = uids
@@ -121,7 +122,7 @@ module Astute
           # At least we will report about successfully deployed nodes
           nodes_to_report = []
           if change_node_status
-            nodes_to_report.concat(calc_nodes['succeed'].map do |uid| 
+            nodes_to_report.concat(calc_nodes['succeed'].map do |uid|
               { 'uid' => uid, 'status' => 'ready', 'role' => nodes_roles[uid] }
             end)
           end
@@ -163,7 +164,7 @@ module Astute
                                  "trace: #{e.format_backtrace}"
             end
           end
-          
+
           ctx.report_and_update_status('nodes' => nodes_to_report) if nodes_to_report.any?
 
           # we will iterate only over running nodes and those that we restart deployment for

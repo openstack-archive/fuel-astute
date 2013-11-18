@@ -40,6 +40,7 @@ describe Astute::DeploymentEngine do
       deployer.stubs(:generate_ssh_keys)
       deployer.stubs(:upload_ssh_keys)
       deployer.stubs(:sync_puppet_manifests)
+      deployer.stubs(:enable_puppet_deploy)
     end
 
     it 'should generate and upload ssh keys' do
@@ -49,6 +50,15 @@ describe Astute::DeploymentEngine do
       deployer.expects(:generate_ssh_keys).with(nodes.first['deployment_id'])
       deployer.expects(:upload_ssh_keys).with([1,2], nodes.first['deployment_id']).returns()
       deployer.expects(:sync_puppet_manifests).with([{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}])
+
+      deployer.deploy(nodes)
+    end
+
+    it 'should enable puppet for all nodes' do
+      nodes = [{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}, {'uid' => 1}]
+      deployer.stubs(:deploy_piece)
+
+      deployer.expects(:enable_puppet_deploy).with([1,2]).returns()
 
       deployer.deploy(nodes)
     end
@@ -144,6 +154,7 @@ describe Astute::DeploymentEngine do
       deployer.stubs(:deploy_piece)
       deployer.stubs(:generate_ssh_keys)
       deployer.stubs(:upload_ssh_keys)
+      deployer.stubs(:enable_puppet_deploy)
     end
 
     let(:nodes) { [{'uid' => 1, 'deployment_id' => 1, 'master_ip' => '10.20.0.2'}, {'uid' => 2}] }
@@ -167,6 +178,7 @@ describe Astute::DeploymentEngine do
       Astute.config.PUPPET_SSH_KEYS = ['nova']
       deployer.stubs(:deploy_piece)
       deployer.stubs(:sync_puppet_manifests)
+      deployer.stubs(:enable_puppet_deploy)
     end
 
     let(:nodes) { [{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}] }

@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+require 'timeout'
 
 module MCollective
   module Agent
@@ -34,14 +35,16 @@ module MCollective
     class Puppetd<RPC::Agent
       def startup_hook
         @splaytime = @config.pluginconf["puppetd.splaytime"].to_i || 0
-        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/puppetdlock"
+        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/puppetd.lock"
         @statefile = @config.pluginconf["puppetd.statefile"] || "/var/lib/puppet/state/state.yaml"
         @pidfile = @config.pluginconf["puppet.pidfile"] || "/var/run/puppet/agent.pid"
         @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/sbin/daemonize -a -e /var/log/puppet/puppet.err \
                                                                                  -o /var/log/puppet/puppet.log \
                                                                                  -l #{@lockfile} \
+                                                                                 -p #{@lockfile} \
                                                                                  /usr/bin/puppet apply /etc/puppet/manifests/site.pp"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
+        @lockmcofile = "/tmp/mcopuppetd.lock"
       end
 
       action "last_run_summary" do
@@ -63,6 +66,10 @@ module MCollective
 
       action "status" do
         set_status
+      end
+
+      action "stop_and_disable" do
+        stop_and_disable
       end
 
       private
@@ -111,7 +118,7 @@ module MCollective
 
       def puppet_daemon_status
         err_msg = ""
-        alive = !!puppet_agent_pid
+        alive = !!puppet_pid
         locked = File.exists?(@lockfile)
         disabled = locked && File::Stat.new(@lockfile).zero?
 
@@ -122,8 +129,10 @@ module MCollective
 
         reply[:err_msg] = err_msg if err_msg.any?
 
-        if disabled
+        if disabled && !alive
           'disabled'
+        elsif disabled && alive
+          'running'
         elsif alive && locked
           'running'
         elsif alive && !locked
@@ -134,28 +143,30 @@ module MCollective
       end
 
       def runonce
-        set_status
-        case (reply[:status])
-        when 'disabled' then     # can't run
-          reply.fail "Empty Lock file exists; puppet is disabled."
+        lock_file(@lockmcofile) do
+          set_status
+          case (reply[:status])
+          when 'disabled' then     # can't run
+            reply.fail "Empty Lock file exists; puppet is disabled."
 
-        when 'running' then      # can't run two simultaniously
-          reply.fail "Lock file and PID file exist; puppet is running."
+          when 'running' then      # can't run two simultaniously
+            reply.fail "Lock file and PID file exist; puppet is running."
 
-        when 'idling' then       # signal daemon
-          pid = puppet_agent_pid
-          begin
-            ::Process.kill('USR1', pid)
-            reply[:output] = "Signalled daemonized puppet to run (process #{pid}); " + (reply[:output] || '')
-          rescue => ex
-            reply.fail "Failed to signal the puppet daemon (process #{pid}): #{ex}"
+          when 'idling' then       # signal daemon
+            pid = puppet_pid
+            begin
+              Process.kill('USR1', pid)
+              reply[:output] = "Signalled daemonized puppet to run (process #{pid}); " + (reply[:output] || '')
+            rescue => ex
+              reply.fail "Failed to signal the puppet daemon (process #{pid}): #{ex}"
+            end
+
+          when 'stopped' then      # just run
+            runonce_background
+
+          else
+            reply.fail "Unknown puppet status: #{reply[:status]}"
           end
-
-        when 'stopped' then      # just run
-          runonce_background
-
-        else
-          reply.fail "Unknown puppet status: #{reply[:status]}"
         end
       end
 
@@ -176,6 +187,22 @@ module MCollective
         reply[:output] = "Called #{cmd}, " + output + (reply[:output] || '')
       end
 
+      def stop_and_disable
+        lock_file(@lockmcofile) do
+          case puppet_daemon_status
+          when 'stopped'
+            disable
+          when 'disabled'
+            reply[:output] = "Puppet already stoped and disabled"
+            return
+          else
+            kill_process
+            disable
+          end
+          reply[:output] = "Puppet stoped and disabled"
+        end
+      end
+
       def enable
         if File.exists?(@lockfile)
           stat = File::Stat.new(@lockfile)
@@ -187,7 +214,7 @@ module MCollective
             reply[:output] = "Currently running; can't remove lock"
           end
         else
-          reply.fail "Already enabled"
+          reply[:output] = "Already enabled"
         end
       end
 
@@ -195,22 +222,55 @@ module MCollective
         if File.exists?(@lockfile)
           stat = File::Stat.new(@lockfile)
 
-          stat.zero? ? reply.fail("Already disabled") : reply.fail("Currently running; can't remove lock")
+          stat.zero? ? reply[:output] = "Already disabled" : reply.fail("Currently running; can't remove lock")
         else
           begin
             File.open(@lockfile, "w") { |file| }
 
             reply[:output] = "Lock created"
-          rescue Exception => e
+          rescue => e
             reply.fail "Could not create lock: #{e}"
           end
         end
       end
 
-      def puppet_agent_pid
+      private
+
+      def kill_process
+        return if ['stopped', 'disabled'].include? puppet_daemon_status
+
+        begin
+          Timeout.timeout(30) do
+            Process.kill('TERM', puppet_pid)
+            while puppet_pid do
+              sleep 1
+            end
+          end
+        rescue Timeout::Error
+          Process.kill('KILL', puppet_pid)
+        end
+        #FIXME: Daemonized process do not update lock file when we send signal to kill him
+        raise "Should never happen. Some process block lock file in critical section" unless rm_file(@lockfile)
+      rescue => e
+        reply.fail "Failed to kill the puppet daemon (process #{puppet_pid}): #{e}"
+      end
+
+      def puppet_pid
         result = `ps -C puppet -o pid,comm --no-headers`.lines.first
         result && result.strip.split(' ')[0].to_i
       end
+
+      def lock_file(file_name, &block)
+        File.open(file_name, 'w+') do |f|
+          begin
+            f.flock File::LOCK_EX
+            yield
+          ensure
+            f.flock File::LOCK_UN
+          end
+        end
+      end
+
     end
   end
 end

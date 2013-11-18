@@ -134,6 +134,12 @@ module Astute
       nodes_progress
     end
 
+    def stop_puppet_deploy(reporter, task_id, nodes)
+      nodes_uids = nodes.map { |n| n['uid'] }.uniq
+      puppetd = MClient.new(Context.new(task_id, reporter), "puppetd", nodes_uids)
+      puppetd.stop_and_disable
+    end
+
     def remove_nodes(reporter, task_id, nodes)
       NodesRemover.new(Context.new(task_id, reporter), nodes).remove
     end
