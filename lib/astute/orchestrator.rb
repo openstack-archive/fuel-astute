@@ -149,6 +149,12 @@ module Astute
       NodesRemover.new(Context.new(task_id, reporter), nodes, reboot).remove
     end
 
+    def stop_puppet_deploy(reporter, task_id, nodes)
+      nodes_uids = nodes.map { |n| n['uid'] }.uniq
+      puppetd = MClient.new(Context.new(task_id, reporter), "puppetd", nodes_uids)
+      puppetd.stop_and_disable
+    end
+
     def dump_environment(reporter, task_id, lastdump)
       Dump.dump_environment(Context.new(task_id, reporter), lastdump)
     end

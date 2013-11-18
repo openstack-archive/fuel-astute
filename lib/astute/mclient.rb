@@ -85,7 +85,7 @@ module Astute
           end
         end
       end
-      failed = @mc_res.select{|x| x.results[:statuscode] != 0 }
+      failed = @mc_res.select{ |x| x.results[:statuscode] != 0 }
       if failed.any?
         err_msg += "MCollective call failed in agent '#{@agent}', "\
                      "method '#{method}', failed nodes: \n"

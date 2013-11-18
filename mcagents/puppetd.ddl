@@ -29,6 +29,12 @@ action "last_run_summary", :description => "Get a summary of the last puppet run
            :display_as => "Versions"
 end
 
+action "stop_and_disable", :description => "Stop and disable puppet" do
+    output :output,
+           :description => "String indicating status",
+           :display_as => "Status"
+end
+
 action "enable", :description => "Enable puppet" do
     output :output,
            :description => "String indicating status",

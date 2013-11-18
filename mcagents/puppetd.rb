@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+require 'timeout'
 
 module MCollective
   module Agent
@@ -43,6 +44,7 @@ module MCollective
                                                                                  -p #{@lockfile} \
                                                                                  /usr/bin/puppet apply /etc/puppet/manifests/site.pp"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
+        @lockmcofile = "/tmp/mcopuppetd.lock"
       end
 
       action "last_run_summary" do
@@ -64,6 +66,10 @@ module MCollective
 
       action "status" do
         set_status
+      end
+
+      action "stop_and_disable" do
+        stop_and_disable
       end
 
       private
@@ -112,7 +118,7 @@ module MCollective
 
       def puppet_daemon_status
         err_msg = ""
-        alive = !!puppet_agent_pid
+        alive = !!puppet_pid
         locked = File.exists?(@lockfile)
         disabled = locked && File::Stat.new(@lockfile).zero?
 
@@ -137,30 +143,31 @@ module MCollective
       end
 
       def runonce
-        set_status
-        case (reply[:status])
-        when 'disabled' then     # can't run
-          reply.fail "Empty Lock file exists; puppet is disabled."
+        lock_file(@lockmcofile) do
+          set_status
+          case (reply[:status])
+          when 'disabled' then     # can't run
+            reply.fail "Empty Lock file exists; puppet is disabled."
 
-        when 'running' then      # can't run two simultaniously
-          reply.fail "Lock file and PID file exist; puppet is running."
+          when 'running' then      # can't run two simultaniously
+            reply.fail "Lock file and PID file exist; puppet is running."
 
-        when 'idling' then       # signal daemon
-          pid = puppet_agent_pid
-          begin
-            ::Process.kill('INT', pid)
-          rescue Errno::ESRCH => e
-            reply[:err_msg] = "Failed to signal the puppet apply daemon (process #{pid}): #{e}"
-          ensure
+          when 'idling' then       # signal daemon
+            pid = puppet_agent_pid
+            begin
+              ::Process.kill('INT', pid)
+            rescue Errno::ESRCH => e
+              reply[:err_msg] = "Failed to signal the puppet apply daemon (process #{pid}): #{e}"
+            ensure
+              runonce_background
+              reply[:output] = "Kill old idling puppet process #{pid})." + (reply[:output] || '')
+            end
+
+          when 'stopped' then      # just run
             runonce_background
-            reply[:output] = "Kill old idling puppet process #{pid})." + (reply[:output] || '')
+          else
+            reply.fail "Unknown puppet status: #{reply[:status]}"
           end
-
-        when 'stopped' then      # just run
-          runonce_background
-
-        else
-          reply.fail "Unknown puppet status: #{reply[:status]}"
         end
       end
 
@@ -179,6 +186,22 @@ module MCollective
         output = reply[:output] || ''
         run(cmd, :stdout => :output, :chomp => true)
         reply[:output] = "Called #{cmd}, " + output + (reply[:output] || '')
+      end
+
+      def stop_and_disable
+        lock_file(@lockmcofile) do
+          case puppet_daemon_status
+          when 'stopped'
+            disable
+          when 'disabled'
+            reply[:output] = "Puppet already stoped and disabled"
+            return
+          else
+            kill_process
+            disable
+          end
+          reply[:output] = "Puppet stoped and disabled"
+        end
       end
 
       def enable
@@ -211,10 +234,43 @@ module MCollective
         end
       end
 
-      def puppet_agent_pid
+      private
+
+      def kill_process
+        return if ['stopped', 'disabled'].include? puppet_daemon_status
+
+        begin
+          Timeout.timeout(30) do
+            Process.kill('TERM', puppet_pid)
+            while puppet_pid do
+              sleep 1
+            end
+          end
+        rescue Timeout::Error
+          Process.kill('KILL', puppet_pid)
+        end
+        #FIXME: Daemonized process do not update lock file when we send signal to kill him
+        raise "Should never happen. Some process block lock file in critical section" unless rm_file(@lockfile)
+      rescue => e
+        reply.fail "Failed to kill the puppet daemon (process #{puppet_pid}): #{e}"
+      end
+
+      def puppet_pid
         result = `ps -C puppet -o pid,comm --no-headers`.lines.first
         result && result.strip.split(' ')[0].to_i
       end
+
+      def lock_file(file_name, &block)
+        File.open(file_name, 'w+') do |f|
+          begin
+            f.flock File::LOCK_EX
+            yield
+          ensure
+            f.flock File::LOCK_UN
+          end
+        end
+      end
+
     end
   end
 end
