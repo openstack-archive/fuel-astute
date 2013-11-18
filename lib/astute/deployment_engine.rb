@@ -44,6 +44,9 @@ module Astute
 
           # Sync puppet manifests and modules to every node (emulate puppet master)
           sync_puppet_manifests(part)
+
+          # Unlock puppet (can be lock if puppet was killed by user)
+          enable_puppet_deploy(part.map{ |n| n['uid'] })
         end
       rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
@@ -146,6 +149,11 @@ module Astute
                                )
         end
       end
+    end
+
+    def enable_puppet_deploy(node_uids)
+      puppetd = MClient.new(@ctx, "puppetd", node_uids)
+      puppetd.enable
     end
 
     def nodes_status(nodes, status, data_to_merge)
