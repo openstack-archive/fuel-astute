@@ -36,16 +36,18 @@ module Astute
     # Runs puppetd.runonce only if puppet is stopped on the host at the time
     # If it isn't stopped, we wait a bit and try again.
     # Returns list of nodes uids which appear to be with hung puppet.
-    def self.puppetd_runonce(puppetd, uids)
+    def self.puppetd_runonce(puppetd, uids, nodes)
+      debug_mode_dict = nodes.inject({}) {|dict, node| dict[node['uid']] = node['debug']; dict}
       started = Time.now.to_i
       while Time.now.to_i - started < Astute.config.PUPPET_FADE_TIMEOUT
         puppetd.discover(:nodes => uids)
         last_run = puppetd.last_run_summary
         running_uids = last_run.select {|x| x.results[:data][:status] != 'stopped'}.map {|n| n.results[:sender]}
         stopped_uids = uids - running_uids
-        if stopped_uids.any?
-          puppetd.discover(:nodes => stopped_uids)
-          puppetd.runonce
+        # If stopped_uids is empty this cycle will not be called.
+        stopped_uids.each do |uid|
+          puppetd.discover(:nodes => [uid])
+          puppetd.runonce(:puppet_debug => debug_mode_dict[uid])
         end
         uids = running_uids
         break if uids.empty?
@@ -109,7 +111,7 @@ module Astute
           ctx.report_and_update_status('nodes' => nodes)
         end if change_node_status
         prev_summary = puppetd.last_run_summary
-        puppetd_runonce(puppetd, uids)
+        puppetd_runonce(puppetd, uids, nodes)
         nodes_to_check = uids
         last_run = puppetd.last_run_summary
         while nodes_to_check.any?
@@ -139,7 +141,7 @@ module Astute
           end
           if nodes_to_retry.any?
             Astute.logger.info "Retrying to run puppet for following error nodes: #{nodes_to_retry.join(',')}"
-            puppetd_runonce(puppetd, nodes_to_retry)
+            puppetd_runonce(puppetd, nodes_to_retry, nodes)
             # We need this magic with prev_summary to reflect new puppetd run statuses..
             prev_summary.delete_if { |x| nodes_to_retry.include?(x.results[:sender]) }
             prev_summary += last_run.select { |x| nodes_to_retry.include?(x.results[:sender]) }
