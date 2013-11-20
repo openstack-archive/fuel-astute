@@ -165,6 +165,8 @@ module MCollective
           end
         end
 
+        cmd << '--debug' if request[:puppet_debug]
+
         cmd = cmd.join(" ")
 
         output = reply[:output] || ''
