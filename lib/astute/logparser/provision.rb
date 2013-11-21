@@ -20,7 +20,7 @@ module Astute
     class ParseProvisionLogs < ParseNodeLogs
 
       def get_pattern_for_node(node)
-        os = node['cobbler']['profile']
+        os = node['profile']
         if ['rhel-x86_64', 'centos-x86_64'].include?(os)
           pattern_spec_name = 'centos-anaconda-log-supposed-time-kvm'
         elsif os == 'ubuntu_1204_x86_64'

@@ -122,7 +122,7 @@ describe LogParser do
         deploy_parser = Astute::LogParser::ParseProvisionLogs.new
         pattern_spec = deploy_parser.get_pattern_for_node(node)
         # Create temp log files and structures.
-        path = "#{pattern_spec['path_prefix']}#{node['fqdn']}/#{pattern_spec['filename']}"
+        path = "#{pattern_spec['path_prefix']}#{node['hostname']}/#{pattern_spec['filename']}"
 
         FileUtils.mkdir_p(File.dirname(path))
         node['file'] = File.open(path, 'w')
@@ -163,11 +163,10 @@ describe LogParser do
       node = {
         'uid' => '1',
         'ip' => '1.0.0.1',
-        'fqdn' => 'slave-1.domain.tld',
+        'hostname' => 'slave-1.domain.tld',
         'role' => 'controller',
         'src_filename' => 'anaconda.log_',
-        'cobbler' => {
-          'profile' => 'centos-x86_64'}}
+        'profile' => 'centos-x86_64'}
 
       calculated_node = provision_parser_wrapper(node)
       calculated_node['statistics']['pcc'].should > 0.96
@@ -467,9 +466,7 @@ describe LogParser do
     it 'should not raise error if system is CentOS' do
       node = {
         'uid' => '1',
-        'cobbler' => {
-          'profile' => 'centos-x86_64'
-        }
+        'profile' => 'centos-x86_64'
       }
       pattern_spec = deploy_parser.get_pattern_for_node(node)
       expect(pattern_spec['filename']).to be_eql "install/anaconda.log"
@@ -478,9 +475,7 @@ describe LogParser do
     it 'should not raise error if system is RedHat' do
       node = {
         'uid' => '1',
-        'cobbler' => {
-          'profile' => 'rhel-x86_64'
-        }
+        'profile' => 'rhel-x86_64'
       }
       pattern_spec = deploy_parser.get_pattern_for_node(node)
       expect(pattern_spec['filename']).to be_eql "install/anaconda.log"
@@ -489,9 +484,7 @@ describe LogParser do
     it 'should not raise error if system is Ubuntu' do
       node = {
         'uid' => '1',
-        'cobbler' => {
-          'profile' => 'ubuntu_1204_x86_64'
-        }
+        'profile' => 'ubuntu_1204_x86_64'
       }
       pattern_spec = deploy_parser.get_pattern_for_node(node)
       expect(pattern_spec['filename']).to be_eql "main-menu.log"
@@ -500,9 +493,7 @@ describe LogParser do
     it 'should raise error if system unknown' do
       node = {
         'uid' => '1',
-        'cobbler' => {
-          'profile' => 'unknown'
-        }
+        'profile' => 'unknown'
       }
       expect { deploy_parser.get_pattern_for_node(node) }.to raise_error(Astute::ParseProvisionLogsError)
     end
