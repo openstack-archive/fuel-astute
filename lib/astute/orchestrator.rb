@@ -113,11 +113,16 @@ module Astute
       rescue Timeout::Error
         msg = "Timeout of provisioning is exceeded."
         Astute.logger.error msg
-        error_nodes = nodes_not_booted.map { |n| {'uid' => n,
-                                                  'status' => 'error',
-                                                  'error_msg' => msg,
-                                                  'progress' => 100,
-                                                  'error_type' => 'provision'} }
+        error_nodes = nodes_not_booted.map do |n|
+          {
+            'uid' => n,
+            'status' => 'error',
+            'error_msg' => msg,
+            'progress' => 100,
+            'error_type' => 'provision'
+          }
+        end
+
         proxy_reporter.report('status' => 'error', 'error' => msg, 'nodes' => error_nodes)
         error_nodes
       end

@@ -49,7 +49,7 @@ module Astute
             {'pattern' => 'wait while node rebooting', 'supposed_time' => 20},
             ].reverse,
           'filename' => 'install/anaconda.log',
-          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
           },
 
         'centos-anaconda-log-supposed-time-kvm' => # key for default kvm provision pattern
@@ -73,7 +73,7 @@ module Astute
             {'pattern' => 'wait while node rebooting', 'supposed_time' => 20},
             ].reverse,
           'filename' => 'install/anaconda.log',
-          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
         },
 
         'ubuntu-provisioning' =>
@@ -89,7 +89,7 @@ module Astute
             {'pattern' => 'Processing next logs (fake pattern)', 'supposed_time' => 90},
             ].reverse,
           'filename' => 'main-menu.log',
-          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
         },
 
         'puppet-log-components-list-ha-controller' =>   # key for default HA deploy pattern
