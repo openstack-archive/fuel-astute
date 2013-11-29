@@ -19,7 +19,6 @@ module Astute
       def self.get_default_pattern(key)
         pattern_key = key
         pattern_key = 'default' unless @default_patterns.has_key?(key)
-
         deep_copy(@default_patterns[pattern_key])
       end
 
@@ -27,73 +26,7 @@ module Astute
         return @default_patterns.keys
       end
 
-      @default_patterns = {
-        'centos-anaconda-log-supposed-time-baremetal' => # key for default baremetal provision pattern
-          {'type' => 'supposed-time',
-          'chunk_size' => 10000,
-          'date_format' => '%Y-%m-%dT%H:%M:%S',
-          'date_regexp' => '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
-          'pattern_list' => [
-            {'pattern' => 'Running anaconda script', 'supposed_time' => 60},
-            {'pattern' => 'moving (1) to step enablefilesystems', 'supposed_time' => 3},
-            {'pattern' => "notifying kernel of 'change' event on device", 'supposed_time' => 6},
-            {'pattern' => 'Preparing to install packages', 'supposed_time' => 9},
-            {'pattern' => 'Installing glibc-common-2.12', 'supposed_time' => 9},
-            {'pattern' => 'Installing bash-4.1.2', 'supposed_time' => 11},
-            {'pattern' => 'Installing coreutils-8.4-19', 'supposed_time' => 20},
-            {'pattern' => 'Installing centos-release-6-3', 'supposed_time' => 21},
-            {'pattern' => 'Installing attr-2.4.44', 'supposed_time' => 23},
-            {'pattern' => 'leaving (1) step installpackages', 'supposed_time' => 60},
-            {'pattern' => 'moving (1) to step postscripts', 'supposed_time' => 4},
-            {'pattern' => 'leaving (1) step postscripts', 'supposed_time' => 130},
-            {'pattern' => 'wait while node rebooting', 'supposed_time' => 20},
-            ].reverse,
-          'filename' => 'install/anaconda.log',
-          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
-          },
-
-        'centos-anaconda-log-supposed-time-kvm' => # key for default kvm provision pattern
-          {'type' => 'supposed-time',
-          'chunk_size' => 10000,
-          'date_format' => '%Y-%m-%dT%H:%M:%S',
-          'date_regexp' => '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
-          'pattern_list' => [
-            {'pattern' => 'Running anaconda script', 'supposed_time' => 60},
-            {'pattern' => 'moving (1) to step enablefilesystems', 'supposed_time' => 3},
-            {'pattern' => "notifying kernel of 'change' event on device", 'supposed_time' => 30},
-            {'pattern' => 'Preparing to install packages', 'supposed_time' => 12},
-            {'pattern' => 'Installing glibc-common-2.12', 'supposed_time' => 15},
-            {'pattern' => 'Installing bash-4.1.2', 'supposed_time' => 15},
-            {'pattern' => 'Installing coreutils-8.4-19', 'supposed_time' => 33},
-            {'pattern' => 'Installing centos-release-6-3', 'supposed_time' => 21},
-            {'pattern' => 'Installing attr-2.4.44', 'supposed_time' => 48},
-            {'pattern' => 'leaving (1) step installpackages', 'supposed_time' => 100},
-            {'pattern' => 'moving (1) to step postscripts', 'supposed_time' => 4},
-            {'pattern' => 'leaving (1) step postscripts', 'supposed_time' => 200},
-            {'pattern' => 'wait while node rebooting', 'supposed_time' => 20},
-            ].reverse,
-          'filename' => 'install/anaconda.log',
-          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
-        },
-
-        'ubuntu-provisioning' =>
-          {'type' => 'supposed-time',
-          'chunk_size' => 10000,
-          'date_format' => '%Y-%m-%dT%H:%M:%S',
-          'date_regexp' => '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
-          'pattern_list' => [
-            {'pattern' => "Menu item 'choose-mirror' selected", 'supposed_time' => 120},
-            {'pattern' => "Menu item 'user-setup-udeb' selected", 'supposed_time' => 60},
-            {'pattern' => "Menu item 'apt-setup-udeb' selected", 'supposed_time' => 60},
-            {'pattern' => "Menu item 'finish-install' selected", 'supposed_time' => 60},
-            {'pattern' => 'Processing next logs (fake pattern)', 'supposed_time' => 90},
-            ].reverse,
-          'filename' => 'main-menu.log',
-          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
-        },
-
-        'puppet-log-components-list-ha-controller' =>   # key for default HA deploy pattern
-          {'type' => 'components-list',
+      ha_controller_pattern = {'type' => 'components-list',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-agent.log',
@@ -254,10 +187,79 @@ module Astute
                {'pattern' => '/Stage[main]/Openstack::Img::Cirros/Package[cirros-testvm]/ensure) created', 'progress' => 1},
                ]
             },
-            ]
+          ]
+      }
+
+      @default_patterns = {
+        'centos-anaconda-log-supposed-time-baremetal' => # key for default baremetal provision pattern
+          {'type' => 'supposed-time',
+          'chunk_size' => 10000,
+          'date_format' => '%Y-%m-%dT%H:%M:%S',
+          'date_regexp' => '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
+          'pattern_list' => [
+            {'pattern' => 'Running anaconda script', 'supposed_time' => 60},
+            {'pattern' => 'moving (1) to step enablefilesystems', 'supposed_time' => 3},
+            {'pattern' => "notifying kernel of 'change' event on device", 'supposed_time' => 6},
+            {'pattern' => 'Preparing to install packages', 'supposed_time' => 9},
+            {'pattern' => 'Installing glibc-common-2.12', 'supposed_time' => 9},
+            {'pattern' => 'Installing bash-4.1.2', 'supposed_time' => 11},
+            {'pattern' => 'Installing coreutils-8.4-19', 'supposed_time' => 20},
+            {'pattern' => 'Installing centos-release-6-3', 'supposed_time' => 21},
+            {'pattern' => 'Installing attr-2.4.44', 'supposed_time' => 23},
+            {'pattern' => 'leaving (1) step installpackages', 'supposed_time' => 60},
+            {'pattern' => 'moving (1) to step postscripts', 'supposed_time' => 4},
+            {'pattern' => 'leaving (1) step postscripts', 'supposed_time' => 130},
+            {'pattern' => 'wait while node rebooting', 'supposed_time' => 20},
+            ].reverse,
+          'filename' => 'install/anaconda.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
           },
 
-        'puppet-log-components-list-ha-compute' =>
+        'centos-anaconda-log-supposed-time-kvm' => # key for default kvm provision pattern
+          {'type' => 'supposed-time',
+          'chunk_size' => 10000,
+          'date_format' => '%Y-%m-%dT%H:%M:%S',
+          'date_regexp' => '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
+          'pattern_list' => [
+            {'pattern' => 'Running anaconda script', 'supposed_time' => 60},
+            {'pattern' => 'moving (1) to step enablefilesystems', 'supposed_time' => 3},
+            {'pattern' => "notifying kernel of 'change' event on device", 'supposed_time' => 30},
+            {'pattern' => 'Preparing to install packages', 'supposed_time' => 12},
+            {'pattern' => 'Installing glibc-common-2.12', 'supposed_time' => 15},
+            {'pattern' => 'Installing bash-4.1.2', 'supposed_time' => 15},
+            {'pattern' => 'Installing coreutils-8.4-19', 'supposed_time' => 33},
+            {'pattern' => 'Installing centos-release-6-3', 'supposed_time' => 21},
+            {'pattern' => 'Installing attr-2.4.44', 'supposed_time' => 48},
+            {'pattern' => 'leaving (1) step installpackages', 'supposed_time' => 100},
+            {'pattern' => 'moving (1) to step postscripts', 'supposed_time' => 4},
+            {'pattern' => 'leaving (1) step postscripts', 'supposed_time' => 200},
+            {'pattern' => 'wait while node rebooting', 'supposed_time' => 20},
+            ].reverse,
+          'filename' => 'install/anaconda.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
+        },
+
+        'ubuntu-provisioning' =>
+          {'type' => 'supposed-time',
+          'chunk_size' => 10000,
+          'date_format' => '%Y-%m-%dT%H:%M:%S',
+          'date_regexp' => '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
+          'pattern_list' => [
+            {'pattern' => "Menu item 'choose-mirror' selected", 'supposed_time' => 120},
+            {'pattern' => "Menu item 'user-setup-udeb' selected", 'supposed_time' => 60},
+            {'pattern' => "Menu item 'apt-setup-udeb' selected", 'supposed_time' => 60},
+            {'pattern' => "Menu item 'finish-install' selected", 'supposed_time' => 60},
+            {'pattern' => 'Processing next logs (fake pattern)', 'supposed_time' => 90},
+            ].reverse,
+          'filename' => 'main-menu.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
+        },
+
+        'puppet-log-components-list-ha_compact-primary-controller' => ha_controller_pattern,
+
+        'puppet-log-components-list-ha_compact-controller' => ha_controller_pattern,  # key for default HA deploy pattern
+
+        'puppet-log-components-list-ha_compact-compute' =>
           {'type' => 'components-list',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
@@ -537,7 +539,7 @@ module Astute
             ]
           },
 
-        'puppet-log-components-list-ha-cinder' => {
+        'puppet-log-components-list-ha_compact-cinder' => {
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'expected_line_number' => 345,
