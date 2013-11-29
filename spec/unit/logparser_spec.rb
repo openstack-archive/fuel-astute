@@ -241,7 +241,7 @@ describe LogParser do
         {'uid' => '2', 'ip' => '1.0.0.2', 'fqdn' => 'slave-2.domain.tld', 'role' => 'compute', 'src_filename' => 'puppet-agent.log.ha.compute'},
       ]
 
-      calculated_nodes = deployment_parser_wrapper('ha', nodes)
+      calculated_nodes = deployment_parser_wrapper('ha_compact', nodes)
       calculated_nodes.each {|node| node['statistics']['pcc'].should > 0.85}
     end
 
@@ -497,6 +497,73 @@ describe LogParser do
       }
       expect { deploy_parser.get_pattern_for_node(node) }.to raise_error(Astute::ParseProvisionLogsError)
     end
+  end
+
+  context "Correct profile for logparsing" do
+    let(:deploy_parser) { Astute::LogParser::ParseDeployLogs.new }
+
+    context 'HA' do
+      before(:each) do
+        deploy_parser.deploy_type = 'ha_compact'
+      end
+
+      it 'should set correct patterns for role - controller' do
+        node = {
+          'uid' => '1',
+          'role' => 'controller'
+        }
+
+        pattern_spec = deploy_parser.get_pattern_for_node(node)
+        expect(pattern_spec['type']).to be_eql 'components-list'
+      end
+
+      it 'should set correct patterns for role - primary-controller' do
+        node = {
+          'uid' => '1',
+          'role' => 'primary-controller'
+        }
+
+        pattern_spec = deploy_parser.get_pattern_for_node(node)
+        expect(pattern_spec['type']).to be_eql 'components-list'
+      end
+
+      it 'should set correct patterns for role - compute' do
+        node = {
+          'uid' => '1',
+          'role' => 'compute'
+        }
+
+        pattern_spec = deploy_parser.get_pattern_for_node(node)
+        expect(pattern_spec['type']).to be_eql 'components-list'
+      end
+    end # HA
+
+    context 'multinode' do
+      before(:each) do
+        deploy_parser.deploy_type = 'multinode'
+      end
+
+      it 'should set correct patterns for role - controller' do
+        node = {
+          'uid' => '1',
+          'role' => 'controller'
+        }
+
+        pattern_spec = deploy_parser.get_pattern_for_node(node)
+        expect(pattern_spec['type']).to be_eql 'components-list'
+      end
+
+      it 'should set correct patterns for role - compute' do
+        node = {
+          'uid' => '1',
+          'role' => 'compute'
+        }
+
+        pattern_spec = deploy_parser.get_pattern_for_node(node)
+        expect(pattern_spec['type']).to be_eql 'components-list'
+      end
+    end # multinode
+
   end
 
 end
