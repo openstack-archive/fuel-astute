@@ -50,7 +50,7 @@ orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'])
 More information about expected content of environment you can find here:
 http://docs.mirantis.com/fuel/3.1/installation-fuel-cli.html#yaml-high-level-structure
 
-Simple example of using Astute as library: https://github.com/Mirantis/astute/blob/master/bin/astute
+Simple example of using Astute as library: https://github.com/stackforge/fuel-astute/blob/master/bin/astute
 
 
 Using as CLI
