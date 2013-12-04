@@ -252,7 +252,7 @@ module Astute
             {'pattern' => 'Processing next logs (fake pattern)', 'supposed_time' => 90},
             ].reverse,
           'filename' => 'main-menu.log',
-          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
         },
 
         'puppet-log-components-list-ha_compact-primary-controller' => ha_controller_pattern,

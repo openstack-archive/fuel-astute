@@ -1,0 +1,35 @@
+2013-12-03T20:39:09.730184+00:00 debug:  DEBUG: resolver (libc6-udeb): package doesn't exist (ignored)
+2013-12-03T20:39:09.730184+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:39:09.736111+00:00 info:  INFO: Menu item 'choose-mirror' selected
+2013-12-03T20:39:09.857006+00:00 debug:  DEBUG: resolver (libc6-udeb): package doesn't exist (ignored)
+2013-12-03T20:39:09.857353+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:39:09.871929+00:00 info:  INFO: Menu item 'download-installer' selected
+2013-12-03T20:39:58.194798+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:39:58.194798+00:00 debug:  DEBUG: resolver (ext2-modules): package doesn't exist (ignored)
+2013-12-03T20:39:58.214741+00:00 info:  INFO: Menu item 'user-setup-udeb' selected
+2013-12-03T20:39:58.967654+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:39:58.967654+00:00 debug:  DEBUG: resolver (ext2-modules): package doesn't exist (ignored)
+2013-12-03T20:39:59.000485+00:00 info:  INFO: Menu item 'clock-setup' selected
+2013-12-03T20:39:59.696712+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:39:59.696712+00:00 debug:  DEBUG: resolver (ext2-modules): package doesn't exist (ignored)
+2013-12-03T20:39:59.716302+00:00 info:  INFO: Menu item 'disk-detect' selected
+2013-12-03T20:40:06.008200+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:40:06.008200+00:00 debug:  DEBUG: resolver (ext2-modules): package doesn't exist (ignored)
+2013-12-03T20:40:06.067655+00:00 info:  INFO: Menu item 'partman-base' selected
+2013-12-03T20:40:25.538096+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:40:25.538096+00:00 debug:  DEBUG: resolver (ext2-modules): package doesn't exist (ignored)
+2013-12-03T20:40:25.575977+00:00 info:  INFO: Menu item 'bootstrap-base' selected
+2013-12-03T20:42:30.528930+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:42:30.529607+00:00 debug:  DEBUG: resolver (ext2-modules): package doesn't exist (ignored)
+2013-12-03T20:42:30.558863+00:00 info:  INFO: Menu item 'apt-setup-udeb' selected
+2013-12-03T20:42:38.482864+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:42:38.482864+00:00 debug:  DEBUG: resolver (ext2-modules): package doesn't exist (ignored)
+2013-12-03T20:42:38.504952+00:00 info:  INFO: Menu item 'pkgsel' selected
+2013-12-03T20:45:30.405560+00:00 info:  (process:3694): No packages found matching language-support-en.
+2013-12-03T20:45:30.415481+00:00 info:  (process:3694): update-initramfs: Generating /boot/initrd.img-3.2.0-23-generic
+2013-12-03T20:45:31.427484+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:45:31.427484+00:00 debug:  DEBUG: resolver (ext2-modules): package doesn't exist (ignored)
+2013-12-03T20:45:31.459199+00:00 info:  INFO: Menu item 'nobootloader' selected
+2013-12-03T20:45:32.290189+00:00 debug:  DEBUG: resolver (libnewt0.52): package doesn't exist (ignored)
+2013-12-03T20:45:32.290189+00:00 debug:  DEBUG: resolver (ext2-modules): package doesn't exist (ignored)
+2013-12-03T20:45:32.323904+00:00 info:  INFO: Menu item 'finish-install' selected
