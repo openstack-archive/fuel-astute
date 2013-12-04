@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Approved+1: Mike Scherbakov <mscherbakov@mirantis.com>
+Code-Review+2: Mike Scherbakov <mscherbakov@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 04 Dec 2013 05:31:20 +0000
+Reviewed-on: https://review.openstack.org/59897
+Project: stackforge/fuel-astute
+Branch: refs/heads/3.2-fixes
