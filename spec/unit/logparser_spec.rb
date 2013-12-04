@@ -159,7 +159,7 @@ describe LogParser do
       return node
     end
 
-    it "should be greather than 0.96" do
+    it "should be greather than 0.96 for CentOS" do
       node = {
         'uid' => '1',
         'ip' => '1.0.0.1',
@@ -172,6 +172,21 @@ describe LogParser do
       calculated_node = provision_parser_wrapper(node)
       calculated_node['statistics']['pcc'].should > 0.96
     end
+
+    it "should be greather than 0.96 for Ubuntu" do
+      node = {
+        'uid' => '1',
+        'ip' => '1.0.0.1',
+        'fqdn' => 'slave-1.domain.tld',
+        'role' => 'controller',
+        'src_filename' => 'main-menu.log',
+        'cobbler' => {
+          'profile' => 'ubuntu_1204_x86_64'}}
+
+      calculated_node = provision_parser_wrapper(node)
+      calculated_node['statistics']['pcc'].should > 0.96
+    end
+
   end
 
   context "Correlation coeff. (PCC) of Deploying progress bar calculation" do
