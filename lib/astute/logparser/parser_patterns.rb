@@ -29,7 +29,7 @@ module Astute
       ha_controller_pattern = {'type' => 'components-list',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
-          'filename' => 'puppet-agent.log',
+          'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
           'components_list' => [
             {'name' => 'Galera', 'weight' => 5, 'patterns' => [
@@ -263,7 +263,7 @@ module Astute
           {'type' => 'components-list',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
-          'filename' => 'puppet-agent.log',
+          'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
           'components_list' => [
             {'name' => 'Keystone', 'weight' => 10, 'patterns' => [
@@ -316,7 +316,7 @@ module Astute
           {'type' => 'components-list',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
-          'filename' => 'puppet-agent.log',
+          'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
           'components_list' => [
             {'name' => 'Glance', 'weight' => 10, 'patterns' => [
@@ -403,7 +403,7 @@ module Astute
           {'type' => 'components-list',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
-          'filename' => 'puppet-agent.log',
+          'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
           'components_list' => [
             {'name' => 'Glance', 'weight' => 10, 'patterns' => [
@@ -490,7 +490,7 @@ module Astute
           {'type' => 'components-list',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
-          'filename' => 'puppet-agent.log',
+          'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
           'components_list' => [
             {'name' => 'Keystone', 'weight' => 10, 'patterns' => [
@@ -543,7 +543,7 @@ module Astute
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'expected_line_number' => 345,
-          'filename' => 'puppet-agent.log',
+          'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>"
         },
 
@@ -551,7 +551,7 @@ module Astute
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'expected_line_number' => 345,
-          'filename' => 'puppet-agent.log',
+          'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>"
         },
 
@@ -559,7 +559,7 @@ module Astute
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'expected_line_number' => 345,
-          'filename' => 'puppet-agent.log',
+          'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>"
         },
 
@@ -567,7 +567,7 @@ module Astute
           'type' => 'count-lines',
           'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'expected_line_number' => 345,
-          'filename' => 'puppet-agent.log',
+          'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>"
         },
       }
