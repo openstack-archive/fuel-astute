@@ -95,7 +95,7 @@ module Astute
          return api_node if api_node
         end
         raise Enviroment::ValidationError, "Node #{node['name']} with mac address #{node['mac']}
-                                            not find among discovered nodes"
+                                            was not found among discovered nodes"
       end
 
       # Set uniq id and uid for node from Nailgun using FuelWeb API
