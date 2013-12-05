@@ -34,12 +34,13 @@ module MCollective
     class Puppetd<RPC::Agent
       def startup_hook
         @splaytime = @config.pluginconf["puppetd.splaytime"].to_i || 0
-        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/puppetdlock"
+        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/puppetd.lock"
         @statefile = @config.pluginconf["puppetd.statefile"] || "/var/lib/puppet/state/state.yaml"
         @pidfile = @config.pluginconf["puppet.pidfile"] || "/var/run/puppet/agent.pid"
         @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/sbin/daemonize -a -e /var/log/puppet/puppet.err \
                                                                                  -o /var/log/puppet/puppet.log \
                                                                                  -l #{@lockfile} \
+                                                                                 -p #{@lockfile} \
                                                                                  /usr/bin/puppet apply /etc/puppet/manifests/site.pp"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
       end
@@ -122,8 +123,10 @@ module MCollective
 
         reply[:err_msg] = err_msg if err_msg.any?
 
-        if disabled
+        if disabled && !alive
           'disabled'
+        elsif disabled && alive
+          'running'
         elsif alive && locked
           'running'
         elsif alive && !locked
@@ -187,7 +190,7 @@ module MCollective
             reply[:output] = "Currently running; can't remove lock"
           end
         else
-          reply.fail "Already enabled"
+          reply[:output] = "Already enabled"
         end
       end
 
@@ -195,13 +198,12 @@ module MCollective
         if File.exists?(@lockfile)
           stat = File::Stat.new(@lockfile)
 
-          stat.zero? ? reply.fail("Already disabled") : reply.fail("Currently running; can't remove lock")
+          stat.zero? ? reply[:output] = "Already disabled" : reply.fail("Currently running; can't remove lock")
         else
           begin
             File.open(@lockfile, "w") { |file| }
-
             reply[:output] = "Lock created"
-          rescue Exception => e
+          rescue => e
             reply.fail "Could not create lock: #{e}"
           end
         end
