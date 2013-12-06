@@ -29,9 +29,7 @@ describe Cobbler do
     username = 'user'
     password = 'pass'
 
-    remote = mock() do
-      expects(:call).with('login', username, password)
-    end
+    remote = mock()
     tmp = XMLRPC::Client
     XMLRPC::Client = mock() do
       expects(:new).with(host, path, port).returns(remote)
@@ -50,9 +48,7 @@ describe Cobbler do
     host = "host.domain.tld"
     path = "/api"
     port = "1234"
-    remote = mock() do
-      expects(:call).with('login', username, password)
-    end
+    remote = mock()
     tmp = XMLRPC::Client
     XMLRPC::Client = mock() do
       expects(:new).with(host, path, port).returns(remote)
@@ -177,6 +173,18 @@ describe Cobbler do
       cobbler.item_from_hash('system', 'name', data, :item_preremove => true)
     end
 
+    it 'should generate token in every cobbler call where token need' do
+      remote = mock() do
+        stubs(:call).twice.with('sync', 'remotetoken')
+        expects(:call).twice.with('login', 'cobbler', 'cobbler').returns('remotetoken')
+      end
+      XMLRPC::Client = mock() do
+        stubs(:new).returns(remote)
+      end
+      cobbler = Astute::Provision::Cobbler.new
+      cobbler.sync
+      cobbler.sync
+    end
   end
 end
 

@@ -21,7 +21,7 @@ module Astute
 
     class Cobbler
 
-      attr_reader :remote, :token
+      attr_reader :remote
 
       def initialize(o={})
         Astute.logger.debug("Cobbler options: #{o.inspect}")
@@ -35,13 +35,16 @@ module Astute
           port = o['port'] || '80'
           path = o['path'] || '/cobbler_api'
         end
-        username = o['username'] || 'cobbler'
-        password = o['password'] || 'cobbler'
+        @username = o['username'] || 'cobbler'
+        @password = o['password'] || 'cobbler'
 
         Astute.logger.debug("Connecting to cobbler with: host: #{host} port: #{port} path: #{path}")
         @remote = XMLRPC::Client.new(host, path, port)
-        Astute.logger.debug("Trying to log in to cobbler with username: #{username}, password: #{password}")
-        @token = remote.call('login', username, password)
+        Astute.logger.debug("Cobbler initialize with username: #{@username}, password: #{@password}")
+      end
+
+      def token
+        remote.call('login', @username, @password)
       end
 
       def item_from_hash(what, name, data, opts = {})
