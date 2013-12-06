@@ -79,6 +79,10 @@ module Astute
                         })
         raise e
       end
+    rescue match_message(/invalid token/) => e
+      tries ||= 3
+      retry unless (tries -= 1).zero?
+      raise e
     end
 
     def watch_provision_progress(reporter, task_id, nodes)
@@ -215,6 +219,10 @@ module Astute
       result = {} unless result.instance_of?(Hash)
       status = default_result.merge(result)
       reporter.report(status)
+    end
+
+    def match_message(regexp)
+      lambda{ |error| regexp === error.message }
     end
 
     def upload_cirros_image(deployment_info, context)
