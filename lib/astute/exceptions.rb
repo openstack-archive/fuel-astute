@@ -13,10 +13,15 @@
 #    under the License.
 
 module Astute
+
   # Base class for all errors
   class AstuteError < StandardError; end
+
   # Provisioning log errors
   class ParseProvisionLogsError < AstuteError; end
   # Redhat related exception
   class RedhatCheckingError < AstuteError; end
+  # Failed to reboot nodes
+  class FailedToRebootNodesError < AstuteError; end
+
 end

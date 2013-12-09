@@ -59,25 +59,24 @@ module Astute
       rescue RuntimeError => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
-                          'status' => 'error',
-                          'error' => 'Cobbler error',
-                          'progress' => 100
-                        })
+            'status' => 'error',
+            'error' => 'Cobbler error',
+            'progress' => 100})
+
         raise e
       ensure
         engine.sync
       end
 
-      if failed_nodes.empty?
-        report_result({}, reporter)
-      else
-        Astute.logger.error("Nodes failed to reboot: #{failed_nodes.inspect}")
+      if failed_nodes.present?
+        err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
+        Astute.logger.error(err_msg)
         reporter.report({
-                          'status' => 'error',
-                          'error' => "Nodes failed to reboot: #{failed_nodes.inspect}",
-                          'progress' => 100
-                        })
-        raise e
+            'status' => 'error',
+            'error' => err_msg,
+            'progress' => 100})
+
+        raise FailedToRebootNodesError.new(err_msg)
       end
     end
 
@@ -90,6 +89,7 @@ module Astute
       prepare_logs_for_parsing(provision_log_parser, nodes)
 
       nodes_not_booted = nodes.map{ |n| n['uid'] }
+      result_msg = {'nodes' => []}
       begin
         Timeout.timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
           catch :done do
@@ -103,7 +103,8 @@ module Astute
                   throw :done
                 end
 
-                Astute.logger.debug("Nodes list length is not equal to target nodes list length: #{nodes.length} != #{target_uids.length}")
+                Astute.logger.debug('Nodes list length is not equal to target ' +
+                  "nodes list length: #{nodes.length} != #{target_uids.length}")
                 report_about_progress(proxy_reporter, provision_log_parser, target_uids, nodes)
               end
             end
@@ -111,27 +112,36 @@ module Astute
           # We are here if jumped by throw from while cycle
         end
       rescue Timeout::Error
-        msg = "Timeout of provisioning is exceeded."
-        Astute.logger.error msg
-        error_nodes = nodes_not_booted.map do |n|
+        Astute.logger.error("Timeout of provisioning is exceeded. Nodes not booted: #{nodes_not_booted}")
+        nodes_progress = nodes_not_booted.map do |n|
           {
             'uid' => n,
             'status' => 'error',
-            'error_msg' => msg,
+            'error_msg' => "Timeout of provisioning is exceeded",
             'progress' => 100,
             'error_type' => 'provision'
           }
         end
 
-        proxy_reporter.report('status' => 'error', 'error' => msg, 'nodes' => error_nodes)
-        error_nodes
+        result_msg.merge!({
+            'status' => 'error',
+            'error' => 'Timeout of provisioning is exceeded',
+            'progress' => 100})
+
+        result_msg['nodes'] += nodes_progress
       end
 
-      nodes_progress = nodes.map do |n|
-        {'uid' => n['uid'], 'progress' => 100, 'status' => 'provisioned'}
+      node_uids = nodes.map { |n| n['uid'] }
+      (node_uids - nodes_not_booted).each do |uid|
+        result_msg['nodes'] << {'uid' => uid, 'progress' => 100, 'status' => 'provisioned'}
       end
-      proxy_reporter.report('nodes' => nodes_progress)
-      nodes_progress
+
+      # If there was no errors, then set status to ready
+      result_msg.reverse_merge!({'status' => 'ready', 'progress' => 100})
+
+      proxy_reporter.report(result_msg)
+
+      result_msg
     end
 
     def remove_nodes(reporter, task_id, nodes)
