@@ -423,11 +423,6 @@ describe Astute::Orchestrator do
           @orchestrator.provision(@reporter, data['engine'], data['nodes'])
         end
 
-        it "report about success" do
-          @reporter.expects(:report).with({'status' => 'ready', 'progress' => 100}).returns(true)
-          @orchestrator.provision(@reporter, data['engine'], data['nodes'])
-        end
-
         it "sync engine state" do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
@@ -450,7 +445,9 @@ describe Astute::Orchestrator do
         end
 
         it "raise error if failed node find" do
-          expect {@orchestrator.provision(@reporter, data['engine'], data['nodes'])}.to raise_error(TypeError)
+          expect do
+            @orchestrator.provision(@reporter, data['engine'], data['nodes'])
+          end.to raise_error(Astute::FailedToRebootNodesError)
         end
       end
 
@@ -506,14 +503,37 @@ describe Astute::Orchestrator do
 
       Timeout.stubs(:timeout).raises(Timeout::Error)
 
-      msg = 'Timeout of provisioning is exceeded.'
-      error_mgs = {'status' => 'error', 'error' => msg, 'nodes' => [{ 'uid' => '1',
-                                                            'status' => 'error',
-                                                            'error_msg' => msg,
-                                                            'progress' => 100,
-                                                            'error_type' => 'provision'}]}
+      msg = 'Timeout of provisioning is exceeded'
 
-      @reporter.expects(:report).with(error_mgs).once
+      error_msg = {
+        'status' => 'error',
+        'error' => msg,
+        'progress' => 100,
+        'nodes' => [{
+            'uid' => '1',
+            'status' => 'error',
+            'error_msg' => msg,
+            'progress' => 100,
+            'error_type' => 'provision'}]}
+
+      @reporter.expects(:report).with(error_msg).once
+      @orchestrator.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
+    end
+
+    it 'success report if all nodes were provisioned' do
+      @orchestrator.stubs(:report_about_progress).returns()
+      @orchestrator.expects(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
+      @orchestrator.stubs(:analize_node_types).returns([['1'], []])
+
+      success_msg = {
+        'status' => 'ready',
+        'progress' => 100,
+        'nodes' => [{
+            'uid' => '1',
+            'status' => 'provisioned',
+            'progress' => 100}]}
+
+      @reporter.expects(:report).with(success_msg).once
       @orchestrator.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
     end
 
