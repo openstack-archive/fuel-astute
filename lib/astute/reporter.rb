@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #    Copyright 2013 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -37,7 +38,7 @@ module Astute
       end
 
       def report(data)
-        Astute.logger.debug("Data received by DeploymetProxyReporter to report it up: #{data.inspect}")
+        Astute.logger.debug("Data received by DeploymentProxyReporter to report it up: #{data.inspect}")
         report_new_data(data)
       end
 
@@ -53,7 +54,7 @@ module Astute
           data['nodes'] = nodes_to_report
         end
         data.merge!(get_overall_status(data))
-        Astute.logger.debug("Data send by DeploymetProxyReporter to report it up: #{data.inspect}")
+        Astute.logger.debug("Data send by DeploymentProxyReporter to report it up: #{data.inspect}")
         @up_reporter.report(data)
       end
 
