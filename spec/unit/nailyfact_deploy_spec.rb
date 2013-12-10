@@ -60,7 +60,7 @@ describe "NailyFact DeploymentEngine" do
 
       it "it should not raise an exception if deployment mode is unknown" do
         deploy_engine.expects(:upload_facts).times(deploy_data.size)
-        Astute::PuppetdDeployer.stubs(:deploy).with(ctx, deploy_data, instance_of(Fixnum), true).once
+        Astute::PuppetdDeployer.stubs(:deploy).with(ctx, deploy_data, instance_of(Fixnum)).once
         expect {deploy_engine.deploy(deploy_data)}.to_not raise_exception
       end
     end
@@ -74,8 +74,8 @@ describe "NailyFact DeploymentEngine" do
         deploy_engine.expects(:upload_facts).times(deploy_data.size)
 
         # we got two calls, one for controller (high priority), and another for all computes (same low priority)
-        Astute::PuppetdDeployer.expects(:deploy).with(ctx, controller_nodes, instance_of(Fixnum), true).once
-        Astute::PuppetdDeployer.expects(:deploy).with(ctx, compute_nodes, instance_of(Fixnum), true).once
+        Astute::PuppetdDeployer.expects(:deploy).with(ctx, controller_nodes, instance_of(Fixnum)).once
+        Astute::PuppetdDeployer.expects(:deploy).with(ctx, compute_nodes, instance_of(Fixnum)).once
 
         expect {deploy_engine.deploy(deploy_data)}.to_not raise_exception
       end
@@ -122,12 +122,12 @@ describe "NailyFact DeploymentEngine" do
         deploy_engine.expects(:upload_facts).at_least_once
 
         primary_controller = deploy_data.find { |n| n['role'] == 'primary-controller' }
-        Astute::PuppetdDeployer.expects(:deploy).with(ctx, [primary_controller], 2, true).once
+        Astute::PuppetdDeployer.expects(:deploy).with(ctx, [primary_controller], 2).once
 
         controller_nodes.each do |n|
-          Astute::PuppetdDeployer.expects(:deploy).with(ctx, [n], 2, true).once
+          Astute::PuppetdDeployer.expects(:deploy).with(ctx, [n], 2).once
         end
-        Astute::PuppetdDeployer.expects(:deploy).with(ctx, compute_nodes, instance_of(Fixnum), true).once
+        Astute::PuppetdDeployer.expects(:deploy).with(ctx, compute_nodes, instance_of(Fixnum)).once
 
         deploy_engine.deploy(deploy_data)
       end
