@@ -14,7 +14,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'mcollective-client', '>= 2.3.1'
   s.add_dependency 'symboltable', '1.0.2'
   s.add_dependency 'rest-client', '~> 1.6.7'
-  s.add_dependency 'kwalify', '~> 0.7.2'
 
   s.add_development_dependency 'rake', '10.0.4'
   s.add_development_dependency 'rspec', '2.13.0'

@@ -17,7 +17,7 @@ Deploy
 
 OpenStack installation in the desired configuration on the selected nodes.
 
-Astute uses data about nodes and deployment settings and recalculates parameters needed for deployment. Calculated parameters are passed to the nodes being deployed by use of nailyfact MCollective agent that uploads these attributes to `/etc/naily.facts` file of the node. Then puppet parses this file using Facter plugin and uploads these facts into puppet. These facts are used during catalog compilation phase by puppet master. Finally catalog is executed and Astute orchestrator passes to the next node in deployment sequence. Fuel Library provides puppet modules for Astute.
+Astute uses data about nodes and deployment settings and recalculates parameters needed for deployment. Calculated parameters are passed to the nodes being deployed by use of nailyfact MCollective agent that uploads these attributes to `/etc/astute.yaml` file of the node. Then puppet parses this file using Facter plugin and uploads these facts into puppet. These facts are used during catalog compilation phase by puppet. Finally catalog is executed and Astute orchestrator passes to the next node in deployment sequence. Fuel Library provides puppet modules for Astute.
 
 Using as library
 -----
@@ -46,23 +46,14 @@ orchestrator.watch_provision_progress(reporter, environment['task_uuid'], enviro
 orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'])
 
 ```
-
-More information about expected content of environment you can find here:
-http://docs.mirantis.com/fuel/3.1/installation-fuel-cli.html#yaml-high-level-structure
-
-Simple example of using Astute as library: https://github.com/Mirantis/astute/blob/master/bin/astute
+Example of using Astute as library: https://github.com/stackforge/fuel-web/blob/master/naily/lib/naily/dispatcher.rb
 
 
 Using as CLI
 -----
 
-Provision:
-    
-    astute -f simple.yaml -c provision
+CLI interface in Astute no longer supported. Please use new Fuel-CLI. More details you can get by link: https://github.com/Mirantis/fuel-docs/blob/master/pages/user-guide/cli.rst
 
-More information about content of `simple.yaml` you can find here: http://docs.mirantis.com/fuel/3.1/installation-fuel-cli.html#yaml-high-level-structure
-
-Additional materials
 -----
 
 - ISO, other materials: http://fuel.mirantis.com/
