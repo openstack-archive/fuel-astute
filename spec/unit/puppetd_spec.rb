@@ -115,15 +115,6 @@ describe "Puppetd" do
         
         Astute::PuppetdDeployer.deploy(ctx, nodes, retries=0)
       end
-
-      it "doesn't report ready status for node if change_node_status disabled" do
-        prepare_mcollective_env
-        
-        reporter.expects(:report).never
-        rpcclient.expects(:runonce).at_least_once.returns([mock_mc_result(last_run_result)])
-        
-        Astute::PuppetdDeployer.deploy(ctx, nodes, retries=0, change_node_status=false)
-      end
       
       context 'multiroles behavior' do
         let(:nodes) { [{'uid' => '1', 'role' => 'compute'}] }
@@ -237,23 +228,6 @@ describe "Puppetd" do
         
         Astute::PuppetdDeployer.deploy(ctx, nodes, 0)
       end
-    end
-
-    it "doesn't publish error status for node if change_node_status disabled" do
-      reporter.expects(:report).never
-
-      rpcclient_valid_result = mock_mc_result(last_run_result)
-      rpcclient_new_res = mock_mc_result(last_run_result_fail)
-      rpcclient_finished_res = mock_mc_result(last_run_failed)
-
-      rpcclient.stubs(:last_run_summary).returns([rpcclient_valid_result]).then.
-          returns([rpcclient_valid_result]).then.
-          returns([rpcclient_new_res]).then.
-          returns([rpcclient_finished_res])
-      rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])
-
-      MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
-      Astute::PuppetdDeployer.deploy(ctx, nodes, retries=0, change_node_status=false)
     end
 
     it "retries to run puppet if it fails" do
