@@ -33,6 +33,7 @@ Dir[File.join(File.dirname(__FILE__), 'unit/fixtures/*.rb')].each { |file| requi
 #               resetting time to sleep significantly increases tests speed
 Astute.config.PUPPET_DEPLOY_INTERVAL = 0
 Astute.config.PUPPET_FADE_INTERVAL = 0
+Astute.config.PUPPET_FADE_TIMEOUT = 1
 Astute.config.MC_RETRY_INTERVAL = 0
 Astute.config.PROVISIONING_TIMEOUT = 0
 Astute.config.REBOOT_TIMEOUT = 0
