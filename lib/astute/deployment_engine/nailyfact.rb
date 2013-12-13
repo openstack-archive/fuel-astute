@@ -16,7 +16,7 @@ require 'yaml'
 
 class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
-  def deploy_piece(nodes, retries=2, change_node_status=true)
+  def deploy_piece(nodes, retries=2)
     return false unless validate_nodes(nodes)
 
     @ctx.reporter.report(nodes_status(nodes, 'deploying', {'progress' => 0}))
@@ -30,7 +30,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     nodes.each { |node| upload_facts(node) }
     Astute.logger.info "#{@ctx.task_id}: Required attrs/metadata passed via facts extension. Starting deployment."
 
-    Astute::PuppetdDeployer.deploy(@ctx, nodes, retries, change_node_status)
+    Astute::PuppetdDeployer.deploy(@ctx, nodes, retries)
     nodes_roles = nodes.map { |n| {n['uid'] => n['role']} }
     Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
   end
