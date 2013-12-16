@@ -91,13 +91,12 @@ module Astute
       # but we should to turn it on only in error_nodes
       succeed_nodes -= hung_nodes
       error_nodes = (error_nodes + hung_nodes).uniq
-      running_nodes = last_run.map {|n| n.results[:sender]} - stopped_nodes - hung_nodes
-
+      running_nodes -= hung_nodes
 
       nodes_to_check = running_nodes + succeed_nodes + error_nodes
-      unless nodes_to_check.size == last_run.size
-        raise "Should never happen. Internal error in nodes statuses calculation. Statuses calculated for: #{nodes_to_check.inspect},"
-                    "nodes passed to check statuses of: #{last_run.map {|n| n.results[:sender]}}"
+      all_nodes = last_run.map { |n| n.results[:sender] }
+      if nodes_to_check.size != all_nodes.size
+        raise "Internal error. Check: #{nodes_to_check.inspect}, passed #{all_nodes.inspect}"
       end
       {'succeed' => succeed_nodes, 'error' => error_nodes, 'running' => running_nodes}
     end
