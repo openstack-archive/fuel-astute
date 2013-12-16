@@ -148,10 +148,12 @@ module MCollective
         when 'idling' then       # signal daemon
           pid = puppet_agent_pid
           begin
-            ::Process.kill('USR1', pid)
-            reply[:output] = "Signalled daemonized puppet to run (process #{pid}); " + (reply[:output] || '')
-          rescue => ex
-            reply.fail "Failed to signal the puppet daemon (process #{pid}): #{ex}"
+            ::Process.kill('INT', pid)
+          rescue Errno::ESRCH => e
+            reply[:err_msg] = "Failed to signal the puppet apply daemon (process #{pid}): #{e}"
+          ensure
+            runonce_background
+            reply[:output] = "Kill old idling puppet process #{pid})." + (reply[:output] || '')
           end
 
         when 'stopped' then      # just run
