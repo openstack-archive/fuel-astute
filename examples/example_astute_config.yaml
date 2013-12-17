@@ -15,8 +15,8 @@ PUPPET_DEPLOY_INTERVAL: 2
 # After Puppet agent has finished real work it spend some time to graceful exit.
 # PUPPET_FADE_TIMEOUT means how long (in seconds) Astute can take for Puppet
 # to exit after real work has finished.
-PUPPET_FADE_TIMEOUT: 60
+PUPPET_FADE_TIMEOUT: 120
 # PUPPET_FADE_INTERVAL is used in puppetd.rb file.
 # Retry every PUPPET_FADE_INTERVAL seconds to check puppet state if it was
 # in 'running' state.
-PUPPET_FADE_INTERVAL: 5
+PUPPET_FADE_INTERVAL: 10
