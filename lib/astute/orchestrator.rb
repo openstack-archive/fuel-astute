@@ -247,8 +247,8 @@ module Astute
         'os_username'       => controller['access']['user'],
         'os_password'       => controller['access']['password'],
         'os_auth_url'       => "http://#{controller['management_vip'] || '127.0.0.1'}:5000/v2.0/",
-        'disk_format'       => 'raw',
-        'container_format'  => 'ovf',
+        'disk_format'       => 'qcow2',
+        'container_format'  => 'bare',
         'public'            => 'true',
         'img_name'          => 'TestVM',
         'os_name'           => 'cirros'
@@ -264,20 +264,26 @@ module Astute
                          else
                            raise CirrosError, "Unknow system #{controller['cobbler']['profile']}"
                        end
-
-      cmd = "/usr/bin/glance -N #{os['os_auth_url']} -T #{os['os_tenant_name']} \
-             -I #{os['os_username']} -K #{os['os_password']} index && \
-             (/usr/bin/glance -N #{os['os_auth_url']} -T #{os['os_tenant_name']} \
-             -I #{os['os_username']} -K #{os['os_password']} index | grep #{os['img_name']}) \
-            "
+      auth_params = "-N #{os['os_auth_url']} \
+                     -T #{os['os_tenant_name']} \
+                     -I #{os['os_username']} \
+                     -K #{os['os_password']}"
+      cmd = "/usr/bin/glance #{auth_params} \
+              index && \
+             (/usr/bin/glance #{auth_params} \
+              index | grep #{os['img_name']})"
       response = run_shell_command(context, Array(controller['uid']), cmd)
       if response[:data][:exit_code] == 0
         Astute.logger.debug "Image already added to stack"
       else
-        cmd = "/usr/bin/glance -N #{os['os_auth_url']} -T #{os['os_tenant_name']} \
-               -I #{os['os_username']} -K #{os['os_password']} add name=#{os['img_name']} \
-               is_public=#{os['public']} container_format=#{os['container_format']} \
-               disk_format=#{os['disk_format']} distro=#{os['os_name']} < #{os['img_path']} \
+        cmd = "/usr/bin/glance #{auth_params} \
+               image-create \
+                 --name \'#{os['img_name']}\' \
+                 --is-public #{os['public']} \
+                 --container-format=\'#{os['container_format']}\' \
+                 --disk-format=\'#{os['disk_format']}\' \
+                 --property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\' \
+                 --file \'#{os['img_path']}\' \
               "
         response = run_shell_command(context, Array(controller['uid']), cmd)
         if response[:data][:exit_code] == 0
