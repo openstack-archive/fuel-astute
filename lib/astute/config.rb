@@ -53,7 +53,7 @@ module Astute
 
   def self.default_config
     conf = {}
-    conf[:PUPPET_TIMEOUT] = 60 * 60       # maximum time it waits for the whole deployment
+    conf[:PUPPET_TIMEOUT] = 90 * 60       # maximum time it waits for the whole deployment
     conf[:PUPPET_DEPLOY_INTERVAL] = 2     # sleep for ## sec, then check puppet status again
     conf[:PUPPET_FADE_TIMEOUT] = 120      # how long it can take for puppet to exit after dumping to last_run_summary
     conf[:MC_RETRIES] = 5                 # MClient tries to call mcagent before failure
