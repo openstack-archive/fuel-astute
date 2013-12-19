@@ -88,14 +88,14 @@ module MCollective
       end
 
       def reboot
-        cmd = '/bin/sleep 5; /sbin/reboot --force'
+        cmd = '/bin/sleep 5; sysctl -w kernel.sysrq=1; echo u > /proc/sysrq-trigger; echo s > /proc/sysrq-trigger; echo b > /proc/sysrq-trigger'
         debug_msg("Run node rebooting command '#{cmd}'")
         pid = fork { system(cmd) }
         Process.detach(pid)
       end
 
       def erase_data(dev, length=1, offset=0)
-        cmd = "dd if=/dev/zero of=/dev/#{dev} bs=1M count=#{length} skip=#{offset}"
+        cmd = "dd if=/dev/zero of=/dev/#{dev} bs=1M count=#{length} skip=#{offset} oflag=direct"
         status = system(cmd)
         debug_msg("Run device erasing command '#{cmd}' returned '#{status}'")
 
