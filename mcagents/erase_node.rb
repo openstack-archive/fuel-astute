@@ -41,7 +41,8 @@ module MCollective
 
         begin
           get_boot_devices.each do |dev|
-            erase_data(dev) unless dry_run
+            erase_data(dev[:name]) unless dry_run
+            erase_data(dev[:name], 1, dev[:size], '512') unless dry_run
           end
 
           reply[:erased] = true
@@ -77,11 +78,17 @@ module MCollective
           if File.exists?("/sys/block/#{basename_dir}/removable")
             removable = File.open("/sys/block/#{basename_dir}/removable") { |f| f.read_nonblock(1024).strip }
           end
+          if File.exists?("/sys/block/#{basename_dir}/size")
+            size = File.open("/sys/block/#{basename_dir}/size") { |f| f.read_nonblock(1024).strip }
+          else
+            size = 0
+            debug_msg("Can not define device size. File /sys/block/#{basename_dir}/size not found.")
+          end
           # Look at https://github.com/torvalds/linux/blob/master/Documentation/devices.txt
           # Please also update the device codes here
           # https://github.com/stackforge/fuel-web/blob/master/bin/agent#L274
           if major =~ /^(3|8|104|105|106|107|108|109|110|111|202|252|253)$/ && removable =~ /^0$/
-            blocks << basename_dir
+            blocks << {:name => basename_dir, :size => size}
           end
           blocks
         end
@@ -94,8 +101,8 @@ module MCollective
         Process.detach(pid)
       end
 
-      def erase_data(dev, length=1, offset=0)
-        cmd = "dd if=/dev/zero of=/dev/#{dev} bs=1M count=#{length} skip=#{offset}"
+      def erase_data(dev, length=1, offset=0, bs='1M')
+        cmd = "dd if=/dev/zero of=/dev/#{dev} bs=#{bs} count=#{length} seek=#{offset}"
         status = system(cmd)
         debug_msg("Run device erasing command '#{cmd}' returned '#{status}'")
 
