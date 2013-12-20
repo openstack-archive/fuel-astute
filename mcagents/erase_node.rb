@@ -58,8 +58,8 @@ module MCollective
         end
 
         begin
-          reboot if not dry_run and request_reboot
-          reply[:rebooted] = true
+          reboot if !dry_run && request_reboot
+          reply[:rebooted] = request_reboot
         rescue Exception => e
           reply[:rebooted] = false
           reply[:status] += 1
