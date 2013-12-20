@@ -42,7 +42,6 @@ module MCollective
         tempfile_storage='/mnt/tempfiles'
 
         begin
-          pre_erase_hook(tempfile_storage)
           get_boot_devices.each do |dev|
             erase_data(dev[:name])
             erase_data(dev[:name], 1, dev[:size], '512')
@@ -73,17 +72,6 @@ module MCollective
         end
       end
 
-      def pre_erase_hook(tempfile_storage)
-        #do some stuff before erase is done to
-        #avoid usage of corrupted fs
-        system(<<-CMD)
-          mkdir /mnt/tempfiles;
-          mount tmpfs -o size=16m #{tempfile_storage};
-          sysctl -w kernel.sysrq=1;
-          `which echo` && cp `which echo` #{tempfile_storage};
-        CMD
-      end
-
       def get_boot_devices
         raise "Path /sys/block does not exist" unless File.exists?("/sys/block")
         Dir["/sys/block/*"].inject([]) do |blocks, block_device_dir|
@@ -108,15 +96,16 @@ module MCollective
         end
       end
 
-      def reboot(tempfile_storage)
+      def reboot
         #Use sysrq trigger: Umount->Sync->reBoot
-        cmd = '/bin/sleep 5;'
+        debug_msg("Run node rebooting command using 'SUB' sysrq-trigger")
+        sleep 5
+        File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
         ['u','s','b'].each do |req|
-          cmd += "#{tempfile_storage}/echo #{req} > /proc/sysrq-trigger;"
+          File.open('/proc/sysrq-trigger','w') do |file|
+            file.write("#{req}\n")
+          end
         end
-        debug_msg("Run node rebooting command '#{cmd}'")
-        pid = fork { system(cmd) }
-        Process.detach(pid)
       end
 
       def erase_data(dev, length=1, offset=0, bs='1M')
