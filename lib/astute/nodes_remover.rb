@@ -16,9 +16,10 @@
 module Astute
   class NodesRemover
 
-    def initialize(ctx, nodes)
+    def initialize(ctx, nodes, reboot=true)
       @ctx = ctx
       @nodes = NodesHash.build(nodes)
+      @reboot = reboot
     end
 
     def remove
@@ -34,7 +35,7 @@ module Astute
 
       answer = {'nodes' => serialize_nodes(erased_nodes)}
 
-      unless inaccessible_nodes.empty?
+      if inaccessible_nodes.present?
         serialized_inaccessible_nodes = serialize_nodes(inaccessible_nodes)
         answer.merge!({'inaccessible_nodes' => serialized_inaccessible_nodes})
 
@@ -42,7 +43,7 @@ module Astute
                            "with errors. Nodes #{serialized_inaccessible_nodes.inspect} are inaccessible"
       end
 
-      unless error_nodes.empty?
+      if error_nodes.present?
         serialized_error_nodes = serialize_nodes(error_nodes)
         answer.merge!({'status' => 'error', 'error_nodes' => serialized_error_nodes})
 
@@ -66,7 +67,7 @@ module Astute
       end
       Astute.logger.info "#{@ctx.task_id}: Starting removing of nodes: #{nodes.uids.inspect}"
       remover = MClient.new(@ctx, "erase_node", nodes.uids.sort, check_result=false)
-      responses = remover.erase_node(:reboot => true)
+      responses = remover.erase_node(:reboot => @reboot)
       Astute.logger.debug "#{@ctx.task_id}: Data received from nodes: #{responses.inspect}"
       inaccessible_uids = nodes.uids - responses.map{|response| response.results[:sender] }
       inaccessible_nodes = NodesHash.build(inaccessible_uids.map do |uid|

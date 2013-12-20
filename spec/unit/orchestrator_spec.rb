@@ -395,6 +395,7 @@ describe Astute::Orchestrator do
         XMLRPC::Client = mock() do
           stubs(:new).returns(remote)
         end
+        @orchestrator.stubs(:remove_nodes).returns([])
       end
 
       it "raises error if nodes list is empty" do
@@ -427,6 +428,11 @@ describe Astute::Orchestrator do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
           end
+          @orchestrator.provision(@reporter, data['engine'], data['nodes'])
+        end
+
+        it "should erase mbr for nodes" do
+          @orchestrator.expects(:remove_nodes).with(@reporter, task_id="", data['nodes'], reboot=false).returns([])
           @orchestrator.provision(@reporter, data['engine'], data['nodes'])
         end
       end

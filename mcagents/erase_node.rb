@@ -40,10 +40,7 @@ module MCollective
         prevent_discover unless dry_run
 
         begin
-          get_boot_devices.each do |dev|
-            erase_data(dev) unless dry_run
-          end
-
+          get_boot_devices.each { |dev| erase_data(dev) } unless dry_run
           reply[:erased] = true
         rescue Exception => e
           reply[:erased] = false
@@ -54,8 +51,8 @@ module MCollective
         end
 
         begin
-          reboot if not dry_run and request_reboot
-          reply[:rebooted] = true
+          reboot if !dry_run && request_reboot
+          reply[:rebooted] = request_reboot
         rescue Exception => e
           reply[:rebooted] = false
           reply[:status] += 1

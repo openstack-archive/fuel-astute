@@ -54,6 +54,7 @@ module Astute
       engine = create_engine(engine_attrs, reporter)
       begin
         add_nodes_to_cobbler(engine, nodes)
+        remove_nodes(reporter, task_id="", nodes, reboot=false)
         reboot_events = reboot_nodes(engine, nodes)
         failed_nodes  = check_reboot_nodes(engine, reboot_events)
       rescue RuntimeError => e
@@ -144,8 +145,8 @@ module Astute
       result_msg
     end
 
-    def remove_nodes(reporter, task_id, nodes)
-      NodesRemover.new(Context.new(task_id, reporter), nodes).remove
+    def remove_nodes(reporter, task_id, nodes, reboot=true)
+      NodesRemover.new(Context.new(task_id, reporter), nodes, reboot).remove
     end
 
     def dump_environment(reporter, task_id, lastdump)
