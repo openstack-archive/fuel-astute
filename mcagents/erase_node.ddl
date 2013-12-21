@@ -15,7 +15,7 @@ action "erase_node", :description => "Zeroing of boot device" do
         :type        => :boolean,
         :validation  => :typecheck,
         :default     => true,
-        :optional    => true
+        :optional    => false
 
   input :dry_run,
         :prompt      => "Dry run",
@@ -23,7 +23,7 @@ action "erase_node", :description => "Zeroing of boot device" do
         :type        => :boolean,
         :validation  => :typecheck,
         :default     => false,
-        :optional    => true
+        :optional    => false
 
   output :status,
          :description => "Shell exit code",
