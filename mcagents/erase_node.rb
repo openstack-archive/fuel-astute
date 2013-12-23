@@ -102,11 +102,11 @@ module MCollective
           debug_msg("Run node rebooting command using 'SUB' sysrq-trigger")
           sleep 5
           File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
-          ['u','s','b'].each do |req|
+          File.open('/proc/sys/kernel/panic','w') { |file| file.write("5\n") }
+          ['u','b'].each do |req|
             File.open('/proc/sysrq-trigger','w') do |file|
               file.write("#{req}\n")
             end
-            sleep 1
           end
         end
         Process.detach(pid)
