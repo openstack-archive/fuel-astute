@@ -97,16 +97,19 @@ module MCollective
       end
 
       def reboot
-        #Use sysrq trigger: Umount->Sync->reBoot
-        debug_msg("Run node rebooting command using 'SUB' sysrq-trigger")
-        sleep 5
-        File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
-        ['u','s','b'].each do |req|
-          File.open('/proc/sysrq-trigger','w') do |file|
-            file.write("#{req}\n")
+        pid = fork do
+          #Use sysrq trigger: Umount->Sync->reBoot
+          debug_msg("Run node rebooting command using 'SUB' sysrq-trigger")
+          sleep 5
+          File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
+          ['u','s','b'].each do |req|
+            File.open('/proc/sysrq-trigger','w') do |file|
+              file.write("#{req}\n")
+            end
+            sleep 1
           end
-          sleep 1
         end
+        Process.detach(pid)
       end
 
       def erase_data(dev, length=1, offset=0, bs='1M')
