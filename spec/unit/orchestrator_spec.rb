@@ -265,7 +265,39 @@ describe Astute::Orchestrator do
           'name_servers' => '1.2.3.4 1.2.3.100',
           'name_servers_search' => 'some.domain.tld domain.tld',
           'netboot_enabled' => '1',
-          'ks_meta' => 'some_param=1 another_param=2',
+          'ks_meta' => {
+            'mco_enable' => 1,
+            'mco_vhost' => 'mcollective',
+            'mco_pskey' => 'unset',
+            'mco_user' => 'mcollective',
+            'puppet_enable' => 0,
+            'install_log_2_syslog' => 1,
+            'mco_password' => 'marionette',
+            'puppet_auto_setup' => '1',
+            'puppet_master' => 'fuel.domain.tld',
+            'mco_auto_setup' => '1',
+            'auth_key' => '""',
+            'puppet_version' => '2.7.19',
+            'mco_connector' => 'rabbitmq',
+            'mco_host' => '10.20.0.2',
+            'ks_spaces' => [
+              {
+                'type' => "disk",
+                'id' => "disk/by-path/pci-0000:00:0d.0-scsi-0:0:0:0",
+                'size' => 16384,
+                'volumes' => [
+                  { 'type' => "boot",
+                    'size' => 300 },
+                  { 'type' => "raid",
+                    'mount' => "/boot",
+                    'size' => 200 },
+                  { 'type' => "lvm_meta_pool",
+                    'name' => "os",
+                    'size' => 64 }
+                ]
+              }
+            ]
+          },
           'interfaces' => {
             'eth0' => {
               'mac_address' => '00:00:00:00:00:00',
@@ -305,6 +337,29 @@ describe Astute::Orchestrator do
       end
     end
 
+    context 'validation' do
+      it "should raise error if nodes list is empty" do
+        expect {@orchestrator.provision(@reporter, data['engine'], {}, strong_validation=true)}.
+                              to raise_error(/Nodes to provision are not provided!/)
+      end
+
+      it 'should raise validation error if cobler settings empty' do
+        expect {@orchestrator.provision(@reporter, {}, data['nodes'], strong_validation=true)}.
+                              to raise_error(Astute::ValidationError)
+      end
+
+      it 'should raise validation error if nodes info incorrect' do
+        data['nodes'].first.delete('netboot_enabled')
+        expect {@orchestrator.provision(@reporter, data['engine'], data['nodes'], strong_validation=true)}.
+                              to raise_error(Astute::ValidationError)
+      end
+
+      it "should not raise error if strong validation is off" do
+        expect {@orchestrator.provision(@reporter, {}, data['nodes'], strong_validation=false)}.
+                              to_not raise_error(Astute::ValidationError)
+      end
+    end
+
     context 'node state cases' do
       before(:each) do
         remote = mock() do
@@ -323,18 +378,23 @@ describe Astute::Orchestrator do
       end
 
       it "try to reboot nodes from list" do
+        @orchestrator.stubs(:check_reboot_nodes).returns([])
+
         Astute::Provision::Cobbler.any_instance do
           expects(:power_reboot).with('controller-1')
         end
-        @orchestrator.stubs(:check_reboot_nodes).returns([])
         @orchestrator.provision(@reporter, data['engine'], data['nodes'])
       end
 
       before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:power_reboot).returns(333) }
 
       context 'node reboot success' do
-        before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:event_status).
-                                                   returns([Time.now.to_f, 'controller-1', 'complete'])}
+        before(:each) do
+          Astute::Provision::Cobbler.any_instance
+                                    .stubs(:event_status)
+                                    .returns([Time.now.to_f, 'controller-1', 'complete'])
+          @orchestrator.stubs(:validate_provision_attrs)
+        end
 
         it "does not find failed nodes" do
           Astute::Provision::Cobbler.any_instance.stubs(:event_status).
