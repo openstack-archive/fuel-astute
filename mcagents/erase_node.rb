@@ -43,6 +43,8 @@ module MCollective
 
         begin
           File.open('/proc/sys/kernel/panic','w') { |file| file.write("5\n") }
+          #Enable sysrq trigger for further hard reboot
+          File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
           get_boot_devices.each do |dev|
             erase_data(dev[:name])
             erase_data(dev[:name], 1, dev[:size], '512')
@@ -102,7 +104,6 @@ module MCollective
           #Use sysrq trigger: Umount->Sync->reBoot
           debug_msg("Run node rebooting command using 'SUB' sysrq-trigger")
           sleep 5
-          File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
           ['u','b'].each do |req|
             File.open('/proc/sysrq-trigger','w') do |file|
               file.write("#{req}\n")
