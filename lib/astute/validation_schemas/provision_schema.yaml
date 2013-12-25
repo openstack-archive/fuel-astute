@@ -1,0 +1,199 @@
+type: map
+mapping:
+  "engine":
+    type: map
+    required: true
+    desc: Cobbler engine credentials
+    mapping:
+      "url":
+        type: text
+        required: true
+      "username":
+        type: text
+        required: true
+      "password":
+        type: text
+        required: true
+  "nodes":
+    type: seq
+    required: true
+    desc: Array of nodes
+    sequence:
+      - type: map
+        mapping:
+          "id":
+            type: text
+            unique: yes
+            desc: MCollective node id in mcollective server.cfg
+          "uid":
+            type: text
+            unique: yes
+            desc: UID of the node for deployment engine. Should be equal to `id`
+          "name":
+            type: text
+            required: true
+            unique: yes
+            desc: Name of the system in cobbler
+          "hostname":
+            type: text
+            required: true
+          "fqdn":
+            type: text
+            desc: Fully-qualified domain name of the node
+          "profile":
+            type: text
+            enum: ["centos-x86_64", "ubuntu_1204_x86_64", 'rhel-x86_64']
+            desc: Cobbler profile for the node.
+          "ip":
+            type: text
+          "mac":
+            type: text
+          "power_address":
+            type: text
+            desc: IP address of the device managing the node power state
+          "power_type":
+            type: text
+            desc: Cobbler power-type. Consult cobbler documentation for available options.
+          "power_user":
+            type: text
+            desc: Username for cobbler to manage power of this machine
+          "name_servers":
+            type: text
+          "power_pass":
+            type: text
+            desc: Password/credentials for cobbler to manage power of this machine
+          "netboot_enabled":
+            type: text
+            required: true
+            desc: Disable/enable netboot for this node.
+          "ks_meta":
+            type: map
+            required: true
+            desc: Kickstart metadata used during provisioning
+            mapping:
+              "mco_enable":
+                type: text
+                required: true
+              "mco_vhost":
+                type: text
+                required: true
+              "mco_pskey":
+                type: text
+                required: true
+              "mco_user":
+                type: text
+                required: true
+              "mco_password":
+                type: text
+                required: true
+              "puppet_enable":
+                type: text
+                required: true
+              "puppet_auto_setup":
+                type: text
+                required: true
+              "puppet_master":
+                type: text
+                required: true
+              "mco_auto_setup":
+                type: text
+                required: true
+              "auth_key":
+                type: text
+                required: true
+              "puppet_version":
+                type: text
+                required: true            
+              "install_log_2_syslog":
+                type: text
+                required: true
+              "mco_connector":
+                type: text
+                required: true
+              "mco_host":
+                type: text
+                required: true
+              "ks_spaces":
+                type: seq
+                #required: true
+                sequence:
+                  - type: map
+                    required: true
+                    mapping:
+                      "type":
+                        type: str
+                        required: true
+                        enum: [disk, vg]
+                      "id":
+                        type: text
+                        required: true
+                        unique: yes
+                      "free_space":
+                        type: int
+                      "size":
+                        type: int
+                      "min_size":
+                        type: int
+                      "name":
+                        type: text
+                      "label":
+                        type: text
+                      "volumes":
+                        type: seq
+                        sequence:
+                          - type: map
+                            mapping:
+                              "type":
+                                type: text
+                                required: true
+                                enum: [lv, pv, partition, mbr, raid, lvm_meta_pool, boot]
+                              "mount":
+                                type: text
+                              "size":
+                                type: int
+                                required: true
+                              "lvm_meta_size":
+                                type: int
+                              "vg":
+                                type: text
+                              "file_system":
+                                type: text
+                              "name":
+                                type: text
+          "interfaces":
+            type: map
+            required: true
+            mapping:
+              =:
+                type: map
+                mapping:
+                  "ip_address":
+                    type: text
+                    unique: yes
+                  "netmask":
+                    type: text
+                  "dns_name":
+                    type: text
+                    unique: yes
+                  "static":
+                    type: text
+                    required: true
+                  "mac_address":
+                    type: text
+                    required: true
+                    unique: yes
+          "interfaces_extra":
+            type: map
+            required: true
+            mapping:
+              =:
+                type: map
+                mapping:
+                  "onboot":
+                    type: text
+                    required: true
+                    enum: ['yes', 'no']
+                  "peerdns":
+                    type: text
+                    required: true
+                    enum: ['yes', 'no']

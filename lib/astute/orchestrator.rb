@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+require 'astute/validator'
+
 module Astute
 
   class CirrosError < StandardError; end
@@ -48,8 +50,9 @@ module Astute
       context.status
     end
 
-    def provision(reporter, engine_attrs, nodes)
+    def provision(reporter, engine_attrs, nodes, strong_validation = false)
       raise "Nodes to provision are not provided!" if nodes.empty?
+      validate_provision_attrs(engine_attrs, nodes, strong_validation)
 
       engine = create_engine(engine_attrs, reporter)
       begin
@@ -226,6 +229,10 @@ module Astute
       result = {} unless result.instance_of?(Hash)
       status = default_result.merge(result)
       reporter.report(status)
+    end
+
+    def validate_provision_attrs(engine_attrs, nodes, do_raise = false)
+      Validator.new(:provision).validate_data({'engine' => engine_attrs, 'nodes' => nodes}, do_raise)
     end
 
     def upload_cirros_image(deployment_info, context)
