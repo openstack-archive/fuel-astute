@@ -52,7 +52,7 @@ Example of using Astute as library: https://github.com/stackforge/fuel-web/blob/
 Using as CLI
 -----
 
-CLI interface in Astute no longer supported. Please use new Fuel-CLI. More details you can get by link: https://github.com/Mirantis/fuel-docs/blob/master/pages/user-guide/cli.rst
+CLI interface in Astute no longer supported. Please use new Fuel-CLI. More details you can get by link: https://github.com/stackforge/fuel-docs/blob/master/pages/user-guide/cli.rst
 
 -----
 
