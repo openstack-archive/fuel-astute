@@ -56,6 +56,7 @@ module Astute
     end
 
     private
+
     def serialize_nodes(nodes)
       nodes.nodes.map(&:to_hash)
     end
@@ -65,23 +66,21 @@ module Astute
         Astute.logger.info "#{@ctx.task_id}: Nodes to remove are not provided. Do nothing."
         return Array.new(3){ NodesHash.new }
       end
-      Astute.logger.info "#{@ctx.task_id}: Starting removing of nodes: #{nodes.uids.inspect}"
-      remover = MClient.new(@ctx, "erase_node", nodes.uids.sort, check_result=false)
-      responses = remover.erase_node(:reboot => @reboot)
-      Astute.logger.debug "#{@ctx.task_id}: Data received from nodes: #{responses.inspect}"
-      inaccessible_uids = nodes.uids - responses.map{|response| response.results[:sender] }
+
+      responses = mclient_remove_nodes(nodes)
+      inaccessible_uids = nodes.uids - responses.map { |response| response[:sender] }
       inaccessible_nodes = NodesHash.build(inaccessible_uids.map do |uid|
         {'uid' => uid, 'error' => 'Node not answered by RPC.'}
       end)
       error_nodes = NodesHash.new
       erased_nodes = NodesHash.new
       responses.each do |response|
-        node = Node.new('uid' => response.results[:sender])
-        if response.results[:statuscode] != 0
-          node['error'] = "RPC agent 'erase_node' failed. Result: #{response.results.inspect}"
+        node = Node.new('uid' => response[:sender])
+        if response[:statuscode] != 0
+          node['error'] = "RPC agent 'erase_node' failed. Result: #{response.inspect}"
           error_nodes << node
-        elsif not response.results[:data][:rebooted]
-          node['error'] = "RPC method 'erase_node' failed with message: #{response.results[:data][:error_msg]}"
+        elsif @reboot && !response[:data][:rebooted]
+          node['error'] = "RPC method 'erase_node' failed with message: #{response[:data][:error_msg]}"
           error_nodes << node
         else
           erased_nodes << node
@@ -100,6 +99,14 @@ module Astute
         return if error_nodes.empty?
         sleep(interval) if interval > 0
       end
+    end
+
+    def mclient_remove_nodes(nodes)
+      Astute.logger.info "#{@ctx.task_id}: Starting removing of nodes: #{nodes.uids.inspect}"
+      remover = MClient.new(@ctx, "erase_node", nodes.uids.sort, check_result=false)
+      responses = remover.erase_node(:reboot => @reboot)
+      Astute.logger.debug "#{@ctx.task_id}: Data received from nodes: #{responses.inspect}"
+      responses.results
     end
 
   end
