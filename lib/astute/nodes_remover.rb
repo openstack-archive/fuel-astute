@@ -80,7 +80,7 @@ module Astute
         if response.results[:statuscode] != 0
           node['error'] = "RPC agent 'erase_node' failed. Result: #{response.results.inspect}"
           error_nodes << node
-        elsif not response.results[:data][:rebooted]
+        elsif @reboot && !response.results[:data][:rebooted]
           node['error'] = "RPC method 'erase_node' failed with message: #{response.results[:data][:error_msg]}"
           error_nodes << node
         else
