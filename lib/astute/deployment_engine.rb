@@ -13,6 +13,7 @@
 #    under the License.
 
 require 'fileutils'
+require 'popen4'
 
 KEY_DIR = "/var/lib/astute"
 
@@ -118,13 +119,20 @@ module Astute
       Astute.config.PUPPET_SSH_KEYS.each do |key_name|
         dir_path = File.join(KEY_DIR, deployment_id.to_s, key_name)
         key_path = File.join(dir_path, key_name)
+
         FileUtils.mkdir_p dir_path
-        return if File.exist?(key_path) && !overwrite
+        raise DeploymentEngineError, "Could not create directory #{dir_path}" unless File.directory?(dir_path)
+
+        next if File.exist?(key_path) && !overwrite
 
         # Generate 2 keys(<name> and <name>.pub) and save it to <KEY_DIR>/<name>/
         File.delete key_path if File.exist? key_path
-        result = system("ssh-keygen -b 2048 -t rsa -N '' -f #{key_path}")
-        raise "Could not generate ssh key!" unless result
+
+        cmd = "ssh-keygen -b 2048 -t rsa -N '' -f #{key_path} 2>&1"
+        status, stdout, _ = run_system_command cmd
+
+        error_msg = "Could not generate ssh key! Command: #{cmd}, output: #{stdout}, exit code: #{status}"
+        raise DeploymentEngineError, error_msg if status != 0
       end
     end
 
@@ -146,6 +154,12 @@ module Astute
                                )
         end
       end
+    end
+
+    def run_system_command(cmd)
+      pid, _, stdout, stderr = Open4::popen4 cmd
+      _, status = Process::waitpid2 pid
+      return status.exitstatus, stdout, stderr
     end
 
     def nodes_status(nodes, status, data_to_merge)
