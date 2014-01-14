@@ -16,7 +16,7 @@
 module Astute
   module Dump
     def self.dump_environment(ctx, lastdump)
-      timeout = 500
+      timeout = 5000
       shell = MClient.new(ctx, 'execute_shell_command', ['master'])
       begin
         Timeout.timeout(timeout) do
