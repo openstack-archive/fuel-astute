@@ -23,5 +23,7 @@ module Astute
   class RedhatCheckingError < AstuteError; end
   # Failed to reboot nodes
   class FailedToRebootNodesError < AstuteError; end
+  # Deployment engine error
+  class DeploymentEngineError < AstuteError; end
 
 end

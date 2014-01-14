@@ -188,7 +188,7 @@ describe Astute::DeploymentEngine do
       end
 
       it 'should save files in correct place: KEY_DIR/<name of key>/' do
-        Engine.any_instance.stubs(:system).returns(true)
+        Engine.any_instance.stubs(:run_system_command).returns([0, "", ""])
 
         Dir.mktmpdir do |temp_dir|
           Astute::DeploymentEngine.const_set 'KEY_DIR', temp_dir
@@ -198,24 +198,39 @@ describe Astute::DeploymentEngine do
         end
       end
 
+      it 'should raise error if directory for key was not created' do
+        FileUtils.stubs(:mkdir_p).returns(false)
+        File.stubs(:directory?).returns(false)
+
+        expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError,
+                                                         /Could not create directory/)
+      end
+
       it 'should raise error if ssh key generation fail' do
         FileUtils.stubs(:mkdir_p).returns(true)
-        Engine.any_instance.stubs(:system).returns(false)
+        File.stubs(:directory?).returns(true)
+        Engine.any_instance.stubs(:run_system_command).returns([1, "", ""])
 
-        expect { deployer.deploy(nodes) }.to raise_error('Could not generate ssh key!')
+        expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError,
+                                                         /Could not generate ssh key! Command:/)
       end
 
       it 'should raise error if ssh key generation command not find' do
         FileUtils.stubs(:mkdir_p).returns(true)
-        Engine.any_instance.stubs(:system).returns(nil)
+        File.stubs(:directory?).returns(true)
+        Engine.any_instance.stubs(:run_system_command).returns([127, "Command not found", ""])
 
-        expect { deployer.deploy(nodes) }.to raise_error('Could not generate ssh key!')
+        expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError,
+                                                         /Command not found/)
       end
 
       it 'should run ssh key generation with correct command' do
         FileUtils.stubs(:mkdir_p).returns(true)
+        File.stubs(:directory?).returns(true)
+
         key_path = File.join(Engine::KEY_DIR, nodes.first['deployment_id'].to_s, 'nova', 'nova')
-        Engine.any_instance.expects(:system).with("ssh-keygen -b 2048 -t rsa -N '' -f #{key_path}").returns(true)
+        cmd = "ssh-keygen -b 2048 -t rsa -N '' -f #{key_path} 2>&1"
+        Engine.any_instance.expects(:run_system_command).with(cmd).returns([0, "", ""])
 
         deployer.deploy(nodes)
       end
