@@ -149,7 +149,7 @@ module Astute
     end
 
     def exec_cmd_with_timeout(cmd, timeout, timeout_expired_msg)
-      shell = MClient.new(@ctx, 'execute_shell_command', ['master'])
+      shell = MClient.new(@ctx, 'execute_shell_command', ['master'], check_result=true, timeout)
       begin
         Timeout.timeout(timeout) do
           response = shell.execute(:cmd => cmd).first

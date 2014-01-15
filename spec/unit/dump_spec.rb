@@ -33,7 +33,7 @@ describe 'dump_environment' do
     end
     
     Astute::MClient = mock() do
-      expects(:new).with(ctx, 'execute_shell_command', ['master']).returns(agent)
+      expects(:new).with(ctx, 'execute_shell_command', ['master'], true, Astute.config.DUMP_TIMEOUT).returns(agent)
     end
     Astute::Dump.dump_environment(ctx, lastdump)
   end

@@ -65,11 +65,12 @@ describe MClient do
     mc_valid_result2 = mock_mc_result({:sender => '2'})
 
     rpcclient.stubs(:echo).returns([mc_valid_result]).then.
-                           returns([mc_valid_result2]).then
+                           returns([mc_valid_result2])
 
     mclient = MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']})
     mclient.retries = 1
-    expect { mclient.echo(:msg => 'hello world') }.to raise_error(/MCollective agents '3' didn't respond./)
+    expect { mclient.echo(:msg => 'hello world') }.to \
+      raise_error(Astute::MClientTimeout, /MCollective agents '3' didn't respond./)
   end
 
   it "should raise error if agent returns statuscode != 0" do
@@ -85,11 +86,12 @@ describe MClient do
     mc_failed_result = mock_mc_result({:sender => '2', :statuscode => 1})
 
     rpcclient.stubs(:echo).returns([mc_valid_result]).then.
-                           returns([mc_failed_result]).then
+                           returns([mc_failed_result]).then.
+                           returns([mc_failed_result])
 
     mclient = MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']})
     mclient.retries = 1
     expect { mclient.echo(:msg => 'hello world') }.to \
-        raise_error(/MCollective agents '3' didn't respond./)
+        raise_error(Astute::MClientError, /ID: 2 - Reason:/)
   end
 end

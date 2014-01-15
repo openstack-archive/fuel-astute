@@ -4,7 +4,7 @@ metadata    :name        => "Execute shell command",
             :license     => "Apache License 2.0",
             :version     => "0.0.1",
             :url         => "http://mirantis.com",
-            :timeout     => 600
+            :timeout     => 3600
 
 action "execute", :description => "Execute shell command" do
 
