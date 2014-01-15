@@ -25,5 +25,7 @@ module Astute
   class FailedToRebootNodesError < AstuteError; end
   # Deployment engine error
   class DeploymentEngineError < AstuteError; end
+  # MClient errors
+  class MClientError < AstuteError; end
 
 end
