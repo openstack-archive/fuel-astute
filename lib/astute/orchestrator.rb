@@ -306,7 +306,12 @@ module Astute
     end
 
     def run_shell_command(context, node_uids, cmd)
-      shell = MClient.new(context, 'execute_shell_command', node_uids)
+      shell = MClient.new(context,
+                          'execute_shell_command',
+                          node_uids,
+                          check_result=true,
+                          timeout=60,
+                          retries=1)
       response = shell.execute(:cmd => cmd).first
       Astute.logger.debug("#{context.task_id}: cmd: #{cmd}
                                                stdout: #{response[:data][:stdout]}

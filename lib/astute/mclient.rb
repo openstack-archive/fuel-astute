@@ -14,20 +14,29 @@
 
 
 require 'mcollective'
+require 'timeout'
 
 module Astute
+
+  class MClientTimeout < Timeout::Error; end
+
   class MClient
     include MCollective::RPC
 
     attr_accessor :retries
 
-    def initialize(ctx, agent, nodes=nil, check_result=true, timeout=nil)
+    def initialize(ctx, agent, nodes=nil, check_result=true, timeout=nil, retries=Astute.config.MC_RETRIES)
       @task_id = ctx.task_id
       @agent = agent
       @nodes = nodes.map { |n| n.to_s } if nodes
       @check_result = check_result
-      @retries = Astute.config.MC_RETRIES
-      #FIXME: this timeout does not work
+      # Will be used a minimum of two things: the specified parameter(timeout)
+      # and timeout from DDL (10 sec by default if not explicitly specified in DDL)
+      # If timeout here is nil will be used value from DDL.
+      # Examples:
+      # timeout - 10 sec, DDL - 20 sec. Result — 10 sec.
+      # timeout - 30 sec, DDL - 20 sec. Result — 20 sec.
+      # timeout - 20 sec, DDL - not set. Result — 10 sec.
       @timeout = timeout
       initialize_mclient
     end
@@ -57,6 +66,7 @@ module Astute
 
     def check_results_with_retries(method, args)
       err_msg = ''
+      timeout_nodes_count = 0
       # Following error might happen because of misconfiguration, ex. direct_addressing = 1 only on client
       #  or.. could be just some hang? Let's retry if @retries is set
       if @mc_res.length < @nodes.length
@@ -81,11 +91,12 @@ module Astute
           if @on_respond_timeout
             @on_respond_timeout.call not_responded
           else
-            err_msg += "MCollective agents '#{not_responded.join(',')}' didn't respond. \n"
+            err_msg += "MCollective agents '#{not_responded.join(',')}' didn't respond within the allotted time.\n"
+            timeout_nodes_count += not_responded.size
           end
         end
       end
-      failed = @mc_res.select{|x| x.results[:statuscode] != 0 }
+      failed = @mc_res.select { |x| x.results[:statuscode] != 0 }
       if failed.any?
         err_msg += "MCollective call failed in agent '#{@agent}', "\
                      "method '#{method}', failed nodes: \n"
@@ -93,9 +104,15 @@ module Astute
           err_msg += "ID: #{n.results[:sender]} - Reason: #{n.results[:statusmsg]}\n"
         end
       end
-      unless err_msg.empty?
+      if err_msg.present?
         Astute.logger.error err_msg
-        raise "#{@task_id}: #{err_msg}"
+        expired_size = failed.count { |n| n.results[:statusmsg] == 'execution expired' }
+        # Detect TimeOut: 1 condition - fail because of DDL timeout, 2 - fail because of custom timeout
+        if (failed.present? && failed.size == expired_size) || (timeout_nodes_count > 0 && failed.empty?)
+          raise MClientTimeout, "#{@task_id}: #{err_msg}"
+        else
+          raise MClientError, "#{@task_id}: #{err_msg}"
+        end
       end
     end
 

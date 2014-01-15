@@ -33,7 +33,7 @@ describe 'dump_environment' do
     end
     
     Astute::MClient = mock() do
-      expects(:new).with(ctx, 'execute_shell_command', ['master']).returns(agent)
+      expects(:new).with(ctx, 'execute_shell_command', ['master'], true, Astute.config.DUMP_TIMEOUT, 1).returns(agent)
     end
     Astute::Dump.dump_environment(ctx, lastdump)
   end
@@ -73,7 +73,7 @@ describe 'dump_environment' do
 
   it "should report error if any other exception occured" do
     agent = mock() do
-      expects(:execute).raises(Exception, "MESSAGE")
+      expects(:execute).raises(StandardError , "MESSAGE")
     end
     Astute::MClient = mock() do
       stubs(:new).returns(agent)

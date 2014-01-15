@@ -16,28 +16,26 @@
 module Astute
   module Dump
     def self.dump_environment(ctx, lastdump)
-      timeout = 500
-      shell = MClient.new(ctx, 'execute_shell_command', ['master'])
+      timeout = Astute.config.DUMP_TIMEOUT
+      shell = MClient.new(ctx, 'execute_shell_command', ['master'], check_result=true, timeout=timeout, retries=1)
       begin
-        Timeout.timeout(timeout) do
-          result = shell.execute(
-            :cmd => "/opt/nailgun/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}").first
-          Astute.logger.debug("#{ctx.task_id}: \
+        result = shell.execute(
+          :cmd => "/opt/nailgun/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}").first
+        Astute.logger.debug("#{ctx.task_id}: \
 stdout: #{result[:data][:stdout]} stderr: #{result[:data][:stderr]} \
 exit code: #{result[:data][:exit_code]}")
-          if result[:data][:exit_code] == 0
-            Astute.logger.info("#{ctx.task_id}: Snapshot is done. Result: #{result[:data][:stdout]}")
-            report_success(ctx, result[:data][:stdout].rstrip)
-          else
-            Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code")
-            report_error(ctx, "exit code: #{result[:data][:exit_code]} stderr: #{result[:data][:stderr]}")
-          end
+        if result[:data][:exit_code] == 0
+          Astute.logger.info("#{ctx.task_id}: Snapshot is done. Result: #{result[:data][:stdout]}")
+          report_success(ctx, result[:data][:stdout].rstrip)
+        else
+          Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code")
+          report_error(ctx, "exit code: #{result[:data][:exit_code]} stderr: #{result[:data][:stderr]}")
         end
       rescue Timeout::Error
         msg = "Dump is timed out"
         Astute.logger.error("#{ctx.task_id}: #{msg}")
         report_error(ctx, msg)
-      rescue Exception => e
+      rescue => e
         msg = "Exception occured during dump task: message: #{e.message} \
 trace: #{e.backtrace.inspect}"
         Astute.logger.error("#{ctx.task_id}: #{msg}")
