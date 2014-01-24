@@ -13,21 +13,11 @@
 #    under the License.
 
 module Astute
+  class StopSignal
 
-  # Base class for all errors
-  class AstuteError < StandardError; end
+    def stop_deploy?(task_id)
+      false
+    end
 
-  # Provisioning log errors
-  class ParseProvisionLogsError < AstuteError; end
-  # Redhat related exception
-  class RedhatCheckingError < AstuteError; end
-  # Failed to reboot nodes
-  class FailedToRebootNodesError < AstuteError; end
-  # Deployment engine error
-  class DeploymentEngineError < AstuteError; end
-  # MClient errors
-  class MClientError < AstuteError; end
-  # Received the message to stop deploy
-  class StopSignalEvent < AstuteError; end
-
+  end
 end
