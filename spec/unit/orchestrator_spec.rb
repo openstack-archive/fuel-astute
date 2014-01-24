@@ -158,16 +158,18 @@ describe Astute::Orchestrator do
   end
 
   describe '#deploy' do
+    let(:stop_signal) { Astute::StopSignal.new }
+    
     it "it calls deploy method with valid arguments" do
       nodes = [{'uid' => 1, 'role' => 'controller'}]
       Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
                                                        with(nodes)
       @orchestrator.stubs(:upload_cirros_image).returns(nil)
-      @orchestrator.deploy(@reporter, 'task_uuid', nodes)
+      @orchestrator.deploy(@reporter, 'task_uuid', nodes, stop_signal)
     end
 
     it "deploy method raises error if nodes list is empty" do
-      expect {@orchestrator.deploy(@reporter, 'task_uuid', [])}.
+      expect {@orchestrator.deploy(@reporter, 'task_uuid', [], stop_signal)}.
                             to raise_error(/Deployment info are not provided!/)
     end
 

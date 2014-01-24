@@ -20,11 +20,12 @@ KEY_DIR = "/var/lib/astute"
 module Astute
   class DeploymentEngine
 
-    def initialize(context)
+    def initialize(context, stop_signal = Astute::StopSignal.new)
       if self.class.superclass.name == 'Object'
         raise "Instantiation of this superclass is not allowed. Please subclass from #{self.class.name}."
       end
       @ctx = context
+      @stop_signal = stop_signal
     end
 
     def deploy(deployment_info)
@@ -65,6 +66,8 @@ module Astute
           nodes_group.each_slice(Astute.config[:MAX_NODES_PER_CALL]) { |part| deploy_piece(part) }
         end
       end
+    rescue StopSignalEvent => e
+      Astute.logger.info "Task #{@ctx.task_id} successfully stopped"
     end
 
     protected

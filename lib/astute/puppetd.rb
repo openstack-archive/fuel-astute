@@ -19,11 +19,12 @@ require 'timeout'
 module Astute
   module PuppetdDeployer
 
-    def self.deploy(ctx, nodes, retries=2)
+    def self.deploy(ctx, nodes, stop_signal, retries=2)
       @ctx = ctx
       @nodes_roles = nodes.inject({}) { |h, n| h.merge({n['uid'] => n['role']}) }
       @node_retries = nodes.inject({}) { |h, n| h.merge({n['uid'] => retries}) }
       @nodes = nodes
+      @stop_signal = stop_signal
 
       Astute.logger.debug "Waiting for puppet to finish deployment on all
                            nodes (timeout = #{Astute.config.PUPPET_TIMEOUT} sec)..."
@@ -158,6 +159,18 @@ module Astute
       end
     end
 
+    def self.stop_deploy_nodes
+      Astute.logger.info "Received the task to stop deploy. Stopping..."
+      stop_puppet_deploy(@nodes)
+      raise StopSignalEvent
+    end
+
+    def self.stop_puppet_deploy(nodes)
+      nodes_uids = nodes.map { |n| n['uid'] }.uniq
+      puppetd = MClient.new(@ctx, "puppetd", nodes_uids)
+      puppetd.stop_and_disable
+    end
+
     # As I (Andrey Danin) understand, Puppet agent goes through these steps:
     #   * Puppetd has 'stopped' state.
     #   * We run it as a run_once, and puppetd goes to 'idling' state - it trying to
@@ -177,6 +190,8 @@ module Astute
         hung_nodes = puppetd_runonce(nodes_to_check)
 
         while nodes_to_check.present?
+          stop_deploy_nodes if @stop_signal.stop_deploy?(@ctx.task_id)
+
           last_run = puppetd(nodes_to_check).last_run_summary
           calc_nodes = calc_nodes_status(last_run, prev_summary, hung_nodes)
           Astute.logger.debug "Nodes statuses: #{calc_nodes.inspect}"

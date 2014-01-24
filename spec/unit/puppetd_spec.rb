@@ -27,9 +27,11 @@ describe "Puppetd" do
       Context.new("task id", ProxyReporter::DeploymentProxyReporter.new(reporter), Astute::LogParser::NoParsing.new)
     end
 
-    let(:nodes) { [{'uid' => '1', 'role' => 'compute'}] }
+    let(:nodes) { [{'uid' => '1', 'role' => 'compute', 'deployment_id' => 1}] }
 
     let(:rpcclient) { mock_rpcclient(nodes) }
+
+    let(:stop_retries) { StopSignal.new }
 
     let(:last_run_result) do
       {
@@ -103,7 +105,7 @@ describe "Puppetd" do
         reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}])
         rpcclient.expects(:runonce).at_least_once.returns([mock_mc_result(last_run_result)])
 
-        Astute::PuppetdDeployer.deploy(ctx, nodes, retries=0)
+        Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, retries=0)
       end
 
       context 'multiroles behavior' do
@@ -122,10 +124,23 @@ describe "Puppetd" do
           reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}])
           rpcclient.expects(:runonce).at_least_once.returns([mock_mc_result(last_run_result)])
 
-          Astute::PuppetdDeployer.deploy(@ctx, nodes, retries=0)
+          Astute::PuppetdDeployer.deploy(@ctx, nodes, stop_retries, retries=0)
         end
       end
 
+    end
+
+    context 'cancel deploy' do
+      it 'should end deploy if cancel event happend' do
+        rpcclient.stubs(:last_run_summary).at_least(2).
+          returns([ mock_mc_result(last_run_result_running) ])
+
+        stop_retries.stubs(:stop_deploy?).returns(false).then
+                                         .returns(true)
+
+        Astute::PuppetdDeployer.expects(:stop_puppet_deploy)
+        expect { Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, 1) }.to raise_error Astute::StopSignalEvent
+      end
     end
 
     context "puppet state transitions" do
@@ -158,7 +173,7 @@ describe "Puppetd" do
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
 
-        Astute::PuppetdDeployer.deploy(ctx, nodes, 0)
+        Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, 0)
       end
 
       it "publishes error status for node if puppet failed (a cycle w/o idle states)" do
@@ -174,7 +189,7 @@ describe "Puppetd" do
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
 
-        Astute::PuppetdDeployer.deploy(ctx, nodes, 0)
+        Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, 0)
       end
 
       it "publishes error status for node if puppet failed (a cycle w/o idle and finishing states)" do
@@ -188,7 +203,7 @@ describe "Puppetd" do
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
 
-        Astute::PuppetdDeployer.deploy(ctx, nodes, 0)
+        Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, 0)
       end
 
       it "publishes error status for node if puppet failed (a cycle with one running state only)" do
@@ -203,7 +218,7 @@ describe "Puppetd" do
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
 
-        Astute::PuppetdDeployer.deploy(ctx, nodes, 0)
+        Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, 0)
       end
 
       it "publishes error status for node if puppet failed (a cycle w/o any transitional states)" do
@@ -216,7 +231,7 @@ describe "Puppetd" do
         rpcclient.expects(:runonce).once.
           returns([ mock_mc_result(last_run_result) ])
 
-        Astute::PuppetdDeployer.deploy(ctx, nodes, 0)
+        Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, 0)
       end
 
       context '' do
@@ -240,7 +255,7 @@ describe "Puppetd" do
           reporter.expects(:report).with('nodes' => [{'status' => 'error', 'error_type' => 'deploy', 'uid' => '1', 'role' => 'compute'}])
           rpcclient.expects(:runonce).never
 
-          Astute::PuppetdDeployer.deploy(ctx, nodes, 0)
+          Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, 0)
         end
 
         it "ignore exit code of puppet running of alien task (waited for alien task stop and launched own)" do
@@ -256,7 +271,7 @@ describe "Puppetd" do
           rpcclient.expects(:runonce).at_least(1).returns([ mock_mc_result(last_run_result) ])
           reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}])
 
-          Astute::PuppetdDeployer.deploy(ctx, nodes, 1)
+          Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, 1)
         end
       end
 
@@ -279,7 +294,7 @@ describe "Puppetd" do
       rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])
 
       MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
-      Astute::PuppetdDeployer.deploy(ctx, nodes, retries=1)
+      Astute::PuppetdDeployer.deploy(ctx, nodes, stop_retries, retries=1)
     end
   end
 end

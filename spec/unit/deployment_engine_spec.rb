@@ -143,6 +143,36 @@ describe Astute::DeploymentEngine do
       end
     end
 
+    context 'cancel event' do
+      let(:nodes) {
+                  [{'uid' => 1, 'deployment_id' => 1, 'priority' => 0},
+                   {'uid' => 2, 'priority' => 10}]
+                  }
+      let(:task_id) { nodes.first['deployment_id'] }
+
+      before(:each) do
+        deployer.stubs(:deploy_piece).raises(Astute::StopSignalEvent)
+        ctx.stubs(:task_id).returns(task_id)
+      end
+
+      it 'should stop deploy' do
+        deployer.expects(:deploy_piece).once
+
+        deployer.deploy(nodes)
+      end
+
+      it 'should log result' do
+        Logger.any_instance.stubs(:info)
+        Logger.any_instance.expects(:info).with("Task #{task_id} successfully stopped")
+
+        deployer.deploy(nodes)
+      end
+
+      it 'should handle StopSignalEvent' do
+        expect { deployer.deploy(nodes) }.to_not raise_error
+      end
+    end
+
     it 'should raise error if deployment list is empty' do
       expect { deployer.deploy([]) }.to raise_error('Deployment info are not provided!')
     end
