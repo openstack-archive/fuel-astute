@@ -14,7 +14,7 @@
 
 module Astute
 
-  class CirrosError < StandardError; end
+  class CirrosError < AstuteError; end
 
   class Orchestrator
     def initialize(deploy_engine=nil, log_parsing=false)
@@ -35,11 +35,11 @@ module Astute
       end
     end
 
-    def deploy(up_reporter, task_id, deployment_info)
+    def deploy(up_reporter, task_id, deployment_info, stop_signal)
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, deployment_info)
       log_parser = @log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
       context = Context.new(task_id, proxy_reporter, log_parser)
-      deploy_engine_instance = @deploy_engine.new(context)
+      deploy_engine_instance = @deploy_engine.new(context, stop_signal)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
 
       deploy_engine_instance.deploy(deployment_info)
@@ -147,12 +147,6 @@ module Astute
 
     def remove_nodes(reporter, task_id, nodes, reboot=true)
       NodesRemover.new(Context.new(task_id, reporter), nodes, reboot).remove
-    end
-
-    def stop_puppet_deploy(reporter, task_id, nodes)
-      nodes_uids = nodes.map { |n| n['uid'] }.uniq
-      puppetd = MClient.new(Context.new(task_id, reporter), "puppetd", nodes_uids)
-      puppetd.stop_and_disable
     end
 
     def dump_environment(reporter, task_id, lastdump)
