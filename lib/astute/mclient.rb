@@ -38,6 +38,7 @@ module Astute
       # timeout - 30 sec, DDL - 20 sec. Result — 20 sec.
       # timeout - 20 sec, DDL - not set. Result — 10 sec.
       @timeout = timeout
+      @retries = retries
       initialize_mclient
     end
 

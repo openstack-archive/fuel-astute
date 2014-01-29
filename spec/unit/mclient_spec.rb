@@ -67,8 +67,7 @@ describe MClient do
     rpcclient.stubs(:echo).returns([mc_valid_result]).then.
                            returns([mc_valid_result2])
 
-    mclient = MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']})
-    mclient.retries = 1
+    mclient = MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']}, check_result=true, timeout=nil, retries=1)
     expect { mclient.echo(:msg => 'hello world') }.to \
       raise_error(Astute::MClientTimeout, /MCollective agents '3' didn't respond./)
   end
