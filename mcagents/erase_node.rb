@@ -21,6 +21,11 @@ module MCollective
   module Agent
     class Erase_node < RPC::Agent
 
+      # Look at https://github.com/torvalds/linux/blob/master/Documentation/devices.txt
+      # Please also update the device codes here
+      # https://github.com/stackforge/fuel-web/blob/master/bin/agent#L43
+      STORAGE_CODES = [3, 8, 65, 66, 67, 68, 69, 70, 71, 104, 105, 106, 107, 108, 109, 110, 111, 202, 252, 253]
+
       action "erase_node" do
         erase_node
       end
@@ -89,10 +94,8 @@ module MCollective
             size = 0
             debug_msg("Can not define device size. File /sys/block/#{basename_dir}/size not found.")
           end
-          # Look at https://github.com/torvalds/linux/blob/master/Documentation/devices.txt
-          # Please also update the device codes here
-          # https://github.com/stackforge/fuel-web/blob/master/bin/agent#L274
-          if major =~ /^(3|8|104|105|106|107|108|109|110|111|202|252|253)$/ && removable =~ /^0$/
+
+          if STORAGE_CODES.include?(major.to_i) && removable =~ /^0$/
             blocks << {:name => basename_dir, :size => size}
           end
           blocks
