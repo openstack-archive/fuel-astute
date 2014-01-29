@@ -51,6 +51,7 @@ describe "NailyFact DeploymentEngine" do
       deploy_engine.stubs(:generate_ssh_keys).with(deploy_data.first['deployment_id'])
       deploy_engine.stubs(:upload_ssh_keys).with(uniq_nodes_uid, deploy_data.first['deployment_id'])
       deploy_engine.stubs(:sync_puppet_manifests).with(deploy_data.uniq { |n| n['uid'] })
+      deploy_engine.stubs(:enable_puppet_deploy).with(uniq_nodes_uid)
     end
 
     context 'log parsing' do
