@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Approved+1: Evgeniy L <eli@mirantis.com>
+Code-Review+2: Evgeniy L <eli@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 29 Jan 2014 08:55:56 +0000
+Reviewed-on: https://review.openstack.org/69810
+Project: stackforge/fuel-astute
+Branch: refs/heads/master
