@@ -14,7 +14,7 @@
 
 module Astute
 
-  class CirrosError < StandardError; end
+  class CirrosError < AstuteError; end
 
   class Orchestrator
     def initialize(deploy_engine=nil, log_parsing=false)
@@ -53,8 +53,8 @@ module Astute
 
       engine = create_engine(engine_attrs, reporter)
       begin
+        remove_nodes(reporter, task_id="", engine_attrs, nodes, reboot=false)
         add_nodes_to_cobbler(engine, nodes)
-        remove_nodes(reporter, task_id="", nodes, reboot=false)
         reboot_events = reboot_nodes(engine, nodes)
         failed_nodes  = check_reboot_nodes(engine, reboot_events)
       rescue RuntimeError => e
@@ -145,7 +145,14 @@ module Astute
       result_msg
     end
 
-    def remove_nodes(reporter, task_id, nodes, reboot=true)
+    def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true)
+      engine = create_engine(engine_attrs, reporter)
+      begin
+        remove_nodes_from_cobbler(engine, nodes)
+      ensure
+        Astute.logger.debug("Cobbler syncing")
+        engine.sync
+      end
       NodesRemover.new(Context.new(task_id, reporter), nodes, reboot).remove
     end
 
@@ -373,21 +380,40 @@ module Astute
 
     def add_nodes_to_cobbler(engine, nodes)
       nodes.each do |node|
+        cobbler_name = node['slave_name']
         begin
-          Astute.logger.info("Adding #{node['name']} into cobbler")
-          engine.item_from_hash('system', node['name'], node,
+          Astute.logger.info("Adding #{cobbler_name} into cobbler")
+          engine.item_from_hash('system', cobbler_name, node,
                            :item_preremove => true)
         rescue RuntimeError => e
-          Astute.logger.error("Error occured while adding system #{node['name']} to cobbler")
+          Astute.logger.error("Error occured while adding system #{cobbler_name} to cobbler")
           raise e
         end
       end # end iteration
     end
 
+    def remove_nodes_from_cobbler(engine, nodes)
+      nodes.each do |node|
+        cobbler_name = node['slave_name']
+        if engine.system_exists?(cobbler_name)
+          Astute.logger.info("Removing system from cobbler: #{cobbler_name}")
+          engine.remove_system(cobbler_name)
+          if !engine.system_exists?(cobbler_name)
+            Astute.logger.info("System has been successfully removed from cobbler: #{cobbler_name}")
+          else
+            Astute.logger.error("Cannot remove node from cobbler: #{cobbler_name}")
+          end
+        else
+          Astute.logger.info("System is not in cobbler: #{cobbler_name}")
+        end
+      end
+    end
+
     def reboot_nodes(engine, nodes)
       nodes.inject({}) do |reboot_events, node|
-        Astute.logger.debug("Trying to reboot node: #{node['name']}")
-        reboot_events.merge(node['name'] => engine.power_reboot(node['name']))
+        cobbler_name = node['slave_name']
+        Astute.logger.debug("Trying to reboot node: #{cobbler_name}")
+        reboot_events.merge(cobbler_name => engine.power_reboot(cobbler_name))
       end
     end
 
