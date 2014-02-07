@@ -107,7 +107,9 @@ module MCollective
           #Use sysrq trigger: Umount->Sync->reBoot
           debug_msg("Run node rebooting command using 'SUB' sysrq-trigger")
           sleep 5
-          ['u','b'].each do |req|
+          File.open('/proc/sys/kernel/panic_on_oops', 'w') {|file| file.write("1\n")}
+          File.open('/proc/sys/kernel/panic','w') {|file| file.write("10\n")}
+          ['b'].each do |req|
             File.open('/proc/sysrq-trigger','w') do |file|
               file.write("#{req}\n")
             end
