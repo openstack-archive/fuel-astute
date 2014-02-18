@@ -148,11 +148,60 @@ describe Astute::Orchestrator do
 
   describe '#remove_nodes' do
 
-    let(:nodes) { [{'uid' => '1'}] }
+    let(:nodes) { [{'uid' => '1', 'slave_name' => ''}] }
+    let(:engine_attrs) do
+      {
+        "url"=>"http://localhost/cobbler_api",
+        "username"=>"cobbler",
+        "password"=>"cobbler"
+      }
+    end
+
+    before(:each) do
+      remote = mock() do
+        stubs(:call)
+        stubs(:call).with('login', 'cobbler', 'cobbler').returns('remotetoken')
+      end
+      XMLRPC::Client = mock() do
+        stubs(:new).returns(remote)
+      end
+    end
 
     it 'should use NodeRemover to remove nodes' do
       Astute::NodesRemover.any_instance.expects(:remove).once
-      @orchestrator.remove_nodes(@reporter, task_id="task_id", nodes, reboot=true)
+      @orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+    end
+
+    context 'cobbler' do
+      it 'should remove nodes from cobbler if node exist' do
+        Astute::Provision::Cobbler.any_instance.stubs(:system_exists?).returns(true).twice
+        Astute::NodesRemover.any_instance.stubs(:remove).once
+
+        Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
+
+        @orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+      end
+
+      it 'should not try to remove nodes from cobbler if node do not exist' do
+        Astute::Provision::Cobbler.any_instance.stubs(:system_exists?).returns(false)
+        Astute::NodesRemover.any_instance.stubs(:remove).once
+
+        Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name']).never
+
+        @orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+      end
+
+      it 'should inform about nodes if remove operation fail' do
+        Astute::Provision::Cobbler.any_instance.stubs(:system_exists?)
+                                  .returns(true)
+                                  .then.returns(true)
+        Astute::NodesRemover.any_instance.stubs(:remove).once
+
+        Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
+
+        @orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+      end
+
     end
 
   end
@@ -256,7 +305,7 @@ describe Astute::Orchestrator do
         {
           'uid' => '1',
           'profile' => 'centos-x86_64',
-          "name"=>"controller-1",
+          "slave_name"=>"controller-1",
           'power_type' => 'ssh',
           'power_user' => 'root',
           'power_pass' => '/root/.ssh/bootstrap.rsa',
@@ -351,7 +400,7 @@ describe Astute::Orchestrator do
         end
 
         it "should erase mbr for nodes" do
-          @orchestrator.expects(:remove_nodes).with(@reporter, task_id="", data['nodes'], reboot=false).returns([])
+          @orchestrator.expects(:remove_nodes).with(@reporter, task_id="", data['engine'], data['nodes'], reboot=false).returns([])
           @orchestrator.provision(@reporter, data['engine'], data['nodes'])
         end
       end

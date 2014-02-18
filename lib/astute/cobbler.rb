@@ -90,7 +90,7 @@ module Astute
         remote.call('has_item', what, name)
       end
 
-      def system_exists(name)
+      def system_exists?(name)
         item_exists('system', name)
       end
 
