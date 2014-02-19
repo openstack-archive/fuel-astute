@@ -155,6 +155,16 @@ module Astute
       puppetd.stop_and_disable
     end
 
+    def stop_provision(reporter, task_id, engine_attrs, nodes)
+      Ssh.execute(Context.new(task_id, reporter), nodes, SshEraseNodes.command)
+      CobblerManager.new(engine_attrs, reporter).remove_nodes(nodes)
+      Ssh.execute(Context.new(task_id, reporter),
+                  nodes,
+                  SshHardReboot.command,
+                  timeout=5,
+                  retries=1)
+    end
+
     def dump_environment(reporter, task_id, lastdump)
       Dump.dump_environment(Context.new(task_id, reporter), lastdump)
     end
