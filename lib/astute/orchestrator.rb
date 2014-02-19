@@ -150,13 +150,7 @@ module Astute
     end
 
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true)
-      engine = create_engine(engine_attrs, reporter)
-      begin
-        remove_nodes_from_cobbler(engine, nodes)
-      ensure
-        Astute.logger.debug("Cobbler syncing")
-        engine.sync
-      end
+      erase_nodes_from_cobbler(engine_attrs, nodes, reporter)
       NodesRemover.new(Context.new(task_id, reporter), nodes, reboot).remove
     end
 
@@ -164,6 +158,66 @@ module Astute
       nodes_uids = nodes.map { |n| n['uid'] }.uniq
       puppetd = MClient.new(Context.new(task_id, reporter), "puppetd", nodes_uids, check_result=false)
       puppetd.stop_and_disable
+    end
+
+    def stop_provision(reporter, task_id, engine_attrs, nodes)
+      # TODO: move to a separate class
+      cmd = <<-ERASE_COMMAND
+        killall -STOP anaconda
+        killall -STOP debootstrap dpkg
+        echo "5" > /proc/sys/kernel/panic
+        echo "1" > /proc/sys/kernel/sysrq
+
+        storages_codes="3, 8, 65, 66, 67, 68, 69, 70, 71, 104, 105, 106, 107, 108, 109, 110, 111, 202, 252, 253"
+
+        reboot_with_sleep() {
+          sleep 5
+          echo "1" > /proc/sys/kernel/panic_on_oops
+          echo "10" > /proc/sys/kernel/panic
+          echo "b" > /proc/sysrq-trigger
+        }
+
+        erase_data() {
+          echo "Run erase_node with dev= $1 length = $2 offset = $3 bs = $4"
+          dd if=/dev/zero of=/dev/$1 bs=$2 count=$3 seek=$4 oflag=direct
+        }
+
+        erase_boot_devices() {
+          for d in /sys/block/*
+          do
+            basename_dir=$(basename $d)
+            major_raw=$(udevadm info --query=property --name=$basename_dir | grep MAJOR | sed 's/ *$//g')
+            major=$(echo ${major_raw##*=})
+
+            echo $storages_codes | grep -o "\b$major\b"
+            if [ $? -ne 0 ]; then continue; fi
+
+            removable=$(grep -o '[[:digit:]]' /sys/block/$basename_dir/removable)
+            if [ $removable -ne 0 ]; then continue; fi
+
+            size=$(cat /sys/block/$basename_dir/size)
+
+            erase_data $basename_dir 1 0 '1M'
+            erase_data $basename_dir 1 $size '512'
+          done
+        }
+
+        echo "Run erase node command"
+        erase_boot_devices
+
+        # Avoid shell hang using nohup and stdout/stderr redirections
+        # nohup reboot_with_sleep > /dev/null 2>&1 &
+      ERASE_COMMAND
+      cmd_reboot = <<-REBOOT_COMMAND
+        echo "Run node rebooting command using 'SB' to sysrq-trigger"
+        echo "1" > /proc/sys/kernel/panic_on_oops
+        echo "10" > /proc/sys/kernel/panic
+        echo "b" > /proc/sysrq-trigger
+      REBOOT_COMMAND
+      Ssh.execute(Context.new(task_id, reporter), nodes, cmd)
+      # FIXME: erase nodes before it will up hung nodes
+      erase_nodes_from_cobbler(engine_attrs, nodes, reporter)
+      Ssh.execute(Context.new(task_id, reporter), nodes, cmd_reboot, timeout=5, retries=1)
     end
 
     def dump_environment(reporter, task_id, lastdump)
@@ -460,6 +514,16 @@ module Astute
           raise e
         end
       end # end iteration
+    end
+
+    def erase_nodes_from_cobbler(engine_attrs, nodes, reporter)
+      engine = create_engine(engine_attrs, reporter)
+      begin
+        remove_nodes_from_cobbler(engine, nodes)
+      ensure
+        Astute.logger.debug("Cobbler syncing")
+        engine.sync
+      end
     end
 
     def remove_nodes_from_cobbler(engine, nodes)
