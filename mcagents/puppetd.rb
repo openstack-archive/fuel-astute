@@ -153,7 +153,7 @@ module MCollective
             reply.fail "Lock file and PID file exist; puppet is running."
 
           when 'idling' then       # signal daemon
-            pid = puppet_agent_pid
+            pid = puppet_pid
             begin
               ::Process.kill('INT', pid)
             rescue Errno::ESRCH => e
