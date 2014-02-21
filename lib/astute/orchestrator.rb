@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+require 'json'
+
 module Astute
 
   class CirrosError < AstuteError; end
@@ -43,7 +45,11 @@ module Astute
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
 
       deploy_engine_instance.deploy(deployment_info)
+
+      # Post deploy hooks
       upload_cirros_image(deployment_info, context)
+      update_cluster_hosts_info(deployment_info, context)
+      restart_radosgw(deployment_info, context)
 
       context.status
     end
@@ -241,6 +247,66 @@ module Astute
       reporter.report(status)
     end
 
+
+    def update_cluster_hosts_info(deployment_info, context)
+      Astute.logger.info "Updating /etc/hosts in all cluster nodes"
+      return if deployment_info.empty?
+
+      response = nil
+      deployment_info.first['nodes'].each do |node|
+        upload_mclient = Astute::MClient.new(context, "uploadfile", Array(node['uid']))
+        upload_mclient.upload(:path => "/tmp/astute.yaml",
+                              :content => deployment_info.first['nodes'].to_yaml,
+                              :overwrite => true,
+                              :parents => true,
+                              :permissions => '0600'
+                             )
+        cmd = <<-UPDATE_HOSTS
+          ruby -r 'yaml' -e 'y = YAML.load_file("/etc/astute.yaml");
+                             y["nodes"] = YAML.load_file("/tmp/astute.yaml");
+                             File.open("/etc/astute.yaml", "w") { |f| f.write y.to_yaml }';
+          puppet apply --logdest syslog --debug -e '$settings=parseyaml($::astute_settings_yaml)
+                                $nodes_hash=$settings["nodes"]
+                                class {"l23network::hosts_file": nodes => $nodes_hash }'
+        UPDATE_HOSTS
+        cmd.tr!("\n"," ")
+
+        response = run_shell_command(context, Array(node['uid']), cmd)
+        if response[:data][:exit_code] != 0
+          Astute.logger.warn "#{context.task_id}: Fail to update /etc/hosts, "\
+                             "check the debugging output for node "\
+                             "#{node['uid']} for details"
+        end
+      end
+
+      Astute.logger.info "#{context.task_id}: Updating /etc/hosts is done"
+    end
+
+    def restart_radosgw(deployment_info, context)
+      ceph_node = deployment_info.find { |n| n['role'] == 'ceph-osd' }
+      objects_ceph = ceph_node && ceph_node.fetch('storage', {}).fetch('objects_ceph')
+
+      return unless objects_ceph
+      Astute.logger.info "Start restarting radosgw on controller nodes"
+
+      cmd = <<-RESTART_RADOSGW
+        test -f /etc/init.d/ceph-radosgw && /etc/init.d/ceph-radosgw restart;
+        test -f /etc/init.d/radosgw && /etc/init.d/radosgw restart;
+        radosgw-admin region-map get > /dev/null || radosgw-admin region-map get > /dev/null;
+        test -f /etc/init.d/ceph-radosgw && /etc/init.d/ceph-radosgw restart;
+        test -f /etc/init.d/radosgw && /etc/init.d/radosgw restart;
+      RESTART_RADOSGW
+      cmd.tr!("\n"," ")
+
+      controller_nodes = deployment_info.first['nodes'].inject([]) do |c_n, n|
+        c_n << n['uid'] if ['controller', 'primary-controller'].include? n['role']
+        c_n
+      end
+
+      response = run_shell_command(context, controller_nodes, cmd)
+      Astute.logger.info "#{context.task_id}: Finish restarting radosgw on controller nodes"
+    end
+
     def upload_cirros_image(deployment_info, context)
       #FIXME: update context status to multirole support: possible situation where one of the
       #       roles of node fail but if last status - success, we try to run code below.
@@ -325,6 +391,8 @@ module Astute
                           check_result=true,
                           timeout=60,
                           retries=1)
+
+      #TODO: return result for all nodes not only for first
       response = shell.execute(:cmd => cmd).first
       Astute.logger.debug("#{context.task_id}: cmd: #{cmd}
                                                stdout: #{response[:data][:stdout]}

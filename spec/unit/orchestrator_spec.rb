@@ -212,6 +212,8 @@ describe Astute::Orchestrator do
       Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
                                                        with(nodes)
       @orchestrator.stubs(:upload_cirros_image).returns(nil)
+      @orchestrator.stubs(:update_cluster_hosts_info).returns(nil)
+      @orchestrator.stubs(:restart_radosgw).returns(nil)
       @orchestrator.deploy(@reporter, 'task_uuid', nodes)
     end
 
