@@ -92,7 +92,7 @@ module Astute
           if @on_respond_timeout
             @on_respond_timeout.call not_responded
           else
-            err_msg += "MCollective agents '#{not_responded.join(',')}' didn't respond within the allotted time.\n"
+            err_msg += "MCollective agents '#{not_responded.join(',')}' didn't respond within the allowed time.\n"
             timeout_nodes_count += not_responded.size
           end
         end
