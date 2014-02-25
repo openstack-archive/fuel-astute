@@ -162,7 +162,7 @@ module Astute
 
     def stop_puppet_deploy(reporter, task_id, nodes)
       nodes_uids = nodes.map { |n| n['uid'] }.uniq
-      puppetd = MClient.new(Context.new(task_id, reporter), "puppetd", nodes_uids)
+      puppetd = MClient.new(Context.new(task_id, reporter), "puppetd", nodes_uids, check_result=false)
       puppetd.stop_and_disable
     end
 
