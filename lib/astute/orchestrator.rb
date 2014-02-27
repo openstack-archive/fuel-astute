@@ -325,9 +325,9 @@ module Astute
       end
 
       os = {
-        'os_tenant_name'    => controller['access']['tenant'],
-        'os_username'       => controller['access']['user'],
-        'os_password'       => controller['access']['password'],
+        'os_tenant_name'    => Shellwords.escape("#{controller['access']['tenant']}"),
+        'os_username'       => Shellwords.escape("#{controller['access']['user']}"),
+        'os_password'       => Shellwords.escape("#{controller['access']['password']}"),
         'os_auth_url'       => "http://#{controller['management_vip'] || '127.0.0.1'}:5000/v2.0/",
         'disk_format'       => 'qcow2',
         'container_format'  => 'bare',
@@ -344,12 +344,12 @@ module Astute
                          when 'ubuntu_1204_x86_64'
                            '/usr/share/cirros-testvm/cirros-x86_64-disk.img'
                          else
-                           raise CirrosError, "Unknow system #{controller['cobbler']['profile']}"
+                           raise CirrosError, "Unknown system #{controller['cobbler']['profile']}"
                        end
-      auth_params = "-N #{os['os_auth_url']} \
-                     -T #{os['os_tenant_name']} \
-                     -I #{os['os_username']} \
-                     -K #{os['os_password']}"
+      auth_params = "-N \"#{os['os_auth_url']}\" \
+                     -T \"#{os['os_tenant_name']}\" \
+                     -I \"#{os['os_username']}\" \
+                     -K \"#{os['os_password']}\""
       cmd = "/usr/bin/glance #{auth_params} \
               index && \
              (/usr/bin/glance #{auth_params} \
