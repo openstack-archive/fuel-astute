@@ -46,8 +46,9 @@ describe Astute::Orchestrator do
           :uid => "1",
           :neighbours => {
             "eth0" => {
-              "100" => {"1" => ["eth0"], "2" => ["eth0"]},
-              "101" => {"1" => ["eth0"]}}}},
+              "100" => {"1" => ["eth0"], "2" => ["eth0"], "2th 2" => ["eth0"]},
+              "101" => {"1" => ["eth0"]}
+          }}},
         :sender => "1"}
       res2 = {
         :data => {
