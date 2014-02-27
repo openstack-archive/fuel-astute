@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 module Astute
   module Network
 
@@ -136,8 +135,8 @@ module Astute
       data.map do |iface, vlans|
         {
           'iface' => iface,
-          'vlans' => vlans.reject{ |k, v|
-            v.keys.sort != uids
+          'vlans' => vlans.select { |k, v|
+            (uids - v.keys).empty?
           }.keys.map(&:to_i)
         }
       end
