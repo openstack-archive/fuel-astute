@@ -259,7 +259,7 @@ describe Astute::Orchestrator do
         nodes_data.first['cobbler']['profile'] = 'unknown'
         ctx.expects(:status).returns(1 => 'success', 2 => 'success')
         Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(nodes_data)
-        expect {@orchestrator.send(:upload_cirros_image, nodes_data, ctx)}.to raise_error(Astute::CirrosError, /Unknow system/)
+        expect {@orchestrator.send(:upload_cirros_image, nodes_data, ctx)}.to raise_error(Astute::CirrosError, /Unknown system/)
       end
 
       it 'should not add new image if it already added' do
