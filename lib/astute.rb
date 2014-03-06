@@ -30,6 +30,7 @@ require 'astute/network'
 require 'astute/puppetd'
 require 'astute/deployment_engine/nailyfact'
 require 'astute/cobbler'
+require 'astute/cobbler_manager'
 require 'astute/dump'
 
 module Astute

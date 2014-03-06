@@ -377,7 +377,7 @@ describe Astute::Orchestrator do
         Astute::Provision::Cobbler.any_instance do
           expects(:power_reboot).with('controller-1')
         end
-        @orchestrator.stubs(:check_reboot_nodes).returns([])
+        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
         @orchestrator.provision(@reporter, data['engine'], data['nodes'])
       end
 

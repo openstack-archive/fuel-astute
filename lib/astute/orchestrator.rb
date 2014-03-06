@@ -55,12 +55,12 @@ module Astute
     def provision(reporter, engine_attrs, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
 
-      engine = create_engine(engine_attrs, reporter)
+      cobbler = CobblerManager.new(engine_attrs, reporter)
       begin
         remove_nodes(reporter, task_id="", engine_attrs, nodes, reboot=false)
-        add_nodes_to_cobbler(engine, nodes)
-        reboot_events = reboot_nodes(engine, nodes)
-        failed_nodes  = check_reboot_nodes(engine, reboot_events)
+        cobbler.add_nodes(nodes)
+        reboot_events = cobbler.reboot_nodes(nodes)
+        failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
       rescue RuntimeError => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
@@ -69,8 +69,6 @@ module Astute
             'progress' => 100})
 
         raise e
-      ensure
-        engine.sync
       end
 
       if failed_nodes.present?
@@ -150,13 +148,8 @@ module Astute
     end
 
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true)
-      engine = create_engine(engine_attrs, reporter)
-      begin
-        remove_nodes_from_cobbler(engine, nodes)
-      ensure
-        Astute.logger.debug("Cobbler syncing")
-        engine.sync
-      end
+      cobbler = CobblerManager.new(engine_attrs, reporter)
+      cobbler.remove_nodes(nodes)
       NodesRemover.new(Context.new(task_id, reporter), nodes, reboot).remove
     end
 
@@ -429,90 +422,6 @@ module Astute
       block.call
       time = time + sleep_time - Time.now.to_f
       sleep(time) if time > 0
-    end
-
-    def create_engine(engine_attrs, reporter)
-      raise "Settings for Cobbler must be set" if engine_attrs.blank?
-
-      begin
-        Astute.logger.info("Trying to instantiate cobbler engine: #{engine_attrs.inspect}")
-        Astute::Provision::Cobbler.new(engine_attrs)
-      rescue => e
-        Astute.logger.error("Error occured during cobbler initializing")
-        reporter.report({
-                          'status' => 'error',
-                          'error' => 'Cobbler can not be initialized',
-                          'progress' => 100
-                        })
-        raise e
-      end
-    end
-
-    def add_nodes_to_cobbler(engine, nodes)
-      nodes.each do |node|
-        cobbler_name = node['slave_name']
-        begin
-          Astute.logger.info("Adding #{cobbler_name} into cobbler")
-          engine.item_from_hash('system', cobbler_name, node,
-                           :item_preremove => true)
-        rescue RuntimeError => e
-          Astute.logger.error("Error occured while adding system #{cobbler_name} to cobbler")
-          raise e
-        end
-      end # end iteration
-    end
-
-    def remove_nodes_from_cobbler(engine, nodes)
-      nodes.each do |node|
-        cobbler_name = node['slave_name']
-        if engine.system_exists?(cobbler_name)
-          Astute.logger.info("Removing system from cobbler: #{cobbler_name}")
-          engine.remove_system(cobbler_name)
-          if !engine.system_exists?(cobbler_name)
-            Astute.logger.info("System has been successfully removed from cobbler: #{cobbler_name}")
-          else
-            Astute.logger.error("Cannot remove node from cobbler: #{cobbler_name}")
-          end
-        else
-          Astute.logger.info("System is not in cobbler: #{cobbler_name}")
-        end
-      end
-    end
-
-    def reboot_nodes(engine, nodes)
-      nodes.inject({}) do |reboot_events, node|
-        cobbler_name = node['slave_name']
-        Astute.logger.debug("Trying to reboot node: #{cobbler_name}")
-        reboot_events.merge(cobbler_name => engine.power_reboot(cobbler_name))
-      end
-    end
-
-    def check_reboot_nodes(engine, reboot_events)
-      begin
-        Astute.logger.debug("Waiting for reboot to be complete: nodes: #{reboot_events.keys}")
-        failed_nodes = []
-        Timeout::timeout(Astute.config.REBOOT_TIMEOUT) do
-          while not reboot_events.empty?
-            reboot_events.each do |node_name, event_id|
-              event_status = engine.event_status(event_id)
-              Astute.logger.debug("Reboot task status: node: #{node_name} status: #{event_status}")
-              if event_status[2] =~ /^failed$/
-                Astute.logger.error("Error occured while trying to reboot: #{node_name}")
-                reboot_events.delete(node_name)
-                failed_nodes << node_name
-              elsif event_status[2] =~ /^complete$/
-                Astute.logger.debug("Successfully rebooted: #{node_name}")
-                reboot_events.delete(node_name)
-              end
-            end
-            sleep(5)
-          end
-        end
-      rescue Timeout::Error => e
-        Astute.logger.debug("Reboot timeout: reboot tasks not completed for nodes #{reboot_events.keys}")
-        raise e
-      end
-      failed_nodes
     end
 
     def report_about_progress(reporter, provision_log_parser, target_uids, nodes)
