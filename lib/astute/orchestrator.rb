@@ -163,6 +163,10 @@ module Astute
       Network.check_network(Context.new(task_id, reporter), nodes)
     end
 
+    def mutlicast_verification(reporter, task_id, nodes)
+      Network.mutlicast_verification(Context.new(task_id, reporter), nodes)
+    end
+
     def download_release(up_reporter, task_id, release_info)
       raise "Release information not provided!" if release_info.empty?
 
