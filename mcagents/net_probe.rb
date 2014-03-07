@@ -24,6 +24,23 @@ module MCollective
         @pattern = "/var/tmp/net-probe-dump*"
       end
 
+      action "multicast_listen" do
+        config = request[:nodes][get_uid].to_json
+        cmd = "fuel-netcheck mutlicast serve listen --config=#{config}"
+        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+      end
+
+      action "multicast_send" do
+        cmd = "fuel-netcheck mutlicast send"
+        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+      end
+
+      action "multicast_info" do
+        reply[:status] = run("fuel-netcheck multicast info",
+                              :stdout => :out, :stderr => :err)
+        run("fuel-netcheck multicast clean")
+      end
+
       action "start_frame_listeners" do
         start_frame_listeners
       end
