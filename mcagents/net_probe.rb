@@ -25,6 +25,10 @@ module MCollective
         @pattern = "/var/tmp/net-probe-dump*"
       end
 
+      action "check" do
+          implemented_by "fuel-mco"
+      end
+
       action "start_frame_listeners" do
         start_frame_listeners
       end
