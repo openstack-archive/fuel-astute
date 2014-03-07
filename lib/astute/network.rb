@@ -54,7 +54,7 @@ module Astute
       {'nodes' => result}
     end
 
-   def self.check_dhcp(net_probe, nodes)
+    def self.check_dhcp(net_probe, nodes)
       data_to_send = {}
       nodes.each do |node|
         data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'], joined=false).to_json
@@ -65,6 +65,46 @@ module Astute
       end
 
       {'nodes' => result, 'status'=> 'ready'}
+    end
+
+    def self.network_flow(ctx, nodes, task)
+      formatted_nodes = {}
+      nodes.each do |node|
+        formatted_nodes[node['uid']] = node['config']
+      end
+
+      _flow = [:start_action, :send_action, :get_info_action]
+      data = {'config' => formatted_nodes,
+              'check' => task}
+      result = {'progress'=>0}
+      # TODO Everything breakes if agent not found. We have to handle that
+      agent = MClient.new(ctx, "net_probe", formatted_nodes.keys)
+      begin
+        for action in _flow
+          response = self.send(action, ctx, agent, data)
+          formatted = format_response(response)
+
+          nodes_status = formatted.map do |uuid, data|
+            data['status']
+          end
+
+          if nodes_status.all? {|status| status == 'success'}
+            result['status'] = 'success'
+            result['data'] = formatted
+            break
+          else
+            result['progress'] += 30
+            ctx.reporter.report(result)
+          end
+
+        end
+    rescue Astute::MClientError => e
+      result['status'] = 'error'
+      result['error'] = e
+      clean_action(ctx, agent, data)
+    end
+      result['progress'] = 100
+      result
     end
 
     private
@@ -131,7 +171,6 @@ module Astute
       end
     end
 
-
     def self.check_vlans_by_traffic(uids, data)
       data.map do |iface, vlans|
         {
@@ -141,6 +180,35 @@ module Astute
           }.keys.map(&:to_i)
         }
       end
+    end
+
+    def self.start_action(ctx, agent, data)
+      data['command'] = 'start'
+      agent.check(:data=>data.to_json)
+    end
+
+    def self.send_action(ctx, agent, data)
+      data['command'] = 'send'
+      agent.check(:data=>data.to_json)
+    end
+
+    def self.get_info_action(ctx, agent, data)
+      data['command'] = 'get_info'
+      agent.check(:data=>data.to_json)
+    end
+
+    def self.clean_action(ctx, agent, data)
+      data['command'] = 'clean'
+      agent.check(:data=>data.to_json)
+    end
+
+    def self.format_response(response)
+      formatted = {}
+      response.each do |node|
+        formatted[node.results[:sender]] = {'status'=>node.results[:status],
+                                            'data'=>node.results[:data]}
+      end
+      formatted
     end
 
   end
