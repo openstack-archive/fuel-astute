@@ -132,4 +132,53 @@ describe Astute::Network do
       res.should eql(expected)
     end
   end
+
+  describe '.multicast_verifcation' do
+
+    def make_nodes(*uids)
+      uids.map do |uid|
+        {
+          'node_id' => uid.to_s,
+          'iface' => 'eth1',
+          'group' => '250.0.0.3',
+          'port' => 10000
+        }
+      end
+    end
+
+    def format_nodes(nodes)
+      formatted_nodes = {}
+      nodes.each do |node|
+        formatted_nodes[node['node_id']] = node
+      end
+      formatted_nodes
+    end
+
+    it "must run all three stages: listen send info with expected argumenets" do
+      nodes = make_nodes(1, 2)
+      formatted_nodes = format_nodes(nodes)
+      task = 'multicast'
+
+      res1 = {:sender => 1,
+              :data => JSON.dump({:out => [1, 2]})}
+      res2 = {:sender => 2,
+              :data => JSON.dump({:out => [1, 2]})}
+
+      expected_response = {1 => [1,2]
+                           2 => [1,2]}
+
+      rpcclient = mock_rpcclient(nodes)
+
+      rpcclient.expects(:multicast_listen).with(:nodes=>formatted_nodes).once
+
+      rpcclient.expects(:multicast_send).with().once
+
+      rpcclient.expects(:multicast_info).with().once.returns([res1, res2])
+
+      res = Astute::Network.multicast_verification(Astute::Context.new('task_uuid', reporter), nodes)
+      res['nodes'].should eql(expected_response)
+    end
+
+  end
+
 end
