@@ -14,8 +14,6 @@
 
 module Astute
 
-  class CirrosError < AstuteError; end
-
   class Orchestrator
     def initialize(deploy_engine=nil, log_parsing=false)
       @deploy_engine = deploy_engine || Astute::DeploymentEngine::NailyFact
@@ -45,9 +43,7 @@ module Astute
       deploy_engine_instance.deploy(deployment_info)
 
       # Post deploy hooks
-      upload_cirros_image(deployment_info, context)
-      update_cluster_hosts_info(deployment_info, context)
-      restart_radosgw(deployment_info, context)
+      PostDeployActions.new(deployment_info, context).process
 
       context.status
     end
@@ -236,164 +232,6 @@ module Astute
       result = {} unless result.instance_of?(Hash)
       status = default_result.merge(result)
       reporter.report(status)
-    end
-
-
-    def update_cluster_hosts_info(deployment_info, context)
-      Astute.logger.info "Updating /etc/hosts in all cluster nodes"
-      return if deployment_info.empty?
-
-      response = nil
-      deployment_info.first['nodes'].each do |node|
-        upload_mclient = Astute::MClient.new(context, "uploadfile", Array(node['uid']))
-        upload_mclient.upload(:path => "/tmp/astute.yaml",
-                              :content => deployment_info.first['nodes'].to_yaml,
-                              :overwrite => true,
-                              :parents => true,
-                              :permissions => '0600'
-                             )
-        cmd = <<-UPDATE_HOSTS
-          ruby -r 'yaml' -e 'y = YAML.load_file("/etc/astute.yaml");
-                             y["nodes"] = YAML.load_file("/tmp/astute.yaml");
-                             File.open("/etc/astute.yaml", "w") { |f| f.write y.to_yaml }';
-          puppet apply --logdest syslog --debug -e '$settings=parseyaml($::astute_settings_yaml)
-                                $nodes_hash=$settings["nodes"]
-                                class {"l23network::hosts_file": nodes => $nodes_hash }'
-        UPDATE_HOSTS
-        cmd.tr!("\n"," ")
-
-        response = run_shell_command(context, Array(node['uid']), cmd)
-        if response[:data][:exit_code] != 0
-          Astute.logger.warn "#{context.task_id}: Fail to update /etc/hosts, "\
-                             "check the debugging output for node "\
-                             "#{node['uid']} for details"
-        end
-      end
-
-      Astute.logger.info "#{context.task_id}: Updating /etc/hosts is done"
-    end
-
-    def restart_radosgw(deployment_info, context)
-      ceph_node = deployment_info.find { |n| n['role'] == 'ceph-osd' }
-      objects_ceph = ceph_node && ceph_node.fetch('storage', {}).fetch('objects_ceph')
-
-      return unless objects_ceph
-      Astute.logger.info "Start restarting radosgw on controller nodes"
-
-      cmd = <<-RESTART_RADOSGW
-        (test -f /etc/init.d/ceph-radosgw && /etc/init.d/ceph-radosgw restart) ||
-        (test -f /etc/init.d/radosgw && /etc/init.d/radosgw restart);
-        radosgw-admin region-map get > /dev/null || radosgw-admin region-map update > /dev/null;
-        (test -f /etc/init.d/ceph-radosgw && /etc/init.d/ceph-radosgw restart) ||
-        (test -f /etc/init.d/radosgw && /etc/init.d/radosgw restart);
-      RESTART_RADOSGW
-      cmd.tr!("\n"," ")
-
-      controller_nodes = deployment_info.first['nodes'].inject([]) do |c_n, n|
-        c_n << n['uid'] if ['controller', 'primary-controller'].include? n['role']
-        c_n
-      end
-
-      response = run_shell_command(context, controller_nodes, cmd)
-      if response[:data][:exit_code] != 0
-        Astute.logger.warn "#{context.task_id}: Fail to restart radosgw, "\
-                             "check the debugging output for details"
-      end
-      Astute.logger.info "#{context.task_id}: Finish restarting radosgw on controller nodes"
-    end
-
-    def upload_cirros_image(deployment_info, context)
-      #FIXME: update context status to multirole support: possible situation where one of the
-      #       roles of node fail but if last status - success, we try to run code below.
-      if context.status.has_value?('error')
-        Astute.logger.warn "Disabling the upload of disk image because deploy ended with an error"
-        return
-      end
-
-      controller = deployment_info.find { |n| n['role'] == 'primary-controller' }
-      controller = deployment_info.find { |n| n['role'] == 'controller' } unless controller
-      if controller.nil?
-        Astute.logger.debug("Could not find controller! Possible adding a new node to the existing cluster?")
-        return
-      end
-
-      os = {
-        'os_tenant_name'    => Shellwords.escape("#{controller['access']['tenant']}"),
-        'os_username'       => Shellwords.escape("#{controller['access']['user']}"),
-        'os_password'       => Shellwords.escape("#{controller['access']['password']}"),
-        'os_auth_url'       => "http://#{controller['management_vip'] || '127.0.0.1'}:5000/v2.0/",
-        'disk_format'       => 'qcow2',
-        'container_format'  => 'bare',
-        'public'            => 'true',
-        'img_name'          => 'TestVM',
-        'os_name'           => 'cirros'
-      }
-
-      os['img_path'] = case controller['cobbler']['profile']
-                         when 'centos-x86_64'
-                           '/opt/vm/cirros-x86_64-disk.img'
-                         when 'rhel-x86_64'
-                           '/opt/vm/cirros-x86_64-disk.img'
-                         when 'ubuntu_1204_x86_64'
-                           '/usr/share/cirros-testvm/cirros-x86_64-disk.img'
-                         else
-                           raise CirrosError, "Unknown system #{controller['cobbler']['profile']}"
-                       end
-      auth_params = "-N #{os['os_auth_url']} \
-                     -T #{os['os_tenant_name']} \
-                     -I #{os['os_username']} \
-                     -K #{os['os_password']}"
-      cmd = "/usr/bin/glance #{auth_params} \
-              index && \
-             (/usr/bin/glance #{auth_params} \
-              index | grep #{os['img_name']})"
-      response = run_shell_command(context, Array(controller['uid']), cmd)
-      if response[:data][:exit_code] == 0
-        Astute.logger.debug "Image already added to stack"
-      else
-        cmd = "/usr/bin/glance #{auth_params} \
-               image-create \
-                 --name \'#{os['img_name']}\' \
-                 --is-public #{os['public']} \
-                 --container-format=\'#{os['container_format']}\' \
-                 --disk-format=\'#{os['disk_format']}\' \
-                 --property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\' \
-                 --file \'#{os['img_path']}\' \
-              "
-        response = run_shell_command(context, Array(controller['uid']), cmd)
-        if response[:data][:exit_code] == 0
-          Astute.logger.info("#{context.task_id}: Upload cirros image is done")
-        else
-          msg = 'Upload cirros image failed'
-          Astute.logger.error("#{context.task_id}: #{msg}")
-          context.report_and_update_status('nodes' => [
-                                            {'uid' => controller['uid'],
-                                             'status' => 'error',
-                                             'error_type' => 'deploy',
-                                             'role' => controller['role']
-                                            }
-                                           ]
-                                          )
-          raise CirrosError, msg
-        end
-      end
-    end
-
-    def run_shell_command(context, node_uids, cmd)
-      shell = MClient.new(context,
-                          'execute_shell_command',
-                          node_uids,
-                          check_result=true,
-                          timeout=60,
-                          retries=1)
-
-      #TODO: return result for all nodes not only for first
-      response = shell.execute(:cmd => cmd).first
-      Astute.logger.debug("#{context.task_id}: cmd: #{cmd}
-                                               stdout: #{response[:data][:stdout]}
-                                               stderr: #{response[:data][:stderr]}
-                                               exit code: #{response[:data][:exit_code]}")
-      response
     end
 
     def prepare_logs_for_parsing(provision_log_parser, nodes)

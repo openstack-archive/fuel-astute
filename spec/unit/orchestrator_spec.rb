@@ -211,9 +211,7 @@ describe Astute::Orchestrator do
       nodes = [{'uid' => 1, 'role' => 'controller'}]
       Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
                                                        with(nodes)
-      @orchestrator.stubs(:upload_cirros_image).returns(nil)
-      @orchestrator.stubs(:update_cluster_hosts_info).returns(nil)
-      @orchestrator.stubs(:restart_radosgw).returns(nil)
+      Astute::PostDeployActions.any_instance.expects(:process).returns(nil)
       @orchestrator.deploy(@reporter, 'task_uuid', nodes)
     end
 
@@ -221,78 +219,6 @@ describe Astute::Orchestrator do
       expect {@orchestrator.deploy(@reporter, 'task_uuid', [])}.
                             to raise_error(/Deployment info are not provided!/)
     end
-
-    describe '#upload_cirros_image' do
-      let(:ctx) do
-        ctx = mock
-        ctx.stubs(:task_id)
-        ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::NoParsing.new)
-        reporter = mock
-        reporter.stubs(:report)
-        up_reporter = Astute::ProxyReporter::DeploymentProxyReporter.new(reporter, deploy_data)
-        ctx.stubs(:reporter).returns(up_reporter)
-        ctx
-      end
-
-      let(:deploy_data) { [ {'uid' => 1, 'role' => 'controller', 'access' => {},
-                             'cobbler' => {'profile' => 'centos-x86_64'}
-                            },
-                            {'uid' => 2, 'role' => 'compute'}
-                          ]
-                        }
-
-      it 'should not add cirros image if deploy fail' do
-        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
-        ctx.expects(:status).returns(1 => 'error', 2 => 'success')
-        expect(@orchestrator.send(:upload_cirros_image, deploy_data, ctx)).to be_nil
-      end
-
-      it 'should not add image again if we only add new nodes to existing cluster' do
-        deploy_data = [{'uid' => 2, 'role' => 'compute'}]
-        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
-        ctx.expects(:status).returns(2 => 'success')
-        expect(@orchestrator.send(:upload_cirros_image, deploy_data, ctx)).to be_nil
-      end
-
-      it 'should raise error if system profile not recognized' do
-        nodes_data = deploy_data.clone
-        nodes_data.first['cobbler']['profile'] = 'unknown'
-        ctx.expects(:status).returns(1 => 'success', 2 => 'success')
-        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(nodes_data)
-        expect {@orchestrator.send(:upload_cirros_image, nodes_data, ctx)}.to raise_error(Astute::CirrosError, /Unknown system/)
-      end
-
-      it 'should not add new image if it already added' do
-        ctx.expects(:status).returns(1 => 'success', 2 => 'success')
-        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
-        @orchestrator.stubs(:run_shell_command).returns(:data => {:exit_code => 0})
-        expect(@orchestrator.send(:upload_cirros_image, deploy_data, ctx)).to be_true
-      end
-
-      it 'should add new image if cluster deploy success and no image was added before' do
-        ctx.expects(:status).returns(1 => 'success', 2 => 'success')
-        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
-        @orchestrator.stubs(:run_shell_command).returns(:data => {:exit_code => 1}).
-                                                then.returns(:data => {:exit_code => 0})
-        expect(@orchestrator.send(:upload_cirros_image, deploy_data, ctx)).to be_true
-      end
-
-      it 'should send node error status for controller and raise if deploy success and no image was added before and fail to add image' do
-        ctx.expects(:status).returns(1 => 'success', 2 => 'success')
-        ctx.expects(:report_and_update_status).with('nodes' => [{
-                                                        'uid' => 1,
-                                                        'role' => 'controller',
-                                                        'status' => 'error',
-                                                        'error_type' => 'deploy'
-                                                        }]
-                                                   )
-        Astute::DeploymentEngine::NailyFact.any_instance.stubs(:deploy).with(deploy_data)
-        @orchestrator.stubs(:run_shell_command).returns(:data => {:exit_code => 1}).
-                                                then.returns(:data => {:exit_code => 1})
-        expect {@orchestrator.send(:upload_cirros_image, deploy_data, ctx)}.to raise_error(Astute::CirrosError, 'Upload cirros image failed')
-      end
-
-    end #'upload_cirros_image'
   end
 
   let(:data) do

@@ -32,6 +32,10 @@ require 'astute/deployment_engine/nailyfact'
 require 'astute/cobbler'
 require 'astute/cobbler_manager'
 require 'astute/dump'
+require 'astute/post_deploy_actions'
+require 'astute/post_deploy_actions/restart_radosgw'
+require 'astute/post_deploy_actions/update_cluster_hosts_info'
+require 'astute/post_deploy_actions/upload_cirros_image'
 
 module Astute
   autoload 'Context', 'astute/context'
