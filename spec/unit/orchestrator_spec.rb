@@ -129,6 +129,119 @@ describe Astute::Orchestrator do
     end
   end
 
+  describe '#network_verifications_flow' do
+
+    def make_nodes(*uids)
+      uids.map do |uid|
+        {
+          'uid' => uid.to_s,
+          'config' => {}
+        }
+      end
+    end
+
+    def format_nodes(nodes)
+      formatted_nodes = {}
+      nodes.each do |node|
+        formatted_nodes[node['uid']] = node['config']
+      end
+      formatted_nodes
+    end
+
+    it "must run clean action if response from any agent was error" do
+      nodes = make_nodes(1, 2)
+      formatted_nodes = format_nodes(nodes)
+      task = 'test'
+      res1 = {
+        :sender => "1",
+        :status => 'error',
+        :statuscode => 1}
+      res2 = {
+        :sender => "2",
+        :status => 'inprogress'}
+
+      rpcclient = mock_rpcclient(nodes)
+
+      rpcclient.expects(:check).
+        with(:data=>{'config'=>formatted_nodes, 'check'=>task, 'command'=>'start'}.to_json).
+        once.
+        returns([mock_mc_result(res1), mock_mc_result(res2)])
+
+      rpcclient.expects(:check).
+        with(:data=>{'config'=>formatted_nodes, 'check'=>task, 'command'=>'clean'}.to_json).
+        once.
+        returns([mock_mc_result]*2)
+
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+
+      res = @orchestrator.network_verifications(@reporter, 'task_uuid', nodes, task)
+      res['status'].should eql('error')
+    end
+
+    it "must stop running verifications flow if success response was received after any action" do
+      nodes = make_nodes(1, 2)
+      formatted_nodes = format_nodes(nodes)
+      task = 'test'
+      res1 = {
+        :sender => "1",
+        :status => 'success'}
+      res2 = {
+        :sender => "2",
+        :status => 'success'}
+
+      rpcclient = mock_rpcclient(nodes)
+
+      rpcclient.expects(:check).
+        with(:data=>{'config'=>formatted_nodes, 'check'=>task, 'command'=>'start'}.to_json).
+        once.
+        returns([mock_mc_result(res1), mock_mc_result(res2)])
+
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+
+      res = @orchestrator.network_verifications(@reporter, 'task_uuid', nodes, task)
+      res.should eql({'status' => 'success',
+                      'progress' => 100,
+                      "data" => {"1"=>{}, "2"=>{}}})
+    end
+
+    it "must successfully run action_start, action_send and action_get_info" do
+      nodes = make_nodes(1, 2)
+      formatted_nodes = format_nodes(nodes)
+      task = 'test'
+      res1 = {:sender => "1", :status => 'inpogress'}
+      res2 = {:sender => "2", :status => 'inpogress'}
+
+      rpcclient = mock_rpcclient(nodes)
+
+      rpcclient.expects(:check).
+        with(:data=>{'config'=>formatted_nodes, 'check'=>task, 'command'=>'start'}.to_json).
+        once.
+        returns([mock_mc_result({:sender => "1", :status => 'inpogress'}),
+                 mock_mc_result({:sender => "2", :status => 'inpogress'})])
+
+      rpcclient.expects(:check).
+        with(:data=>{'config'=>formatted_nodes, 'check'=>task, 'command'=>'send'}.to_json).
+        once.
+        returns([mock_mc_result({:sender => "1", :status => 'inpogress'}),
+                 mock_mc_result({:sender => "2", :status => 'inpogress'})])
+
+      rpcclient.expects(:check).
+        with(:data=>{'config'=>formatted_nodes, 'check'=>task, 'command'=>'get_info'}.to_json).
+        once.
+        returns([mock_mc_result({:sender => "1", :status => 'success'}),
+                 mock_mc_result({:sender => "2", :status => 'success'})])
+
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+
+      res = @orchestrator.network_verifications(@reporter, 'task_uuid', nodes, task)
+      res.should eql({'status' => 'success',
+                      'progress' => 100,
+                      "data" => {"1"=>{}, "2"=>{}}})
+
+    end
+
+  end
+
   describe '#node_type' do
     it "must be able to return node type" do
       nodes = [{'uid' => '1'}]
