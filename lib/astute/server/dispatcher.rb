@@ -85,6 +85,12 @@ module Astute
         report_result(result, reporter)
       end
 
+      def multicast_verification(data)
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+        result = @orchestrator.multicast_verification(reporter, data['args']['task_uuid'], data['args']['nodes'])
+        report_result(result, reporter)
+     end
+
       def dump_environment(data)
         task_id = data['args']['task_uuid']
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_id)

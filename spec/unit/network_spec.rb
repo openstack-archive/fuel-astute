@@ -131,4 +131,54 @@ describe Astute::Network do
       res.should eql(expected)
     end
   end
+
+  describe '.multicast_verifcation' do
+
+    def make_nodes(*uids)
+      uids.map do |uid|
+        {
+          'uid' => uid.to_s,
+          'iface' => 'eth1',
+          'group' => '250.0.0.3',
+          'port' => 10000
+        }
+      end
+    end
+
+    def format_nodes(nodes)
+      formatted_nodes = {}
+      nodes.each do |node|
+        formatted_nodes[node['uid']] = node
+      end
+      formatted_nodes
+    end
+
+    it "must run all three stages: listen send info with expected argumenets" do
+      nodes = make_nodes(1, 2)
+      formatted_nodes = format_nodes(nodes)
+      command_output = JSON.dump(["1", "2"])
+      res1 = {:sender => "1",
+              :data => {:out => command_output}}
+      res2 = {:sender => "2",
+              :data => {:out => command_output}}
+      mc_valid_res = mock_mc_result
+      expected_response = {1 => ["1", "2"],
+                           2 => ["1", "2"]}
+
+      rpcclient = mock_rpcclient()
+
+      rpcclient.expects(:discover).with(:nodes=>formatted_nodes.keys)
+
+      rpcclient.expects(:multicast_listen).with(:nodes=>formatted_nodes.to_json).once.returns([mock_mc_result]*2)
+
+      rpcclient.expects(:multicast_send).with().once.returns([mock_mc_result]*2)
+
+      rpcclient.expects(:multicast_info).with().once.returns([mock_mc_result(res1), mock_mc_result(res2)])
+
+      res = Astute::Network.multicast_verification(Astute::Context.new('task_uuid', reporter), nodes)
+      res['nodes'].should eql(expected_response)
+    end
+
+  end
+
 end

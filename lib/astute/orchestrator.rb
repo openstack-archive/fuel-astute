@@ -181,6 +181,10 @@ module Astute
       Network.check_dhcp(Context.new(task_id, reporter), nodes)
     end
 
+    def multicast_verification(reporter, task_id, nodes)
+      Network.multicast_verification(Context.new(task_id, reporter), nodes)
+    end
+
     private
 
     def report_result(result, reporter)
