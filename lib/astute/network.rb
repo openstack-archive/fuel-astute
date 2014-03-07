@@ -53,7 +53,7 @@ module Astute
       {'nodes' => result}
     end
 
-   def self.check_dhcp(net_probe, nodes)
+    def self.check_dhcp(net_probe, nodes)
       data_to_send = {}
       nodes.each do |node|
         data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'], joined=false).to_json
@@ -64,6 +64,45 @@ module Astute
       end
 
       {'nodes' => result, 'status'=> 'ready'}
+    end
+
+    def self.network_flow(ctx, nodes, task)
+      formatted_nodes = {}
+      nodes.each do |node|
+        formatted_nodes[node['uid']] = node
+      end
+      Astute.logger.debug "Sending network verifications config #{formatted_nodes} for task #{task}"
+      action_flow = [:start_action, :send_action, :get_info_action]
+      result = {'progress'=>0}
+      # TODO Everything breakes if agent not found. We have to handle that
+      agent = MClient.new(ctx, "net_probe", formatted_nodes.keys)
+      begin
+        action_flow.each do |action|
+          response = self.send(action, ctx, agent, formatted_nodes, task)
+          formatted = format_response(response)
+
+          nodes_status = formatted.values.map { |data| data['status'] }
+
+          if nodes_status.all? {|status| status == 'success'}
+            result['status'] = 'ready'
+            result['data'] = {}
+            formatted.each do |node_uid, body|
+              result['data'][node_uid] = body['data']
+            end
+            break
+          else
+            result['progress'] += 30
+            ctx.reporter.report(result)
+          end
+
+        end
+    rescue Astute::MClientError => e
+      result['status'] = 'error'
+      result['error'] = e
+      clean_action(ctx, agent, formatted_nodes, task)
+    end
+      result['progress'] = 100
+      result
     end
 
     private
@@ -130,7 +169,6 @@ module Astute
       end
     end
 
-
     def self.check_vlans_by_traffic(uids, data)
       data.map do |iface, vlans|
         {
@@ -140,6 +178,34 @@ module Astute
           }.keys.map(&:to_i)
         }
       end
+    end
+
+    def self.start_action(ctx, agent, config, check)
+      Astute.logger.debug "Start action with #{config}"
+      agent.check(:command=>'listen', :config=>config, :check=>check)
+    end
+
+    def self.send_action(ctx, agent, config, check)
+      Astute.logger.debug "Send action with #{config}"
+      agent.check(:command=>'send', :config=>config, :check=>check)
+    end
+
+    def self.get_info_action(ctx, agent, config, check)
+      Astute.logger.debug "Get info action with #{config}"
+      agent.check(:command=>'get_info', :config=>config, :check=>check)
+    end
+
+    def self.clean_action(ctx, agent, config, check)
+      agent.check(:command=>'clean', :config=>config, :check=>check)
+    end
+
+    def self.format_response(response)
+      formatted = {}
+      response.each do |node|
+        formatted[node.results[:sender]] = {'status'=>node.results[:data][:status],
+                                            'data'=>node.results[:data][:data]}
+      end
+      formatted
     end
 
   end
