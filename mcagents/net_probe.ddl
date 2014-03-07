@@ -29,3 +29,55 @@ end
 action "dhcp_discover", :description => "Find dhcp server for provided interfaces" do
     display :always
 end
+
+action "multicast_listen", :description => "Start multicast listeners" do
+    display :always
+
+    input :nodes,
+          :prompt         => "Multicat config for each node",
+          :type           => :string,
+
+    output :stdout,
+           :description => "Output from multicast listen",
+           :display_as => "Output"
+
+    output :stderr,
+           :description => "Stderr from multicast listen",
+           :display_as => "Stderr"
+
+    output :exit_code,
+           :description => "Exit code of multicast listen",
+           :display_as => "Exit code"
+end
+
+action "multicast_send", :description => "Send multicast frames" do
+    display :always
+
+    output :stdout,
+           :description => "Output from multicast send",
+           :display_as => "Output"
+
+    output :stderr,
+           :description => "Stderr from multicast send",
+           :display_as => "Stderr"
+
+    output :exit_code,
+           :description => "Exit code of multicast send",
+           :display_as => "Exit code"
+end
+
+action "multicast_info", :description => "Request received data from multicast frames" do
+    display :always
+
+    output :stdout,
+           :description => "Output from multicast info",
+           :display_as => "Output"
+
+    output :stderr,
+           :description => "Stderr from multicast info",
+           :display_as => "Stderr"
+
+    output :exit_code,
+           :description => "Exit code of multicast info",
+           :display_as => "Exit code"
+end
