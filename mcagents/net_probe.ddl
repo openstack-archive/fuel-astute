@@ -29,3 +29,19 @@ end
 action "dhcp_discover", :description => "Find dhcp server for provided interfaces" do
     display :always
 end
+
+action "check", :description => "Check action should be used for seamless message passing to python bindings" do
+    display :always
+
+    input :command,
+          :description => "Any of the listen | send | get_info",
+          :display_as  => "Command"
+
+    input :check,
+          :description => "Any of the available network checks",
+          :display_as  => "Network check"
+
+    input :config,
+          :description => "Specifical info for each check",
+          :display_as  => "Configuration for network check"
+end
