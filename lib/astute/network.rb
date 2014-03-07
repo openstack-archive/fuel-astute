@@ -53,7 +53,7 @@ module Astute
       {'nodes' => result}
     end
 
-   def self.check_dhcp(net_probe, nodes)
+    def self.check_dhcp(net_probe, nodes)
       data_to_send = {}
       nodes.each do |node|
         data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'], joined=false).to_json
@@ -64,6 +64,33 @@ module Astute
       end
 
       {'nodes' => result, 'status'=> 'ready'}
+    end
+
+    def self.multicast_verification(ctx, nodes)
+      uids = nodes.map { |node| node['node_id'].to_s }
+      net_probe = MClient.new(ctx, "net_probe", uids)
+      data_to_send = {}
+      nodes.each do |node|
+        data_to_send[node['node_id']] = node
+      end
+
+      listen_resp = net_probe.multicast_listen(:nodes => data_to_send.to_json)
+      Astute.logger.debug("Mutlicast verification listen: #{listen_resp.inspect}")
+      ctx.reporter.report({'progress' => 30})
+
+      send_resp = net_probe.multicast_send()
+      Astute.logger.debug("Mutlicast verification send: #{send_resp.inspect}")
+      ctx.reporter.report({'progress' => 60})
+
+      results = net_probe.multicast_info()
+      Astute.logger.debug("Mutlicast verification info: #{results.inspect}")
+      response = {}
+      results.each do |node|
+        if node.results[:data][:out].present?
+          response[node.results[:sender].to_i] = JSON.parse(node.results[:data][:out])
+        end
+      end
+      {'nodes' => response}
     end
 
     private
@@ -129,7 +156,6 @@ module Astute
         }
       end
     end
-
 
     def self.check_vlans_by_traffic(uids, data)
       data.map do |iface, vlans|

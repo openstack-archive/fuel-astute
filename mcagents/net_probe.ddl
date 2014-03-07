@@ -29,3 +29,15 @@ end
 action "dhcp_discover", :description => "Find dhcp server for provided interfaces" do
     display :always
 end
+
+action "mutlicast_listen", :description => "Start multicast listeners" do
+    display :always
+end
+
+action "multicast_send", :description => "Send multicast frames" do
+    display :always
+end
+
+action "multicast_info", :description => "Request received data from multicast frames" do
+    display :always
+end
