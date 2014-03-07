@@ -31,7 +31,8 @@ describe Astute::Network do
           {
             'iface' => 'eth0',
             'vlans' => [100, 101]
-          }
+          },
+        'config' => {}
         ]
       }
     end
@@ -132,4 +133,101 @@ describe Astute::Network do
       res.should eql(expected)
     end
   end
+
+  describe '.network_verifications_flow' do
+
+    def format_nodes(nodes)
+      formatted_nodes = {}
+      nodes.each do |node|
+        formatted_nodes[node['uid']] = node
+      end
+      formatted_nodes
+    end
+
+    it "must run clean action if response from any agent was error" do
+      nodes = make_nodes(1, 2)
+      formatted_nodes = format_nodes(nodes)
+      task = 'test'
+      res1 = {
+        :sender => "1",
+        :data => {:status => 'error'},
+        :statuscode => 1}
+      res2 = {
+        :sender => "2",
+        :data => {:status => 'inprogress'}}
+
+      rpcclient = mock_rpcclient(nodes)
+
+      rpcclient.expects(:check).
+        with(:config=>formatted_nodes, :check=>task, :command=>'listen').
+        once.
+        returns([mock_mc_result(res1), mock_mc_result(res2)])
+
+      rpcclient.expects(:check).
+        with(:config=>formatted_nodes, :check=>task, :command=>'clean').
+        once.
+        returns([mock_mc_result]*2)
+
+      res = Astute::Network.network_flow(Astute::Context.new('task_uuid', reporter), nodes, task)
+      res['status'].should eql('error')
+    end
+
+    it "must stop running verifications flow if success response was received after any action" do
+      nodes = make_nodes(1, 2)
+      formatted_nodes = format_nodes(nodes)
+      task = 'test'
+      res1 = {
+        :sender => "1", :data => {:status => 'success', :data=>{}}}
+      res2 = {
+        :sender => "2", :data => {:status => 'success', :data=>{}}}
+
+      rpcclient = mock_rpcclient(nodes)
+
+      rpcclient.expects(:check).
+        with(:config=>formatted_nodes, :check=>task, :command=>'listen').
+        once.
+        returns([mock_mc_result(res1), mock_mc_result(res2)])
+
+      res = Astute::Network.network_flow(Astute::Context.new('task_uuid', reporter), nodes, task)
+      res.should eql({'status' => 'ready',
+                      'progress' => 100,
+                      "data" => {"1"=>{}, "2"=>{}}})
+    end
+
+    it "must successfully run action_start, action_send and action_get_info" do
+      nodes = make_nodes(1, 2)
+      formatted_nodes = format_nodes(nodes)
+      task = 'test'
+      res1 = {:sender => "1", :data => {:status => 'inprogress'}}
+      res2 = {:sender => "2", :data => {:status => 'inprogress'}}
+
+      rpcclient = mock_rpcclient(nodes)
+
+      rpcclient.expects(:check).
+        with(:config=>formatted_nodes, :check=>task, :command=>'listen').
+        once.
+        returns([mock_mc_result({:sender => "1", :data => {:status => 'inprogress'}}),
+                 mock_mc_result({:sender => "2", :data => {:status => 'inprogress'}})])
+
+      rpcclient.expects(:check).
+        with(:config=>formatted_nodes, :check=>task, :command=>'send').
+        once.
+        returns([mock_mc_result({:sender => "1", :data => {:status => 'inprogress'}}),
+                 mock_mc_result({:sender => "2", :data => {:status => 'inprogress'}})])
+
+      rpcclient.expects(:check).
+        with(:config=>formatted_nodes, :check=>task, :command=>'get_info').
+        once.
+        returns([mock_mc_result({:sender => "1", :data => {:status => 'success', :data=>{}}}),
+                 mock_mc_result({:sender => "2", :data => {:status => 'success', :data=>{}}})])
+
+      res = Astute::Network.network_flow(Astute::Context.new('task_uuid', reporter), nodes, task)
+      res.should eql({'status' => 'ready',
+                      'progress' => 100,
+                      "data" => {"1"=>{}, "2"=>{}}})
+
+    end
+
+  end
+
 end

@@ -18,7 +18,7 @@ function cd_workspace() {
 function license_check() {
   # License information must be in every source file
   cd_workspace
-  
+
   tmpfile=`tempfile`
   find * -not -path "docs/*" -regex ".*\.\(rb\)" -type f -print0 | xargs -0 grep -Li License
   files_with_no_license=`wc -l $tmpfile | awk '{print $1}'`
@@ -33,10 +33,10 @@ function license_check() {
 
 function ruby_checks() {
   cd_workspace
-  
+
   # Install all ruby dependencies (expect ruby version manager: RVM, rbenv or similar)
   bundle install
-  
+
   # Run unit rspec tests
   bundle exec rake spec:unit
 }
