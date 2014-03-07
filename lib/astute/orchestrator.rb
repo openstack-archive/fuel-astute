@@ -181,6 +181,10 @@ module Astute
       Network.check_dhcp(Context.new(task_id, reporter), nodes)
     end
 
+    def multicast_verification(reporter, task_id, nodes)
+      Network.multicast_verification(Context.new(task_id, reporter), nodes)
+    end
+
     def download_release(up_reporter, task_id, release_info)
       raise "Release information not provided!" if release_info.empty?
 
