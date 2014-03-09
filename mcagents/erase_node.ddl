@@ -23,7 +23,7 @@ action "erase_node", :description => "Zeroing of boot device" do
         :type        => :boolean,
         :validation  => :typecheck,
         :default     => false,
-        :optional    => false
+        :optional    => true
 
   output :status,
          :description => "Shell exit code",
