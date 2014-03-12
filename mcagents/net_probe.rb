@@ -117,6 +117,7 @@ module MCollective
           rescue Errno::ENOTCONN
             socket.close
           end
+          stop_frame_listeners
         end
       end
 
