@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 require "json"
 require "tempfile"
 require "socket"
@@ -81,21 +80,16 @@ module MCollective
           File.delete file
         end
 
-        f = Tempfile.new "net_probe"
-        f.write config.to_json
-        fpath = f.path
-        f.close
-
         begin
           socket = Socket.new( Socket::AF_INET, Socket::SOCK_STREAM, 0)
           sockaddr = Socket.pack_sockaddr_in(config['ready_port'], config['ready_address'])
           socket.bind(sockaddr)
           socket.listen(1)
-        rescue Exception => e
-          reply.fail "Socket error: #{e.to_s}"
+        rescue => e
+          reply.fail! "Socket error: #{e.to_s}"
         else
-
-          cmd = "net_probe.py -c #{fpath}"
+          config_file = net_probe_config(config)
+          cmd = "net_probe.py -c #{config_file.path}"
           pid = fork { `#{cmd}` }
           Process.detach(pid)
 
@@ -103,23 +97,26 @@ module MCollective
           sleep 1
           begin
             Process.kill(0, pid)
-          rescue Errno::ESRCH => e
-            reply.fail "Failed to run '#{cmd}'"
-          else
-            begin
-              Timeout::timeout(120) do
-                client, clientaddr = socket.accept
-                status = client.read
-                reply.fail "Wrong listener status: '#{status}'" unless status =~ /READY/
-                client.close
-              end
-            rescue Timeout::Error
-              reply.fail "Listener did not reported status."
+          rescue Errno::ESRCH
+            reply.fail! "Failed to run '#{cmd}'"
+          end
+
+          begin
+            Timeout::timeout(120) do
+              client, clientaddr = socket.accept
+              status = client.read
+              client.close
+              reply.fail! "Wrong listener status: '#{status}'" unless status =~ /READY/
             end
+          rescue Timeout::Error
+            reply.fail! "Listener did not reported status"
           end
         ensure
-          socket.shutdown
-          socket.close
+          begin
+            socket.shutdown
+          rescue Errno::ENOTCONN
+            socket.close
+          end
         end
       end
 
@@ -131,14 +128,12 @@ module MCollective
           config.merge!(JSON.parse(request[:config]))
         end
 
-        f = Tempfile.new "net_probe"
-        f.write config.to_json
-        fpath = f.path
-        f.close
+        config_file = net_probe_config(config)
 
-        cmd = "net_probe.py -c #{fpath}"
+        cmd = "net_probe.py -c #{config_file.path}"
         status = run(cmd, :stdout => :out, :stderr => :error)
-        f.unlink
+        config_file.unlink
+
         reply.fail "Failed to send probing frames, cmd='#{cmd}' failed, config: #{config.inspect}" if status != 0
       end
 
@@ -151,6 +146,13 @@ module MCollective
         end
         reply[:neighbours] = neighbours
         reply[:uid] = get_uid
+      end
+
+      def net_probe_config(config)
+        f = Tempfile.new "net_probe"
+        f.write config.to_json
+        f.close
+        f
       end
 
       def stop_frame_listeners
@@ -184,4 +186,3 @@ module MCollective
   end
 end
 
-# vi:tabstop=2:expandtab:ai:filetype=ruby
