@@ -109,6 +109,7 @@ module MCollective
               reply.fail! "Wrong listener status: '#{status}'" unless status =~ /READY/
             end
           rescue Timeout::Error
+            stop_frame_listeners
             reply.fail! "Listener did not reported status"
           end
         ensure
