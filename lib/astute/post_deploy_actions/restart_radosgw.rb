@@ -25,9 +25,6 @@ module Astute
       cmd = <<-RESTART_RADOSGW
         (test -f /etc/init.d/ceph-radosgw && /etc/init.d/ceph-radosgw restart) ||
         (test -f /etc/init.d/radosgw && /etc/init.d/radosgw restart);
-        radosgw-admin region-map get > /dev/null || radosgw-admin region-map update > /dev/null;
-        (test -f /etc/init.d/ceph-radosgw && /etc/init.d/ceph-radosgw restart) ||
-        (test -f /etc/init.d/radosgw && /etc/init.d/radosgw restart);
       RESTART_RADOSGW
       cmd.tr!("\n"," ")
 
