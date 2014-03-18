@@ -84,7 +84,8 @@ module MCollective
         raise "Path /sys/block does not exist" unless File.exists?("/sys/block")
         Dir["/sys/block/*"].inject([]) do |blocks, block_device_dir|
           basename_dir = File.basename(block_device_dir)
-          major = `udevadm info --query=property --name=#{basename_dir} | grep MAJOR`.strip.split(/\=/)[-1]
+          dev_name = basename_dir.gsub(/!/, '/')
+          major = `udevadm info --query=property --name=#{dev_name} | grep MAJOR`.strip.split(/\=/)[-1]
           if File.exists?("/sys/block/#{basename_dir}/removable")
             removable = File.open("/sys/block/#{basename_dir}/removable") { |f| f.read_nonblock(1024).strip }
           end
@@ -96,7 +97,7 @@ module MCollective
           end
 
           if STORAGE_CODES.include?(major.to_i) && removable =~ /^0$/
-            blocks << {:name => basename_dir, :size => size}
+            blocks << {:name => dev_name, :size => size}
           end
           blocks
         end
