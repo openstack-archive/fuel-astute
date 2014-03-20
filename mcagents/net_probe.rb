@@ -116,8 +116,8 @@ module MCollective
           begin
             socket.shutdown
           rescue Errno::ENOTCONN
-            socket.close
           end
+          socket.close
         end
       end
 
