@@ -118,7 +118,10 @@ module MCollective
             end
           end
         ensure
-          socket.shutdown
+          begin
+            socket.shutdown
+          rescue Errno::ENOTCONN
+          end
           socket.close
         end
       end
