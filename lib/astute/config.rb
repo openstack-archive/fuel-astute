@@ -53,6 +53,8 @@ module Astute
 
   def self.default_config
     conf = {}
+
+    # Library settings
     conf[:PUPPET_TIMEOUT] = 90 * 60       # maximum time it waits for the whole deployment
     conf[:PUPPET_DEPLOY_INTERVAL] = 2     # sleep for ## sec, then check puppet status again
     conf[:PUPPET_FADE_TIMEOUT] = 120      # how long it can take for puppet to exit after dumping to last_run_summary
@@ -70,6 +72,17 @@ module Astute
     conf[:PUPPET_SSH_KEYS] = ['neutron', 'nova', 'ceph', 'mysql']  # name of ssh keys what will be generated
                                                         #and uploaded to all nodes before deploy
     conf[:MAX_NODES_PER_CALL] = 50        # how many nodes to deploy in one puppet call
+
+    # Server settings
+    conf[:broker_host] = 'localhost'
+    conf[:broker_port] = 5672
+    conf[:broker_username] = 'mcollective'
+    conf[:broker_password] = 'mcollective'
+
+    conf[:broker_service_queue] = 'naily_service'
+    conf[:broker_queue] = 'naily'
+    conf[:broker_publisher_queue] = 'nailgun'
+    conf[:broker_exchange] = 'nailgun'
 
     conf
   end

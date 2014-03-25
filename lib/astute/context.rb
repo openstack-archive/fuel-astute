@@ -17,14 +17,14 @@ module Astute
   class Context
     attr_accessor :reporter, :deploy_log_parser
     attr_reader   :task_id, :status
-    
+
     def initialize(task_id, reporter, deploy_log_parser=nil)
       @task_id = task_id
       @reporter = reporter
       @status = {}
       @deploy_log_parser = deploy_log_parser
     end
-    
+
     def report_and_update_status(data)
       if data['nodes']
         data['nodes'].each do |node|
@@ -33,6 +33,6 @@ module Astute
       end
       reporter.report(data)
     end
-    
+
   end
 end

@@ -37,7 +37,15 @@ require 'astute/post_deploy_actions/restart_radosgw'
 require 'astute/post_deploy_actions/update_cluster_hosts_info'
 require 'astute/post_deploy_actions/upload_cirros_image'
 
+# Server
+require 'astute/server/worker'
+require 'astute/server/server'
+require 'astute/server/producer'
+require 'astute/server/dispatcher'
+require 'astute/server/reporter'
+
 module Astute
+  # Library
   autoload 'Context', 'astute/context'
   autoload 'MClient', 'astute/mclient'
   autoload 'ProxyReporter', 'astute/reporter'

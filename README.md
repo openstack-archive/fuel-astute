@@ -39,14 +39,14 @@ orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
 # Add systems to cobbler, reboot and start installation process.
 orchestrator.provision(reporter, environment['engine'], environment['nodes'])
 
-# Observation OS installation 
+# Observation OS installation
 orchestrator.watch_provision_progress(reporter, environment['task_uuid'], environment['nodes'])
 
 # Deploy OpenStack
 orchestrator.deploy(reporter, environment['task_uuid'], environment['nodes'])
 
 ```
-Example of using Astute as library: https://github.com/stackforge/fuel-web/blob/master/naily/lib/naily/dispatcher.rb
+Example of using Astute as library: lib/astute/server/dispatcher.rb
 
 
 Using as CLI

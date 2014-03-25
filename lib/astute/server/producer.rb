@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 #    Copyright 2013 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,9 +12,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-puts <<-EOF 
-CLI interface in Astute no longer supported. Please use new Fuel-CLI. 
-More details you can get by link: https://github.com/Mirantis/fuel-docs/blob/master/pages/user-guide/cli.rst
-EOF
+module Astute
+  module Server
 
-exit 1
+    class Producer
+      def initialize(exchange)
+        @exchange = exchange
+      end
+
+      def publish(message, options={})
+        default_options = {:routing_key => Astute.config.broker_publisher_queue,
+                           :content_type => 'application/json'}
+        options = default_options.merge(options)
+
+        begin
+          @exchange.publish(message.to_json, options)
+        rescue
+          Astute.logger.error "Error publishing message: #{$!}"
+        end
+      end
+    end
+
+  end #Server
+end #Astute
