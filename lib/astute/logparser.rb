@@ -237,7 +237,7 @@ module Astute
         chunk = get_chunk(fo, 100)
         return nil unless chunk
         endlog_patterns.each do |pattern|
-          return pattern['progress'] if chunk.end_with?(pattern['pattern'])
+          return pattern['progress'] if Regexp.new("#{pattern['pattern']}$").match(chunk)
         end
         nil
       end
