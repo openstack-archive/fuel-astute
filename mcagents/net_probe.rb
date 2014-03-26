@@ -64,7 +64,7 @@ module MCollective
           "action" => "listen",
           "interfaces" => JSON.parse(request[:interfaces]),
           "dump_file" => "/var/tmp/net-probe-dump",
-          "ready_address" => "localhost",
+          "ready_address" => "0.0.0.0",
           "ready_port" => 31338,
         }
 
