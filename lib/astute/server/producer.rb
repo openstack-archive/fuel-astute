@@ -26,7 +26,7 @@ module Astute
         options = default_options.merge(options)
 
         begin
-          @exchange.publish(message.to_json, options)
+          EM.next_tick { @exchange.publish(message.to_json, options) }
         rescue
           Astute.logger.error "Error publishing message: #{$!}"
         end
