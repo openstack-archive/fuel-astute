@@ -41,11 +41,12 @@ describe Astute::DeploymentEngine do
       deployer.stubs(:upload_ssh_keys)
       deployer.stubs(:sync_puppet_manifests)
       deployer.stubs(:enable_puppet_deploy)
+      deployer.stubs(:update_repo_sources)
+      deployer.stubs(:deploy_piece)
     end
 
     it 'should generate and upload ssh keys' do
       nodes = [{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}, {'uid' => 1}]
-      deployer.stubs(:deploy_piece)
 
       deployer.expects(:generate_ssh_keys).with(nodes.first['deployment_id'])
       deployer.expects(:upload_ssh_keys).with([1,2], nodes.first['deployment_id']).returns()
@@ -54,9 +55,27 @@ describe Astute::DeploymentEngine do
       deployer.deploy(nodes)
     end
 
+    it 'should setup packages repositories' do
+      nodes = [
+        {'uid' => 1,
+         'deployment_id' => 1,
+         'repo_source' => {
+            'Nailgun' => 'http://10.20.0.2:8080/centos/fuelweb/x86_64/'
+         }
+        },
+        {'uid' => 2},
+        {'uid' => 1}
+      ]
+      uniq_nodes = nodes[0..-2]
+
+      deployer.expects(:update_repo_sources).with(uniq_nodes)
+
+      deployer.deploy(nodes)
+    end
+
     it 'should enable puppet for all nodes' do
       nodes = [{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}, {'uid' => 1}]
-      deployer.stubs(:deploy_piece)
+
 
       deployer.expects(:enable_puppet_deploy).with([1,2]).returns()
 
@@ -157,21 +176,202 @@ describe Astute::DeploymentEngine do
       deployer.stubs(:enable_puppet_deploy)
     end
 
-    let(:nodes) { [{'uid' => 1, 'deployment_id' => 1, 'master_ip' => '10.20.0.2'}, {'uid' => 2}] }
-
-    it "should sync puppet modules and manifests mcollective client 'puppetsync'" do
+    let(:nodes) { [
+                    {'uid' => 1,
+                     'deployment_id' => 1,
+                     'master_ip' => '10.20.0.2',
+                     'puppet_modules_source' => '/puppet/modules/',
+                     'puppet_manifests_source' => '/puppet/manifests/'
+                    },
+                    {'uid' => 2}
+                  ]
+                }
+    let(:mclient) do
       mclient = mock_rpcclient(nodes)
       Astute::MClient.any_instance.stubs(:rpcclient).returns(mclient)
       Astute::MClient.any_instance.stubs(:log_result).returns(mclient)
       Astute::MClient.any_instance.stubs(:check_results_with_retries).returns(mclient)
+      mclient
+    end
+    let(:master_ip) { nodes.first['master_ip'] }
 
-      master_ip = nodes.first['master_ip']
+    it "should sync puppet modules and manifests mcollective client 'puppetsync'" do
+      mclient.expects(:rsync).with(:modules_source => "rsync://#{master_ip}:/puppet/modules/",
+                                   :manifests_source => "rsync://#{master_ip}:/puppet/manifests/"
+                                   )
+      deployer.deploy(nodes)
+    end
+
+    it 'should able to customize path for puppet modules and manifests' do
+      modules_source = '/puppet/vX/modules/'
+      manifests_source = '/puppet/vX/manifests/'
+      nodes.first['puppet_modules_source'] = modules_source
+      nodes.first['puppet_manifests_source'] = manifests_source
+      mclient.expects(:rsync).with(:modules_source => "rsync://#{master_ip}:#{modules_source}",
+                                   :manifests_source => "rsync://#{master_ip}:#{manifests_source}"
+                                   )
+      deployer.deploy(nodes)
+    end
+
+    it 'should use default value for puppet modules and manifests if no paths suggest' do
+      nodes.first.delete('puppet_modules_source')
+      nodes.first.delete('puppet_manifests_source')
       mclient.expects(:rsync).with(:modules_source => "rsync://#{master_ip}:/puppet/modules/",
                                    :manifests_source => "rsync://#{master_ip}:/puppet/manifests/"
                                    )
       deployer.deploy(nodes)
     end
   end
+
+  describe '#update_repo_sources' do
+    before(:each) do
+      deployer.stubs(:generate_ssh_keys)
+      deployer.stubs(:upload_ssh_keys)
+      deployer.stubs(:sync_puppet_manifests)
+      deployer.stubs(:enable_puppet_deploy)
+      deployer.stubs(:deploy_piece)
+    end
+
+    let(:nodes) do
+      [
+        {'uid' => 1,
+         'deployment_id' => 1,
+         'cobbler' => {
+            'profile' => 'centos-x86_64'
+         },
+         'repo_source' => {
+            'Nailgun' => 'http://10.20.0.2:8080/centos/fuelweb/x86_64/',
+         }
+        },
+        {'uid' => 2}
+      ]
+    end
+
+    let(:mclient) do
+      mclient = mock_rpcclient(nodes)
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(mclient)
+      Astute::MClient.any_instance.stubs(:log_result).returns(mclient)
+      Astute::MClient.any_instance.stubs(:check_results_with_retries).returns(mclient)
+      mclient
+    end
+
+    context 'source configuration generation' do
+      before(:each) do
+        deployer.stubs(:upload_repo_source)
+        deployer.stubs(:regenerate_metadata)
+      end
+
+      it 'should generate correct config for centos' do
+        content = ["[nailgun]",
+                   "name=Nailgun",
+                   "baseurl=http://10.20.0.2:8080/centos/fuelweb/x86_64/",
+                   "gpgcheck=0"].join("\n")
+
+        deployer.expects(:generate_repo_source).with(nodes).returns(content)
+        deployer.deploy(nodes)
+      end
+
+      it 'should generate correct config for rhel' do
+        nodes.first['cobbler']['profile'] = 'rhel-x86_64'
+        content = ["[nailgun]",
+                   "name=Nailgun",
+                   "baseurl=http://10.20.0.2:8080/centos/fuelweb/x86_64/",
+                   "gpgcheck=0"].join("\n")
+
+        deployer.expects(:generate_repo_source).with(nodes).returns(content)
+        deployer.deploy(nodes)
+      end
+
+      it 'should generate correct config for ubuntu' do
+        nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+        nodes.first['repo_source']['Nailgun'] =
+            'http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 precise main'
+        content = "deb http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 precise main"
+
+        deployer.expects(:generate_repo_source).with(nodes).returns(content)
+        deployer.deploy(nodes)
+      end
+    end # source configuration generation
+
+    context 'new source configuration uploading' do
+
+      let(:repo_content) { "repo conf" }
+
+      before(:each) do
+        deployer.stubs(:generate_repo_source).returns(repo_content)
+        deployer.stubs(:regenerate_metadata)
+      end
+
+      it 'should upload config in correct place for centos' do
+        mclient.expects(:upload).with(:path => '/etc/yum.repos.d/nailgun.repo',
+                              :content => repo_content,
+                              :user_owner => 'root',
+                              :group_owner => 'root',
+                              :permissions => '0644',
+                              :dir_permissions => '0755',
+                              :overwrite => true,
+                              :parents => true
+                             )
+        deployer.deploy(nodes)
+      end
+
+      it 'should upload config in correct place for rhel' do
+        nodes.first['cobbler']['profile'] = 'rhel-x86_64'
+        mclient.expects(:upload).with(:path => '/etc/yum.repos.d/nailgun.repo',
+                              :content => repo_content,
+                              :user_owner => 'root',
+                              :group_owner => 'root',
+                              :permissions => '0644',
+                              :dir_permissions => '0755',
+                              :overwrite => true,
+                              :parents => true
+                             )
+        deployer.deploy(nodes)
+      end
+
+      it 'should upload config in correct place for ubuntu' do
+        nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+
+        mclient.expects(:upload).with(:path => '/etc/apt/sources.list',
+                      :content => repo_content,
+                      :user_owner => 'root',
+                      :group_owner => 'root',
+                      :permissions => '0644',
+                      :dir_permissions => '0755',
+                      :overwrite => true,
+                      :parents => true
+                     )
+        deployer.deploy(nodes)
+      end
+    end #new source configuration uploading
+
+    context 'metadata regeneration' do
+
+      before(:each) do
+        deployer.stubs(:generate_repo_source)
+        deployer.stubs(:upload_repo_source)
+      end
+
+      it 'should regenerate metadata for centos' do
+        mclient.expects(:execute).with(:cmd => 'yum clean all').returns([{:data => {} }])
+        deployer.deploy(nodes)
+      end
+
+      it 'should regenerate metadata for rhel' do
+        nodes.first['cobbler']['profile'] = 'rhel-x86_64'
+        mclient.expects(:execute).with(:cmd => 'yum clean all').returns([{:data => {} }])
+        deployer.deploy(nodes)
+      end
+
+      it 'should regenerate metadata for ubuntu' do
+        nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+        mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns([{:data => {} }])
+        deployer.deploy(nodes)
+      end
+
+    end #'metadata regeneration'
+
+  end # update_repo_sources
 
   describe '#generation and uploading of ssh keys' do
     before(:each) do
