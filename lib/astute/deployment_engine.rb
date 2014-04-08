@@ -43,6 +43,9 @@ module Astute
           # Will be used by puppet after to connect nodes between themselves.
           upload_ssh_keys(part.map{ |n| n['uid'] }, part.first['deployment_id'])
 
+          # Update packages source list
+          update_repo_sources(part) if part.first['repo_source']
+
           # Sync puppet manifests and modules to every node (emulate puppet master)
           sync_puppet_manifests(part)
 
@@ -110,10 +113,12 @@ module Astute
     def sync_puppet_manifests(deployment_info)
       sync_mclient = MClient.new(@ctx, "puppetsync", deployment_info.map{ |n| n['uid'] }.uniq)
       master_ip = deployment_info.first['master_ip']
+      modules_source = deployment_info.first['puppet_modules_source'] || '/puppet/modules/'
+      manifests_source = deployment_info.first['puppet_manifests_source'] || '/puppet/manifests/'
       # Paths /puppet/modules and /puppet/manifests/ in master node set by FUEL
       # Check fuel source code /deployment/puppet/nailgun/manifests/puppetsync.pp
-      sync_mclient.rsync(:modules_source => "rsync://#{master_ip}:/puppet/modules/",
-                         :manifests_source => "rsync://#{master_ip}:/puppet/manifests/"
+      sync_mclient.rsync(:modules_source => "rsync://#{master_ip}:#{modules_source}",
+                         :manifests_source => "rsync://#{master_ip}:#{manifests_source}"
                         )
     end
 
@@ -159,10 +164,89 @@ module Astute
       end
     end
 
+    def update_repo_sources(deployment_info)
+      content = generate_repo_source(deployment_info)
+      upload_repo_source(deployment_info, content)
+      regenerate_metadata(deployment_info)
+    end
+
+    def generate_repo_source(deployment_info)
+      ubuntu_source = -> (name, url) { "deb #{url}" }
+      centos_source = -> (name, url) do
+        ["[#{name.downcase}]", "name=#{name}", "baseurl=#{url}", "gpgcheck=0"].join("\n")
+      end
+
+      formatter = case target_os(deployment_info)
+                  when 'centos' then ubuntu_source
+                  when 'ubuntu' then centos_source
+                  end
+
+      content = []
+      # FIXME: This key 'repo_source' not approved
+      deployment_info.first['repo_source'].each do |name, url|
+        content << formatter.call(name,url)
+      end
+      content.join("\n")
+    end
+
+    def upload_repo_source(deployment_info, content)
+      upload_mclient = MClient.new(@ctx, "uploadfile", deployment_info.map{ |n| n['uid'] }.uniq)
+      destination_path = case target_os(deployment_info)
+                         when 'centos' then '/etc/yum.repos.d/nailgun.repo'
+                         when 'ubuntu' then '/etc/apt/sources.list'
+                         end
+      upload_mclient.upload(:path => destination_path,
+                      :content => content,
+                      :user_owner => 'root',
+                      :group_owner => 'root',
+                      :permissions => '0644',
+                      :dir_permissions => '0755',
+                      :overwrite => true,
+                      :parents => true
+                     )
+    end
+
+    def regenerate_metadata(deployment_info)
+      cmd = case target_os(deployment_info)
+            when 'centos' then "yum clean all"
+            when 'ubuntu' then "apt-get clean; apt-get update"
+            end
+
+      run_shell_command_remotely(deployment_info.map{ |n| n['uid'] }.uniq, cmd)
+    end
+
+    def target_os(deployment_info)
+      os = deployment_info.first['cobbler']['profile']
+      case os
+      when 'centos-x86_64' then 'centos'
+      when 'rhel-x86_64'  then 'centos'
+      when 'ubuntu_1204_x86_64' then 'ubuntu'
+      else
+        raise DeploymentEngineError, "Unknown system #{os}"
+      end
+    end
+
     def run_system_command(cmd)
       pid, _, stdout, stderr = Open4::popen4 cmd
       _, status = Process::waitpid2 pid
       return status.exitstatus, stdout, stderr
+    end
+
+    def run_shell_command_remotely(node_uids, cmd)
+      shell = MClient.new(@ctx,
+                          'execute_shell_command',
+                          node_uids,
+                          check_result=true,
+                          timeout=60,
+                          retries=1)
+
+      #TODO: return result for all nodes not only for first
+      response = shell.execute(:cmd => cmd).first
+      Astute.logger.debug("#{@ctx.task_id}: cmd: #{cmd}
+                                            stdout: #{response[:data][:stdout]}
+                                            stderr: #{response[:data][:stderr]}
+                                            exit code: #{response[:data][:exit_code]}")
+      response
     end
 
     def enable_puppet_deploy(node_uids)
