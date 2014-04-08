@@ -36,6 +36,9 @@ require 'astute/post_deploy_actions'
 require 'astute/post_deploy_actions/restart_radosgw'
 require 'astute/post_deploy_actions/update_cluster_hosts_info'
 require 'astute/post_deploy_actions/upload_cirros_image'
+require 'astute/ssh'
+require 'astute/ssh_actions/ssh_erase_nodes'
+require 'astute/ssh_actions/ssh_hard_reboot'
 
 # Server
 require 'astute/server/worker'
