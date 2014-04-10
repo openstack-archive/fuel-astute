@@ -20,6 +20,7 @@ module Astute
       @context = context
       @actions = [
         UploadCirrosImage.new,
+        UploadCirrosVMWareImage.new,
         RestartRadosgw.new,
         UpdateClusterHostsInfo.new
       ]
