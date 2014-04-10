@@ -38,23 +38,9 @@ module Astute
         'os_username'       => Shellwords.escape("#{controller['access']['user']}"),
         'os_password'       => Shellwords.escape("#{controller['access']['password']}"),
         'os_auth_url'       => "http://#{controller['management_vip'] || '127.0.0.1'}:5000/v2.0/",
-        'disk_format'       => 'qcow2',
-        'container_format'  => 'bare',
-        'public'            => 'true',
-        'img_name'          => 'TestVM',
-        'os_name'           => 'cirros'
       }
+      os.merge!(controller['test_vm_image'])
 
-      os['img_path'] = case controller['cobbler']['profile']
-                         when 'centos-x86_64'
-                           '/opt/vm/cirros-x86_64-disk.img'
-                         when 'rhel-x86_64'
-                           '/opt/vm/cirros-x86_64-disk.img'
-                         when 'ubuntu_1204_x86_64'
-                           '/usr/share/cirros-testvm/cirros-x86_64-disk.img'
-                         else
-                           raise CirrosError, "Unknown system #{controller['cobbler']['profile']}"
-                       end
       auth_params = "-N #{os['os_auth_url']} \
                      -T #{os['os_tenant_name']} \
                      -I #{os['os_username']} \
@@ -65,7 +51,7 @@ module Astute
               index | grep #{os['img_name']})"
       response = run_shell_command(context, Array(controller['uid']), cmd)
       if response[:data][:exit_code] == 0
-        Astute.logger.debug "Image already added to stack"
+        Astute.logger.debug "Image \"#{os['img_name']}\" already added to stack"
       else
         cmd = "/usr/bin/glance #{auth_params} \
                image-create \
@@ -73,14 +59,14 @@ module Astute
                  --is-public #{os['public']} \
                  --container-format=\'#{os['container_format']}\' \
                  --disk-format=\'#{os['disk_format']}\' \
-                 --property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\' \
+                 #{os['glance_properties']} \
                  --file \'#{os['img_path']}\' \
               "
         response = run_shell_command(context, Array(controller['uid']), cmd)
         if response[:data][:exit_code] == 0
-          Astute.logger.info("#{context.task_id}: Upload cirros image is done")
+          Astute.logger.info("#{context.task_id}: Upload cirros image \"#{os['img_name']}\" is done")
         else
-          msg = 'Upload cirros image failed'
+          msg = "Upload cirros \"#{os['img_name']}\" image failed"
           Astute.logger.error("#{context.task_id}: #{msg}")
           context.report_and_update_status('nodes' => [
                                             {'uid' => controller['uid'],
