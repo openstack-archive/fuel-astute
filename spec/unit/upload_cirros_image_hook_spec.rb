@@ -29,7 +29,16 @@ describe Astute::UploadCirrosImage do
                         {'uid' => 1,
                          'role' => 'controller',
                          'access' => {},
-                         'cobbler' => {'profile' => 'centos-x86_64'}
+                         'test_vm_image' => {
+                            'disk_format'       => 'qcow2',
+                            'container_format'  => 'bare',
+                            'public'            => 'true',
+                            'img_name'          => 'TestVM',
+                            'os_name'           => 'cirros',
+                            'img_path'          => '/opt/vm/cirros-x86_64-disk.img',
+                            'glance_properties' =>
+                              '--property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\''
+                         }
                         },
                         {'uid' => 2,
                          'role' => 'compute'
@@ -51,12 +60,6 @@ describe Astute::UploadCirrosImage do
     deploy_data = [{'uid' => 2, 'role' => 'compute'}]
     upload_cirros_image.expects(:run_shell_command).never
     upload_cirros_image.process(deploy_data, ctx)
-  end
-
-  it 'should raise error if system profile not recognized' do
-    deploy_data.first['cobbler']['profile'] = 'unknown'
-    expect {upload_cirros_image.process(deploy_data, ctx)}
-            .to raise_error(Astute::CirrosError, /Unknown system/)
   end
 
   it 'should not add new image if it already added' do
@@ -86,7 +89,7 @@ describe Astute::UploadCirrosImage do
                        .returns(:data => {:exit_code => 1})
                        .then.returns(:data => {:exit_code => 1})
     expect {upload_cirros_image.process(deploy_data, ctx)}
-            .to raise_error(Astute::CirrosError, 'Upload cirros image failed')
+            .to raise_error(Astute::CirrosError, 'Upload cirros "TestVM" image failed')
   end
 
   it 'should run only in controller node' do
