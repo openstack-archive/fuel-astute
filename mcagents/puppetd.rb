@@ -127,7 +127,7 @@ module MCollective
           err_msg << (rm_file(@lockfile) ? "ok." : "failed.")
         end
 
-        reply[:err_msg] = err_msg if err_msg.any?
+        reply[:err_msg] = err_msg unless err_msg.empty?
 
         if disabled && !alive
           'disabled'
