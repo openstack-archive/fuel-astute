@@ -17,21 +17,21 @@ require File.join(File.dirname(__FILE__), '../spec_helper')
 
 describe 'dump_environment' do
   include SpecHelpers
-  
+
   before(:each) { @tmp = Astute::MClient }
   after(:each)  { Astute::MClient = @tmp }
-  
+
   let(:ctx) { mock_ctx() }
-  
+
   it "should call execute method with nailgun_dump as cmd" do
     lastdump = "LASTDUMP"
     ctx = mock_ctx()
-    
+
     agent = mock() do
-      expects(:execute).with({:cmd => "/opt/nailgun/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}"}).\
+      expects(:execute).with({:cmd => "/usr/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}"}).\
       returns([{:data => {:exit_code => 0, :stdout => "stdout", :stderr => "stderr"}}])
     end
-    
+
     Astute::MClient = mock() do
       expects(:new).with(ctx, 'execute_shell_command', ['master'], true, Astute.config.DUMP_TIMEOUT, 1).returns(agent)
     end
