@@ -20,7 +20,7 @@ module Astute
       shell = MClient.new(ctx, 'execute_shell_command', ['master'], check_result=true, timeout=timeout, retries=1)
       begin
         result = shell.execute(
-          :cmd => "/opt/nailgun/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}").first
+          :cmd => "/usr/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}").first
         Astute.logger.debug("#{ctx.task_id}: \
 stdout: #{result[:data][:stdout]} stderr: #{result[:data][:stderr]} \
 exit code: #{result[:data][:exit_code]}")
