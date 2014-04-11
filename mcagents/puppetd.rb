@@ -42,7 +42,7 @@ module MCollective
                                                                                  -o /var/log/puppet/puppet.log \
                                                                                  -l #{@lockfile} \
                                                                                  -p #{@lockfile} \
-                                                                                 /usr/bin/puppet apply /etc/puppet/manifests/site.pp"
+                                                                                 /usr/bin/puppet apply /etc/puppet/manifests/site.pp --logdest syslog "
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
         @lockmcofile = "/tmp/mcopuppetd.lock"
       end
