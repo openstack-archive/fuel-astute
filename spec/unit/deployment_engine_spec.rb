@@ -216,14 +216,12 @@ describe Astute::DeploymentEngine do
     it 'should raise exception if modules/manifests schema of uri is not equal' do
       nodes.first['puppet_manifests_source'] = 'rsync://10.20.0.2:/puppet/vX/modules/'
       nodes.first['puppet_manifests_source'] = 'http://10.20.0.2:/puppet/vX/manifests/'
-      mclient.expects(:rsync).never
       expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError,
           /Scheme for puppet_modules_source 'rsync' and puppet_manifests_source/)
     end
 
     it 'should raise exception if modules/manifests source uri is incorrect' do
       nodes.first['puppet_manifests_source'] = ':/puppet/modules/'
-      mclient.expects(:rsync).never
       expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError,
                                                          /bad URI/)
     end
@@ -367,25 +365,43 @@ describe Astute::DeploymentEngine do
 
     context 'metadata regeneration' do
 
+      let(:fail_return) { [{:data => {:exit_code => 1}}] }
+
       before(:each) do
         deployer.stubs(:generate_repo_source)
         deployer.stubs(:upload_repo_source)
       end
 
+      let(:success_return) { [{:data => {:exit_code => 0}}] }
+
       it 'should regenerate metadata for centos' do
-        mclient.expects(:execute).with(:cmd => 'yum clean all').returns([{:data => {} }])
+        mclient.expects(:execute).with(:cmd => 'yum clean all').returns(success_return)
         deployer.deploy(nodes)
       end
 
       it 'should regenerate metadata for rhel' do
         nodes.first['cobbler']['profile'] = 'rhel-x86_64'
-        mclient.expects(:execute).with(:cmd => 'yum clean all').returns([{:data => {} }])
+        mclient.expects(:execute).with(:cmd => 'yum clean all').returns(success_return)
         deployer.deploy(nodes)
       end
 
       it 'should regenerate metadata for ubuntu' do
         nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
-        mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns([{:data => {} }])
+        mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(success_return)
+        deployer.deploy(nodes)
+      end
+
+      it 'should raise error if metadata not updated' do
+        nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+        mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(fail_return).times(5)
+        expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError,
+                  /Run command:/)
+      end
+
+      it 'should retry metadata update several time if get error' do
+        nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+        mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(fail_return)
+                                 .then.returns(success_return).twice
         deployer.deploy(nodes)
       end
     end #'metadata regeneration'
