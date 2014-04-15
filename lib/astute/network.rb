@@ -45,6 +45,10 @@ module Astute
       send_probing_frames(ctx, net_probe, nodes)
       ctx.reporter.report({'progress' => 60})
 
+      # on slow networks we need to wait for some time to be sure
+      # that all vlans tags are received
+      sleep(10)
+
       net_probe.discover(:nodes => uids)
       stats = net_probe.get_probing_info
       result = format_result(stats)
