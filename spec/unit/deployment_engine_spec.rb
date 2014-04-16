@@ -284,17 +284,6 @@ describe Astute::DeploymentEngine do
         deployer.deploy(nodes)
       end
 
-      it 'should generate correct config for rhel' do
-        nodes.first['cobbler']['profile'] = 'rhel-x86_64'
-        content = ["[nailgun]",
-                   "name=Nailgun",
-                   "baseurl=http://10.20.0.2:8080/centos/fuelweb/x86_64/",
-                   "gpgcheck=0"].join("\n")
-
-        deployer.expects(:upload_repo_source).with(nodes, content)
-        deployer.deploy(nodes)
-      end
-
       it 'should generate correct config for ubuntu' do
         nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
         nodes.first['repo_source']['Nailgun'] =
@@ -335,20 +324,6 @@ describe Astute::DeploymentEngine do
         deployer.deploy(nodes)
       end
 
-      it 'should upload config in correct place for rhel' do
-        nodes.first['cobbler']['profile'] = 'rhel-x86_64'
-        mclient.expects(:upload).with(:path => '/etc/yum.repos.d/nailgun.repo',
-                              :content => repo_content,
-                              :user_owner => 'root',
-                              :group_owner => 'root',
-                              :permissions => '0644',
-                              :dir_permissions => '0755',
-                              :overwrite => true,
-                              :parents => true
-                             )
-        deployer.deploy(nodes)
-      end
-
       it 'should upload config in correct place for ubuntu' do
         nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
 
@@ -373,12 +348,6 @@ describe Astute::DeploymentEngine do
       end
 
       it 'should regenerate metadata for centos' do
-        mclient.expects(:execute).with(:cmd => 'yum clean all').returns([{:data => {} }])
-        deployer.deploy(nodes)
-      end
-
-      it 'should regenerate metadata for rhel' do
-        nodes.first['cobbler']['profile'] = 'rhel-x86_64'
         mclient.expects(:execute).with(:cmd => 'yum clean all').returns([{:data => {} }])
         deployer.deploy(nodes)
       end

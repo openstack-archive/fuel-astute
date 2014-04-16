@@ -19,8 +19,6 @@ module Astute
 
   # Provisioning log errors
   class ParseProvisionLogsError < AstuteError; end
-  # Redhat related exception
-  class RedhatCheckingError < AstuteError; end
   # Failed to reboot nodes
   class FailedToRebootNodesError < AstuteError; end
   # Deployment engine error

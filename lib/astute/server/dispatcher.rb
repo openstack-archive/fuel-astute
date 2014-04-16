@@ -33,51 +33,6 @@ module Astute
       #  Main worker actions
       #
 
-      def download_release(data)
-        # Example of message = {
-        # {'method': 'download_release',
-        # 'respond_to': 'download_release_resp',
-        # 'args':{
-        #     'task_uuid': 'task UUID',
-        #     'release_info':{
-        #         'release_id': 'release ID',
-        #         'redhat':{
-        #             'license_type' :"rhn" or "rhsm",
-        #             'username': 'username',
-        #             'password': 'password',
-        #             'satellite': 'satellite host (for RHN license)'
-        #             'activation_key': 'activation key (for RHN license)'
-        #         }
-        #     }
-        # }}
-        Astute.logger.info("'download_release' method called with data: #{data.inspect}")
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
-        release_info = data['args']['release_info']['redhat']
-        begin
-          result = @orchestrator.download_release(reporter, data['args']['task_uuid'], release_info)
-        rescue Timeout::Error
-          msg = "Timeout of release download is exceeded."
-          Astute.logger.error msg
-          reporter.report({'status' => 'error', 'error' => msg})
-          return
-        end
-      end
-
-      def check_redhat_credentials(data)
-        release = data['args']['release_info']
-        task_id = data['args']['task_uuid']
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_id)
-        @orchestrator.check_redhat_credentials(reporter, task_id, release)
-      end
-
-      def check_redhat_licenses(data)
-        release = data['args']['release_info']
-        nodes = data['args']['nodes']
-        task_id = data['args']['task_uuid']
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_id)
-        @orchestrator.check_redhat_licenses(reporter, task_id, release, nodes)
-      end
-
       def provision(data)
         Astute.logger.info("'provision' method called with data: #{data.inspect}")
 

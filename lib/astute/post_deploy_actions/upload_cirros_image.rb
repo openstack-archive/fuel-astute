@@ -48,8 +48,6 @@ module Astute
       os['img_path'] = case controller['cobbler']['profile']
                          when 'centos-x86_64'
                            '/opt/vm/cirros-x86_64-disk.img'
-                         when 'rhel-x86_64'
-                           '/opt/vm/cirros-x86_64-disk.img'
                          when 'ubuntu_1204_x86_64'
                            '/usr/share/cirros-testvm/cirros-x86_64-disk.img'
                          else
