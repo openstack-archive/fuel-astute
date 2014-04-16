@@ -213,41 +213,5 @@ module Astute
       end
 
     end # DeploymentProxyReporter
-
-    class DLReleaseProxyReporter <DeploymentProxyReporter
-      def initialize(up_reporter, amount)
-        @amount = amount
-        super(up_reporter)
-      end
-
-      def report(data)
-        Astute.logger.debug("Data received by DLReleaseProxyReporter to report it up: #{data.inspect}")
-        report_new_data(data)
-      end
-
-      private
-
-      def calculate_overall_progress
-        @nodes.inject(0) { |sum, node| sum + node['progress'].to_i } / @amount
-      end
-
-      def get_overall_status(data)
-        status = data['status']
-        error_nodes = @nodes.select { |n| n['status'] == 'error' }.map { |n| n['uid'] }
-        msg = data['error']
-        err_msg = "Cannot download release on nodes #{error_nodes.inspect}" if error_nodes.any?
-
-        if status == 'error'
-          msg ||= err_msg
-        elsif status ==  'ready' && err_msg
-          msg = err_msg
-          status = 'error'
-        end
-        progress = data['progress'] || calculate_overall_progress
-
-        {'status' => status, 'error' => msg, 'progress' => progress}.reject{|k,v| v.nil?}
-      end
-    end
-
   end # ProxyReporter
 end # Astute

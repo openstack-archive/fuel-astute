@@ -177,67 +177,6 @@ module Astute
       Network.check_network(Context.new(task_id, reporter), nodes)
     end
 
-    def download_release(up_reporter, task_id, release_info)
-      raise "Release information not provided!" if release_info.empty?
-
-      attrs = {'deployment_mode' => 'rpmcache',
-               'deployment_id' => 'rpmcache'}
-      facts = {'rh_username' => release_info['username'],
-               'rh_password' => release_info['password']}
-      facts.merge!(attrs)
-
-      if release_info['license_type'] == 'rhn'
-        facts.merge!(
-          {'use_satellite' => 'true',
-           'sat_hostname' => release_info['satellite'],
-           'activation_key' => release_info['activation_key']})
-      end
-      facts['uid'] = 'master'
-      facts = [facts]
-      proxy_reporter = ProxyReporter::DLReleaseProxyReporter.new(up_reporter, facts.size)
-      #FIXME: These parameters should be propagated from Nailgun. Maybe they should be saved
-      #       in Release.json.
-      nodes_to_parser = [
-        {:uid => 'master',
-         :path_items => [
-            {:max_size => 1111280705, :path => '/var/www/nailgun/rhel', :weight => 3},
-            {:max_size => 195900000, :path => '/var/cache/yum/x86_64/6Server', :weight => 1},
-         ]}
-      ]
-      log_parser = @log_parsing ? LogParser::DirSizeCalculation.new(nodes_to_parser) : LogParser::NoParsing.new
-      context = Context.new(task_id, proxy_reporter, log_parser)
-      deploy_engine_instance = @deploy_engine.new(context)
-      Astute.logger.info "Using #{deploy_engine_instance.class} for release download."
-      deploy_engine_instance.deploy_piece(facts, 0)
-      proxy_reporter.report({'status' => 'ready', 'progress' => 100})
-    end
-
-    def check_redhat_credentials(reporter, task_id, credentials)
-      ctx = Context.new(task_id, reporter)
-      begin
-        Astute::RedhatChecker.new(ctx, credentials).check_redhat_credentials
-      rescue Astute::RedhatCheckingError => e
-        Astute.logger.error("Error #{e.message}")
-        raise StopIteration
-      rescue => e
-        Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
-        raise e
-      end
-    end
-
-    def check_redhat_licenses(reporter, task_id, credentials, nodes=nil)
-      ctx = Context.new(task_id, reporter)
-      begin
-        Astute::RedhatChecker.new(ctx, credentials).check_redhat_licenses(nodes)
-      rescue Astute::RedhatCheckingError => e
-        Astute.logger.error("Error #{e.message}")
-        raise StopIteration
-      rescue => e
-        Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
-        raise e
-      end
-    end
-
     private
 
     def report_result(result, reporter)

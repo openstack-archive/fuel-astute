@@ -21,7 +21,7 @@ module Astute
 
       def get_pattern_for_node(node)
         os = node['profile']
-        if ['rhel-x86_64', 'centos-x86_64'].include?(os)
+        if ['centos-x86_64'].include?(os)
           pattern_spec_name = 'centos-anaconda-log-supposed-time-kvm'
         elsif os == 'ubuntu_1204_x86_64'
           pattern_spec_name = 'ubuntu-provisioning'

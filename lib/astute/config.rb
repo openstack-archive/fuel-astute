@@ -66,9 +66,6 @@ module Astute
     conf[:DUMP_TIMEOUT] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
 
-    conf[:REDHAT_CHECK_CREDENTIALS_TIMEOUT] = 30  # checking redhat credentials througs mcollective
-    conf[:REDHAT_GET_LICENSES_POOL_TIMEOUT] = 60  # getting redhat licenses through mcollective
-
     conf[:PUPPET_SSH_KEYS] = ['neutron', 'nova', 'ceph', 'mysql']  # name of ssh keys what will be generated
                                                         #and uploaded to all nodes before deploy
     conf[:MAX_NODES_PER_CALL] = 50        # how many nodes to deploy in one puppet call
