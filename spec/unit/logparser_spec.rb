@@ -486,15 +486,6 @@ describe LogParser do
       expect(pattern_spec['filename']).to be_eql "install/anaconda.log"
     end
 
-    it 'should not raise error if system is RedHat' do
-      node = {
-        'uid' => '1',
-        'profile' => 'rhel-x86_64'
-      }
-      pattern_spec = deploy_parser.get_pattern_for_node(node)
-      expect(pattern_spec['filename']).to be_eql "install/anaconda.log"
-    end
-
     it 'should not raise error if system is Ubuntu' do
       node = {
         'uid' => '1',
