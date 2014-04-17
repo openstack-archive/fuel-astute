@@ -38,11 +38,11 @@ module MCollective
         @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/puppetd.lock"
         @statefile = @config.pluginconf["puppetd.statefile"] || "/var/lib/puppet/state/state.yaml"
         @pidfile = @config.pluginconf["puppet.pidfile"] || "/var/run/puppet/agent.pid"
-        @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/sbin/daemonize -a -e /var/log/puppet/puppet.err \
-                                                                                 -o /var/log/puppet/puppet.log \
+        @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/sbin/daemonize -a \
                                                                                  -l #{@lockfile} \
                                                                                  -p #{@lockfile} \
-                                                                                 /usr/bin/puppet apply /etc/puppet/manifests/site.pp --logdest syslog "
+                                                                                 /usr/bin/puppet apply \
+                                                                                 /etc/puppet/manifests/site.pp"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
         @lockmcofile = "/tmp/mcopuppetd.lock"
       end
@@ -180,6 +180,7 @@ module MCollective
         end
 
         cmd << '--debug' if request[:puppet_debug]
+        cmd << '--evaltrace' if request[:puppet_debug]
 
         cmd = cmd.join(" ")
 
