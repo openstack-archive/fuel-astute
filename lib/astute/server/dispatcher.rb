@@ -118,7 +118,7 @@ module Astute
       def dump_environment(data)
         task_id = data['args']['task_uuid']
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_id)
-        @orchestrator.dump_environment(reporter, task_id, data['args']['lastdump'])
+        @orchestrator.dump_environment(reporter, task_id, data['args']['settings'])
       end
 
       def remove_nodes(data)

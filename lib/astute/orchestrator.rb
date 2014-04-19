@@ -165,8 +165,8 @@ module Astute
                   retries=1)
     end
 
-    def dump_environment(reporter, task_id, lastdump)
-      Dump.dump_environment(Context.new(task_id, reporter), lastdump)
+    def dump_environment(reporter, task_id, settings)
+      Dump.dump_environment(Context.new(task_id, reporter), settings)
     end
 
     def verify_networks(reporter, task_id, nodes)

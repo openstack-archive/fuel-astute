@@ -17,70 +17,73 @@ require File.join(File.dirname(__FILE__), '../spec_helper')
 
 describe 'dump_environment' do
   include SpecHelpers
-  
-  before(:each) { @tmp = Astute::MClient }
-  after(:each)  { Astute::MClient = @tmp }
-  
-  let(:ctx) { mock_ctx() }
-  
-  it "should call execute method with nailgun_dump as cmd" do
-    lastdump = "LASTDUMP"
-    ctx = mock_ctx()
-    
-    agent = mock() do
-      expects(:execute).with({:cmd => "/opt/nailgun/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}"}).\
-      returns([{:data => {:exit_code => 0, :stdout => "stdout", :stderr => "stderr"}}])
-    end
-    
-    Astute::MClient = mock() do
-      expects(:new).with(ctx, 'execute_shell_command', ['master'], true, Astute.config.DUMP_TIMEOUT, 1).returns(agent)
-    end
-    Astute::Dump.dump_environment(ctx, lastdump)
+
+  let(:ctx) { mock_ctx }
+  let(:settings) do
+    {
+      'lastdump' => '/last/dump/path'
+    }
+  end
+  let(:rpc_mock) { mock_rpcclient }
+
+  def exec_result(exit_code=0, stdout='', stderr='')
+    result_mock = mock_mc_result({
+        :data => {
+          :exit_code => exit_code,
+          :stdout => stdout,
+          :stderr => stderr}})
+    [result_mock]
+  end
+
+  it "should upload the config and call execute method with shotgun as cmd" do
+    config_path = '/tmp/dump_config'
+    dump_cmd = "/opt/nailgun/bin/shotgun -c #{config_path} >> /var/log/dump.log 2>&1 && cat #{settings['lastdump']}"
+    rpc_mock.expects(:upload).with({
+        path: config_path,
+        content: settings.to_json,
+        user_owner: 'root',
+        group_owner: 'root',
+        overwrite: true}).returns([mock_mc_result])
+
+    rpc_mock.expects(:execute).with({:cmd => dump_cmd}).returns(exec_result)
+
+    Astute::Dump.dump_environment(ctx, settings)
   end
 
   it "should report success if shell agent returns 0" do
-    agent = mock() do
-      expects(:execute).returns([{:data => {:exit_code => 0, :stdout => "stdout"}}])
-    end
-    Astute::MClient = mock() do
-      stubs(:new).returns(agent)
-    end
+    rpc_mock.expects(:upload).returns([mock_mc_result])
+    rpc_mock.expects(:execute).returns(exec_result)
     Astute::Dump.expects(:report_success)
-    Astute::Dump.dump_environment(ctx, nil)
+    Astute::Dump.dump_environment(ctx, settings)
   end
 
   it "should report error if shell agent returns not 0" do
-    agent = mock() do
-      expects(:execute).returns([{:data => {:exit_code => 1, :stderr => "stderr"}}])
-    end
-    Astute::MClient = mock() do
-      stubs(:new).returns(agent)
-    end
+    rpc_mock.expects(:upload).returns([mock_mc_result])
+    rpc_mock.expects(:execute).returns(exec_result(1, '', 'stderr'))
     Astute::Dump.expects(:report_error).with(ctx, "exit code: 1 stderr: stderr")
-    Astute::Dump.dump_environment(ctx, nil)
+    Astute::Dump.dump_environment(ctx, settings)
   end
 
   it "should report error if shell agent times out" do
-    agent = mock() do
-      expects(:execute).raises(Timeout::Error)
+    agent = mock do
+      stubs(:upload)
+      stubs(:execute).raises(Timeout::Error)
     end
-    Astute::MClient = mock() do
-      stubs(:new).returns(agent)
-    end
+    Astute::MClient.stubs(:new).returns(agent)
     Astute::Dump.expects(:report_error).with(ctx, "Dump is timed out")
-    Astute::Dump.dump_environment(ctx, nil)
+    Astute::Dump.dump_environment(ctx, settings)
   end
 
   it "should report error if any other exception occured" do
-    agent = mock() do
-      expects(:execute).raises(StandardError , "MESSAGE")
+    agent = mock do
+      stubs(:upload)
+      stubs(:execute).raises(StandardError , "MESSAGE")
     end
-    Astute::MClient = mock() do
-      stubs(:new).returns(agent)
-    end
-    Astute::Dump.expects(:report_error).with() do |c, msg|
+    Astute::MClient.stubs(:new).returns(agent)
+    Astute::Dump.expects(:report_error).with do |c, msg|
       c == ctx && msg =~ /Exception occured during dump task: message: MESSAGE/
     end
-    Astute::Dump.dump_environment(ctx, nil)
+
+    Astute::Dump.dump_environment(ctx, settings)
   end
 end
