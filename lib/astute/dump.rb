@@ -15,15 +15,28 @@
 
 module Astute
   module Dump
-    def self.dump_environment(ctx, lastdump)
+    def self.dump_environment(ctx, settings)
+      lastdump = settings['lastdump']
       timeout = Astute.config.DUMP_TIMEOUT
       shell = MClient.new(ctx, 'execute_shell_command', ['master'], check_result=true, timeout=timeout, retries=1)
+      upload_file = MClient.new(ctx, 'uploadfile', ['master'])
       begin
-        result = shell.execute(
-          :cmd => "/opt/nailgun/bin/nailgun_dump >>/var/log/dump.log 2>&1 && cat #{lastdump}").first
+        config_path = '/tmp/dump_config'
+        upload_file.upload(
+          :path => config_path,
+          :content => settings.to_json,
+          :user_owner => 'root',
+          :group_owner => 'root',
+          :overwrite => true)
+
+        dump_cmd = "/opt/nailgun/bin/shotgun -c #{config_path} >> /var/log/dump.log 2>&1 && cat #{lastdump}"
+        Astute.logger.debug("Try to execute command: #{dump_cmd}")
+        result = shell.execute(:cmd => dump_cmd).first.results
+
         Astute.logger.debug("#{ctx.task_id}: \
 stdout: #{result[:data][:stdout]} stderr: #{result[:data][:stderr]} \
 exit code: #{result[:data][:exit_code]}")
+
         if result[:data][:exit_code] == 0
           Astute.logger.info("#{ctx.task_id}: Snapshot is done. Result: #{result[:data][:stdout]}")
           report_success(ctx, result[:data][:stdout].rstrip)
