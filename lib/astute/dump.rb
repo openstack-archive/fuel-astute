@@ -29,7 +29,7 @@ module Astute
           :group_owner => 'root',
           :overwrite => true)
 
-        dump_cmd = "/opt/nailgun/bin/shotgun -c #{config_path} >> /var/log/dump.log 2>&1 && cat #{lastdump}"
+        dump_cmd = "shotgun -c #{config_path} >> /var/log/dump.log 2>&1 && cat #{lastdump}"
         Astute.logger.debug("Try to execute command: #{dump_cmd}")
         result = shell.execute(:cmd => dump_cmd).first.results
 

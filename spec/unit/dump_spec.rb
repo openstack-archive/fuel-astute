@@ -37,7 +37,7 @@ describe 'dump_environment' do
 
   it "should upload the config and call execute method with shotgun as cmd" do
     config_path = '/tmp/dump_config'
-    dump_cmd = "/opt/nailgun/bin/shotgun -c #{config_path} >> /var/log/dump.log 2>&1 && cat #{settings['lastdump']}"
+    dump_cmd = "shotgun -c #{config_path} >> /var/log/dump.log 2>&1 && cat #{settings['lastdump']}"
     rpc_mock.expects(:upload).with({
         path: config_path,
         content: settings.to_json,
