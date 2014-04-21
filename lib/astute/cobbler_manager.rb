@@ -36,6 +36,10 @@ module Astute
         cobbler_name = node['slave_name']
         begin
           Astute.logger.info("Adding #{cobbler_name} into cobbler")
+          if node.fetch('ks_meta',{})['repo_metadata']
+             converted_metadata = node['ks_meta']['repo_metadata'].map { |k,v| "#{k}=#{v}"}.join(',')
+             node['ks_meta']['repo_metadata'] = converted_metadata
+          end
           @engine.item_from_hash('system', cobbler_name, node, :item_preremove => true)
         rescue RuntimeError => e
           Astute.logger.error("Error occured while adding system #{cobbler_name} to cobbler")
