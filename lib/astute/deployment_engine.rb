@@ -45,7 +45,7 @@ module Astute
           upload_ssh_keys(part.map{ |n| n['uid'] }, part.first['deployment_id'])
 
           # Update packages source list
-          update_repo_sources(part) if part.first['repo_source']
+          update_repo_sources(part) if part.first['repo_metadata']
 
           # Sync puppet manifests and modules to every node (emulate puppet master)
           sync_puppet_manifests(part)
@@ -112,7 +112,6 @@ module Astute
 
     # Sync puppet manifests and modules to every node
     def sync_puppet_manifests(deployment_info)
-      sync_mclient = MClient.new(@ctx, "puppetsync", deployment_info.map{ |n| n['uid'] }.uniq)
       master_ip = deployment_info.first['master_ip']
       modules_source = deployment_info.first['puppet_modules_source'] || "rsync://#{master_ip}:/puppet/modules/"
       manifests_source = deployment_info.first['puppet_manifests_source'] || "rsync://#{master_ip}:/puppet/manifests/"
@@ -131,6 +130,7 @@ module Astute
                                      " puppet_manifests_source '#{schemas.last}' not equivalent!"
       end
 
+      sync_mclient = MClient.new(@ctx, "puppetsync", deployment_info.map{ |n| n['uid'] }.uniq)
       case schemas.first
       when 'rsync'
         sync_mclient.rsync(:modules_source => modules_source,
@@ -201,8 +201,7 @@ module Astute
                   end
 
       content = []
-      # FIXME: This key 'repo_source' not approved
-      deployment_info.first['repo_source'].each do |name, url|
+      deployment_info.first['repo_metadata'].each do |name, url|
         content << formatter.call(name,url)
       end
       content.join("\n")
@@ -231,7 +230,18 @@ module Astute
             when 'ubuntu' then "apt-get clean; apt-get update"
             end
 
-      run_shell_command_remotely(deployment_info.map{ |n| n['uid'] }.uniq, cmd)
+      succeeded = false
+      nodes_uids = deployment_info.map{ |n| n['uid'] }.uniq
+      Astute.config.MC_RETRIES.times.each do
+        succeeded = run_shell_command_remotely(nodes_uids, cmd)
+        return if succeeded
+        sleep Astute.config.MC_RETRY_INTERVAL
+      end
+
+      if !succeeded
+        raise DeploymentEngineError, "Run command: '#{cmd}' in nodes: #{nodes_uids} fail." \
+                                     " Check debug output for more information"
+      end
     end
 
     def target_os(deployment_info)
@@ -265,7 +275,7 @@ module Astute
                                             stdout: #{response[:data][:stdout]}
                                             stderr: #{response[:data][:stderr]}
                                             exit code: #{response[:data][:exit_code]}")
-      response
+      response.fetch(:data, {})[:exit_code] == 0
     end
 
     def enable_puppet_deploy(node_uids)
