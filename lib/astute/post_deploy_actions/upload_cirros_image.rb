@@ -70,6 +70,7 @@ module Astute
                  --is-public #{os['public']} \
                  --container-format=\'#{os['container_format']}\' \
                  --disk-format=\'#{os['disk_format']}\' \
+                 --min-ram=#{os['min_ram']} \
                  #{os['glance_properties']} \
                  --file \'#{os['img_path']}\' \
               "
