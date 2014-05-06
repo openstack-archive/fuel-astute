@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: Mike Scherbakov <mscherbakov@mirantis.com>
+Workflow+1: Mike Scherbakov <mscherbakov@mirantis.com>
+Code-Review+1: Evgeniy L <eli@mirantis.com>
+Code-Review+1: Dmitry Shulyak <dshulyak@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 06 May 2014 07:49:50 +0000
+Reviewed-on: https://review.openstack.org/90947
+Project: stackforge/fuel-astute
+Branch: refs/heads/master
