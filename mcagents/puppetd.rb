@@ -36,6 +36,7 @@ module MCollective
       def startup_hook
         @splaytime = @config.pluginconf["puppetd.splaytime"].to_i || 0
         @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/puppetd.lock"
+        @log = @config.pluginconf["puppetd.log"] || "/var/log/puppet.log"
         @statefile = @config.pluginconf["puppetd.statefile"] || "/var/lib/puppet/state/state.yaml"
         @pidfile = @config.pluginconf["puppet.pidfile"] || "/var/run/puppet/agent.pid"
         @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/sbin/daemonize -a \
@@ -181,6 +182,7 @@ module MCollective
 
         cmd << '--debug' if request[:puppet_debug]
         cmd << '--evaltrace' if request[:puppet_debug]
+        cmd << "--logdest #{@log}" if @log
 
         cmd = cmd.join(" ")
 
