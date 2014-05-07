@@ -147,6 +147,7 @@ module Astute
       cobbler = CobblerManager.new(engine_attrs, reporter)
       cobbler.remove_nodes(nodes)
       NodesRemover.new(Context.new(task_id, reporter), nodes, reboot).remove
+      Rsyslogd.send_sighup(engine_attrs["master_ip"])
     end
 
     def stop_puppet_deploy(reporter, task_id, nodes)
