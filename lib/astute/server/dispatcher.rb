@@ -126,12 +126,13 @@ module Astute
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
         nodes = data['args']['nodes']
         engine = data['args']['engine']
+        master_ip = data['args']['master_ip']
 
         result = if nodes.empty?
           Astute.logger.debug("#{task_uuid} Node list is empty")
           nil
         else
-          @orchestrator.remove_nodes(reporter, task_uuid, engine, nodes)
+          @orchestrator.remove_nodes(reporter, task_uuid, engine, nodes, master_ip)
         end
 
         report_result(result, reporter)
