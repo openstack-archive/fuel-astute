@@ -56,7 +56,8 @@ describe Astute::Orchestrator do
       {
         "url"=>"http://localhost/cobbler_api",
         "username"=>"cobbler",
-        "password"=>"cobbler"
+        "password"=>"cobbler",
+        "master_ip"=>"127.0.0.1",
       }
     end
 
@@ -72,6 +73,7 @@ describe Astute::Orchestrator do
 
     it 'should use NodeRemover to remove nodes' do
       Astute::NodesRemover.any_instance.expects(:remove).once
+      Astute::Rsyslogd.expects(:send_sighup).once
       @orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
     end
 
@@ -79,6 +81,7 @@ describe Astute::Orchestrator do
       it 'should remove nodes from cobbler if node exist' do
         Astute::Provision::Cobbler.any_instance.stubs(:system_exists?).returns(true).twice
         Astute::NodesRemover.any_instance.stubs(:remove).once
+        Astute::Rsyslogd.expects(:send_sighup).once
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
 
@@ -88,6 +91,7 @@ describe Astute::Orchestrator do
       it 'should not try to remove nodes from cobbler if node do not exist' do
         Astute::Provision::Cobbler.any_instance.stubs(:system_exists?).returns(false)
         Astute::NodesRemover.any_instance.stubs(:remove).once
+        Astute::Rsyslogd.expects(:send_sighup).once
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name']).never
 
@@ -99,6 +103,7 @@ describe Astute::Orchestrator do
                                   .returns(true)
                                   .then.returns(true)
         Astute::NodesRemover.any_instance.stubs(:remove).once
+        Astute::Rsyslogd.expects(:send_sighup).once
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
 
@@ -129,7 +134,8 @@ describe Astute::Orchestrator do
       "engine"=>{
         "url"=>"http://localhost/cobbler_api",
         "username"=>"cobbler",
-        "password"=>"cobbler"
+        "password"=>"cobbler",
+        "master_ip"=>"127.0.0.1",
       },
       "task_uuid"=>"a5c44b9a-285a-4a0c-ae65-2ed6b3d250f4",
       "nodes" => [
