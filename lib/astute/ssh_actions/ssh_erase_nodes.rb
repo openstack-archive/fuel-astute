@@ -31,6 +31,13 @@ module Astute
           echo "b" > /proc/sysrq-trigger
         }
 
+        erase_partitions() {
+          for part in /dev/$1?
+          do
+            dd if=/dev/zero of=$part bs=$2 count=2048
+          done
+        }
+
         erase_data() {
           echo "Run erase_node with dev= $1 length = $2 offset = $3 bs = $4"
           dd if=/dev/zero of=/dev/$1 bs=$2 count=$3 seek=$4 oflag=direct
@@ -51,6 +58,7 @@ module Astute
 
             size=$(cat /sys/block/$basename_dir/size)
 
+            erase_partitions $basename_dir $size
             erase_data $basename_dir 1 0 '1M'
             erase_data $basename_dir 1 $size '512'
           done
