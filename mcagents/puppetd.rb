@@ -172,7 +172,7 @@ module MCollective
       end
 
       def runonce_background
-        cmd = [@puppetd, "--logdest", 'syslog', '--trace']
+        cmd = [@puppetd, "--logdest", 'syslog', '--trace', '--no-report']
         unless request[:forcerun]
           if @splaytime && @splaytime > 0
             cmd << "--splaylimit" << @splaytime << "--splay"
