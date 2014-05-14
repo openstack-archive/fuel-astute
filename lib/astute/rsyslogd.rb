@@ -16,8 +16,9 @@ module Astute
   class Rsyslogd
 
     def self.send_sighup(ctx, master_ip)
+        timeout = Astute.config.RSYSLOG_TIMEOUT
         shell = MClient.new(ctx, 'execute_shell_command', ['master'],
-                            check_result=true, timeout=5, retries=1)
+                            check_result=true, timeout=timeout, retries=1)
         cmd = "ssh root@#{master_ip} 'pkill -HUP rsyslogd'"
 
         begin
@@ -28,7 +29,7 @@ module Astute
     exit code: #{result[:data][:exit_code]}")
         rescue Timeout::Error
             msg = "Sending SIGHUP to rsyslogd is timed out."
-            Astute.logger.warning("#{ctx.task_id}: #{msg}")
+            Astute.logger.error("#{ctx.task_id}: #{msg}")
         rescue => e
             msg = "Exception occured during sending SIGHUP to rsyslogd, message: #{e.message} \
     trace: #{e.backtrace.inspect}"

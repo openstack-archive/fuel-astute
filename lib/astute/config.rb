@@ -65,6 +65,7 @@ module Astute
     conf[:REBOOT_TIMEOUT] = 120           # how long it can take for node to reboot
     conf[:DUMP_TIMEOUT] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
+    conf[:RSYSLOG_TIMEOUT] = 20
 
     conf[:REDHAT_CHECK_CREDENTIALS_TIMEOUT] = 30  # checking redhat credentials througs mcollective
     conf[:REDHAT_GET_LICENSES_POOL_TIMEOUT] = 60  # getting redhat licenses through mcollective
