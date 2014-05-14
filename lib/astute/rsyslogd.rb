@@ -28,7 +28,7 @@ module Astute
     exit code: #{result[:data][:exit_code]}")
         rescue Timeout::Error
             msg = "Sending SIGHUP to rsyslogd is timed out."
-            Astute.logger.warning("#{ctx.task_id}: #{msg}")
+            Astute.logger.info("#{ctx.task_id}: #{msg}")
         rescue => e
             msg = "Exception occured during sending SIGHUP to rsyslogd, message: #{e.message} \
     trace: #{e.backtrace.inspect}"
