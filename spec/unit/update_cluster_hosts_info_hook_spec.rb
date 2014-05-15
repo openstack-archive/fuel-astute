@@ -61,9 +61,17 @@ describe Astute::UpdateClusterHostsInfo do
     update_hosts.process(deploy_data, ctx)
   end
 
-  it 'should not change deployment status if fail' do
+  it 'should not change deployment status if command fail' do
     update_hosts.expects(:upload_file).twice
     update_hosts.expects(:run_shell_command).twice.returns(:data => {:exit_code => 1})
+
+    update_hosts.process(deploy_data, ctx)
+    ctx.expects(:report_and_update_status).never
+  end
+
+  it 'should not change deployment status if mcollective fail' do
+    update_hosts.expects(:upload_file).twice
+    update_hosts.expects(:run_shell_command).twice.returns(:data => {})
 
     update_hosts.process(deploy_data, ctx)
     ctx.expects(:report_and_update_status).never

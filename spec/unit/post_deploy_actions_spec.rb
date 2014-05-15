@@ -31,5 +31,25 @@ describe Astute::PostDeployActions do
 
     post_deploy_actions.process
   end
+end
+
+describe Astute::PostDeployAction do
+  include SpecHelpers
+
+  let(:ctx) { mock_ctx }
+  let(:node_uids) { [1] }
+  let(:pda_example) { Astute::PostDeployAction.new }
+
+  before(:each) { mock_rpcclient([{'uid' => 1}]) }
+
+  it 'should not raise timeout error if mcollective runs out of the timeout' do
+    Astute::MClient.any_instance.stubs(:mc_send).raises(Astute::MClientTimeout)
+    expect(pda_example.run_shell_command(ctx, node_uids, "test command")).to eql({:data => {}})
+  end
+
+  it 'should not raise mcollective error if it occurred' do
+    Astute::MClient.any_instance.stubs(:mc_send).raises(Astute::MClientError)
+    expect(pda_example.run_shell_command(ctx, node_uids, "test command")).to eql({:data => {}})
+  end
 
 end

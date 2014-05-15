@@ -92,6 +92,22 @@ describe Astute::UploadCirrosImage do
             .to raise_error(Astute::CirrosError, 'Upload cirros "TestVM" image failed')
   end
 
+  it 'should send node error status for controller and raise if deploy \
+      success and fail to add image because of mcollective error' do
+    ctx.expects(:report_and_update_status)
+       .with('nodes' => [{
+                          'uid' => 1,
+                          'role' => 'controller',
+                          'status' => 'error',
+                          'error_type' => 'deploy'
+                         }])
+    upload_cirros_image.stubs(:run_shell_command)
+                       .returns(:data => {})
+                       .then.returns(:data => {})
+    expect {upload_cirros_image.process(deploy_data, ctx)}
+            .to raise_error(Astute::CirrosError, 'Upload cirros "TestVM" image failed')
+  end
+
   it 'should run only in controller node' do
     upload_cirros_image.expects(:run_shell_command).once
                   .with(ctx, [1], anything)
