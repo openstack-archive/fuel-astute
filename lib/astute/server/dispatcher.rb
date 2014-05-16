@@ -86,13 +86,15 @@ module Astute
           @orchestrator.provision(reporter,
                                   data['args']['provisioning_info']['engine'],
                                   data['args']['provisioning_info']['nodes'])
+          result = @orchestrator.watch_provision_progress(reporter,
+                                                          data['args']['task_uuid'],
+                                                          data['args']['provisioning_info']['nodes'])
+        #TODO(vsharshov): Refactoring the deployment aborting messages (StopIteration)
         rescue => e
-          Astute.logger.error "Error running provisioning: #{e.message}, trace: #{e.backtrace.inspect}"
+          Astute.logger.error "Error running provisioning: #{e.message}, trace: #{e.format_backtrace}"
           raise StopIteration
         end
-
-        @orchestrator.watch_provision_progress(
-          reporter, data['args']['task_uuid'], data['args']['provisioning_info']['nodes'])
+        raise StopIteration if result && result['status'] == 'error'
       end
 
       def deploy(data)
