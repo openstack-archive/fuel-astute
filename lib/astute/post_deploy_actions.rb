@@ -52,7 +52,7 @@ module Astute
                                                exit code: #{response[:data][:exit_code]}")
       response
     rescue MClientTimeout, MClientError => e
-      Astute.logger.debug("#{context.task_id}: cmd: #{cmd}
+      Astute.logger.error("#{context.task_id}: cmd: #{cmd}
                                                mcollective error: #{e.message}")
       {:data => {}}
     end
