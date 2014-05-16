@@ -69,7 +69,7 @@ describe Astute::UpdateClusterHostsInfo do
     ctx.expects(:report_and_update_status).never
   end
 
-  it 'should not change deployment status if mcollective fail' do
+  it 'should not change deployment status if shell exec using mcollective fail' do
     update_hosts.expects(:upload_file).twice
     update_hosts.expects(:run_shell_command).twice.returns(:data => {})
 
@@ -92,6 +92,25 @@ describe Astute::UpdateClusterHostsInfo do
                     .with(ctx, [3], anything)
                     .returns(:data => {:exit_code => 0})
     update_hosts.process(deploy_data, ctx)
+  end
+
+  describe '#upload_file' do
+
+    let(:node_uid) { 1 }
+
+    before(:each) do
+      mock_rpcclient([{'uid' => node_uid}])
+    end
+
+    it 'should not raise timeout error if mcollective runs out of the timeout' do
+      Astute::MClient.any_instance.stubs(:mc_send).raises(Astute::MClientTimeout)
+      expect { update_hosts.send(:upload_file, node_uid, "", ctx) }.to_not raise_error
+    end
+
+    it 'should not raise mcollective error if it occurred' do
+      Astute::MClient.any_instance.stubs(:mc_send).raises(Astute::MClientError)
+      expect { update_hosts.send(:upload_file, node_uid, "", ctx) }.to_not raise_error
+    end
   end
 
 end
