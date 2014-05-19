@@ -77,6 +77,12 @@ describe Astute::Orchestrator do
       @orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
     end
 
+    it 'should return list of nodes which removed' do
+      Astute::NodesRemover.any_instance.expects(:remove).once.returns({"nodes"=>[{"uid"=>"1"}]})
+      Astute::Rsyslogd.stubs(:send_sighup).once
+      expect(@orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)).to eql({"nodes"=>[{"uid"=>"1"}]})
+    end
+
     context 'cobbler' do
       it 'should remove nodes from cobbler if node exist' do
         Astute::Provision::Cobbler.any_instance.stubs(:system_exists?).returns(true).twice
