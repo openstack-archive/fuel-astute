@@ -57,8 +57,9 @@ module Astute
                               :parents => true,
                               :permissions => '0600'
                              )
+    rescue MClientTimeout, MClientError => e
+      Astute.logger.error("#{context.task_id}: mcollective upload_file agent error: #{e.message}")
     end
 
   end #class
-
 end
