@@ -49,8 +49,15 @@ module Astute
       def main_worker
         @consumer = AMQP::Consumer.new(@channel, @queue)
         @consumer.on_delivery do |metadata, payload|
-          Astute.logger.debug "Process message from worker queue: #{payload.inspect}"
-          perform_main_job(metadata, payload)
+          if @main_work_thread.nil? || !@main_work_thread.alive?
+            Astute.logger.debug "Process message from worker queue: #{payload.inspect}"
+            perform_main_job(metadata, payload)
+          else
+            Astute.logger.debug "Requeue message because worker is busy: #{payload.inspect}"
+            metadata.reject(:requeue => true)
+            # Avoid throttle by consume/reject cycle if only one worker is running
+            EM.add_timer(2)
+          end
         end
         @consumer.consume
       end
@@ -65,13 +72,12 @@ module Astute
       def perform_main_job(metadata, payload)
         @main_work_thread = Thread.new do
           begin
+            metadata.ack
             data = parse_data(payload)
             @tasks_queue = Astute::Server::TaskQueue.new
 
             @tasks_queue.add_task(data)
             dispatch(@tasks_queue)
-          ensure
-            metadata.ack
           end
         end
       end
