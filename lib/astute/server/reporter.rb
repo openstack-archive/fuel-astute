@@ -25,7 +25,6 @@ module Astute
       def report(msg)
         msg_with_task = {'task_uuid' => @task_uuid}.merge(msg)
         message = {'method' => @method, 'args' => msg_with_task}
-        Astute.logger.info "Casting message to fuel: #{message.inspect}"
         @producer.publish(message)
       end
     end
@@ -41,7 +40,6 @@ module Astute
           subtask_msg = {'task_uuid'=>@subtasks[subtask_name]['task_uuid']}.merge(msg)
           message = {'method' => @subtasks[subtask_name]['respond_to'],
                      'args' => subtask_msg}
-          Astute.logger.info "Casting message to fuel: #{message.inspect}"
           @producer.publish(message)
         else
           Astute.logger.info "No subtask #{subtask_name} for : #{@method}"
