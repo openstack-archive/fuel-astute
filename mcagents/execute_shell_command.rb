@@ -20,11 +20,36 @@ module MCollective
     class Execute_shell_command < RPC::Agent
 
       action 'execute' do
-        reply[:exit_code], reply[:stdout], reply[:stderr] = run(request[:cmd],
-                                                                :stdout => :stdout,
-                                                                :stderr => :stderr)
-        reply[:stdout] ||= ""
-        reply[:stderr] ||= ""
+        reply[:stdout], reply[:stderr], reply[:exit_code] = runcommand(request[:cmd])
+      end
+
+      private
+      def runcommand(cmd)
+        # We cannot use Shell from puppet because
+        # version 2.3.1 has bug, with returning wrong exit
+        # code in some cases, in newer version mcollective
+        # it was fixed
+        # https://github.com/puppetlabs/marionette-collective
+        #        /commit/10f163550bc6395f1594dacb9f15a86d4a3fde27
+        # So, it's just fixed code from Shell#runcommand
+        thread = Thread.current
+        stdout = ''
+        stderr = ''
+        status = systemu(cmd, {'stdout' => stdout, 'stderr' => stderr}) do |cid|
+          begin
+            while(thread.alive?)
+              sleep 0.1
+            end
+            Process.waitpid(cid) if Process.getpgid(cid)
+          rescue SystemExit
+          rescue Errno::ESRCH
+          rescue Errno::ECHILD
+          rescue Exception => e
+            Log.info("Unexpected exception received while waiting for child process: #{e.class}: #{e}")
+          end
+        end
+
+        [stdout, stderr, status.exitstatus]
       end
 
     end
