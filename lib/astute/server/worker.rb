@@ -20,6 +20,8 @@ module Astute
     class Worker
       include Raemon::Worker
 
+      DELAY_SEC = 5
+
       def start
         super
         start_heartbeat
@@ -28,19 +30,25 @@ module Astute
       def stop
         super
         begin
-          @connection.close{ stop_event_machine }
+          @connection.close{ stop_event_machine } if @connection
         ensure
           stop_event_machine
         end
       end
 
       def run
+        Astute.logger.info "Worker initialization"
         EM.run do
           run_server
         end
+      rescue AMQP::TCPConnectionFailed => e
+        Astute.logger.warn "TCP connection to AMQP failed: #{e.message}. Retry #{DELAY_SEC} sec later..."
+        sleep DELAY_SEC
+        retry
       rescue => e
-        Astute.logger.error "Exception during worker initialization: #{e.inspect},  trace: #{e.backtrace.inspect}"
-        sleep 5
+        Astute.logger.error "Exception during worker initialization: #{e.message}, trace: #{e.format_backtrace}"
+        Astute.logger.warn "Retry #{DELAY_SEC} sec later..."
+        sleep DELAY_SEC
         retry
       end
 
@@ -73,8 +81,8 @@ module Astute
 
       def configure_connection(connection)
         connection.on_tcp_connection_loss do |conn, settings|
-          Astute.logger.warn "Trying to reconnect to message broker..."
-          conn.reconnect
+          Astute.logger.warn "Trying to reconnect to message broker. Retry #{DELAY_SEC} sec later..."
+          EM.add_timer(DELAY_SEC) { conn.reconnect }
         end
         connection
       end
