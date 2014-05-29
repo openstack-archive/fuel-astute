@@ -44,7 +44,7 @@ describe Astute::Orchestrator do
       rpcclient = mock_rpcclient(nodes, mc_timeout)
       rpcclient.expects(:get_type).once.returns([mc_res])
 
-      types = @orchestrator.node_type(@reporter, 'task_uuid', nodes, mc_timeout)
+      types = @orchestrator.node_type(@reporter, 'task_uuid', nodes.map { |n| n['uid'] }, mc_timeout)
       types.should eql([{"node_type"=>"target", "uid"=>"1"}])
     end
   end
@@ -149,6 +149,7 @@ describe Astute::Orchestrator do
           'uid' => '1',
           'profile' => 'centos-x86_64',
           "slave_name"=>"controller-1",
+          "admin_ip" =>'1.2.3.5',
           'power_type' => 'ssh',
           'power_user' => 'root',
           'power_pass' => '/root/.ssh/bootstrap.rsa',
@@ -408,4 +409,185 @@ describe Astute::Orchestrator do
     end
   end
 
+  describe '#stop_provision' do
+    around(:each) do |example|
+      old_ssh_retries = Astute.config.SSH_RETRIES
+      old_mc_retries = Astute.config.MC_RETRIES
+      old_nodes_rm_interal = Astute.config.NODES_REMOVE_INTERVAL
+      example.run
+      Astute.config.SSH_RETRIES = old_ssh_retries
+      Astute.config.MC_RETRIES = old_mc_retries
+      Astute.config.NODES_REMOVE_INTERVAL = old_nodes_rm_interal
+    end
+
+    before(:each) do
+      Astute.config.SSH_RETRIES = 1
+      Astute.config.MC_RETRIES = 1
+      Astute.config.NODES_REMOVE_INTERVAL = 0
+    end
+
+    it 'erase nodes using ssh' do
+      Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
+      @orchestrator.stubs(:stop_provision_via_mcollective).returns([[], {}])
+      Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => 1}]}).once
+
+      Astute::Ssh.expects(:execute).with(instance_of(Astute::Context),
+                                        data['nodes'],
+                                        Astute::SshEraseNodes.command)
+                                   .returns({'nodes' => [{'uid' => 1}]})
+
+      expect(@orchestrator.stop_provision(@reporter,
+                                   data['task_uuid'],
+                                   data['engine'],
+                                   data['nodes']))
+            .to eql({
+                     "error_nodes" => [],
+                     "inaccessible_nodes" => [],
+                     "nodes" => [{"uid"=>1}]
+                    })
+    end
+
+    it 'always remove nodes from Cobbler' do
+      Astute::Ssh.stubs(:execute).twice.returns({'inaccessible_nodes' => [{'uid' => 1}]})
+      @orchestrator.stubs(:stop_provision_via_mcollective).returns([[], {}])
+
+      Astute::CobblerManager.any_instance.expects(:remove_nodes)
+                                         .with(data['nodes'])
+                                         .returns([])
+
+      @orchestrator.stop_provision(@reporter,
+                                   data['task_uuid'],
+                                   data['engine'],
+                                   data['nodes'])
+    end
+
+    it 'reboot nodes using using ssh' do
+      Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
+      @orchestrator.stubs(:stop_provision_via_mcollective).returns([[], {}])
+      Astute::Ssh.stubs(:execute).returns({'nodes' => [{'uid' => 1}]}).once
+
+      Astute::Ssh.expects(:execute).with(instance_of(Astute::Context),
+                                       data['nodes'],
+                                       Astute::SshHardReboot.command,
+                                       timeout=5,
+                                       retries=1)
+                                 .returns({'inaccessible_nodes' => [{'uid' => 1}]})
+
+      expect(@orchestrator.stop_provision(@reporter,
+                                   data['task_uuid'],
+                                   data['engine'],
+                                   data['nodes']))
+            .to eql({
+                     "error_nodes" => [],
+                     "inaccessible_nodes" => [],
+                     "nodes" => [{"uid"=>1}]
+                    })
+    end
+
+    it 'stop provision if provision operation stop immediately' do
+      @orchestrator.stubs(:stop_provision_via_ssh)
+                   .returns({'inaccessible_nodes' => [{'uid' => '1'}]})
+      @orchestrator.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'bootstrap'}])
+
+      Astute::NodesRemover.any_instance.expects(:remove)
+                          .once.returns({"nodes"=>[{"uid"=>"1", }]})
+
+      expect(@orchestrator.stop_provision(@reporter,
+                                   data['task_uuid'],
+                                   data['engine'],
+                                   data['nodes']))
+            .to eql({
+                     "error_nodes" => [],
+                     "inaccessible_nodes" => [],
+                     "nodes" => [{"uid"=>"1"}]
+                    })
+    end
+
+    it 'stop provision if provision operation stop in the end' do
+      @orchestrator.stubs(:stop_provision_via_ssh)
+             .returns({'nodes' => [{'uid' => "1"}]})
+      @orchestrator.stubs(:node_type).returns([{'uid' => "1", 'node_type' => 'target'}])
+
+      Astute::NodesRemover.any_instance.expects(:remove)
+                          .once.returns({"nodes"=>[{"uid"=>"1", }]})
+
+      expect(@orchestrator.stop_provision(@reporter,
+                                   data['task_uuid'],
+                                   data['engine'],
+                                   data['nodes']))
+            .to eql({
+                     "error_nodes" => [],
+                     "inaccessible_nodes" => [],
+                     "nodes" => [{"uid"=>"1"}]
+                    })
+    end
+
+    it 'inform about inaccessible nodes' do
+      Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => 1}]}).twice
+      Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
+      @orchestrator.stubs(:node_type).returns([])
+
+      Astute::NodesRemover.any_instance.expects(:remove).never
+
+      expect(@orchestrator.stop_provision(@reporter,
+                             data['task_uuid'],
+                             data['engine'],
+                             data['nodes']))
+            .to eql({
+                     "error_nodes" => [],
+                     "inaccessible_nodes" => [{"uid"=>1}],
+                     "nodes" => []
+                    })
+    end
+
+    it 'sleep between attempts to find and erase nodes using mcollective' do
+      @orchestrator.stubs(:stop_provision_via_ssh)
+                   .returns({'inaccessible_nodes' => [{'uid' => '1'}]})
+      @orchestrator.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'bootstrap'}])
+      Astute::NodesRemover.any_instance.stubs(:remove)
+                          .once.returns({"nodes"=>[{"uid"=>"1", }]})
+
+      @orchestrator.expects(:sleep).with(Astute.config.NODES_REMOVE_INTERVAL)
+
+      @orchestrator.stop_provision(@reporter,
+                             data['task_uuid'],
+                             data['engine'],
+                             data['nodes'])
+    end
+
+    it 'perform several attempts to find and erase nodes using mcollective' do
+      Astute.config.MC_RETRIES = 2
+      Astute.config.NODES_REMOVE_INTERVAL = 0
+
+      @orchestrator.stubs(:stop_provision_via_ssh)
+                   .returns({'nodes' => [{'uid' => "1"}],
+                             'inaccessible_nodes' => [{'uid' => '2'}]})
+
+      @orchestrator.stubs(:node_type).twice
+                   .returns([{'uid' => '1', 'node_type' => 'bootstrap'}])
+                   .then.returns([{'uid' => '2', 'node_type' => 'target'}])
+
+      Astute::NodesRemover.any_instance.stubs(:remove).twice
+                          .returns({"nodes"=>[{"uid"=>"1"}]}).then
+                          .returns({"error_nodes"=>[{"uid"=>"2"}]})
+
+      data['nodes'] << {
+        "uid" => '2',
+        "slave_name"=>"controller-2",
+        "admin_ip" =>'1.2.3.6'
+      }
+
+      expect(@orchestrator.stop_provision(@reporter,
+                             data['task_uuid'],
+                             data['engine'],
+                             data['nodes']))
+            .to eql({
+                     "error_nodes" => [{"uid"=>'2'}],
+                     "inaccessible_nodes" => [],
+                     "nodes" => [{"uid"=>"1"}],
+                     "status" => "error"
+                    })
+    end
+
+  end # stop_provision
 end

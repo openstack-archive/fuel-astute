@@ -92,8 +92,15 @@ module Astute
         # execute commands on all servers
         # FIXME: debug not show a messages if command contain a several
         # strings
-        channel = session.exec cmd do |ch, stream, data|
-          Astute.logger.debug "[#{ch[:host]} : #{stream}] #{data}"
+        channel = session.exec cmd do |ch, success|
+
+          ch.on_data do |ichannel, data|
+            Astute.logger.debug "[#{ch[:host]} : #{ichannel}] #{data}"
+          end
+
+          ch.on_request "exit-status" do |_ichannel, data|
+            exit_status = data.read_long
+          end
         end
 
         Timeout::timeout(timeout) { session.loop }

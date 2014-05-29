@@ -64,11 +64,15 @@ module Astute
           done
         }
 
+        # Need more robust mechanizm to detect provisining or provisined node
+        node_type=$(cat /etc/nailgun_systemtype)
+        if [ "$node_type" == "target" ] || [ "$node_type" == "bootstrap" ]; then
+          echo "Do not erase $node_type node using shell"
+          exit
+        fi
+
         echo "Run erase node command"
         erase_boot_devices
-
-        # Avoid shell hang using nohup and stdout/stderr redirections
-        # nohup reboot_with_sleep > /dev/null 2>&1 &
       ERASE_COMMAND
     end
   end

@@ -20,10 +20,9 @@ module Astute
       @log_parsing = log_parsing
     end
 
-    def node_type(reporter, task_id, nodes, timeout=nil)
+    def node_type(reporter, task_id, nodes_uids, timeout=nil)
       context = Context.new(task_id, reporter)
-      uids = nodes.map {|n| n['uid']}
-      systemtype = MClient.new(context, "systemtype", uids, check_result=false, timeout)
+      systemtype = MClient.new(context, "systemtype", nodes_uids, check_result=false, timeout)
       systems = systemtype.get_type
       systems.map do |n|
         {
@@ -94,7 +93,7 @@ module Astute
           catch :done do
             loop do
               sleep_not_greater_than(5) do
-                nodes_types = node_type(proxy_reporter, task_id, nodes, 2)
+                nodes_types = node_type(proxy_reporter, task_id, nodes.map {|n| n['uid']}, 2)
                 target_uids, nodes_not_booted = analize_node_types(nodes_types, nodes_not_booted)
 
                 if nodes.length == target_uids.length
@@ -146,9 +145,9 @@ module Astute
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true)
       cobbler = CobblerManager.new(engine_attrs, reporter)
       cobbler.remove_nodes(nodes)
-      ctxt = Context.new(task_id, reporter)
-      result = NodesRemover.new(ctxt, nodes, reboot).remove
-      Rsyslogd.send_sighup(ctxt, engine_attrs["master_ip"])
+      ctx = Context.new(task_id, reporter)
+      result = NodesRemover.new(ctx, nodes, reboot).remove
+      Rsyslogd.send_sighup(ctx, engine_attrs["master_ip"])
 
       result
     end
@@ -160,13 +159,21 @@ module Astute
     end
 
     def stop_provision(reporter, task_id, engine_attrs, nodes)
-      Ssh.execute(Context.new(task_id, reporter), nodes, SshEraseNodes.command)
-      CobblerManager.new(engine_attrs, reporter).remove_nodes(nodes)
-      Ssh.execute(Context.new(task_id, reporter),
-                  nodes,
-                  SshHardReboot.command,
-                  timeout=5,
-                  retries=1)
+      ctx = Context.new(task_id, reporter)
+
+      ssh_result = stop_provision_via_ssh(ctx, nodes, engine_attrs)
+
+      # Remove already provisioned node. Possible erasing nodes twice
+      provisioned_nodes, mco_result = stop_provision_via_mcollective(ctx, nodes)
+
+      # For nodes responded via mcollective use mcollective result instead of ssh
+      ['nodes', 'error_nodes', 'inaccessible_nodes'].each do |node_status|
+        ssh_result[node_status] = ssh_result.fetch(node_status, []) - provisioned_nodes
+      end
+
+      result = merge_rm_nodes_result(ssh_result, mco_result)
+      result['status'] = 'error' if result['error_nodes'].present?
+      result
     end
 
     def dump_environment(reporter, task_id, settings)
@@ -290,6 +297,62 @@ module Astute
         reporter.report({'nodes' => nodes_progress})
       rescue => e
         Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.format_backtrace}"
+      end
+    end
+
+    def stop_provision_via_mcollective(ctx, nodes)
+      return [], {} if nodes.empty?
+
+      mco_result = {}
+      nodes_uids = nodes.map{ |n| n['uid'] }
+
+      Astute.config.MC_RETRIES.times do |i|
+        sleep Astute.config.NODES_REMOVE_INTERVAL
+
+        Astute.logger.debug "Trying to connect to nodes #{nodes_uids} using mcollective"
+        nodes_types = node_type(ctx.reporter, ctx.task_id, nodes_uids, 2)
+        next if nodes_types.empty?
+
+        provisioned = nodes_types.select{ |n| ['target', 'bootstrap'].include? n['node_type'] }
+                                 .map{ |n| {'uid' => n['uid']} }
+        current_mco_result = NodesRemover.new(ctx, provisioned, reboot=true).remove
+        Astute.logger.debug "Retry result #{i}: "\
+          "mco success nodes: #{current_mco_result['nodes']}, "\
+          "mco error nodes: #{current_mco_result['error_nodes']}, "\
+          "mco inaccessible nodes: #{current_mco_result['inaccessible_nodes']}"
+
+        mco_result = merge_rm_nodes_result(mco_result, current_mco_result)
+        nodes_uids -= provisioned.map{ |n| n['uid'] }
+
+        break if nodes_uids.empty?
+      end
+
+      provisioned_nodes = nodes.map{ |n| {'uid' => n['uid']} } - nodes_uids.map {|n| {'uid' => n} }
+
+      Astute.logger.debug "MCO final result: "\
+        "mco success nodes: #{mco_result['nodes']}, "\
+        "mco error nodes: #{mco_result['error_nodes']}, "\
+        "mco inaccessible nodes: #{mco_result['inaccessible_nodes']}, "\
+        "all mco nodes: #{provisioned_nodes}"
+
+      return provisioned_nodes, mco_result
+    end
+
+    def stop_provision_via_ssh(ctx, nodes, engine_attrs)
+      ssh_result = Ssh.execute(ctx, nodes, SshEraseNodes.command)
+      CobblerManager.new(engine_attrs, ctx.reporter).remove_nodes(nodes)
+      Ssh.execute(ctx,
+                  nodes,
+                  SshHardReboot.command,
+                  timeout=5,
+                  retries=1)
+      ssh_result
+    end
+
+    def merge_rm_nodes_result(res1, res2)
+      ['nodes', 'error_nodes', 'inaccessible_nodes'].inject({}) do |result, node_status|
+        result[node_status] = (res1.fetch(node_status, []) + res2.fetch(node_status, [])).uniq
+        result
       end
     end
 
