@@ -146,9 +146,9 @@ module Astute
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true)
       cobbler = CobblerManager.new(engine_attrs, reporter)
       cobbler.remove_nodes(nodes)
-      ctxt = Context.new(task_id, reporter)
-      result = NodesRemover.new(ctxt, nodes, reboot).remove
-      Rsyslogd.send_sighup(ctxt, engine_attrs["master_ip"])
+      ctx = Context.new(task_id, reporter)
+      result = NodesRemover.new(ctx, nodes, reboot).remove
+      Rsyslogd.send_sighup(ctx, engine_attrs["master_ip"])
 
       result
     end
@@ -160,13 +160,26 @@ module Astute
     end
 
     def stop_provision(reporter, task_id, engine_attrs, nodes)
-      Ssh.execute(Context.new(task_id, reporter), nodes, SshEraseNodes.command)
-      CobblerManager.new(engine_attrs, reporter).remove_nodes(nodes)
-      Ssh.execute(Context.new(task_id, reporter),
-                  nodes,
-                  SshHardReboot.command,
-                  timeout=5,
-                  retries=1)
+      ctx = Context.new(task_id, reporter)
+
+      ssh_result = stop_provision_via_ssh(ctx, nodes, engine_attrs)
+
+      # Remove already provisioned node. Possible erasing nodes twice
+      provisioned_nodes, mco_result = stop_provision_via_mcollective(ctx, nodes)
+
+      # For nodes responded via mcollective use mcollective result instead of ssh
+      ['nodes', 'error_nodes', 'inaccessible_nodes'].each do |node_status|
+        ssh_result[node_status] = ssh_result.fetch(node_status, []) - provisioned_nodes
+      end
+
+      # TODO: move logic with answer from nodes_remover and ssh to orchestrator level
+      result = ['nodes', 'error_nodes', 'inaccessible_nodes'].inject({}) do |result, node_status|
+        result[node_status] = (ssh_result.fetch(node_status, []) + mco_result.fetch(node_status, [])).uniq
+        result
+      end
+
+      result['status'] = 'error' if result['error_nodes'].present?
+      result
     end
 
     def dump_environment(reporter, task_id, settings)
@@ -230,6 +243,31 @@ module Astute
       rescue => e
         Astute.logger.warn "Some error occurred when parse logs for nodes progress: #{e.message}, trace: #{e.format_backtrace}"
       end
+    end
+
+    def stop_provision_via_mcollective(ctx, nodes)
+      return [], {} if nodes.empty?
+
+      nodes_types = node_type(ctx.reporter, ctx.task_id, nodes, 2)
+      provisioned_nodes = nodes_types.select{ |n| ['target', 'bootstrap'].include? n['node_type'] }
+                                     .map{ |n| {'uid' => n['uid']} }
+      if provisioned_nodes.present?
+        mco_result = NodesRemover.new(ctx, provisioned_nodes, reboot=true).remove
+      else
+        mco_result = {}
+      end
+      return provisioned_nodes, mco_result
+    end
+
+    def stop_provision_via_ssh(ctx, nodes, engine_attrs)
+      ssh_result = Ssh.execute(ctx, nodes, SshEraseNodes.command)
+      CobblerManager.new(engine_attrs, ctx.reporter).remove_nodes(nodes)
+      Ssh.execute(ctx,
+                  nodes,
+                  SshHardReboot.command,
+                  timeout=5,
+                  retries=1)
+      ssh_result
     end
 
   end
