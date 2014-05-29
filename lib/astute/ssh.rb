@@ -105,7 +105,11 @@ module Astute
       return [[], [], nodes] unless servers
 
       servers.each do |s|
-        s.session.shutdown! && s.fail! if s.busy?
+        if s.busy?
+          # Pending connection could not be shutdown, but always return busy as true
+          s.session.shutdown! if s.session.channels.present?
+          s.fail!
+        end
       end
       detect_status(servers)
     end
