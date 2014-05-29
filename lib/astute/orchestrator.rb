@@ -146,9 +146,9 @@ module Astute
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true)
       cobbler = CobblerManager.new(engine_attrs, reporter)
       cobbler.remove_nodes(nodes)
-      ctxt = Context.new(task_id, reporter)
-      result = NodesRemover.new(ctxt, nodes, reboot).remove
-      Rsyslogd.send_sighup(ctxt, engine_attrs["master_ip"])
+      ctx = Context.new(task_id, reporter)
+      result = NodesRemover.new(ctx, nodes, reboot).remove
+      Rsyslogd.send_sighup(ctx, engine_attrs["master_ip"])
 
       result
     end
@@ -160,13 +160,31 @@ module Astute
     end
 
     def stop_provision(reporter, task_id, engine_attrs, nodes)
-      Ssh.execute(Context.new(task_id, reporter), nodes, SshEraseNodes.command)
+      ctx = Context.new(task_id, reporter)
+      Ssh.execute(ctx, nodes, SshEraseNodes.command)
       CobblerManager.new(engine_attrs, reporter).remove_nodes(nodes)
-      Ssh.execute(Context.new(task_id, reporter),
-                  nodes,
-                  SshHardReboot.command,
-                  timeout=5,
-                  retries=1)
+      ssh_result = Ssh.execute(ctx,
+                               nodes,
+                               SshHardReboot.command,
+                               timeout=5,
+                               retries=1)
+
+      # Remove already provisioned node, ignore bootstrap node
+      nodes_types = node_type(reporter, task_id, nodes, 2)
+      target_uids, nodes_not_booted = analize_node_types(nodes_types, nodes.map { |n| n['uid'] })
+
+      provisioned_nodes = nodes_not_booted.map { |uid| {'uid' => uid } }
+      mco_result = NodesRemover.new(ctx, provisioned_nodes, reboot=true).remove
+
+      # TODO: remove possible duplication: node uid in success and in error/inaccessible state
+      # TODO: move logic with answer from nodes_remover and ssh.rb to orchestrator level
+      result = ['nodes', 'error_nodes', 'inaccessible_nodes'].inject({}) do |result, node_status|
+        result[node_status] = (ssh_result.fetch(node_status, []) + mco_result.fetch(node_status, [])).uniq
+        result
+      end
+
+      result['status'] = 'error' if result['error_nodes'].present?
+      result
     end
 
     def dump_environment(reporter, task_id, settings)

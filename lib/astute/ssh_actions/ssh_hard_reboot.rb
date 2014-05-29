@@ -17,6 +17,11 @@ module Astute
 
     def self.command
      <<-REBOOT_COMMAND
+        node_type=$(cat /etc/nailgun_systemtype)
+        if [ "$node_type" == "target" ] || [ "$node_type" == "bootstrap" ]; then
+          echo "Do not affect $node_type node"
+          exit
+        fi
         echo "Run node rebooting command using 'SB' to sysrq-trigger"
         echo "1" > /proc/sys/kernel/panic_on_oops
         echo "10" > /proc/sys/kernel/panic
