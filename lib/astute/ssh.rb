@@ -19,7 +19,7 @@ module Astute
   class Ssh
 
     def self.execute(ctx, nodes, cmd, timeout=60, retries=Astute.config.SSH_RETRIES)
-      nodes_to_process = nodes.map { |n| n['slave_name'] }
+      nodes_to_process = nodes.map { |n| n['admin_ip'] }
 
       Astute.logger.debug "Run shell command '#{cmd}' using ssh"
       ready_nodes = []
@@ -68,7 +68,7 @@ module Astute
     private
 
     def self.to_report_format(slave_names, nodes)
-      result_nodes = nodes.select { |n| slave_names.include?(n['slave_name']) }
+      result_nodes = nodes.select { |n| slave_names.include?(n['admin_ip']) }
       result_nodes.inject([]) do |result, node|
         result << {'uid' => node['uid']} if node['uid']
         result
