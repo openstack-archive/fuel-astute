@@ -103,9 +103,19 @@ module Astute
     rescue Timeout::Error
       Astute.logger.debug "SSH session is closed due to the achievement of a timeout"
       return [[], [], nodes] unless servers
+      exception_process(servers)
+    rescue Net::SSH::Disconnect
+      Astute.logger.debug "SSH connection closed by remote host"
+      exception_process(servers)
+    end
 
+    def self.exception_process(servers)
       servers.each do |s|
-        s.session.shutdown! && s.fail! if s.busy?
+        if s.busy?
+          # Pending connection could not be shutdown, but always return busy as true
+          s.session.shutdown! if s.session.channels.present?
+          s.fail!
+        end
       end
       detect_status(servers)
     end
