@@ -213,6 +213,25 @@ describe Astute::DeploymentEngine do
       deployer.deploy(nodes)
     end
 
+
+    context 'retry sync if mcollective raise error and' do
+      it 'raise error if retry fail SYNC_RETRIES times' do
+        mclient.stubs(:rsync)
+        Astute::MClient.any_instance.stubs(:check_results_with_retries)
+                                    .raises(Astute::MClientError)
+                                    .times(Astute::DeploymentEngine::SYNC_RETRIES)
+        expect { deployer.deploy(nodes) }.to raise_error(Astute::MClientError)
+      end
+
+      it 'not raise error if mcollective return success less than SYNC_RETRIES attempts' do
+        mclient.stubs(:rsync)
+        Astute::MClient.any_instance.stubs(:check_results_with_retries)
+                                    .raises(Astute::MClientError)
+                                    .then.returns("")
+        expect { deployer.deploy(nodes) }.to_not raise_error(Astute::MClientError)
+      end
+    end
+
     it 'should raise exception if modules/manifests schema of uri is not equal' do
       nodes.first['puppet_manifests_source'] = 'rsync://10.20.0.2:/puppet/vX/modules/'
       nodes.first['puppet_manifests_source'] = 'http://10.20.0.2:/puppet/vX/manifests/'

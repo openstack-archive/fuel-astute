@@ -17,6 +17,7 @@ require 'popen4'
 require 'uri'
 
 KEY_DIR = "/var/lib/astute"
+SYNC_RETRIES = 10
 
 module Astute
   class DeploymentEngine
@@ -133,9 +134,19 @@ module Astute
       sync_mclient = MClient.new(@ctx, "puppetsync", deployment_info.map{ |n| n['uid'] }.uniq)
       case schemas.first
       when 'rsync'
-        sync_mclient.rsync(:modules_source => modules_source,
-                           :manifests_source => manifests_source
-                          )
+        begin
+          sync_mclient.rsync(:modules_source => modules_source,
+                             :manifests_source => manifests_source
+                            )
+        rescue MClientError => e
+          sync_retries ||= 0
+          sync_retries += 1
+          if sync_retries < SYNC_RETRIES
+            Astute.logger.warn("Rsync problem. Try to repeat: #{sync_retries} attempt")
+            retry
+          end
+          raise e
+        end
       else
         raise DeploymentEngineError, "Unknown scheme '#{schemas.first}' in #{modules_source}"
       end
