@@ -406,6 +406,13 @@ describe Astute::Orchestrator do
         @orchestrator.check_redhat_licenses(@reporter, data['task_uuid'], credentials)
       end
     end
+    describe '#raid_manipulation' do
+      it 'should use Raid' do
+        nodes = [{node: 1}]
+        Astute::Raid.any_instance.expects(:exec).once
+        @orchestrator.raid_manipulation(@reporter, task_id="task_id", nodes, 'raid_vendor', 'cli', [])
+      end
+    end
   end
 
 end

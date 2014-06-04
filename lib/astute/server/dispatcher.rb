@@ -143,6 +143,18 @@ module Astute
         remove_nodes(data)
       end
 
+      def raid(data)
+        task_uuid = data['args']['task_uuid']
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
+        nodes  = data['args']['nodes']
+        vendor = data['args']['vendor']
+        interface = data['args']['interface']
+        cmds = data['args']['cmds']
+        result = @orchestrator.raid_manipulation(reporter, task_uuid, nodes, vendor, interface, cmds)
+
+        report_result(result, reporter)
+      end
+
       #
       #  Service worker actions
       #
