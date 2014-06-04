@@ -406,6 +406,11 @@ describe Astute::Orchestrator do
         @orchestrator.check_redhat_licenses(@reporter, data['task_uuid'], credentials)
       end
     end
+    describe '#raid_manipulation' do
+      it 'should call Astute::Raid' do
+        Astute::Raid.any_instance
+      end
+    end
   end
 
 end
