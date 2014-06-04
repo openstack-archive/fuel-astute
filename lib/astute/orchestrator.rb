@@ -185,6 +185,10 @@ module Astute
       Network.multicast_verification(Context.new(task_id, reporter), nodes)
     end
 
+    def raid_manipulation(reporter, task_uuid, nodes, vendor, interface, cmds)
+      Astute::Raid.new(Context.new(reporter, task_uuid), nodes, vendor, interface, cmds).exec
+    end
+
     private
 
     def report_result(result, reporter)

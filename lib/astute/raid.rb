@@ -13,19 +13,29 @@
 #    under the License.
 
 module Astute
+  class Raid
+    def initialize(context, nodes, vendor, interface, cmds)
+      @vendor = vendor
+      @context = context
+      @nodes = nodes
+      @interface = interface
+      # Run nailgun agent at the end of tasks
+      @cmds = cmds << {'action' =>  'nailgun_agent'}
+    end
 
-  # Base class for all errors
-  class AstuteError < StandardError; end
+    def exec
+      send(@vendor)
+    end
 
-  # Provisioning log errors
-  class ParseProvisionLogsError < AstuteError; end
-  # Failed to reboot nodes
-  class FailedToRebootNodesError < AstuteError; end
-  # Deployment engine error
-  class DeploymentEngineError < AstuteError; end
-  # MClient errors
-  class MClientError < AstuteError; end
-  # Raid related exeptions
-  class RaidError < AstuteError; end
+    private
 
+    # Vendors
+
+    def lsi
+      @cmds.each do |command|
+        RaidVendors::Lsi.new(@context, @nodes, @interface, command).send(command['action'])
+      end
+    end
+
+  end
 end
