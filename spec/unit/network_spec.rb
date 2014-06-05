@@ -81,7 +81,6 @@ describe Astute::Network do
           with(:interfaces => data_to_send.to_json).
           returns([mc_valid_res]*2)
       end
-      Astute::Network.expects(:check_dhcp)
       Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
 
       res = Astute::Network.check_network(Astute::Context.new('task_uuid', reporter), nodes)
@@ -112,19 +111,19 @@ describe Astute::Network do
                        {'iface'=>'eth2',
                         'mac'=> 'ee:fa:1f:er:ds:as'}]
       json_output = JSON.dump(expected_data)
-      res1 = {
+      res1 = mock_mc_result({
         :data => {:out => json_output},
-        :sender => "1"}
-      res2 = {
+        :sender => "1"})
+      res2 = mock_mc_result({
         :data => {:out => json_output},
-        :sender => "2"}
+        :sender => "2"})
 
       rpcclient = mock_rpcclient(nodes)
-
       rpcclient.expects(:dhcp_discover).at_least_once.returns([res1, res2])
 
-      rpcclient.discover(:nodes => ['1', '2'])
-      res = Astute::Network.check_dhcp(rpcclient, nodes)
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+
+      res = Astute::Network.check_dhcp(Astute::Context.new('task_uuid', reporter), nodes)
 
       expected = {"nodes" => [{:status=>"ready", :uid=>"1", :data=>expected_data},
                               {:status=>"ready", :uid=>"2", :data=>expected_data}],
