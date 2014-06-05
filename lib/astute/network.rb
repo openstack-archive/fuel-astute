@@ -39,9 +39,6 @@ module Astute
       start_frame_listeners(ctx, net_probe, nodes)
       ctx.reporter.report({'progress' => 30})
 
-      net_probe.discover(:nodes => uids)
-      ctx.reporter.report_to_subtask('check_dhcp', check_dhcp(net_probe, nodes))
-
       send_probing_frames(ctx, net_probe, nodes)
       ctx.reporter.report({'progress' => 60})
 
@@ -53,7 +50,10 @@ module Astute
       {'nodes' => result}
     end
 
-   def self.check_dhcp(net_probe, nodes)
+   def self.check_dhcp(ctx, nodes)
+      uids = nodes.map { |node| node['uid'].to_s }
+      net_probe = MClient.new(ctx, "net_probe", uids)
+
       data_to_send = {}
       nodes.each do |node|
         data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'], joined=false).to_json
@@ -105,12 +105,12 @@ module Astute
     end
 
     def self.format_dhcp_response(response)
-      node_result = {:uid => response[:sender],
+      node_result = {:uid => response.results[:sender],
                      :status=>'ready'}
-      if response[:data][:out].present?
+      if response.results[:data][:out].present?
         Astute.logger.debug("DHCP checker received: #{response.inspect}")
-        node_result[:data] = JSON.parse(response[:data][:out])
-      elsif response[:data][:error].present?
+        node_result[:data] = JSON.parse(response.results[:data][:out])
+      elsif response.results[:data][:error].present?
         Astute.logger.debug("DHCP checker errred with: #{response.inspect}")
         node_result[:status] = 'error'
         node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
