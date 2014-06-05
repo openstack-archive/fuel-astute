@@ -81,7 +81,6 @@ describe Astute::Network do
           with(:interfaces => data_to_send.to_json).
           returns([mc_valid_res]*2)
       end
-      Astute::Network.expects(:check_dhcp)
       Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
 
       res = Astute::Network.check_network(Astute::Context.new('task_uuid', reporter), nodes)
