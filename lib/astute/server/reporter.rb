@@ -29,23 +29,5 @@ module Astute
       end
     end
 
-    class SubtaskReporter < Reporter
-      def initialize(producer, method, task_uuid, subtasks)
-        super(producer, method, task_uuid)
-        @subtasks = subtasks
-      end
-
-      def report_to_subtask(subtask_name, msg)
-        if @subtasks[subtask_name] and @subtasks[subtask_name].any?
-          subtask_msg = {'task_uuid'=>@subtasks[subtask_name]['task_uuid']}.merge(msg)
-          message = {'method' => @subtasks[subtask_name]['respond_to'],
-                     'args' => subtask_msg}
-          @producer.publish(message)
-        else
-          Astute.logger.info "No subtask #{subtask_name} for : #{@method}"
-        end
-      end
-    end
-
   end #Server
 end #Astute

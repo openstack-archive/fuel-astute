@@ -39,9 +39,6 @@ module Astute
       start_frame_listeners(ctx, net_probe, nodes)
       ctx.reporter.report({'progress' => 30})
 
-      net_probe.discover(:nodes => uids)
-      ctx.reporter.report_to_subtask('check_dhcp', check_dhcp(net_probe, nodes))
-
       send_probing_frames(ctx, net_probe, nodes)
       ctx.reporter.report({'progress' => 60})
 
