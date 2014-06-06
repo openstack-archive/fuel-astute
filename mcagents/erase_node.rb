@@ -122,6 +122,11 @@ module MCollective
 
       def erase_data(dev, length=1, offset=0, bs='1M')
         cmd = "dd if=/dev/zero of=/dev/#{dev} bs=#{bs} count=#{length} seek=#{offset} oflag=direct"
+        ['s', 'u'].each do |req|
+          File.open('/proc/sysrq-trigger','w') do |file|
+            file.write("#{req}\n")
+          end
+        end
         status = system(cmd)
         debug_msg("Run device erasing command '#{cmd}' returned '#{status}'")
 
