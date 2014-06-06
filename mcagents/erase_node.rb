@@ -47,24 +47,6 @@ module MCollective
         tempfile_storage='/mnt/tempfiles'
 
         begin
-          File.open('/proc/sys/kernel/panic','w') { |file| file.write("5\n") }
-          #Enable sysrq trigger for further hard reboot
-          File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
-          get_boot_devices.each do |dev|
-            erase_data(dev[:name])
-            erase_data(dev[:name], 1, dev[:size], '512')
-          end unless dry_run
-
-          reply[:erased] = true
-        rescue Exception => e
-          reply[:erased] = false
-          reply[:status] += 1
-          msg = "MBR can't be erased. Reason: #{e.message};"
-          Log.error(msg)
-          error_msg << msg
-        end
-
-        begin
           reboot if !dry_run && request_reboot
           reply[:rebooted] = request_reboot
         rescue Exception => e
@@ -105,17 +87,48 @@ module MCollective
 
       def reboot
         pid = fork do
-          #Use sysrq trigger: Umount->Sync->reBoot
           debug_msg("Run node rebooting command using 'SB' to sysrq-trigger")
           sleep 5
+          File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
           # turning panic on oops and setting panic timeout to 10
           File.open('/proc/sys/kernel/panic_on_oops', 'w') {|file| file.write("1\n")}
           File.open('/proc/sys/kernel/panic','w') {|file| file.write("10\n")}
-          ['b'].each do |req|
-            File.open('/proc/sysrq-trigger','w') do |file|
-              file.write("#{req}\n")
+
+          trap('SIGTERM') do
+            #Giving 5 seconds for other process to die nicely
+            sleep 5
+
+            #Setting RO for all file systems
+            ['s', 'u'].each do |req|
+              File.open('/proc/sysrq-trigger','w') do |file|
+                file.write("#{req}\n")
+              end
+            end
+
+            begin
+              get_boot_devices.each do |dev|
+                erase_data(dev[:name])
+                erase_data(dev[:name], 1, dev[:size], '512')
+              end
+
+              reply[:erased] = true
+            rescue Exception => e
+              reply[:erased] = false
+              reply[:status] += 1
+              msg = "MBR can't be erased. Reason: #{e.message};"
+              Log.error(msg)
+              error_msg << msg
+            end
+
+            ['b'].each do |req|
+              File.open('/proc/sysrq-trigger','w') do |file|
+                file.write("#{req}\n")
+              end
             end
           end
+
+          # Sending SIGTERM to all processes
+          File.open('/proc/sysrq-trigger','w') { |file| file.write("e\n")}
         end
         Process.detach(pid)
       end
