@@ -25,6 +25,7 @@ module MCollective
       end
 
       action "start_frame_listeners" do
+        cleanup_netprobe
         start_frame_listeners
       end
 
@@ -56,6 +57,10 @@ module MCollective
           uid = fo.gets.chomp
           return uid
         end
+      end
+
+      def cleanup_netprobe
+        run("pkill net_probe.py")
       end
 
       def start_frame_listeners
