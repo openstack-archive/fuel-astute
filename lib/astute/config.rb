@@ -75,6 +75,8 @@ module Astute
     conf[:MAX_NODES_PER_REMOVE_CALL] = 10 # how many nodes to remove in one call
     conf[:NODES_REMOVE_INTERVAL] = 10     # sleeps for ## sec between remove calls
 
+    conf[:DHCP_REPEAT] = 3                # Dhcp discover will be sended 3 times
+
     # Server settings
     conf[:broker_host] = 'localhost'
     conf[:broker_port] = 5672
