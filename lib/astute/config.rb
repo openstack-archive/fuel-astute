@@ -75,6 +75,8 @@ module Astute
     conf[:SSH_RETRIES] = 5                # SSH tries to call ssh client before failure
     conf[:SSH_RETRY_TIMEOUT] = 30         # SSH sleeps for ## sec between retries
 
+    conf[:DHCP_REPEAT] = 3                # Dhcp discover will be sended 3 times
+
     # Server settings
     conf[:broker_host] = 'localhost'
     conf[:broker_port] = 5672
