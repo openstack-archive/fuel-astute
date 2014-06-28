@@ -21,58 +21,52 @@ module Astute
         killall -STOP debootstrap dpkg
         echo "5" > /proc/sys/kernel/panic
         echo "1" > /proc/sys/kernel/sysrq
+        echo "1" > /proc/sys/kernel/panic_on_oops
 
-        storages_codes="3, 8, 65, 66, 67, 68, 69, 70, 71, 104, 105, 106, 107, 108, 109, 110, 111, 202, 252, 253"
+        STORAGE_DEVICE_NUMBERS="3, 8, 65, 66, 67, 68, 69, 70, 71, 104, 105, 106, 107, 108, 109, 110, 111, 202, 252, 253"
+        BLOCK_DEVICES=$(sed -nr 's#^.*[0-9]\s+([a-z]+|cciss\/c[0-9]+d[0-9]+)$#\\1#p' /proc/partitions)
 
-        reboot_with_sleep() {
-          sleep 5
-          echo "1" > /proc/sys/kernel/panic_on_oops
-          echo "10" > /proc/sys/kernel/panic
-          echo "b" > /proc/sysrq-trigger
+        erase_data() {
+          echo "Run erase_data with dev= /dev/$1 length = $2 offset = $3 bs = $4"
+          dd if=/dev/zero of="/dev/$1" count="$2" seek="$3" bs="$4"
+	  blockdev --flushbufs "/dev/$1"
         }
 
         erase_partitions() {
-          for part in /dev/$1[0-9]*
+          for PART in $(sed -nr 's#^.*[0-9]\s+('"$1"'p?[0-9]+)$#\\1#p' /proc/partitions)
           do
-            dd if=/dev/zero of=$part bs=$2 count=2048 oflag=direct
+            erase_data "$PART" "$2" "$3" "$4"
           done
-        }
-
-        erase_data() {
-          echo "Run erase_node with dev= $1 length = $2 offset = $3 bs = $4"
-          dd if=/dev/zero of=/dev/$1 bs=$2 count=$3 seek=$4 oflag=direct
         }
 
         erase_boot_devices() {
-          for d in /sys/block/*
+          for DEVICE in $BLOCK_DEVICES
           do
-            basename_dir=$(basename $d)
-            major_raw=$(udevadm info --query=property --name=$basename_dir | grep MAJOR | sed 's/ *$//g')
-            major=$(echo ${major_raw##*=})
+            MAJOR=$(sed -nr 's#^\s+([0-9]+)\s.*\s'"$DEVICE"'$#\\1#p' /proc/partitions)
+            SIZE=$(($(sed -nr 's#^(\s+[0-9]+){2}\s+([0-9]+)\s+'"$DEVICE"'$#\\2#p' /proc/partitions) * 2))
+            echo "$STORAGE_DEVICE_NUMBERS" | grep -wq "$MAJOR" || continue
+            grep -wq 0 "/sys/block/$(echo $DEVICE | sed 's#/#!#')/removable" || continue
 
-            echo $storages_codes | grep -o "\b$major\b"
-            if [ $? -ne 0 ]; then continue; fi
-
-            removable=$(grep -o '[[:digit:]]' /sys/block/$basename_dir/removable)
-            if [ $removable -ne 0 ]; then continue; fi
-
-            size=$(cat /sys/block/$basename_dir/size)
-
-            erase_partitions $basename_dir $size
-            erase_data $basename_dir 1 0 '1M'
-            erase_data $basename_dir 1 $size '512'
+            erase_data "$DEVICE" 1 0 512
+            erase_data "$DEVICE" 1 $(($SIZE-1)) 512
+            erase_partitions "$DEVICE" 1 0 512
           done
         }
 
-        # Need more robust mechanizm to detect provisining or provisined node
-        node_type=$(cat /etc/nailgun_systemtype)
-        if [ "$node_type" == "target" ] || [ "$node_type" == "bootstrap" ]; then
-          echo "Do not erase $node_type node using shell"
-          exit
+        if [ -r /etc/nailgun_systemtype ]; then
+          NODE_TYPE=$(cat /etc/nailgun_systemtype)
+        else
+          NODE_TYPE="provisioning"
         fi
 
-        echo "Run erase node command"
-        erase_boot_devices
+        # Check what was mounted to '/': drive (provisioned node)
+        # or init ramdisk (bootsrapped/provisioned node)
+        if grep -Eq 'root=[^[:blank:]]+' /proc/cmdline; then
+          echo "Do not erase $NODE_TYPE node using shell"
+        else
+          echo "Run erase command on ${NODE_TYPE} node"
+          erase_boot_devices
+        fi
       ERASE_COMMAND
     end
   end
