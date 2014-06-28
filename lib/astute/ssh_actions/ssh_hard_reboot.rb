@@ -17,16 +17,22 @@ module Astute
 
     def self.command
      <<-REBOOT_COMMAND
-        # Need more robust mechanizm to detect provisining or provisined node
-        node_type=$(cat /etc/nailgun_systemtype)
-        if [ "$node_type" == "target" ] || [ "$node_type" == "bootstrap" ]; then
-          echo "Do not affect $node_type node"
-          exit
+        if [ -r /etc/nailgun_systemtype ]; then
+          NODE_TYPE=$(cat /etc/nailgun_systemtype)
+        else
+          NODE_TYPE="provisioning"
         fi
-        echo "Run node rebooting command using 'SB' to sysrq-trigger"
-        echo "1" > /proc/sys/kernel/panic_on_oops
-        echo "10" > /proc/sys/kernel/panic
-        echo "b" > /proc/sysrq-trigger
+
+        # Check what was mounted to '/': drive (provisioned node)
+        # or init ramdisk (bootsrapped/provisioning node)
+        if grep -Eq 'root=[^[:blank:]]+' /proc/cmdline; then
+          echo "Do not reboot $NODE_TYPE node using shell"
+        else
+          echo "Run node rebooting command using 'SB' to sysrq-trigger"
+          echo "1" > /proc/sys/kernel/panic_on_oops
+          echo "10" > /proc/sys/kernel/panic
+          echo "b" > /proc/sysrq-trigger
+        fi
       REBOOT_COMMAND
     end
   end
