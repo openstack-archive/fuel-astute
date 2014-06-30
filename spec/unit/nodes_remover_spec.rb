@@ -29,7 +29,7 @@ describe Astute::NodesRemover do
   end
 
   before(:each) do
-    Astute::NodesRemover.any_instance.stubs(:mclient_remove_nodes).returns(mcollective_answer)
+    Astute::NodesRemover.any_instance.stubs(:mclient_remove_piece_nodes).returns(mcollective_answer)
   end
 
   it 'should erase nodes (mbr) and reboot nodes(default)' do
@@ -129,4 +129,43 @@ describe Astute::NodesRemover do
       expect(Astute::NodesRemover.new(ctx, nodes, reboot=false).remove).to eq({"nodes"=>[{"uid"=>"1"}, {"uid"=>"2"}]})
     end
   end
+
+  context 'nodes limits' do
+    around(:each) do |example|
+      old_value = Astute.config.MAX_NODES_PER_REMOVE_CALL
+      example.run
+      Astute.config.MAX_NODES_PER_REMOVE_CALL = old_value
+    end
+
+    let(:mcollective_answer1) do
+      [{:sender => '1', :statuscode => 0, :data => {:rebooted => true}}]
+    end
+
+    let(:mcollective_answer2) do
+      [{:sender => '2', :statuscode => 0, :data => {:rebooted => true}}]
+    end
+
+    before(:each) do
+      Astute.config.MAX_NODES_PER_REMOVE_CALL = 1
+
+      Astute::NodesRemover.any_instance.expects(:mclient_remove_piece_nodes).twice
+                          .returns(mcollective_answer1)
+                          .then.returns(mcollective_answer2)
+    end
+
+    it 'number of nodes deleting in parallel should be limited' do
+      expect(Astute::NodesRemover.new(ctx, nodes).remove).to eq({"nodes"=>[{"uid"=>"1"}, {"uid"=>"2"}]})
+    end
+
+    it 'should sleep between group of nodes' do
+      Astute::NodesRemover.any_instance.expects(:sleep).with(Astute.config.NODES_REMOVE_INTERVAL)
+      Astute::NodesRemover.new(ctx, nodes).remove
+    end
+
+    it 'should not use sleep for first group of nodes' do
+      Astute::NodesRemover.any_instance.expects(:sleep).once
+      Astute::NodesRemover.new(ctx, nodes).remove
+    end
+
+  end # nodes limits
 end # describe
