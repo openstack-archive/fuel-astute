@@ -38,6 +38,7 @@ Astute.config.MC_RETRY_INTERVAL = 0
 Astute.config.PROVISIONING_TIMEOUT = 0
 Astute.config.REBOOT_TIMEOUT = 0
 Astute.config.SSH_RETRY_TIMEOUT = 0
+Astute.config.NODES_REMOVE_INTERVAL = 0
 Astute.logger = Logger.new(STDERR)
 
 RSpec.configure do |c|

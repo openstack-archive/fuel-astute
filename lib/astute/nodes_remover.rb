@@ -103,6 +103,16 @@ module Astute
 
     def mclient_remove_nodes(nodes)
       Astute.logger.info "#{@ctx.task_id}: Starting removing of nodes: #{nodes.uids.inspect}"
+      results = []
+
+      nodes.each_slice(Astute.config[:MAX_NODES_PER_REMOVE_CALL]).with_index do |part, i|
+        sleep Astute.config[:NODES_REMOVE_INTERVAL] if i != 0
+        results += mclient_remove_piece_nodes(part)
+      end
+      results
+    end
+
+    def mclient_remove_piece_nodes(nodes)
       remover = MClient.new(@ctx, "erase_node", nodes.uids.sort, check_result=false)
       responses = remover.erase_node(:reboot => @reboot)
       Astute.logger.debug "#{@ctx.task_id}: Data received from nodes: #{responses.inspect}"

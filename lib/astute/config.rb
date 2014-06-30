@@ -75,6 +75,10 @@ module Astute
     conf[:SSH_RETRIES] = 5                # SSH tries to call ssh client before failure
     conf[:SSH_RETRY_TIMEOUT] = 30         # SSH sleeps for ## sec between retries
 
+
+    conf[:MAX_NODES_PER_REMOVE_CALL] = 10 # how many nodes to remove in one call
+    conf[:NODES_REMOVE_INTERVAL] = 10     # sleeps for ## sec between remove calls
+
     # Server settings
     conf[:broker_host] = 'localhost'
     conf[:broker_port] = 5672
