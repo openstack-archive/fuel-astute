@@ -140,7 +140,7 @@ describe Astute::DeploymentEngine do
         Astute.config.MAX_NODES_PER_CALL = old_value
       end
 
-      it 'number of nodes running in parallel should be limit' do
+      it 'number of nodes running in parallel should be limited' do
         Astute.config.MAX_NODES_PER_CALL = 1
         deployer.stubs(:generate_ssh_keys)
         deployer.stubs(:upload_ssh_keys)
