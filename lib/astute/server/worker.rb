@@ -45,6 +45,11 @@ module Astute
         Astute.logger.warn "TCP connection to AMQP failed: #{e.message}. Retry #{DELAY_SEC} sec later..."
         sleep DELAY_SEC
         retry
+      rescue AMQP::PossibleAuthenticationFailureError => e
+        Astute.logger.warn "If problem repeated more than 5 minutes, please check " \
+                           "authentication parameters. #{e.message}. Retry #{DELAY_SEC} sec later..."
+        sleep DELAY_SEC
+        retry
       rescue => e
         Astute.logger.error "Exception during worker initialization: #{e.message}, trace: #{e.format_backtrace}"
         Astute.logger.warn "Retry #{DELAY_SEC} sec later..."
