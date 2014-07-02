@@ -67,8 +67,21 @@ module Astute
       end
 
       def verify_networks(data)
-        reporter = Astute::Server::SubtaskReporter.new(@producer, data['respond_to'], data['args']['task_uuid'], data['subtasks'])
+        data.fetch('subtasks', []).each do |subtask|
+          if self.respond_to?(subtask['method'])
+            self.send(subtask['method'], subtask)
+          else
+            Astute.logger.warn("No method for #{subtask}")
+          end
+        end
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         result = @orchestrator.verify_networks(reporter, data['args']['task_uuid'], data['args']['nodes'])
+        report_result(result, reporter)
+      end
+
+      def check_dhcp(data)
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+        result = @orchestrator.check_dhcp(reporter, data['args']['task_uuid'], data['args']['nodes'])
         report_result(result, reporter)
       end
 
