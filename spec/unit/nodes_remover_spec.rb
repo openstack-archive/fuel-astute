@@ -166,6 +166,14 @@ describe Astute::NodesRemover do
       Astute::NodesRemover.any_instance.expects(:sleep).once
       Astute::NodesRemover.new(ctx, nodes).remove
     end
-
   end # nodes limits
+
+  describe '#mclient_remove_piece_nodes' do
+    it 'should get array of nodes uids' do
+      remover = Astute::NodesRemover.new(ctx, nodes)
+      remover.expects(:mclient_remove_piece_nodes).with(all_of(includes("1"), includes("2"))).returns(mcollective_answer)
+      remover.remove
+    end
+  end
+
 end # describe
