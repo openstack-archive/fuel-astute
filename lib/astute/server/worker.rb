@@ -13,6 +13,7 @@
 #    under the License.
 
 require 'raemon'
+require 'net/http'
 
 module Astute
   module Server
@@ -74,7 +75,7 @@ module Astute
           @channel = create_channel(@connection)
           @exchange = @channel.topic(Astute.config.broker_exchange, :durable => true)
           @service_channel = create_channel(@connection, prefetch=false)
-          @service_exchange = @service_channel.fanout(Astute.config.broker_service_queue, :auto_delete => true)
+          @service_exchange = @service_channel.fanout(Astute.config.broker_service_exchange, :auto_delete => true)
 
           @producer = Astute::Server::Producer.new(@exchange)
           @delegate = Astute.config.delegate || Astute::Server::Dispatcher.new(@producer)
@@ -97,7 +98,12 @@ module Astute
         channel = AMQP::Channel.new(connection, AMQP::Channel.next_channel_id, prefetch_opts)
         channel.auto_recovery = true
         channel.on_error do |ch, error|
-          Astute.logger.fatal "Channel error #{error.inspect}"
+          if error.reply_code == 406 #PRECONDITION_FAILED
+            cleanup_rabbitmq_stuff
+          else
+            Astute.logger.fatal "Channel error #{error.inspect}"
+          end
+          sleep DELAY_SEC # avoid race condition
           stop
         end
         channel
@@ -115,6 +121,36 @@ module Astute
       def stop_event_machine
         EM.stop_event_loop if EM.reactor_running?
       end
+
+      def cleanup_rabbitmq_stuff
+        Astute.logger.warn "Try to remove problem exchanges and queues"
+
+        [Astute.config.broker_exchange, Astute.config.broker_service_exchange].each do |exchange|
+          rest_delete("/api/exchanges/%2F/#{exchange}")
+        end
+
+        [Astute.config.broker_queue, Astute.config.broker_publisher_queue].each do |queue|
+          rest_delete("/api/queues/%2F/#{queue}")
+        end
+      end
+
+      def rest_delete(url)
+        http = Net::HTTP.new(Astute.config.broker_host, Astute.config.broker_rest_api_port)
+        request = Net::HTTP::Delete.new(url)
+        request.basic_auth(Astute.config.broker_username, Astute.config.broker_password)
+
+        response = http.request(request)
+
+        case response.code.to_i
+        when 204 then Astute.logger.debug "Successfully delete object at #{url}"
+        when 404 then
+        else
+           Astute.logger.error "Failed to perform delete request. Debug information: "\
+                               "http code: #{response.code}, message: #{response.message},"\
+                               "body #{response.body}"
+        end
+      end
+
     end
 
   end #Server
