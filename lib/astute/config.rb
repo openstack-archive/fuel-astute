@@ -79,10 +79,11 @@ module Astute
     # Server settings
     conf[:broker_host] = 'localhost'
     conf[:broker_port] = 5672
+    conf[:broker_rest_api_port] = 15672
     conf[:broker_username] = 'mcollective'
     conf[:broker_password] = 'mcollective'
 
-    conf[:broker_service_queue] = 'naily_service'
+    conf[:broker_service_exchange] = 'naily_service'
     conf[:broker_queue] = 'naily'
     conf[:broker_publisher_queue] = 'nailgun'
     conf[:broker_exchange] = 'nailgun'
