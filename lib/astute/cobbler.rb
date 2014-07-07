@@ -129,6 +129,15 @@ module Astute
         remote.call('get_task_status', event_id)
       end
 
+      def netboot(name, state)
+        ['on', 'yes', true, 'true', 1 '1'].include? state ? state = true : state = false
+        if system_exists? name
+          system_id = get_item_id('system', name)
+        end
+        remote.call('modify_system', system_id, 'netboot_enabled', state, token)
+        remote.call('save_system', system_id, token, 'edit')
+      end
+
     end
 
     class Cobsh < ::Hash
