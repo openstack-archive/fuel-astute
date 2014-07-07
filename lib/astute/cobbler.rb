@@ -129,6 +129,17 @@ module Astute
         remote.call('get_task_status', event_id)
       end
 
+      def netboot(name, state)
+        state = ['on', 'yes', true, 'true', 1, '1'].include?(state)
+        if system_exists?(name)
+          system_id = get_item_id('system', name)
+        else
+          raise CobblerError, "System #{name} not found."
+        end
+        remote.call('modify_system', system_id, 'netboot_enabled', state, token)
+        remote.call('save_system', system_id, token, 'edit')
+      end
+
     end
 
     class Cobsh < ::Hash
