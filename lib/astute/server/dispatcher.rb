@@ -38,12 +38,10 @@ module Astute
 
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         begin
-          @orchestrator.provision(reporter,
+          result = @orchestrator.provision(reporter, data['args']['task_uuid'],
                                   data['args']['provisioning_info']['engine'],
                                   data['args']['provisioning_info']['nodes'])
-          result = @orchestrator.watch_provision_progress(reporter,
-                                                          data['args']['task_uuid'],
-                                                          data['args']['provisioning_info']['nodes'])
+
         #TODO(vsharshov): Refactoring the deployment aborting messages (StopIteration)
         rescue => e
           Astute.logger.error "Error running provisioning: #{e.message}, trace: #{e.format_backtrace}"

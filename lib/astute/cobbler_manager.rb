@@ -103,6 +103,21 @@ module Astute
       failed_nodes
     end
 
+    def netboot_nodes(nodes, state)
+      nodes.each do |node|
+        cobbler_name = node['slave_name']
+        begin
+          Astute.logger.info("Changing node netboot state #{cobbler_name}")
+          @engine.netboot(cobbler_name, state)
+        rescue RuntimeError => e
+          Astute.logger.error("Error while changing node netboot state #{cobbler_name}")
+          raise e
+        end
+      end
+    ensure
+      sync
+    end
+
     def sync
       Astute.logger.debug("Cobbler syncing")
       @engine.sync
