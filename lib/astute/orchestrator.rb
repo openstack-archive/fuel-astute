@@ -55,8 +55,22 @@ module Astute
       begin
         remove_nodes(reporter, task_id="", engine_attrs, nodes, reboot=false)
         cobbler.add_nodes(nodes)
-        reboot_events = cobbler.reboot_nodes(nodes)
-        failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
+        provision_method = engine_attrs['provision_method'] || 'cobbler'
+        if provision_method == 'cobbler'
+          reboot_events = cobbler.reboot_nodes(nodes)
+          failed_nodes = cobbler.check_reboot_nodes(reboot_events)
+          if failed_nodes.present?
+            err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
+            Astute.logger.error(err_msg)
+            reporter.report({
+              'status' => 'error',
+              'error' => err_msg,
+              'progress' => 100})
+            raise FailedToRebootNodesError.new(err_msg)
+          end
+        else
+          ImageProvision.provision(Context.new(task_id, reporter), nodes)
+        end
       rescue RuntimeError => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
@@ -67,16 +81,6 @@ module Astute
         raise e
       end
 
-      if failed_nodes.present?
-        err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
-        Astute.logger.error(err_msg)
-        reporter.report({
-            'status' => 'error',
-            'error' => err_msg,
-            'progress' => 100})
-
-        raise FailedToRebootNodesError.new(err_msg)
-      end
     end
 
     def watch_provision_progress(reporter, task_id, nodes)

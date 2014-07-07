@@ -41,9 +41,16 @@ module Astute
           @orchestrator.provision(reporter,
                                   data['args']['provisioning_info']['engine'],
                                   data['args']['provisioning_info']['nodes'])
-          result = @orchestrator.watch_provision_progress(reporter,
+
+          # provision_method is one of "cobbler" or "image"
+          # "image" means using image based provisioning
+          provision_method = data['args']['provisioning_info']['engine']['provision_method'] || 'cobbler'
+          if provision_method == 'cobbler'
+            result = @orchestrator.watch_provision_progress(reporter,
                                                           data['args']['task_uuid'],
                                                           data['args']['provisioning_info']['nodes'])
+          end
+
         #TODO(vsharshov): Refactoring the deployment aborting messages (StopIteration)
         rescue => e
           Astute.logger.error "Error running provisioning: #{e.message}, trace: #{e.format_backtrace}"
