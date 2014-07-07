@@ -43,6 +43,7 @@ describe Astute::DeploymentEngine do
       deployer.stubs(:enable_puppet_deploy)
       deployer.stubs(:update_repo_sources)
       deployer.stubs(:deploy_piece)
+      deployer.stubs(:sync_time)
     end
 
     it 'should generate and upload ssh keys' do
@@ -174,6 +175,7 @@ describe Astute::DeploymentEngine do
       deployer.stubs(:generate_ssh_keys)
       deployer.stubs(:upload_ssh_keys)
       deployer.stubs(:enable_puppet_deploy)
+      deployer.stubs(:sync_time)
     end
 
     let(:nodes) { [
@@ -261,6 +263,7 @@ describe Astute::DeploymentEngine do
       deployer.stubs(:sync_puppet_manifests)
       deployer.stubs(:enable_puppet_deploy)
       deployer.stubs(:deploy_piece)
+      deployer.stubs(:sync_time)
     end
 
     let(:nodes) do
@@ -362,6 +365,7 @@ describe Astute::DeploymentEngine do
       let(:fail_return) { [{:data => {:exit_code => 1}}] }
 
       before(:each) do
+        deployer.stubs(:sync_time)
         deployer.stubs(:generate_repo_source)
         deployer.stubs(:upload_repo_source)
       end
@@ -398,6 +402,7 @@ describe Astute::DeploymentEngine do
   describe '#generation and uploading of ssh keys' do
     before(:each) do
       Astute.config.PUPPET_SSH_KEYS = ['nova']
+      deployer.stubs(:sync_time)
       deployer.stubs(:deploy_piece)
       deployer.stubs(:sync_puppet_manifests)
       deployer.stubs(:enable_puppet_deploy)
@@ -533,4 +538,35 @@ describe Astute::DeploymentEngine do
       end
     end # context
   end # describe
+
+  describe '#sync_time' do
+    before(:each) do
+      deployer.stubs(:generate_ssh_keys)
+      deployer.stubs(:upload_ssh_keys)
+      deployer.stubs(:sync_puppet_manifests)
+      deployer.stubs(:enable_puppet_deploy)
+      deployer.stubs(:update_repo_sources)
+      deployer.stubs(:deploy_piece)
+    end
+
+    let(:nodes) { [{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}] }
+
+    it 'should sync time between cluster nodes' do
+      deployer.expects(:sync_time).with([1,2])
+      deployer.deploy(nodes)
+    end
+
+    it 'should not raise exception if fail' do
+      deployer.stubs(:run_shell_command_remotely).returns(false)
+      expect {deployer.deploy(nodes)}.to_not raise_error
+    end
+
+    it 'should try to sync several times if fail' do
+      deployer.stubs(:run_shell_command_remotely).returns(false)
+              .then.returns(true).twice
+
+      deployer.deploy(nodes)
+    end
+
+  end #sync_time
 end

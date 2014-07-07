@@ -53,6 +53,9 @@ module Astute
 
           # Unlock puppet (can be lock if puppet was killed by user)
           enable_puppet_deploy(part.map{ |n| n['uid'] })
+
+          # Sync time
+          sync_time(part.map{ |n| n['uid'] })
         end
       rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
@@ -262,6 +265,24 @@ module Astute
       when 'ubuntu_1204_x86_64' then 'ubuntu'
       else
         raise DeploymentEngineError, "Unknown system #{os}"
+      end
+    end
+
+
+    def sync_time(nodes_uids)
+      cmd = "ntpdate -u $(egrep '^server' /etc/ntp.conf | sed '/^#/d' | awk '{print $2}')"
+      succeeded = false
+
+      Astute.config.MC_RETRIES.times.each do
+        succeeded = run_shell_command_remotely(nodes_uids, cmd)
+        return if succeeded
+        sleep Astute.config.MC_RETRY_INTERVAL
+      end
+
+      if !succeeded
+        Astute.logger.warn "Run command: '#{cmd}' in nodes: #{nodes_uids} fail. " \
+                           "Check debug output for more information. You can try "\
+                           "to fix it problem manually."
       end
     end
 
