@@ -48,35 +48,61 @@ module Astute
       context.status
     end
 
-    def provision(reporter, engine_attrs, nodes)
+    def provision(reporter, task_id engine_attrs, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
+      provision_method = engine_attrs['provision_method'] || 'cobbler'
 
       cobbler = CobblerManager.new(engine_attrs, reporter)
       begin
         remove_nodes(reporter, task_id="", engine_attrs, nodes, reboot=false)
         cobbler.add_nodes(nodes)
+
+        # if provision_method is 'image', we do not need to immediately
+        # reboot nodes. instead, we need to run image based provisioning
+        # process and then reboot nodes
+        if provision_method == 'image'
+          failed_uids_provis = ImageProvision.provision(Context.new(task_id, reporter), nodes)
+          if failed_uids_provis.empty?
+            reporter.report({
+              'status' => 'provisioning',
+              'progress' => 80,
+              'msg' => 'Nodes have beed successfully provisioned. Next step is reboot.'
+            })
+            # disabling pxe boot
+            cobbler.netboot_nodes(nodes, false)
+          else
+            err_msg = 'At least one of nodes have failed during provisioning'
+            Astute.logger.error("#{task_id}: #{err_msg}")
+            reporter.report({
+              'status' => 'error',
+              'progress' => 100,
+              'msg' => err_msg,
+              'error_type' => 'provision'
+            })
+            raise FailedImageProvisionError.new(err_msg)
+          end
+        end
         reboot_events = cobbler.reboot_nodes(nodes)
-        failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
+        failed_nodes = cobbler.check_reboot_nodes(reboot_events)
       rescue RuntimeError => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
             'status' => 'error',
             'error' => 'Cobbler error',
             'progress' => 100})
-
         raise e
       end
 
       if failed_nodes.present?
         err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
         Astute.logger.error(err_msg)
-        reporter.report({
-            'status' => 'error',
-            'error' => err_msg,
-            'progress' => 100})
-
+        reporter.report({'status' => 'error',
+                         'error' => err_msg,
+                         'progress' => 100})
         raise FailedToRebootNodesError.new(err_msg)
       end
+
+      watch_provision_progress(reporter, task_id, nodes)
     end
 
     def watch_provision_progress(reporter, task_id, nodes)
