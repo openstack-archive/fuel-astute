@@ -74,6 +74,7 @@ module Astute
             'error' => err_msg,
             'progress' => 100})
 
+        unlock_nodes_discovery(reporter, task_id="", failed_nodes, nodes)
         raise FailedToRebootNodesError.new(err_msg)
       end
     end
@@ -301,6 +302,24 @@ module Astute
         result[node_status] = (res1.fetch(node_status, []) + res2.fetch(node_status, [])).uniq
         result
       end
+    end
+
+    def unlock_nodes_discovery(reporter, task_id="", failed_nodes, nodes)
+      nodes_uids = nodes.select{ |n| failed_nodes.include?(n['slave_name']) }
+                        .map{ |n| n['uid'] }
+      shell = MClient.new(Context.new(task_id, reporter),
+                          'execute_shell_command',
+                          nodes_uids,
+                          check_result=false,
+                          timeout=2)
+      mco_result = shell.execute(:cmd => 'rm -f /var/run/nodiscover')
+      result = mco_result.map do |n|
+        {
+          'uid'       => n.results[:sender],
+          'exit code' => n.results[:data][:exit_code]
+        }
+      end
+      Astute.logger.debug "Unlock discovery for failed nodes. Result: #{result}"
     end
 
   end
