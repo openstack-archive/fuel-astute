@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Dmitry Borodaenko <dborodaenko@mirantis.com>
+Workflow+1: Dmitry Borodaenko <dborodaenko@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 08 Jul 2014 03:19:24 +0000
+Reviewed-on: https://review.openstack.org/105260
+Project: stackforge/fuel-astute
+Branch: refs/heads/stable/5.0
