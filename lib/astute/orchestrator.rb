@@ -65,22 +65,26 @@ module Astute
         image_provision(reporter, task_id, nodes) if provision_method == 'image'
 
         reboot_events = cobbler.reboot_nodes(nodes)
-        failed_nodes = cobbler.check_reboot_nodes(reboot_events)
-      rescue RuntimeError => e
+        failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
+      rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
             'status' => 'error',
             'error' => 'Cobbler error',
             'progress' => 100})
+        unlock_nodes_discovery(reporter, task_id="", nodes.map {|n| n['slave_name']}, nodes)
         raise e
       end
 
       if failed_nodes.present?
         err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
         Astute.logger.error(err_msg)
-        reporter.report({'status' => 'error',
-                         'error' => err_msg,
-                         'progress' => 100})
+        reporter.report({
+            'status' => 'error',
+            'error' => err_msg,
+            'progress' => 100})
+
+        unlock_nodes_discovery(reporter, task_id="", failed_nodes, nodes)
         raise FailedToRebootNodesError.new(err_msg)
       end
 
@@ -334,6 +338,24 @@ module Astute
         result[node_status] = (res1.fetch(node_status, []) + res2.fetch(node_status, [])).uniq
         result
       end
+    end
+
+    def unlock_nodes_discovery(reporter, task_id="", failed_nodes, nodes)
+      nodes_uids = nodes.select{ |n| failed_nodes.include?(n['slave_name']) }
+                        .map{ |n| n['uid'] }
+      shell = MClient.new(Context.new(task_id, reporter),
+                          'execute_shell_command',
+                          nodes_uids,
+                          check_result=false,
+                          timeout=2)
+      mco_result = shell.execute(:cmd => 'rm -f /var/run/nodiscover')
+      result = mco_result.map do |n|
+        {
+          'uid'       => n.results[:sender],
+          'exit code' => n.results[:data][:exit_code]
+        }
+      end
+      Astute.logger.debug "Unlock discovery for failed nodes. Result: #{result}"
     end
 
   end

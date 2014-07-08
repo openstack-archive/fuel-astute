@@ -254,18 +254,28 @@ describe Astute::Orchestrator do
           @orchestrator.expects(:remove_nodes).with(@reporter, task_id="", data['engine'], data['nodes'], reboot=false).returns([])
           @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
+
+        it 'should not try to unlock node discovery' do
+          @orchestrator.stubs(:watch_provision_progress).returns(nil)
+          @orchestrator.expects(:unlock_nodes_discovery).never
+          @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+        end
       end
 
       context 'node reboot fail' do
-        before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:event_status).
-                                                                returns([Time.now.to_f, 'controller-1', 'failed'])}
+        before(:each) do
+          Astute::Provision::Cobbler.any_instance
+                                    .stubs(:event_status)
+                                    .returns([Time.now.to_f, 'controller-1', 'failed'])
+          @orchestrator.stubs(:unlock_nodes_discovery)
+        end
         it "should sync engine state" do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
           end
           begin
             @orchestrator.stubs(:watch_provision_progress).returns(nil)
-            @orchestrator.provision(@reporter, data['engine'], data['nodes'])
+            @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
           rescue
           end
         end
@@ -275,6 +285,14 @@ describe Astute::Orchestrator do
             @orchestrator.stubs(:watch_provision_progress).returns(nil)
             @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
           end.to raise_error(Astute::FailedToRebootNodesError)
+        end
+
+        it "should try to unlock nodes discovery" do
+          @orchestrator.expects(:unlock_nodes_discovery)
+          begin
+            @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+          rescue
+          end
         end
       end
 
