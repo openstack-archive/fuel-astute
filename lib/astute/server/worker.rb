@@ -95,7 +95,7 @@ module Astute
 
       def create_channel(connection, prefetch=true)
         prefetch_opts = ( prefetch ? {:prefetch => 1} : {} )
-        channel = AMQP::Channel.new(connection, AMQP::Channel.next_channel_id, prefetch_opts)
+        channel = AMQP::Channel.new(connection, connection.next_channel_id, prefetch_opts)
         channel.auto_recovery = true
         channel.on_error do |ch, error|
           if error.reply_code == 406 #PRECONDITION_FAILED
