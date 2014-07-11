@@ -19,6 +19,8 @@ module Astute
 
   # Provisioning log errors
   class ParseProvisionLogsError < AstuteError; end
+  # Image provisioning errors
+  class FailedImageProvisionError < AstuteError; end
   # Failed to reboot nodes
   class FailedToRebootNodesError < AstuteError; end
   # Deployment engine error

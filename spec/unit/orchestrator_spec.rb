@@ -142,6 +142,7 @@ describe Astute::Orchestrator do
         "username"=>"cobbler",
         "password"=>"cobbler",
         "master_ip"=>"127.0.0.1",
+        "provision_method"=>"cobbler",
       },
       "task_uuid"=>"a5c44b9a-285a-4a0c-ae65-2ed6b3d250f4",
       "nodes" => [
@@ -193,7 +194,8 @@ describe Astute::Orchestrator do
 
     context 'cobler cases' do
       it "raise error if cobler settings empty" do
-        expect {@orchestrator.provision(@reporter, {}, data['nodes'])}.
+        @orchestrator.stubs(:watch_provision_progress).returns(nil)
+        expect {@orchestrator.provision(@reporter, data['task_uuid'], {}, data['nodes'])}.
                               to raise_error(/Settings for Cobbler must be set/)
       end
     end
@@ -211,7 +213,8 @@ describe Astute::Orchestrator do
       end
 
       it "raises error if nodes list is empty" do
-        expect {@orchestrator.provision(@reporter, data['engine'], {})}.
+        @orchestrator.stubs(:watch_provision_progress).returns(nil)
+        expect {@orchestrator.provision(@reporter, data['task_uuid'], data['engine'], {})}.
                               to raise_error(/Nodes to provision are not provided!/)
       end
 
@@ -220,7 +223,8 @@ describe Astute::Orchestrator do
           expects(:power_reboot).with('controller-1')
         end
         Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
-        @orchestrator.provision(@reporter, data['engine'], data['nodes'])
+        @orchestrator.stubs(:watch_provision_progress).returns(nil)
+        @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
       end
 
       before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:power_reboot).returns(333) }
@@ -233,19 +237,22 @@ describe Astute::Orchestrator do
           Astute::Provision::Cobbler.any_instance.stubs(:event_status).
                                                   returns([Time.now.to_f, 'controller-1', 'complete'])
 
-          @orchestrator.provision(@reporter, data['engine'], data['nodes'])
+          @orchestrator.stubs(:watch_provision_progress).returns(nil)
+          @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
 
         it "sync engine state" do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
           end
-          @orchestrator.provision(@reporter, data['engine'], data['nodes'])
+          @orchestrator.stubs(:watch_provision_progress).returns(nil)
+          @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
 
         it "should erase mbr for nodes" do
+          @orchestrator.stubs(:watch_provision_progress).returns(nil)
           @orchestrator.expects(:remove_nodes).with(@reporter, task_id="", data['engine'], data['nodes'], reboot=false).returns([])
-          @orchestrator.provision(@reporter, data['engine'], data['nodes'])
+          @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
       end
 
@@ -257,6 +264,7 @@ describe Astute::Orchestrator do
             expects(:sync).once
           end
           begin
+            @orchestrator.stubs(:watch_provision_progress).returns(nil)
             @orchestrator.provision(@reporter, data['engine'], data['nodes'])
           rescue
           end
@@ -264,7 +272,8 @@ describe Astute::Orchestrator do
 
         it "raise error if failed node find" do
           expect do
-            @orchestrator.provision(@reporter, data['engine'], data['nodes'])
+            @orchestrator.stubs(:watch_provision_progress).returns(nil)
+            @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
           end.to raise_error(Astute::FailedToRebootNodesError)
         end
       end
