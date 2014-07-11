@@ -48,6 +48,10 @@ module Astute
 
       def main_worker
         @consumer = AMQP::Consumer.new(@channel, @queue)
+        @consumer.on_cancel do |basic_cancel|
+          Astute.logger.debug("Received cancel notification from #{@queue.name}")
+          @queue.auto_recover
+        end
         @consumer.on_delivery do |metadata, payload|
           if @main_work_thread.nil? || !@main_work_thread.alive?
             Astute.logger.debug "Process message from worker queue: #{payload.inspect}"
