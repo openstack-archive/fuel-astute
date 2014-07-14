@@ -47,7 +47,7 @@ module Astute
       end
 
       def main_worker
-        @consumer = AMQP::Consumer.new(@channel, @queue)
+        @consumer = AMQP::Consumer.new(@channel, @queue, consumer_tag=nil, exclusive=false, no_ack=true)
         @consumer.on_delivery do |metadata, payload|
           if @main_work_thread.nil? || !@main_work_thread.alive?
             Astute.logger.debug "Process message from worker queue: #{payload.inspect}"
@@ -70,7 +70,6 @@ module Astute
 
       def perform_main_job(metadata, payload)
         @main_work_thread = Thread.new do
-          metadata.ack
           data = parse_data(payload)
           @tasks_queue = Astute::Server::TaskQueue.new
 
