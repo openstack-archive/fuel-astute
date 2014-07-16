@@ -97,7 +97,7 @@ module Astute
             Astute.logger.error "Error running RPC method #{message['method']}: #{ex.message}, trace: #{ex.backtrace.inspect}"
             return_results message, {
               'status' => 'error',
-              'error'  => "Error occurred while running method '#{message['method']}'. Inspect Orchestrator logs for the details."
+              'error'  => "Error occurred while running method '#{message['method']}'. Inspect Astute logs for the details"
             }
             break
           end
