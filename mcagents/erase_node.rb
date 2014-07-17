@@ -107,6 +107,7 @@ module MCollective
 
             begin
               get_boot_devices.each do |dev|
+                erase_partitions(dev[:name])
                 erase_data(dev[:name])
                 erase_data(dev[:name], 1, dev[:size], '512')
               end
@@ -131,6 +132,12 @@ module MCollective
           File.open('/proc/sysrq-trigger','w') { |file| file.write("e\n")}
         end
         Process.detach(pid)
+      end
+
+      def erase_partitions(dev)
+        Dir["/dev/#{dev}[0-9]*"].each do |part|
+          system("dd if=/dev/zero of=#{part} bs=1M count=10 oflag=direct")
+        end
       end
 
       def erase_data(dev, length=1, offset=0, bs='1M')
