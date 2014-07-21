@@ -23,6 +23,7 @@ describe "NailyFact DeploymentEngine" do
       ctx = mock
       ctx.stubs(:task_id)
       ctx.stubs(:deploy_log_parser).returns(Astute::LogParser::NoParsing.new)
+      ctx.stubs(:status).returns({})
       reporter = mock
       reporter.stubs(:report)
       up_reporter = Astute::ProxyReporter::DeploymentProxyReporter.new(reporter, deploy_data)
