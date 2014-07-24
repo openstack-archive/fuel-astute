@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'net-ssh-multi', '~> 1.1'
 
   # Astute as service
-  s.add_dependency 'amqp', '0.9.10'
+  s.add_dependency 'amqp', '1.4.1'
   s.add_dependency 'raemon', '0.3.0'
 
   s.add_development_dependency 'rake', '10.0.4'
