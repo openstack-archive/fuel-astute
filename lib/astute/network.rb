@@ -58,9 +58,10 @@ module Astute
       nodes.each do |node|
         data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'], joined=false).to_json
       end
-
-      result = net_probe.dhcp_discover(:interfaces => data_to_send, :timeout => 10).map do |response|
-        format_dhcp_response(response)
+      repeat = Astute.config.DHCP_REPEAT
+      result = net_probe.dhcp_discover(:interfaces => data_to_send,
+        :timeout => 10, :repeat => repeat).map do |response|
+          format_dhcp_response(response)
       end
 
       {'nodes' => result, 'status'=> 'ready'}
