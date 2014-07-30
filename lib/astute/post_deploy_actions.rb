@@ -19,6 +19,7 @@ module Astute
       @deployment_info = deployment_info
       @context = context
       @actions = [
+        UpdateNoQuorumPolicy.new,
         UploadCirrosImage.new,
         RestartRadosgw.new,
         UpdateClusterHostsInfo.new
