@@ -22,6 +22,8 @@ describe Astute::PostDeployActions do
   let(:post_deploy_actions) { Astute::PostDeployActions.new(deploy_data, ctx) }
 
   it 'should run post hooks' do
+    Astute::UpdateNoQuorumPolicy.any_instance.expects(:process)
+                                             .with(deploy_data, ctx)
     Astute::UploadCirrosImage.any_instance.expects(:process)
                                           .with(deploy_data, ctx)
     Astute::RestartRadosgw.any_instance.expects(:process)
