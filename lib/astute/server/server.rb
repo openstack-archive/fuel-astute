@@ -47,7 +47,7 @@ module Astute
       end
 
       def main_worker
-        @consumer = AMQP::Consumer.new(@channel, @queue, consumer_tag=nil, exclusive=false, no_ack=true)
+        @consumer = AMQP::Consumer.new(@channel, @queue, consumer_tag=nil, exclusive=false)
         @consumer.on_cancel do |basic_cancel|
           Astute.logger.debug("Received cancel notification from in main worker.")
           @exchange.auto_recover
@@ -58,6 +58,7 @@ module Astute
         @consumer.on_delivery do |metadata, payload|
           if @main_work_thread.nil? || !@main_work_thread.alive?
             Astute.logger.debug "Process message from worker queue: #{payload.inspect}"
+            metadata.ack
             perform_main_job(metadata, payload)
           else
             Astute.logger.debug "Requeue message because worker is busy: #{payload.inspect}"
