@@ -71,6 +71,9 @@ module Astute
       # If Puppet had crashed before it got a catalog (e.g. certificate problems),
       #   it didn't update last_run_summary file and switched to 'stopped' state.
 
+      # Consider only hung nodes which was in last_run
+      hung_nodes = hung_nodes & last_run.map { |n| n.results[:sender] }
+
       stopped = last_run.select { |x| ['stopped', 'disabled'].include? x.results[:data][:status] }
 
       # Select all finished nodes which not failed and changed last_run time.
