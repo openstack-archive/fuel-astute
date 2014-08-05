@@ -40,6 +40,7 @@ require 'astute/post_deploy_actions/upload_cirros_image'
 require 'astute/ssh'
 require 'astute/ssh_actions/ssh_erase_nodes'
 require 'astute/ssh_actions/ssh_hard_reboot'
+require 'astute/ssh_actions/ssh_reboot_not_provisioning'
 
 # Server
 require 'astute/server/worker'
