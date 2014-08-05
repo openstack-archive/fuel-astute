@@ -67,7 +67,7 @@ module Astute
         reboot_events = cobbler.reboot_nodes(nodes)
         failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
       rescue => e
-        Astute.logger.error("Error occured while provisioning: #{e.inspect}")
+        Astute.logger.error("Error occured while provisioning: #{e.pretty_inspect}")
         reporter.report({
             'status' => 'error',
             'error' => 'Cobbler error',
@@ -77,7 +77,7 @@ module Astute
       end
 
       if failed_nodes.present?
-        err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
+        err_msg = "Nodes failed to reboot: #{failed_nodes.pretty_inspect}"
         Astute.logger.error(err_msg)
         reporter.report({
             'status' => 'error',

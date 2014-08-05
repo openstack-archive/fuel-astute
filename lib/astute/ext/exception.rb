@@ -15,6 +15,6 @@
 
 class Exception
   def format_backtrace
-    backtrace.join("\n")
+    "\n" + backtrace.pretty_inspect
   end
 end

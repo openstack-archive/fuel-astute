@@ -38,7 +38,7 @@ module Astute
       end
 
       def report(data)
-        Astute.logger.debug("Data received by DeploymentProxyReporter to report it up: #{data.inspect}")
+        Astute.logger.debug("Data received by DeploymentProxyReporter to report it up: #{data.pretty_inspect}")
         report_new_data(data)
       end
 
@@ -54,7 +54,7 @@ module Astute
           data['nodes'] = nodes_to_report
         end
         data.merge!(get_overall_status(data))
-        Astute.logger.debug("Data send by DeploymentProxyReporter to report it up: #{data.inspect}")
+        Astute.logger.debug("Data send by DeploymentProxyReporter to report it up: #{data.pretty_inspect}")
         @up_reporter.report(data)
       end
 
@@ -65,7 +65,7 @@ module Astute
 
         if status == 'ready' && error_nodes.any?
           status = 'error'
-          msg = "Some error occured on nodes #{error_nodes.inspect}"
+          msg = "Some error occured on nodes #{error_nodes.pretty_inspect}"
         end
         progress = data['progress']
 
@@ -112,7 +112,7 @@ module Astute
         err << "Node uid is not provided" unless node['uid']
 
         if err.any?
-          msg = "Validation of node: #{node.inspect} for report failed: #{err.join('; ')}."
+          msg = "Validation of node: #{node.pretty_inspect} for report failed: #{err.join('; ')}."
           Astute.logger.error(msg)
           raise msg
         end

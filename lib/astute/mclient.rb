@@ -119,38 +119,55 @@ module Astute
     end
 
     def mc_send(*args)
-      @mc.send(*args)
-    rescue => ex
-      case ex
-      when Stomp::Error::NoCurrentConnection
-        # stupid stomp cannot recover severed connection
-        stomp = MCollective::PluginManager["connector_plugin"]
-        stomp.disconnect rescue nil
-        stomp.instance_variable_set :@connection, nil
-        initialize_mclient
+      retries = 1
+      begin
+        @mc.send(*args)
+      rescue => ex
+        case ex
+        when Stomp::Error::NoCurrentConnection
+          # stupid stomp cannot recover severed connection
+          stomp = MCollective::PluginManager["connector_plugin"]
+          stomp.disconnect rescue nil
+          stomp.instance_variable_set :@connection, nil
+          initialize_mclient
+        end
+        if retries < 4
+          Astute.logger.error "Retrying MCollective call after exception: #{ex.pretty_inspect}"
+          sleep rand
+          retries += 1
+          retry
+        else
+          Astute.logger.error "Retrying MCollective call after exception: #{ex.format_backtrace}"
+          raise MClientError, "#{ex.pretty_inspect}"
+        end
       end
-      sleep rand
-      Astute.logger.error "Retrying MCollective call after exception: #{ex}"
-      retry
     end
 
     def initialize_mclient
-      @mc = rpcclient(@agent, :exit_on_failure => false)
-      @mc.timeout = @timeout if @timeout
-      @mc.progress = false
-      if @nodes
-        @mc.discover :nodes => @nodes
+      retries = 1
+      begin
+        @mc = rpcclient(@agent, :exit_on_failure => false)
+        @mc.timeout = @timeout if @timeout
+        @mc.progress = false
+        if @nodes
+          @mc.discover :nodes => @nodes
+        end
+      rescue => ex
+        if retries < 4
+          Astute.logger.error "Retrying RPC client instantiation after exception: #{ex.pretty_inspect}"
+          sleep 5
+          retries += 1
+          retry
+        else
+          raise MClientError, "#{ex.pretty_inspect}"
+        end
       end
-    rescue => ex
-      Astute.logger.error "Retrying RPC client instantiation after exception: #{ex}"
-      sleep 5
-      retry
     end
 
     def log_result(result, method)
       result.each do |node|
         Astute.logger.debug "#{@task_id}: MC agent '#{node.agent}', method '#{method}', "\
-                            "results: #{node.results.inspect}"
+                            "results: #{node.results.pretty_inspect}"
       end
     end
   end

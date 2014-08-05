@@ -34,8 +34,6 @@ module Astute
       #
 
       def provision(data)
-        Astute.logger.info("'provision' method called with data: #{data.inspect}")
-
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         begin
           result = @orchestrator.provision(reporter, data['args']['task_uuid'],
@@ -51,8 +49,6 @@ module Astute
       end
 
       def deploy(data)
-        Astute.logger.info("'deploy' method called with data: #{data.inspect}")
-
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         begin
           @orchestrator.deploy(reporter, data['args']['task_uuid'], data['args']['deployment_info'])
@@ -120,7 +116,7 @@ module Astute
       #
 
       def stop_deploy_task(data, service_data)
-        Astute.logger.debug("'stop_deploy_task' service method called with data: #{data.inspect}")
+        Astute.logger.debug("'stop_deploy_task' service method called with data: #{data.pretty_inspect}")
         target_task_uuid = data['args']['stop_task_uuid']
         task_uuid = data['args']['task_uuid']
 
@@ -147,7 +143,7 @@ module Astute
         task_uuid = data['args']['task_uuid']
 
         new_task_data = data_for_rm_nodes(data)
-        Astute.logger.info("Replace running task #{target_task_uuid} to new #{task_uuid} with data: #{new_task_data.inspect}")
+        Astute.logger.info("Replace running task #{target_task_uuid} to new #{task_uuid} with data: #{new_task_data.pretty_inspect}")
         service_data[:tasks_queue].replace_task(target_task_uuid, new_task_data)
       end
 

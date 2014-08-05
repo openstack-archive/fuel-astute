@@ -32,7 +32,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
     Astute::PuppetdDeployer.deploy(@ctx, nodes, retries)
     nodes_roles = nodes.map { |n| {n['uid'] => n['role']} }
-    Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
+    Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.pretty_inspect}"
   end
 
   private

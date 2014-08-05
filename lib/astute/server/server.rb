@@ -57,11 +57,11 @@ module Astute
         end
         @consumer.on_delivery do |metadata, payload|
           if @main_work_thread.nil? || !@main_work_thread.alive?
-            Astute.logger.debug "Process message from worker queue: #{payload.inspect}"
+            Astute.logger.debug "Process message from worker queue: #{payload.pretty_inspect}"
             metadata.ack
             perform_main_job(metadata, payload)
           else
-            Astute.logger.debug "Requeue message because worker is busy: #{payload.inspect}"
+            Astute.logger.debug "Requeue message because worker is busy: #{payload.pretty_inspect}"
             # Avoid throttle by consume/reject cycle if only one worker is running
             EM.add_timer(2) { metadata.reject(:requeue => true) }
           end
@@ -71,7 +71,7 @@ module Astute
 
       def service_worker
         @service_queue.subscribe do |_, payload|
-          Astute.logger.debug "Process message from service queue: #{payload.inspect}"
+          Astute.logger.debug "Process message from service queue: #{payload.pretty_inspect}"
           perform_service_job(nil, payload)
         end
       end
@@ -102,7 +102,8 @@ module Astute
             abort_messages messages[(i + 1)..-1]
             break
           rescue => ex
-            Astute.logger.error "Error running RPC method #{message['method']}: #{ex.message}, trace: #{ex.backtrace.inspect}"
+            Astute.logger.error "Error running RPC method #{message['method']}: #{ex.message}" \
+            ", trace: #{ex.format_backtrace}"
             return_results message, {
               'status' => 'error',
               'error'  => "Error occurred while running method '#{message['method']}'. Inspect Astute logs for the details"
@@ -113,7 +114,7 @@ module Astute
       end
 
       def dispatch_message(data, service_data=nil)
-        Astute.logger.debug "Dispatching message: #{data.inspect}"
+        Astute.logger.debug "Dispatching message: #{data.pretty_inspect}"
 
         if Astute.config.fake_dispatch
           Astute.logger.debug "Fake dispatch"
@@ -131,7 +132,7 @@ module Astute
 
         Astute.logger.debug "Main worker task id is #{@tasks_queue.current_task_id}" if service_data.nil?
 
-        Astute.logger.info "Processing RPC call '#{data['method']}'"
+        Astute.logger.info "Processing RPC call method '#{data['method']}' with data: \n '#{data.pretty_inspect}'"
         if !service_data
           @delegate.send(data['method'], data)
         else
@@ -147,12 +148,12 @@ module Astute
       end
 
       def parse_data(data)
-        Astute.logger.debug "Got message with payload #{data.inspect}"
+        Astute.logger.debug "Got message with payload #{data.pretty_inspect}"
         messages = nil
         begin
           messages = JSON.load(data)
         rescue => e
-          Astute.logger.error "Error deserializing payload: #{e.message}, trace: #{e.backtrace.inspect}"
+          Astute.logger.error "Error deserializing payload: #{e.message}, trace: #{e.format_backtrace}"
         end
         messages.is_a?(Array) ? messages : [messages]
       end
@@ -178,7 +179,7 @@ module Astute
 
             return_results(message, err_msg)
           rescue => ex
-            Astute.logger.debug "Failed to abort '#{message['method']}': #{ex.inspect}"
+            Astute.logger.debug "Failed to abort '#{message['method']}': #{ex.pretty_inspect}"
           end
         end
       end

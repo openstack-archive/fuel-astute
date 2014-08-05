@@ -67,7 +67,7 @@ module Astute
         date_format = pattern_spec['date_format']
         date_regexp = pattern_spec['date_regexp']
         unless date_regexp and date_format and log_patterns
-          Astute.logger.warn("Wrong pattern_spec #{pattern_spec.inspect} defined for calculating progress via logs.")
+          Astute.logger.warn("Wrong pattern_spec #{pattern_spec.pretty_inspect} defined for calculating progress via logs.")
           return 0
         end
 
@@ -185,7 +185,7 @@ module Astute
         separator = pattern_spec['separator']
         log_patterns = pattern_spec['pattern_list']
         unless log_patterns
-          Astute.logger.warn("Wrong pattern #{pattern_spec.inspect} defined for calculating progress via logs.")
+          Astute.logger.warn("Wrong pattern #{pattern_spec.pretty_inspect} defined for calculating progress via logs.")
           return 0
         end
 
@@ -214,7 +214,7 @@ module Astute
                 progress = pattern['p_min'] + progress * (pattern['p_max'] - pattern['p_min'])
                 return progress
               end
-              Astute.logger.warn("Wrong pattern #{pattern_spec.inspect} defined for calculating progress via log.")
+              Astute.logger.warn("Wrong pattern #{pattern_spec.pretty_inspect} defined for calculating progress via log.")
             end
           end
         end

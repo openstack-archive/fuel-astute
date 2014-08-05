@@ -27,7 +27,7 @@ module Astute
 
         EM.next_tick {
           begin
-            Astute.logger.info "Casting message to Nailgun: #{message.inspect}"
+            Astute.logger.info "Casting message to Nailgun: #{message.pretty_inspect}"
             @exchange.publish(message.to_json, options)
           rescue
             Astute.logger.error "Error publishing message: #{$!}"
