@@ -212,8 +212,12 @@ describe Astute::Orchestrator do
         @orchestrator.stubs(:remove_nodes).returns([])
       end
 
-      it "raises error if nodes list is empty" do
+      before(:each) do
         @orchestrator.stubs(:watch_provision_progress).returns(nil)
+        @orchestrator.stubs(:control_reboot_using_ssh).returns(nil)
+      end
+
+      it "raises error if nodes list is empty" do
         expect {@orchestrator.provision(@reporter, data['task_uuid'], data['engine'], {})}.
                               to raise_error(/Nodes to provision are not provided!/)
       end
@@ -223,7 +227,7 @@ describe Astute::Orchestrator do
           expects(:power_reboot).with('controller-1')
         end
         Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
-        @orchestrator.stubs(:watch_provision_progress).returns(nil)
+
         @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
       end
 
@@ -237,7 +241,6 @@ describe Astute::Orchestrator do
           Astute::Provision::Cobbler.any_instance.stubs(:event_status).
                                                   returns([Time.now.to_f, 'controller-1', 'complete'])
 
-          @orchestrator.stubs(:watch_provision_progress).returns(nil)
           @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
 
@@ -245,19 +248,27 @@ describe Astute::Orchestrator do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
           end
-          @orchestrator.stubs(:watch_provision_progress).returns(nil)
           @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
 
         it "should erase mbr for nodes" do
-          @orchestrator.stubs(:watch_provision_progress).returns(nil)
-          @orchestrator.expects(:remove_nodes).with(@reporter, task_id="", data['engine'], data['nodes'], reboot=false).returns([])
+          @orchestrator.expects(:remove_nodes).with(
+            @reporter,
+            data['task_uuid'],
+            data['engine'],
+            data['nodes'],
+            reboot=false
+          ).returns([])
           @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
 
         it 'should not try to unlock node discovery' do
-          @orchestrator.stubs(:watch_provision_progress).returns(nil)
           @orchestrator.expects(:unlock_nodes_discovery).never
+          @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+        end
+
+        it 'should try to reboot nodes using mcollective(insurance for cobbler)' do
+          @orchestrator.expects(:control_reboot_using_ssh).with(@reporter, data['task_uuid'], data['nodes']).once
           @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
       end
@@ -289,6 +300,14 @@ describe Astute::Orchestrator do
 
         it "should try to unlock nodes discovery" do
           @orchestrator.expects(:unlock_nodes_discovery)
+          begin
+            @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+          rescue
+          end
+        end
+
+        it 'should not try to reboot nodes using mcollective(insurance for cobbler)' do
+          @orchestrator.expects(:control_reboot_using_ssh).never
           begin
             @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
           rescue

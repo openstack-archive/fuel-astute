@@ -53,7 +53,7 @@ module Astute
 
       cobbler = CobblerManager.new(engine_attrs, reporter)
       begin
-        remove_nodes(reporter, task_id="", engine_attrs, nodes, reboot=false)
+        remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=false)
         cobbler.add_nodes(nodes)
 
         # if provision_method is 'image', we do not need to immediately
@@ -64,15 +64,19 @@ module Astute
         # watch_provision_progress has PROVISIONING_TIMEOUT + 3600 is much longer than PROVISIONING_TIMEOUT
         image_provision(reporter, task_id, nodes) if provision_method == 'image'
 
+        # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
         reboot_events = cobbler.reboot_nodes(nodes)
         failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
+
+        # control reboot for nodes which still in bootstrap state
+        control_reboot_using_ssh(reporter, task_id, nodes)
       rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
             'status' => 'error',
             'error' => 'Cobbler error',
             'progress' => 100})
-        unlock_nodes_discovery(reporter, task_id="", nodes.map {|n| n['slave_name']}, nodes)
+        unlock_nodes_discovery(reporter, task_id, nodes.map {|n| n['slave_name']}, nodes)
         raise e
       end
 
@@ -358,5 +362,15 @@ module Astute
       Astute.logger.debug "Unlock discovery for failed nodes. Result: #{result}"
     end
 
-  end
-end
+    def control_reboot_using_ssh(reporter, task_id="", nodes)
+      ctx = Context.new(task_id, reporter)
+      nodes.each { |n| n['admin_ip'] = n['power_address'] }
+      Ssh.execute(ctx,
+                  nodes,
+                  SshRebootNotProvisioning.command,
+                  timeout=5,
+                  retries=1)
+    end
+
+  end # class
+end # module
