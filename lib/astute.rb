@@ -18,6 +18,7 @@ require 'json'
 require 'logger'
 require 'shellwords'
 require 'active_support/all'
+require 'pp'
 
 require 'astute/ext/exception'
 require 'astute/ext/deep_copy'

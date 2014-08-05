@@ -130,7 +130,7 @@ module Astute
         initialize_mclient
       end
       sleep rand
-      Astute.logger.error "Retrying MCollective call after exception: #{ex}"
+      Astute.logger.error "Retrying MCollective call after exception: #{ex.pretty_inspect}"
       retry
     end
 
@@ -142,7 +142,7 @@ module Astute
         @mc.discover :nodes => @nodes
       end
     rescue => ex
-      Astute.logger.error "Retrying RPC client instantiation after exception: #{ex}"
+      Astute.logger.error "Retrying RPC client instantiation after exception: #{ex.pretty_inspect}"
       sleep 5
       retry
     end
@@ -150,7 +150,7 @@ module Astute
     def log_result(result, method)
       result.each do |node|
         Astute.logger.debug "#{@task_id}: MC agent '#{node.agent}', method '#{method}', "\
-                            "results: #{node.results.inspect}"
+                            "results: #{node.results.pretty_inspect}"
       end
     end
   end

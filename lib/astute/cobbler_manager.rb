@@ -18,7 +18,7 @@ module Astute
       raise "Settings for Cobbler must be set" if engine_attrs.blank?
 
       begin
-        Astute.logger.info("Trying to instantiate cobbler engine: #{engine_attrs.inspect}")
+        Astute.logger.info("Trying to instantiate cobbler engine: #{engine_attrs.pretty_inspect}")
         @engine = Astute::Provision::Cobbler.new(engine_attrs)
       rescue => e
         Astute.logger.error("Error occured during cobbler initializing")
@@ -81,7 +81,7 @@ module Astute
 
     def check_reboot_nodes(reboot_events)
       begin
-        Astute.logger.debug("Waiting for reboot to be complete: nodes: #{reboot_events.keys}")
+        Astute.logger.debug("Waiting for reboot to be complete: nodes: #{reboot_events.keys.pretty_inspect}")
         failed_nodes = []
         Timeout::timeout(Astute.config.REBOOT_TIMEOUT) do
           while not reboot_events.empty?
@@ -101,7 +101,7 @@ module Astute
           end
         end
       rescue Timeout::Error => e
-        Astute.logger.debug("Reboot timeout: reboot tasks not completed for nodes #{reboot_events.keys}")
+        Astute.logger.debug("Reboot timeout: reboot tasks not completed for nodes #{reboot_events.keys.pretty_inspect}")
         raise e
       end
       failed_nodes

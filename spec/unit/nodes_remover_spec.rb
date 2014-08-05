@@ -56,8 +56,8 @@ describe Astute::NodesRemover do
         { "nodes"=>[],
           "status" => "error",
           "error_nodes" => [
-          {"uid"=>"1", "error"=>"RPC agent 'erase_node' failed. Result: {:sender=>\"1\", :statuscode=>1, :data=>{:rebooted=>false}}"},
-          {"uid"=>"2", "error"=>"RPC agent 'erase_node' failed. Result: {:sender=>\"2\", :statuscode=>1, :data=>{:rebooted=>false}}"}
+          {"uid"=>"1", "error"=>"RPC agent 'erase_node' failed. Result: {:sender=>\"1\", :statuscode=>1, :data=>{:rebooted=>false}}\n"},
+          {"uid"=>"2", "error"=>"RPC agent 'erase_node' failed. Result: {:sender=>\"2\", :statuscode=>1, :data=>{:rebooted=>false}}\n"}
           ]
         }
       )

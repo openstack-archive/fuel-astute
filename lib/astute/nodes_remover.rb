@@ -39,18 +39,18 @@ module Astute
         serialized_inaccessible_nodes = serialize_nodes(inaccessible_nodes)
         answer.merge!({'inaccessible_nodes' => serialized_inaccessible_nodes})
 
-        Astute.logger.warn "#{@ctx.task_id}: Removing of nodes #{@nodes.uids.inspect} finished " \
-                           "with errors. Nodes #{serialized_inaccessible_nodes.inspect} are inaccessible"
+        Astute.logger.warn "#{@ctx.task_id}: Removing of nodes #{@nodes.uids.pretty_inspect} finished " \
+                           "with errors. Nodes #{serialized_inaccessible_nodes.pretty_inspect} are inaccessible"
       end
 
       if error_nodes.present?
         serialized_error_nodes = serialize_nodes(error_nodes)
         answer.merge!({'status' => 'error', 'error_nodes' => serialized_error_nodes})
 
-        Astute.logger.error "#{@ctx.task_id}: Removing of nodes #{@nodes.uids.inspect} finished " \
-                            "with errors: #{serialized_error_nodes.inspect}"
+        Astute.logger.error "#{@ctx.task_id}: Removing of nodes #{@nodes.uids.pretty_inspect} finished " \
+                            "with errors: #{serialized_error_nodes.pretty_inspect}"
       end
-      Astute.logger.info "#{@ctx.task_id}: Finished removing of nodes: #{@nodes.uids.inspect}"
+      Astute.logger.info "#{@ctx.task_id}: Finished removing of nodes: #{@nodes.uids.pretty_inspect}"
 
       answer
     end
@@ -77,7 +77,7 @@ module Astute
       responses.each do |response|
         node = Node.new('uid' => response[:sender])
         if response[:statuscode] != 0
-          node['error'] = "RPC agent 'erase_node' failed. Result: #{response.inspect}"
+          node['error'] = "RPC agent 'erase_node' failed. Result: #{response.pretty_inspect}"
           error_nodes << node
         elsif @reboot && !response[:data][:rebooted]
           node['error'] = "RPC method 'erase_node' failed with message: #{response[:data][:error_msg]}"
@@ -102,7 +102,7 @@ module Astute
     end
 
     def mclient_remove_nodes(nodes)
-      Astute.logger.info "#{@ctx.task_id}: Starting removing of nodes: #{nodes.uids.inspect}"
+      Astute.logger.info "#{@ctx.task_id}: Starting removing of nodes: #{nodes.uids.pretty_inspect}"
       results = []
 
       nodes.uids.sort.each_slice(Astute.config[:MAX_NODES_PER_REMOVE_CALL]).with_index do |part, i|
@@ -115,7 +115,7 @@ module Astute
     def mclient_remove_piece_nodes(nodes)
       remover = MClient.new(@ctx, "erase_node", nodes, check_result=false)
       responses = remover.erase_node(:reboot => @reboot)
-      Astute.logger.debug "#{@ctx.task_id}: Data received from nodes: #{responses.inspect}"
+      Astute.logger.debug "#{@ctx.task_id}: Data received from nodes: #{responses.pretty_inspect}"
       responses.map(&:results)
     end
 

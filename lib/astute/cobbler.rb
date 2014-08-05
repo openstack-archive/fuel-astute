@@ -24,7 +24,7 @@ module Astute
       attr_reader :remote
 
       def initialize(o={})
-        Astute.logger.debug("Cobbler options: #{o.inspect}")
+        Astute.logger.debug("Cobbler options: #{o.pretty_inspect}")
 
         if (match = /^http:\/\/([^:]+?):?(\d+)?(\/.+)/.match(o['url']))
           host = match[1]
@@ -54,7 +54,7 @@ module Astute
         cobsh = Cobsh.new(data.merge({'what' => what, 'name' => name}))
         cobblerized = cobsh.cobblerized
 
-        Astute.logger.debug("Creating/editing item from hash: #{cobsh.inspect}")
+        Astute.logger.debug("Creating/editing item from hash: #{cobsh.pretty_inspect}")
         remove_item(what, name) if options[:item_preremove]
         # get existent item id or create new one
         item_id = get_item_id(what, name)
@@ -68,7 +68,7 @@ module Astute
 
         # defining system interfaces
         if what == 'system' && cobblerized.has_key?('interfaces')
-          Astute.logger.debug("Defining system interfaces #{name} #{cobblerized['interfaces']}")
+          Astute.logger.debug("Defining system interfaces #{name} #{cobblerized['interfaces'].pretty_inspect}")
           remote.call('modify_system', item_id, 'modify_interface',
                   cobblerized['interfaces'], token)
         end
@@ -199,7 +199,7 @@ module Astute
       }
 
       def initialize(h)
-        Astute.logger.debug("Cobsh is initialized with: #{h.inspect}")
+        Astute.logger.debug("Cobsh is initialized with: #{h.pretty_inspect}")
         raise CobblerError, "Cobbler hash must have 'name' key" unless h.has_key? 'name'
         raise CobblerError, "Cobbler hash must have 'what' key" unless h.has_key? 'what'
         raise CobblerError, "Unsupported 'what' value" unless FIELDS.has_key? h['what']
@@ -208,7 +208,7 @@ module Astute
 
 
       def cobblerized
-        Astute.logger.debug("Cobblerizing hash: #{inspect}")
+        Astute.logger.debug("Cobblerizing hash: #{pretty_inspect}")
         ch = {}
         ks_meta = ''
         kernel_options = ''
@@ -259,7 +259,7 @@ module Astute
         elsif param.kind_of?(String)
           param
         else
-          raise CobblerError, "Wrong param format. It must be Hash or String: '#{param}'"
+          raise CobblerError, "Wrong param format. It must be Hash or String: '#{param.pretty_inspect}'"
         end
 
         serialized_param

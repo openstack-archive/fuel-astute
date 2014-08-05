@@ -50,7 +50,7 @@ exit code: #{result[:data][:exit_code]}")
         report_error(ctx, msg)
       rescue => e
         msg = "Exception occured during dump task: message: #{e.message} \
-trace: #{e.backtrace.inspect}"
+trace: #{e.format_backtrace}"
         Astute.logger.error("#{ctx.task_id}: #{msg}")
         report_error(ctx, msg)
       end
