@@ -26,8 +26,9 @@ describe MClient do
     @ctx.stubs(:reporter)
   end
 
+  let(:nodes) { [{'uid' => 1}, {'uid' => 2}, {'uid' => 3}] }
+
   it "should receive method call and process valid result correctly" do
-    nodes = [{'uid' => 1}, {'uid' => 2}, {'uid' => 3}]
     rpcclient = mock_rpcclient(nodes)
     mc_valid_result = mock_mc_result
 
@@ -39,7 +40,6 @@ describe MClient do
   end
 
   it "should return even bad result if check_result=false" do
-    nodes = [{'uid' => 1}, {'uid' => 2}, {'uid' => 3}]
     rpcclient = mock_rpcclient(nodes)
     mc_valid_result = mock_mc_result
     mc_error_result = mock_mc_result({:statuscode => 1, :sender => '2'})
@@ -53,7 +53,6 @@ describe MClient do
   end
 
   it "should try to retry for non-responded nodes" do
-    nodes = [{'uid' => 1}, {'uid' => 2}, {'uid' => 3}]
     rpcclient = mock('rpcclient') do
       stubs(:progress=)
       expects(:discover).with(:nodes => ['1','2','3'])
@@ -73,7 +72,6 @@ describe MClient do
   end
 
   it "should raise error if agent returns statuscode != 0" do
-    nodes = [{'uid' => 1}, {'uid' => 2}, {'uid' => 3}]
     rpcclient = mock('rpcclient') do
       stubs(:progress=)
       expects(:discover).with(:nodes => ['1','2','3'])
@@ -93,4 +91,103 @@ describe MClient do
     expect { mclient.echo(:msg => 'hello world') }.to \
         raise_error(Astute::MClientError, /ID: 2 - Reason:/)
   end
-end
+
+  context 'initialize' do
+    before(:each) do
+      Astute::MClient.any_instance.stubs(:sleep)
+    end
+
+    it 'should try to initialize mclient 3 times' do
+      rpcclient = mock('rpcclient') do
+        stubs(:progress=)
+        stubs(:discover).with(:nodes => ['1','2','3'])
+          .raises(RuntimeError, 'test exception')
+          .then.raises(RuntimeError, 'test exception')
+          .then.returns(nil)
+      end
+
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+      mc_valid_result = mock_mc_result
+
+      rpcclient.expects(:echo).with(:msg => 'hello world').once.returns([mc_valid_result]*3)
+
+      mclient = MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']})
+      stats = mclient.echo(:msg => 'hello world')
+      stats.should eql([mc_valid_result]*3)
+    end
+
+    it 'should raise error if initialize process fail after 3 attempts' do
+      rpcclient = mock('rpcclient') do
+        stubs(:progress=)
+        stubs(:discover).with(:nodes => ['1','2','3'])
+          .raises(RuntimeError, 'test exception').times(3)
+      end
+
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+
+      expect { MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']}) }.to \
+        raise_error(Astute::MClientError, /test exception/)
+    end
+
+    it 'should sleep 5 seconds between attempts' do
+      rpcclient = mock('rpcclient') do
+        stubs(:progress=)
+        stubs(:discover).with(:nodes => ['1','2','3'])
+          .raises(RuntimeError, 'test exception').times(3)
+      end
+
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+
+      Astute::MClient.any_instance.expects(:sleep).with(5).times(2)
+      expect { MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']}) }.to \
+        raise_error(Astute::MClientError, /test exception/)
+    end
+  end # 'initialize'
+
+  context 'mcollective call' do
+    before(:each) do
+      Astute::MClient.any_instance.stubs(:sleep)
+    end
+
+    it 'should retries 3 times' do
+      rpcclient = mock_rpcclient(nodes)
+      mc_valid_result = mock_mc_result
+
+      mclient = MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']}, check_result=false)
+      rpcclient.stubs(:send)
+        .raises(RuntimeError, 'test exception')
+        .then.raises(RuntimeError, 'test exception')
+        .then.returns([mc_valid_result])
+
+      stats = mclient.echo(:msg => 'hello world')
+      stats.should eql([mc_valid_result])
+    end
+
+    it 'should raise exception if process fail after 3 attempts' do
+      rpcclient = mock_rpcclient(nodes)
+
+      mclient = MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']}, check_result=false)
+      rpcclient.stubs(:send)
+        .raises(RuntimeError, 'test send exception').times(3)
+
+      expect { mclient.echo(:msg => 'hello world') }.to \
+        raise_error(Astute::MClientError, /test send exception/)
+    end
+
+    it 'should sleep rand time before repeat' do
+      rpcclient = mock_rpcclient(nodes)
+      mc_valid_result = mock_mc_result
+
+      mclient = MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']}, check_result=false)
+      rpcclient.stubs(:send)
+        .raises(RuntimeError, 'test exception')
+        .then.raises(RuntimeError, 'test exception')
+        .then.returns([mc_valid_result])
+
+      Astute::MClient.any_instance.expects(:sleep).times(2)
+      stats = mclient.echo(:msg => 'hello world')
+      stats.should eql([mc_valid_result])
+    end
+  end # 'mcollective call'
+
+end # 'describe'
