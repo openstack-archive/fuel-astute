@@ -20,7 +20,11 @@ describe Astute::DeploymentEngine do
 
   class Engine < Astute::DeploymentEngine; end
 
-  let(:ctx) { mock_ctx }
+  let(:ctx) do
+    tctx = mock_ctx
+    tctx.stubs(:status).returns({})
+    tctx
+  end
 
   describe '#new' do
     it 'should not be avaliable to instantiation' do
@@ -116,7 +120,7 @@ describe Astute::DeploymentEngine do
       deployer.deploy(nodes)
     end
 
-    it 'node with several roles with same priority should not run at parallel, but diffirent nodes should' do
+    it 'node with several roles with same priority should not run at parallel, but different nodes should' do
       nodes = [
         {'uid' => 1, 'priority' => 10, 'role' => 'compute'},
         {'uid' => 3, 'priority' => 10, 'role' => 'compute'},
@@ -132,6 +136,130 @@ describe Astute::DeploymentEngine do
       deployer.expects(:deploy_piece).with([{'uid' => 1, 'priority' => 10, 'role' => 'cinder'}])
 
       deployer.deploy(nodes)
+    end
+
+
+    context 'critical node' do
+
+      let(:ctx)  { mock_ctx }
+
+      it 'should stop deployment if critical node deployment fail' do
+        nodes = [
+          {'uid' => '1', 'priority' => 20, 'role' => 'compute', 'fail_if_error' => false},
+          {'uid' => '3', 'priority' => 20, 'role' => 'compute', 'fail_if_error' => false},
+          {'uid' => '2', 'priority' => 10, 'role' => 'primary-controller', 'fail_if_error' => true},
+          {'uid' => '1', 'priority' => 20, 'role' => 'cinder', 'fail_if_error' => false},
+          {'uid' => '2', 'priority' => 5, 'role' => 'mongo', 'fail_if_error' => false}
+        ]
+        ctx.stubs(:status).returns({'2' => 'success'}).then.returns({'2' => 'error'})
+
+        deployer.expects(:deploy_piece).with([
+          {'uid' => '2',
+           'priority' => 5,
+           'role' => 'mongo',
+           'fail_if_error' => false}]
+        )
+        deployer.expects(:deploy_piece).with([
+          {'uid' => '2',
+           'priority' => 10,
+           'role' => 'primary-controller',
+           'fail_if_error' => true}]
+        )
+
+        ctx.stubs(:report_and_update_status)
+        deployer.deploy(nodes)
+      end
+
+      it 'should not stop deployment if fail non-critical node' do
+        nodes = [
+          {'uid' => '1', 'priority' => 20, 'role' => 'compute', 'fail_if_error' => false},
+          {'uid' => '2', 'priority' => 10, 'role' => 'primary-controller', 'fail_if_error' => true},
+          {'uid' => '1', 'priority' => 5, 'role' => 'mongo', 'fail_if_error' => false}
+        ]
+
+        ctx.stubs(:status).returns({'1' => 'error'})
+          .then.returns({'2' => 'success', '1' => 'error'})
+          .then.returns({'1' => 'success', '2' => 'success' })
+
+        deployer.expects(:deploy_piece).with([
+          {'uid' => '1',
+           'priority' => 5,
+           'role' => 'mongo',
+           'fail_if_error' => false}]
+        )
+        deployer.expects(:deploy_piece).with([
+          {'uid' => '2',
+           'priority' => 10,
+           'role' => 'primary-controller',
+           'fail_if_error' => true}]
+        )
+        deployer.expects(:deploy_piece).with([
+          {'uid' => '1',
+           'priority' => 20,
+           'role' => 'compute',
+           'fail_if_error' => false}]
+        )
+
+        deployer.deploy(nodes)
+      end
+
+      it 'should not send status for all nodes after nodes group where critical node fail' do
+        nodes = [
+          {'uid' => '1', 'priority' => 20, 'role' => 'compute', 'fail_if_error' => false},
+          {'uid' => '3', 'priority' => 20, 'role' => 'compute', 'fail_if_error' => false},
+          {'uid' => '2', 'priority' => 10, 'role' => 'primary-controller', 'fail_if_error' => true},
+          {'uid' => '1', 'priority' => 20, 'role' => 'cinder', 'fail_if_error' => false},
+          {'uid' => '2', 'priority' => 5, 'role' => 'mongo', 'fail_if_error' => false}
+        ]
+        ctx.stubs(:status).returns({'2' => 'success'}).then.returns({'2' => 'error'})
+
+        deployer.stubs(:deploy_piece).twice
+
+        ctx.expects(:report_and_update_status).never
+        deployer.deploy(nodes)
+      end
+
+      it 'should not affect parallel nodes in same running group' do
+        nodes = [
+          {'uid' => '1', 'priority' => 20, 'role' => 'compute', 'fail_if_error' => false},
+          {'uid' => '3', 'priority' => 20, 'role' => 'compute', 'fail_if_error' => false},
+          {'uid' => '2', 'priority' => 10, 'role' => 'primary-controller', 'fail_if_error' => true},
+          {'uid' => '2', 'priority' => 20, 'role' => 'cinder', 'fail_if_error' => false},
+          {'uid' => '1', 'priority' => 10, 'role' => 'mongo', 'fail_if_error' => true}
+        ]
+        ctx.stubs(:status).returns({'2' => 'success', '1' => 'error'})
+
+        deployer.stubs(:deploy_piece).once
+
+        ctx.expects(:report_and_update_status).never
+
+        deployer.deploy(nodes)
+      end
+
+      context 'limits' do
+        around(:each) do |example|
+          old_value = Astute.config.MAX_NODES_PER_CALL
+          example.run
+          Astute.config.MAX_NODES_PER_CALL = old_value
+        end
+
+        it 'should affect nodes with same priorities in next deployment group' do
+          Astute.config.MAX_NODES_PER_CALL = 1
+
+          nodes = [
+            {'uid' => '2', 'priority' => 10, 'role' => 'primary-controller', 'fail_if_error' => true},
+            {'uid' => '2', 'priority' => 20, 'role' => 'cinder', 'fail_if_error' => false},
+            {'uid' => '1', 'priority' => 10, 'role' => 'mongo', 'fail_if_error' => true}
+          ]
+          ctx.stubs(:status).returns({'2' => 'error'})
+
+          deployer.stubs(:deploy_piece).once
+
+          ctx.expects(:report_and_update_status).never
+
+          deployer.deploy(nodes)
+        end
+      end # 'limits'
     end
 
     context 'limits' do

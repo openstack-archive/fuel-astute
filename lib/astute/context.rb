@@ -28,7 +28,8 @@ module Astute
     def report_and_update_status(data)
       if data['nodes']
         data['nodes'].each do |node|
-          status.merge! node['uid'] => node['status'] if node['uid'] && node['status']
+          #TODO(vsharshov): save node role to hash
+          @status.merge! node['uid'] => node['status'] if node['uid'] && node['status']
         end
       end
       reporter.report(data)

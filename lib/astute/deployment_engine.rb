@@ -62,6 +62,7 @@ module Astute
         raise e
       end
 
+      fail_deploy = false
       # Sort by priority (the lower the number, the higher the priority)
       # and send groups to deploy
       deployment_info.sort_by { |f| f['priority'] }.group_by{ |f| f['priority'] }.each do |_, nodes|
@@ -70,7 +71,21 @@ module Astute
         # can perform multiple roles.
         group_by_uniq_values(nodes).each do |nodes_group|
           # Prevent deploy too many nodes at once
-          nodes_group.each_slice(Astute.config[:MAX_NODES_PER_CALL]) { |part| deploy_piece(part) }
+          nodes_group.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |part|
+            if !fail_deploy
+              deploy_piece(part)
+              fail_deploy = fail_critical_node?(part)
+            else
+              nodes_to_report = part.map do |n|
+                {
+                  'uid' => n['uid'],
+                  'role' => n['role']
+                }
+              end
+              Astute.logger.warn "This nodes: #{nodes_to_report} will " \
+                "not deploy because at least one critical node deployment fail"
+            end
+          end
         end
       end
     end
@@ -320,6 +335,19 @@ module Astute
           {'uid' => n['uid'], 'status' => status, 'role' => n['role']}.merge(data_to_merge)
         end
       }
+    end
+
+    def fail_critical_node?(part)
+      nodes_status = @ctx.status
+      return false unless nodes_status.has_value?('error')
+
+      stop_uids = part.select{ |n| n['fail_if_error'] }.map{ |n| n['uid'] } &
+                  nodes_status.select { |k, v| v == 'error' }.keys
+      return false if stop_uids.empty?
+
+      Astute.logger.warn "#{@ctx.task_id}: Critical nodes with uids: #{stop_uids.join(', ')} " \
+                         "fail to deploy. Stop deployment"
+      true
     end
 
   end
