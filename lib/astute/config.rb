@@ -62,7 +62,7 @@ module Astute
     conf[:MC_RETRY_INTERVAL] = 1          # MClient sleeps for ## sec between retries
     conf[:PUPPET_FADE_INTERVAL] = 10      # retry every ## seconds to check puppet state if it was running
     conf[:PROVISIONING_TIMEOUT] = 90 * 60 # timeout for booting target OS in provision
-    conf[:REBOOT_TIMEOUT] = 120           # how long it can take for node to reboot
+    conf[:REBOOT_TIMEOUT] = 240           # how long it can take for node to reboot
     conf[:DUMP_TIMEOUT] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
 
@@ -76,6 +76,12 @@ module Astute
     conf[:NODES_REMOVE_INTERVAL] = 10     # sleeps for ## sec between remove calls
 
     conf[:DHCP_REPEAT] = 3                # Dhcp discover will be sended 3 times
+
+    conf[:iops] = 120                     # Default IOPS master node IOPS performance
+    conf[:splay_factor] = 180             # Formula: 20(amount of nodes nodes) div 120(iops) = 0.1667
+                                          # 0.1667 / 180 = 30 sec. Delay between reboot command for first
+                                          # and last node in group should be 30 sec. Empirical observation.
+                                          # Please increase if nodes could not provisioning
 
     # Server settings
     conf[:broker_host] = 'localhost'

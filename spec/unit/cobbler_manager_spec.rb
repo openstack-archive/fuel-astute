@@ -83,19 +83,22 @@ describe Astute::CobblerManager do
     reporter
   end
 
+  let(:engine) do
+    cobbler = mock('cobbler')
+    cobbler.stub_everything
+    cobbler
+  end
+
+  before(:each) do
+    Astute::Provision::Cobbler.stubs(:new).returns(engine)
+  end
+
+  let(:cobbler_manager) { Astute::CobblerManager.new(data['engine'], reporter) }
+
   describe '#add_nodes' do
-
-    let(:engine) do
-      cobbler = mock('cobbler')
-      cobbler.stub_everything
-      cobbler
-    end
-
     before(:each) do
-      Astute::Provision::Cobbler.stubs(:new).returns(engine)
+      cobbler_manager.stubs(:sleep)
     end
-
-    let(:cobbler_manager) { Astute::CobblerManager.new(data['engine'], reporter) }
 
     it 'should convert data about additional repositories to easy parsing format' do
       cobbler_manager.stubs(:sync)
@@ -114,11 +117,60 @@ describe Astute::CobblerManager do
     end
 
     it 'should sync engine status after end' do
-      cobbler_manager.stubs(:item_from_hash)
+      engine.stubs(:item_from_hash)
       cobbler_manager.expects(:sync).once
 
       cobbler_manager.add_nodes(data['nodes'])
     end
 
   end #'add_nodes'
+
+  describe '#reboot_nodes' do
+    before(:each) do
+      cobbler_manager.stubs(:sleep)
+    end
+
+    it 'should reboot nodes' do
+      engine.expects(:power_reboot)
+
+      cobbler_manager.reboot_nodes(data['nodes'])
+    end
+
+    context 'splay' do
+      around(:each) do |example|
+        old_iops_value = Astute.config.iops
+        old_splay_factor_value = Astute.config.splay_factor
+        example.run
+        Astute.config.iops = old_iops_value
+        Astute.config.splay_factor = old_splay_factor_value
+      end
+
+      it 'should delay between nodes reboot' do
+        engine.stubs(:power_reboot)
+
+        cobbler_manager.expects(:calculate_splay_between_nodes).returns(5).once
+        cobbler_manager.expects(:sleep).with(5).once
+
+        cobbler_manager.reboot_nodes(data['nodes'])
+      end
+
+      it 'use formula (node + 1) / iops * splay_factor / node' do
+        Astute.config.iops = 100
+        Astute.config.splay_factor = 100
+
+        engine.stubs(:power_reboot)
+        cobbler_manager.expects(:sleep).with(2.0).once
+
+        cobbler_manager.reboot_nodes(data['nodes'])
+      end
+    end #'splay'
+
+    it 'should sync engine status after end' do
+      engine.stubs(:power_reboot)
+      cobbler_manager.expects(:sync).once
+
+      cobbler_manager.reboot_nodes(data['nodes'])
+    end
+  end #'reboot_nodes'
+
 end
