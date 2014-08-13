@@ -38,80 +38,100 @@ describe Astute::UploadCirrosImage do
                             'img_path'          => '/opt/vm/cirros-x86_64-disk.img',
                             'glance_properties' =>
                               '--property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\''
-                         }
+                         },
+                         'nodes' => [{'uid'=>1, 'role'=>'controller'},
+                                     {'uid'=>2, 'role'=>'compute'}]
                         },
                         {'uid' => 2,
-                         'role' => 'compute'
+                         'role' => 'compute',
+                         'nodes' => [{'uid'=>1, 'role'=>'controller'},
+                                     {'uid'=>2, 'role'=>'compute'}],
+                          'test_vm_image' => {
+                            'disk_format'       => 'qcow2',
+                            'container_format'  => 'bare',
+                            'public'            => 'true',
+                            'img_name'          => 'TestVM',
+                            'os_name'           => 'cirros',
+                            'img_path'          => '/opt/vm/cirros-x86_64-disk.img',
+                            'glance_properties' =>
+                              '--property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\''
+                         },
                         }
                       ]
                     }
 
   let(:upload_cirros_image) { Astute::UploadCirrosImage.new }
 
-  it 'should not add cirros image if deploy fail' do
-    ctx.expects(:status).returns(1 => 'error', 2 => 'success')
-    upload_cirros_image.expects(:run_shell_command).never
+  it 'should try to add cirros image for any deploy' do
+    upload_cirros_image.expects(:run_shell_command)
+                       .returns(:data => {:exit_code => 1})
 
     upload_cirros_image.process(deploy_data, ctx)
   end
 
-  it 'should not add image again if we only add new nodes \
+  it 'should try to add image again if we only add new nodes \
       to existing cluster' do
-    deploy_data = [{'uid' => 2, 'role' => 'compute'}]
-    upload_cirros_image.expects(:run_shell_command).never
+    upload_cirros_image.stubs(:run_shell_command)
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {:exit_code => 0})
     upload_cirros_image.process(deploy_data, ctx)
   end
 
   it 'should not add new image if it already added' do
-    upload_cirros_image.expects(:run_shell_command)
-                       .returns(:data => {:exit_code => 0}).once
+    upload_cirros_image.stubs(:run_shell_command)
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {:exit_code => 0})
     expect(upload_cirros_image.process(deploy_data, ctx)).to be_true
   end
 
   it 'should add new image if cluster deploy success and \
       no image was added before' do
     upload_cirros_image.stubs(:run_shell_command)
-                       .returns(:data => {:exit_code => 1})
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {:exit_code => 1})
                        .then.returns(:data => {:exit_code => 0})
     expect(upload_cirros_image.process(deploy_data, ctx)).to be_true
   end
 
-  it 'should send node error status for controller and raise if deploy \
+  it 'should send node error status for last node in queue and raise if deploy \
       success and no image was added before and fail to add image' do
     ctx.expects(:report_and_update_status)
        .with('nodes' => [{
-                          'uid' => 1,
-                          'role' => 'controller',
+                          'uid' => 2,
+                          'role' => 'compute',
                           'status' => 'error',
                           'error_type' => 'deploy'
                          }])
     upload_cirros_image.stubs(:run_shell_command)
-                       .returns(:data => {:exit_code => 1})
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {:exit_code => 1})
                        .then.returns(:data => {:exit_code => 1})
     expect {upload_cirros_image.process(deploy_data, ctx)}
             .to raise_error(Astute::CirrosError, 'Upload cirros "TestVM" image failed')
   end
 
-  it 'should send node error status for controller and raise if deploy \
+  it 'should send node error status for last node in queue and raise if deploy \
       success and fail to add image because of mcollective error' do
     ctx.expects(:report_and_update_status)
        .with('nodes' => [{
-                          'uid' => 1,
-                          'role' => 'controller',
+                          'uid' => 2,
+                          'role' => 'compute',
                           'status' => 'error',
                           'error_type' => 'deploy'
                          }])
     upload_cirros_image.stubs(:run_shell_command)
-                       .returns(:data => {})
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {})
                        .then.returns(:data => {})
     expect {upload_cirros_image.process(deploy_data, ctx)}
             .to raise_error(Astute::CirrosError, 'Upload cirros "TestVM" image failed')
   end
 
   it 'should run only in controller node' do
-    upload_cirros_image.expects(:run_shell_command).once
+    upload_cirros_image.stubs(:run_shell_command)
                   .with(ctx, [1], anything)
                   .returns(:data => {:exit_code => 0})
+                  .then.returns(:data => {:exit_code => 0})
     upload_cirros_image.process(deploy_data, ctx)
   end
 
