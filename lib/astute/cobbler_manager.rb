@@ -73,7 +73,8 @@ module Astute
       nodes.inject({}) do |reboot_events, node|
         cobbler_name = node['slave_name']
         Astute.logger.debug("Trying to reboot node: #{cobbler_name}")
-        reboot_events.merge(cobbler_name => @engine.power_reboot(cobbler_name))
+        splay=(Astute.config.iops / nodes.size * 360)
+        reboot_events.merge(cobbler_name => @engine.power_reboot(cobbler_name, splay))
       end
     ensure
       sync
