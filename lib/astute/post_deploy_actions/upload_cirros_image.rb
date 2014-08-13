@@ -26,19 +26,13 @@ module Astute
         return
       end
 
-      controller = deployment_info.find { |n| n['role'] == 'primary-controller' }
-      controller = deployment_info.find { |n| n['role'] == 'controller' } unless controller
+      node = deployment_info.last
+      controller = node['nodes'].find { |n| n['role'] =~ /controller/i }
       if controller.nil?
-        Astute.logger.debug("Could not find controller! Possible adding a new node to the existing cluster?")
+        Astute.logger.debug("Could not find controller in nodes in facts! Please check logs to be sure that it is correctly generated.")
         return
       end
 
-      os = {
-        'os_tenant_name'    => Shellwords.escape("#{controller['access']['tenant']}"),
-        'os_username'       => Shellwords.escape("#{controller['access']['user']}"),
-        'os_password'       => Shellwords.escape("#{controller['access']['password']}"),
-        'os_auth_url'       => "http://#{controller['management_vip'] || '127.0.0.1'}:5000/v2.0/",
-      }
       # controller['test_vm_image'] contains a hash like that:
       # controller['test_vm_image'] = {
       # 'disk_format'       => 'qcow2',
@@ -50,22 +44,17 @@ module Astute
       # 'glance_properties' => '--property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\''
       # }
 
-      os.merge!(controller['test_vm_image'])
-
-      auth_params = "-N #{os['os_auth_url']} \
-                     -T #{os['os_tenant_name']} \
-                     -I #{os['os_username']} \
-                     -K #{os['os_password']}"
-      cmd = "/usr/bin/glance #{auth_params} \
+      os = node['test_vm_image']
+      cmd = "source /root/openrc && /usr/bin/glance \
               index && \
-             (/usr/bin/glance #{auth_params} \
+             (/usr/bin/glance \
               index | grep #{os['img_name']})"
       response = run_shell_command(context, Array(controller['uid']), cmd)
       if response[:data][:exit_code] == 0
         Astute.logger.debug "Image \"#{os['img_name']}\" already added to stack"
       else
-        cmd = "/usr/bin/glance #{auth_params} \
-               image-create \
+        cmd = "source /root/openrc && \
+                 /usr/bin/glance image-create \
                  --name \'#{os['img_name']}\' \
                  --is-public #{os['public']} \
                  --container-format=\'#{os['container_format']}\' \
@@ -81,10 +70,10 @@ module Astute
           msg = "Upload cirros \"#{os['img_name']}\" image failed"
           Astute.logger.error("#{context.task_id}: #{msg}")
           context.report_and_update_status('nodes' => [
-                                            {'uid' => controller['uid'],
+                                            {'uid' => node['uid'],
                                              'status' => 'error',
                                              'error_type' => 'deploy',
-                                             'role' => controller['role']
+                                             'role' => node['role']
                                             }
                                            ]
                                           )
