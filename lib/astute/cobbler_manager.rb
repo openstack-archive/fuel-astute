@@ -70,9 +70,13 @@ module Astute
     end
 
     def reboot_nodes(nodes)
+      splay = calcualte_splay_between_nodes(nodes)
       nodes.inject({}) do |reboot_events, node|
         cobbler_name = node['slave_name']
         Astute.logger.debug("Trying to reboot node: #{cobbler_name}")
+
+        #Sleep up to splay seconds before reboot for load balancing
+        sleep splay
         reboot_events.merge(cobbler_name => @engine.power_reboot(cobbler_name))
       end
     ensure
@@ -125,6 +129,13 @@ module Astute
     def sync
       Astute.logger.debug("Cobbler syncing")
       @engine.sync
+    end
+
+    private
+
+    def calcualte_splay_between_nodes(nodes)
+      # For 20 nodes, 120 iops and 180 splay_factor splay will be 1.5749
+      (nodes.size + 1)  / Astute.config.iops.to_f * Astute.config.splay_factor / nodes.size
     end
 
   end

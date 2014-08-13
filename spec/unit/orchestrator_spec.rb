@@ -210,6 +210,7 @@ describe Astute::Orchestrator do
           stubs(:new).returns(remote)
         end
         @orchestrator.stubs(:remove_nodes).returns([])
+        Astute::CobblerManager.any_instance.stubs(:sleep)
       end
 
       it "raises error if nodes list is empty" do
