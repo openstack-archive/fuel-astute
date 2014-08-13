@@ -121,7 +121,9 @@ module Astute
         power(name, 'off')
       end
 
-      def power_reboot(name)
+      # Sleep up to splay seconds before reboot
+      def power_reboot(name, splay=0)
+        sleep((0..splay).to_a.sample)
         power(name, 'reboot')
       end
 
