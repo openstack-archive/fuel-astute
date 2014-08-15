@@ -64,6 +64,16 @@ module Astute
         end
       end
 
+      def update(data)
+        Astute.logger.info("'update' method called with data: #{data.inspect}")
+        self.deploy(data)
+      end
+
+      def rollback(data)
+        Astute.logger.info("'rollback' method called with data: #{data.inspect}")
+        self.deploy(data)
+      end
+
       def verify_networks(data)
         data.fetch('subtasks', []).each do |subtask|
           if self.respond_to?(subtask['method'])
