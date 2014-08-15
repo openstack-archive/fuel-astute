@@ -21,13 +21,10 @@ module Astute
     def process(deployment_info, context)
       #FIXME: update context status to multirole support: possible situation where one of the
       #       roles of node fail but if last status - success, we try to run code below.
-      if context.status.has_value?('error')
-        Astute.logger.warn "Disabling the upload of disk image because deploy ended with an error"
-        return
-      end
 
       controller = deployment_info.find { |n| n['role'] == 'primary-controller' }
       controller = deployment_info.find { |n| n['role'] == 'controller' } unless controller
+
       if controller.nil?
         Astute.logger.debug("Could not find controller! Possible adding a new node to the existing cluster?")
         return
@@ -56,6 +53,14 @@ module Astute
                      -T #{os['os_tenant_name']} \
                      -I #{os['os_username']} \
                      -K #{os['os_password']}"
+
+      cmd = "/usr/bin/glance #{auth_params} index"
+      response = run_shell_command(context, Array(controller['uid']), cmd)
+      if response[:data][:exit_code] != 0
+        Astute.logger.info "Disabling the upload of disk image because glance was installed properly."
+        return
+      end
+
       cmd = "/usr/bin/glance #{auth_params} \
               index && \
              (/usr/bin/glance #{auth_params} \

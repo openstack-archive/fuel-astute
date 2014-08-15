@@ -48,9 +48,9 @@ describe Astute::UploadCirrosImage do
 
   let(:upload_cirros_image) { Astute::UploadCirrosImage.new }
 
-  it 'should not add cirros image if deploy fail' do
-    ctx.expects(:status).returns(1 => 'error', 2 => 'success')
-    upload_cirros_image.expects(:run_shell_command).never
+  it 'should try to add cirros image for any deploy' do
+    upload_cirros_image.expects(:run_shell_command)
+                       .returns(:data => {:exit_code => 1})
 
     upload_cirros_image.process(deploy_data, ctx)
   end
@@ -63,15 +63,17 @@ describe Astute::UploadCirrosImage do
   end
 
   it 'should not add new image if it already added' do
-    upload_cirros_image.expects(:run_shell_command)
-                       .returns(:data => {:exit_code => 0}).once
+    upload_cirros_image.stubs(:run_shell_command)
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {:exit_code => 0})
     expect(upload_cirros_image.process(deploy_data, ctx)).to be_true
   end
 
   it 'should add new image if cluster deploy success and \
       no image was added before' do
     upload_cirros_image.stubs(:run_shell_command)
-                       .returns(:data => {:exit_code => 1})
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {:exit_code => 1})
                        .then.returns(:data => {:exit_code => 0})
     expect(upload_cirros_image.process(deploy_data, ctx)).to be_true
   end
@@ -86,7 +88,8 @@ describe Astute::UploadCirrosImage do
                           'error_type' => 'deploy'
                          }])
     upload_cirros_image.stubs(:run_shell_command)
-                       .returns(:data => {:exit_code => 1})
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {:exit_code => 1})
                        .then.returns(:data => {:exit_code => 1})
     expect {upload_cirros_image.process(deploy_data, ctx)}
             .to raise_error(Astute::CirrosError, 'Upload cirros "TestVM" image failed')
@@ -102,16 +105,18 @@ describe Astute::UploadCirrosImage do
                           'error_type' => 'deploy'
                          }])
     upload_cirros_image.stubs(:run_shell_command)
-                       .returns(:data => {})
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {})
                        .then.returns(:data => {})
     expect {upload_cirros_image.process(deploy_data, ctx)}
             .to raise_error(Astute::CirrosError, 'Upload cirros "TestVM" image failed')
   end
 
   it 'should run only in controller node' do
-    upload_cirros_image.expects(:run_shell_command).once
+    upload_cirros_image.stubs(:run_shell_command)
                   .with(ctx, [1], anything)
                   .returns(:data => {:exit_code => 0})
+                  .then.returns(:data => {:exit_code => 0})
     upload_cirros_image.process(deploy_data, ctx)
   end
 
