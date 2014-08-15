@@ -90,6 +90,16 @@ module Astute
       end
     end
 
+    def update(deployment_info)
+      Astute.logger.info "Going to update environment"
+      self.deploy(deployment_info)
+    end
+
+    def rollback(deployment_info)
+      Astute.logger.info "Going to rollback environment"
+      self.deploy(deployment_info)
+    end
+
     protected
 
     def validate_nodes(nodes)
