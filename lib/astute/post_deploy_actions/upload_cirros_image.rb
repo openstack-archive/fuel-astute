@@ -44,14 +44,14 @@ re that it is correctly generated."
 
       os = node['test_vm_image']
 
-      cmd = "source /root/openrc && /usr/bin/glance index"
+      cmd = ". /root/openrc && /usr/bin/glance index"
       response = run_shell_command(context, Array(controller['uid']), cmd)
       if response[:data][:exit_code] != 0
         Astute.logger.info "Disabling the upload of disk image because glance was not installed properly."
         return
       end
 
-      cmd = "source /root/openrc &&
+      cmd = ". /root/openrc &&
              /usr/bin/glance index && \
              (/usr/bin/glance \
               index | grep #{os['img_name']})"
@@ -59,7 +59,7 @@ re that it is correctly generated."
       if response[:data][:exit_code] == 0
         Astute.logger.debug "Image \"#{os['img_name']}\" already added to stack"
       else
-        cmd = "source /root/openrc && \
+        cmd = ". /root/openrc && \
                  /usr/bin/glance image-create \
                  --name \'#{os['img_name']}\' \
                  --is-public #{os['public']} \
