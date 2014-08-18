@@ -44,14 +44,17 @@ re that it is correctly generated."
 
       os = node['test_vm_image']
 
-      cmd = "source /root/openrc && /usr/bin/glance index"
+      cmd = ". /root/openrc && /usr/bin/glance index"
       response = run_shell_command(context, Array(controller['uid']), cmd)
       if response[:data][:exit_code] != 0
-        Astute.logger.info "Disabling the upload of disk image because glance was not installed properly."
-        return
+        raise_cirros_error(
+          context,
+          node,
+          'Disabling the upload of disk image because glance was not installed properly'
+        )
       end
 
-      cmd = "source /root/openrc &&
+      cmd = ". /root/openrc &&
              /usr/bin/glance index && \
              (/usr/bin/glance \
               index | grep #{os['img_name']})"
@@ -59,7 +62,7 @@ re that it is correctly generated."
       if response[:data][:exit_code] == 0
         Astute.logger.debug "Image \"#{os['img_name']}\" already added to stack"
       else
-        cmd = "source /root/openrc && \
+        cmd = ". /root/openrc && \
                  /usr/bin/glance image-create \
                  --name \'#{os['img_name']}\' \
                  --is-public #{os['public']} \
@@ -73,19 +76,25 @@ re that it is correctly generated."
         if response[:data][:exit_code] == 0
           Astute.logger.info("#{context.task_id}: Upload cirros image \"#{os['img_name']}\" is done")
         else
-          msg = "Upload cirros \"#{os['img_name']}\" image failed"
-          Astute.logger.error("#{context.task_id}: #{msg}")
-          context.report_and_update_status('nodes' => [
-                                            {'uid' => node['uid'],
-                                             'status' => 'error',
-                                             'error_type' => 'deploy',
-                                             'role' => node['role']
-                                            }
-                                           ]
-                                          )
-          raise CirrosError, msg
+          raise_cirros_error(context, node, "Upload cirros \"#{os['img_name']}\" image failed")
         end
       end
     end # process
+
+    private
+
+    def raise_cirros_error(context, node, msg='')
+      Astute.logger.error("#{context.task_id}: #{msg}")
+      context.report_and_update_status('nodes' => [
+                                        {'uid' => node['uid'],
+                                         'status' => 'error',
+                                         'error_type' => 'deploy',
+                                         'role' => node['role']
+                                        }
+                                       ]
+                                      )
+      raise CirrosError, msg
+    end
+
   end # class
 end

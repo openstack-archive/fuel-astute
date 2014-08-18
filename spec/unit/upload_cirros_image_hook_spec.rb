@@ -63,10 +63,27 @@ describe Astute::UploadCirrosImage do
   let(:upload_cirros_image) { Astute::UploadCirrosImage.new }
 
   it 'should try to add cirros image for any deploy' do
+    upload_cirros_image.stubs(:run_shell_command)
+                       .returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {:exit_code => 0})
+
+    upload_cirros_image.process(deploy_data, ctx)
+  end
+
+  it 'should raise deploy if glance glance was not installed properly' do
     upload_cirros_image.expects(:run_shell_command)
                        .returns(:data => {:exit_code => 1})
 
-    upload_cirros_image.process(deploy_data, ctx)
+    ctx.expects(:report_and_update_status)
+       .with('nodes' => [{
+                          'uid' => 2,
+                          'role' => 'compute',
+                          'status' => 'error',
+                          'error_type' => 'deploy'
+                         }])
+
+    expect {upload_cirros_image.process(deploy_data, ctx)}
+      .to raise_error(Astute::CirrosError, /glance was not installed properly/)
   end
 
   it 'should try to add image again if we only add new nodes \
