@@ -203,7 +203,7 @@ describe "ProxyReporter" do
 
     context 'multiroles' do
       let(:up_reporter) { mock('up_reporter') }
-      let(:nodes) { [{'uid' => 1, 'role' => 'controller'}, {'uid' => 1, 'role' => 'compute'}] }
+      let(:nodes) { [{'uid' => 1, 'role' => 'controller', 'fail_if_error' => true }, {'uid' => 1, 'role' => 'compute'}] }
       before(:each) do
         @reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, nodes)
       end
@@ -263,31 +263,43 @@ describe "ProxyReporter" do
         msgs.each {|msg| reporter.report(msg)}
       end
 
-      it 'send final error status for node if any of roles get error deploy status' do
-        msgs = [ {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'controller'}]},
-                 {'nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 50, 'role' => 'controller', 'error_type' => 'deploy'}]},
-                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'compute'}]},
-                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}]},
-                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}]}
+      it 'send final error status for node if any of non-critical roles get error deploy status' do
+        msgs = [ {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'compute'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 50, 'role' => 'compute', 'error_type' => 'deploy'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'progress' => 100, 'role' => 'controller'}]}
                ]
 
         up_reporter.expects(:report).with(msgs[0])
-        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'controller'}])
         up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}])
-        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 75, 'role' => 'compute'}])
-        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 100, 'role' => 'compute', 'error_type' => 'deploy'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 75, 'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 100, 'role' => 'controller', 'error_type' => 'deploy'}])
         up_reporter.expects(:report).never
 
         msgs.each {|msg| @reporter.report(msg)}
       end
-      
+
       it 'send intermediate status without additional error field: error_type, but add it to final if need' do
-        msgs = [ {'nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 50, 'role' => 'controller', 'error_type' => 'deploy'}]},
-                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}]}
+        msgs = [ {'nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 50, 'role' => 'compute', 'error_type' => 'deploy'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'progress' => 100, 'role' => 'controller'}]}
                ]
 
-        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'controller'}])
-        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 100, 'role' => 'compute', 'error_type' => 'deploy'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'compute'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 100, 'role' => 'controller', 'error_type' => 'deploy'}])
+        up_reporter.expects(:report).never
+
+        msgs.each {|msg| @reporter.report(msg)}
+      end
+
+      it 'send final error status for critical node regardless of roles after it' do
+        msgs = [ {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'error', 'role' => 'controller', 'error_type' => 'deploy'}]}
+               ]
+
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0, 'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'error', 'progress' => 100, 'role' => 'controller', 'error_type' => 'deploy'}])
         up_reporter.expects(:report).never
 
         msgs.each {|msg| @reporter.report(msg)}

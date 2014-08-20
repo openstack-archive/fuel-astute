@@ -33,7 +33,9 @@ module Astute
 
       def initialize(up_reporter, deployment_info=[])
         @up_reporter = up_reporter
-        @nodes = deployment_info.inject([]) { |nodes, di| nodes << {'uid' => di['uid'], 'role' => di['role']} }
+        @nodes = deployment_info.inject([]) do |nodes, di|
+          nodes << {'uid' => di['uid'], 'role' => di['role'], 'fail_if_error' => di['fail_if_error']}
+        end
         @deploy = deployment_info.present?
       end
 
@@ -129,6 +131,9 @@ module Astute
       # second(50%). Overall progress of the operation for node is
       # 50 / 3 + 1 * 100 / 3 = 49
       # We calculate it as 100/3 = 33% for every finished(success or fail) role
+      # Exception: node which have fail_if_error status equal true for some
+      # assigned node role. If this node role fail, we send error state for
+      # the entire node immediately.
       def calculate_multiroles_node_progress(node)
         @finish_roles_for_nodes ||= []
         roles_of_node = @nodes.select { |n| n['uid'] == node['uid'] }
@@ -150,7 +155,11 @@ module Astute
           node['progress'] = 100 * (finish_roles_amount + 1)/all_roles_amount
         end
 
-        if all_roles_amount - finish_roles_amount != 1
+        # No more status update will be for node which failed and have fail_if_error as true
+        fail_if_error = @nodes.select { |n| n['uid'] == node['uid'] && n['role'] == node['role'] }[0]['fail_if_error']
+        fail_now = fail_if_error && node['status'] == 'error'
+
+        if all_roles_amount - finish_roles_amount != 1 && !fail_now
           # block 'ready' or 'error' final status for node if not all roles yet deployed
           node['status'] = 'deploying'
           node.delete('error_type') # Additional field for error response
