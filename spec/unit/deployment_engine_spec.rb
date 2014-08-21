@@ -513,7 +513,7 @@ describe Astute::DeploymentEngine do
 
       it 'should raise error if metadata not updated' do
         nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
-        mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(fail_return).times(5)
+        mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(fail_return).times(Astute.config[:MC_RETRIES])
         expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError,
                   /Run command:/)
       end
