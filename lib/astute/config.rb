@@ -60,7 +60,7 @@ module Astute
     conf[:PUPPET_FADE_TIMEOUT] = 120      # how long it can take for puppet to exit after dumping to last_run_summary
     conf[:MC_RETRIES] = 5                 # MClient tries to call mcagent before failure
     conf[:MC_RETRY_INTERVAL] = 1          # MClient sleeps for ## sec between retries
-    conf[:PUPPET_FADE_INTERVAL] = 10      # retry every ## seconds to check puppet state if it was running
+    conf[:PUPPET_FADE_INTERVAL] = 30      # retry every ## seconds to check puppet state if it was running
     conf[:PROVISIONING_TIMEOUT] = 90 * 60 # timeout for booting target OS in provision
     conf[:REBOOT_TIMEOUT] = 240           # how long it can take for node to reboot
     conf[:DUMP_TIMEOUT] = 3600            # maximum time it waits for the dump (meaningles to be larger

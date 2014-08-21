@@ -106,7 +106,7 @@ module Astute
 
 
     def self.puppetd(uids)
-      puppetd = MClient.new(@ctx, "puppetd", Array(uids))
+      puppetd = MClient.new(@ctx, "puppetd", Array(uids), check_result=true, timeout=nil, retries=10)
       puppetd.on_respond_timeout do |uids|
         nodes = uids.map do |uid|
           { 'uid' => uid, 'status' => 'error', 'error_type' => 'deploy', 'role' => @nodes_roles[uid] }
