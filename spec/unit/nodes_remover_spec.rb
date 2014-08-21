@@ -65,7 +65,7 @@ describe Astute::NodesRemover do
 
     it 'should try maximum MC_RETRIES + 1 times to erase node if node get error' do
       retries = Astute.config[:MC_RETRIES]
-      expect(retries).to eq(5)
+      expect(retries).to eq(10)
 
       remover = Astute::NodesRemover.new(ctx, nodes)
       remover.expects(:mclient_remove_nodes).times(retries + 1).returns(mcollective_answer)
@@ -74,7 +74,7 @@ describe Astute::NodesRemover do
 
     it 'should try maximum MC_RETRIES + 1 times to erase node if node is inaccessible' do
       retries = Astute.config[:MC_RETRIES]
-      expect(retries).to eq(5)
+      expect(retries).to eq(10)
 
       remover = Astute::NodesRemover.new(ctx, nodes)
       remover.expects(:mclient_remove_nodes).times(retries + 1).returns([])
