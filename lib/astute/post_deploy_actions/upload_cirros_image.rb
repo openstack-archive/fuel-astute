@@ -54,10 +54,7 @@ re that it is correctly generated."
         )
       end
 
-      cmd = ". /root/openrc &&
-             /usr/bin/glance index && \
-             (/usr/bin/glance \
-              index | grep #{os['img_name']})"
+      cmd = ". /root/openrc && /usr/bin/glance index | grep #{os['img_name']}"
       response = run_shell_command(context, Array(controller['uid']), cmd)
       if response[:data][:exit_code] == 0
         Astute.logger.debug "Image \"#{os['img_name']}\" already added to stack"
