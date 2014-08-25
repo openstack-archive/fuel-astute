@@ -51,7 +51,7 @@ module Astute
         @nodes.select { |n| stopped_uids.include? n['uid'] }
              .group_by { |n| n['debug'] }
              .each do |debug, stop_nodes|
-               puppetd(stop_nodes.map { |n| n['uid'] }).runonce(:puppet_debug => debug)
+               puppetd(stop_nodes.map { |n| n['uid'] }).runonce(:puppet_debug => true)
              end
         break if running_uids.empty?
 
