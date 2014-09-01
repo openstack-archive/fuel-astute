@@ -17,7 +17,33 @@ module Astute
 
     def process(deployment_info, context)
       # NOTE(bogdando) use 'suicide' if fencing is enabled in corosync
-      cmd = '/usr/sbin/crm configure property no-quorum-policy=stop'
+      xml = <<-EOF
+      <diff>
+        <diff-removed>
+          <cib>
+            <configuration>
+              <crm_config>
+                <cluster_property_set id="cib-bootstrap-options">
+                  <nvpair value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
+                </cluster_property_set>
+              </crm_config>
+            </configuration>
+          </cib>
+        </diff-removed>
+        <diff-added>
+          <cib>
+            <configuration>
+              <crm_config>
+                <cluster_property_set id="cib-bootstrap-options">
+                  <nvpair value="stop" id="cib-bootstrap-options-no-quorum-policy"/>
+                </cluster_property_set>
+              </crm_config>
+            </configuration>
+          </cib>
+        </diff-added>
+      </diff>
+      EOF
+      cmd = "/usr/sbin/cibadmin --patch --sync-call --xml-text #{xml}"
 
       controllers_count = deployment_info.select {|n|
         ['controller', 'primary-controller'].include? n['role']
