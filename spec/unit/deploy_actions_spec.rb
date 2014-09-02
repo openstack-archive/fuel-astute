@@ -35,6 +35,48 @@ describe Astute::PostDeploymentActions do
   end
 end
 
+describe Astute::PreDeploymentActions do
+  include SpecHelpers
+
+  let(:deploy_data) {[]}
+  let(:ctx) { mock }
+  let(:pre_deployment_actions) { Astute::PreDeploymentActions.new(deploy_data, ctx) }
+
+  it 'should run post hooks' do
+    Astute::EnablePuppetDeploy.any_instance.expects(:process)
+                                             .with(deploy_data, ctx)
+    Astute::GenerateSshKeys.any_instance.expects(:process)
+                                          .with(deploy_data, ctx)
+    Astute::SyncPuppetStuff.any_instance.expects(:process)
+                                       .with(deploy_data, ctx)
+    Astute::SyncTime.any_instance.expects(:process)
+                                  .with(deploy_data, ctx)
+    Astute::UpdateRepoSources.any_instance.expects(:process)
+                                  .with(deploy_data, ctx)
+    Astute::UploadSshKeys.any_instance.expects(:process)
+                                  .with(deploy_data, ctx)
+    Astute::SyncTasks.any_instance.expects(:process)
+                                  .with(deploy_data, ctx)
+
+    pre_deployment_actions.process
+  end
+end
+
+describe Astute::PreDeployActions do
+  include SpecHelpers
+
+  let(:deploy_data) {[]}
+  let(:ctx) { mock }
+  let(:pre_deploy_actions) { Astute::PreDeployActions.new(deploy_data, ctx) }
+
+  it 'should run pre hooks' do
+    Astute::UploadFacts.any_instance.expects(:process)
+                                    .with(deploy_data, ctx)
+
+    pre_deploy_actions.process
+  end
+end
+
 describe Astute::PreNodeActions do
   include SpecHelpers
 

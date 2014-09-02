@@ -15,6 +15,7 @@
 require 'astute/ruby_removed_functions'
 
 require 'json'
+require 'yaml'
 require 'logger'
 require 'shellwords'
 require 'active_support/all'
@@ -29,12 +30,15 @@ require 'astute/deployment_engine'
 require 'astute/network'
 require 'astute/puppetd'
 require 'astute/deployment_engine/nailyfact'
+require 'astute/deployment_engine/tasklib'
 require 'astute/cobbler'
 require 'astute/cobbler_manager'
 require 'astute/image_provision'
 require 'astute/dump'
 require 'astute/deploy_actions'
-['/astute/pre_deploy_actions/*.rb',
+
+['/astute/pre_deployment_actions/*.rb',
+ '/astute/pre_deploy_actions/*.rb',
  '/astute/pre_node_actions/*.rb',
  '/astute/post_deploy_actions/*.rb',
  '/astute/post_deployment_actions/*.rb',
@@ -42,10 +46,12 @@ require 'astute/deploy_actions'
  ].each do |path|
   Dir[File.dirname(__FILE__) + path].each{ |f| require f }
 end
+
 require 'astute/ssh'
 require 'astute/ssh_actions/ssh_erase_nodes'
 require 'astute/ssh_actions/ssh_hard_reboot'
 require 'astute/ssh_actions/ssh_reboot_not_provisioning'
+
 
 # Server
 require 'astute/server/worker'

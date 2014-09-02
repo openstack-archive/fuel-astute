@@ -66,6 +66,8 @@ module Astute
     conf[:DUMP_TIMEOUT] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
 
+    conf[:PUPPET_SSH_KEYS_DIR] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
+                                              # Do not change this at least your clear know what you do!
     conf[:PUPPET_SSH_KEYS] = ['neutron', 'nova', 'ceph', 'mysql']  # name of ssh keys what will be generated
                                                         #and uploaded to all nodes before deploy
     conf[:MAX_NODES_PER_CALL] = 50        # how many nodes to deploy in one puppet call

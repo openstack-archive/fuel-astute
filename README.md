@@ -33,8 +33,7 @@ end
 
 reporter = ConsoleReporter.new
 
-deploy_engine = Astute::DeploymentEngine::NailyFact
-orchestrator = Astute::Orchestrator.new(deploy_engine, log_parsing=false)
+orchestrator = Astute::Orchestrator.new(log_parsing=false)
 
 # Add systems to cobbler, reboot and start installation process.
 orchestrator.provision(reporter, environment['engine'], environment['nodes'])
