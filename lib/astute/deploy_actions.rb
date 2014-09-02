@@ -29,7 +29,9 @@ module Astute
   class PreDeployActions < DeployActions
     def initialize(deployment_info, context)
       super
-      @actions = []
+      @actions = [
+        UploadFacts.new
+      ]
     end
   end
 
@@ -63,7 +65,25 @@ module Astute
     end
   end
 
+  class PreDeploymentActions < DeployActions
+
+    def initialize(deployment_info, context)
+      super
+      @actions = [
+        GenerateSshKeys.new,
+        UploadSshKeys.new,
+        UpdateRepoSources.new,
+        SyncPuppetStuff.new,
+        SyncTasks.new,
+        EnablePuppetDeploy.new,
+        SyncTime.new
+      ]
+    end
+
+  end
+
   class PostDeploymentActions < DeployActions
+
     def initialize(deployment_info, context)
       super
       @actions = [
@@ -72,6 +92,7 @@ module Astute
         RestartRadosgw.new,
         UpdateClusterHostsInfo.new
       ]
+
     end
   end
 
