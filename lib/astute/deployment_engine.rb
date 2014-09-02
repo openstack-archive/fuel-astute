@@ -56,14 +56,13 @@ module Astute
 
           # Sync time
           sync_time(part.map{ |n| n['uid'] })
-
-          # Pre deploy hooks
-          PreDeployActions.new(part, @ctx).process
         end
       rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
       end
+
+      pre_node_actions = PreNodeActions.new(@ctx)
 
       fail_deploy = false
       # Sort by priority (the lower the number, the higher the priority)
@@ -76,6 +75,10 @@ module Astute
           # Prevent deploy too many nodes at once
           nodes_group.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |part|
             if !fail_deploy
+
+              # Pre deploy hooks
+              pre_node_actions.process(part)
+              PreDeployActions.new(part, @ctx).process
               deploy_piece(part)
               fail_deploy = fail_critical_node?(part)
             else

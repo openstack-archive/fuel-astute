@@ -30,7 +30,8 @@ module Astute
 
     def initialize(deployment_info, context)
       super
-      @actions = []
+      @actions = [
+      ]
     end
 
   end
@@ -49,6 +50,25 @@ module Astute
 
   end
 
+  class PreNodeActions
+
+    def initialize(context)
+      @node_uids = []
+      @context = context
+      @actions = [
+        PrePatching.new
+      ]
+    end
+
+    def process(deployment_info)
+      nodes_to_process = deployment_info.select { |n| !@node_uids.include?(n['uid']) }
+      return if nodes_to_process.empty?
+
+      @actions.each { |action| action.process(nodes_to_process, @context) }
+      @node_uids += nodes_to_process.map { |n| n['uid'] }
+    end
+  end
+
 
   class DeployAction
 
@@ -56,12 +76,12 @@ module Astute
       raise "Should be implemented!"
     end
 
-    def run_shell_command(context, node_uids, cmd)
+    def run_shell_command(context, node_uids, cmd, timeout=60)
       shell = MClient.new(context,
                           'execute_shell_command',
                           node_uids,
                           check_result=true,
-                          timeout=60,
+                          timeout=timeout,
                           retries=1)
 
       #TODO: return result for all nodes not only for first
@@ -80,5 +100,6 @@ module Astute
 
   class PreDeployAction < DeployAction; end
   class PostDeployAction < DeployAction; end
+  class PreNodeAction < DeployAction; end
 
 end

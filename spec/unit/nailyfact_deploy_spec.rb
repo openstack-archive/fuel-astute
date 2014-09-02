@@ -55,6 +55,7 @@ describe "NailyFact DeploymentEngine" do
       deploy_engine.stubs(:enable_puppet_deploy).with(uniq_nodes_uid)
       deploy_engine.stubs(:sync_time)
       Astute::PreDeployActions.any_instance.stubs(:process).returns(nil)
+      Astute::PreNodeActions.any_instance.stubs(:process).returns(nil)
     end
 
     context 'log parsing' do
