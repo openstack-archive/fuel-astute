@@ -29,7 +29,9 @@ module Astute
   class PreDeployActions < DeployActions
 
     def initialize(deployment_info, context)
-      @actions = []
+      @actions = [
+          PrePatching.new
+      ]
       super
     end
 
