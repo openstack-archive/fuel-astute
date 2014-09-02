@@ -13,17 +13,12 @@
 #    under the License.
 
 module Astute
-  class PostDeployActions
+  class DeployActions
 
     def initialize(deployment_info, context)
       @deployment_info = deployment_info
       @context = context
-      @actions = [
-        UpdateNoQuorumPolicy.new,
-        UploadCirrosImage.new,
-        RestartRadosgw.new,
-        UpdateClusterHostsInfo.new
-      ]
+      @actions ||= []
     end
 
     def process
@@ -31,7 +26,31 @@ module Astute
     end
   end
 
-  class PostDeployAction
+  class PreDeployActions < DeployActions
+
+    def initialize(deployment_info, context)
+      @actions = []
+      super
+    end
+
+  end
+
+  class PostDeployActions < DeployActions
+
+    def initialize(deployment_info, context)
+      @actions = [
+        UpdateNoQuorumPolicy.new,
+        UploadCirrosImage.new,
+        RestartRadosgw.new,
+        UpdateClusterHostsInfo.new
+      ]
+      super
+    end
+
+  end
+
+
+  class DeployAction
 
     def process(deployment_info, context)
       raise "Should be implemented!"
@@ -58,5 +77,8 @@ module Astute
       {:data => {}}
     end
   end
+
+  class PreDeployAction < DeployAction; end
+  class PostDeployAction < DeployAction; end
 
 end
