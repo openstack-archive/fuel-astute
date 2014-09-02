@@ -41,7 +41,7 @@ describe Astute::DeploymentEngine do
   describe '#deploy' do
 
     before(:each) do
-      Astute::PreDeployActions.any_instance.stubs(:process).returns(nil)
+      Astute::PreDeployActions.any_instance.expects(:process).returns(nil)
       deployer.stubs(:generate_ssh_keys)
       deployer.stubs(:upload_ssh_keys)
       deployer.stubs(:sync_puppet_manifests)

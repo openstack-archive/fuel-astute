@@ -29,7 +29,9 @@ module Astute
   class PreDeployActions < DeployActions
 
     def initialize(deployment_info, context)
-      @actions = []
+      @actions = [
+          DownHook50250.new
+      ]
       super
     end
 
