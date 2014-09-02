@@ -47,6 +47,20 @@ module Astute
       context.status
     end
 
+    def task_deploy(up_reporter, task_id, deployment_info)
+      proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, deployment_info)
+      context = Context.new(task_id, proxy_reporter, log_parser)
+      deploy_engine_instance = Astute::DeploymentEngine::Tasklib.new(context)
+
+      Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
+      deploy_engine_instance.deploy(deployment_info)
+
+      # Post deploy hooks
+      PostDeployActions.new(deployment_info, context).process
+
+      context.status
+    end
+
     def provision(reporter, task_id, engine_attrs, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
       provision_method = engine_attrs['provision_method'] || 'cobbler'
