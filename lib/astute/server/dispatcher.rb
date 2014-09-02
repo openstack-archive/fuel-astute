@@ -64,6 +64,20 @@ module Astute
         end
       end
 
+      def task_deployment(data)
+        Astute.logger.info("'task_deployment' method called with data: #{data.inspect}")
+
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+        begin
+          @orchestrator.task_deployment(reporter, data['args']['task_uuid'], data['args']['deployment_info'])
+          reporter.report('status' => 'ready', 'progress' => 100)
+        rescue Timeout::Error
+          msg = "Timeout of deployment is exceeded."
+          Astute.logger.error msg
+          reporter.report('status' => 'error', 'error' => msg)
+        end
+      end
+
       def verify_networks(data)
         data.fetch('subtasks', []).each do |subtask|
           if self.respond_to?(subtask['method'])
