@@ -19,7 +19,7 @@ module Astute
 
     class Dispatcher
       def initialize(producer)
-        @orchestrator = Astute::Orchestrator.new(nil, log_parsing=true)
+        @orchestrator = Astute::Orchestrator.new(log_parsing=true)
         @producer = producer
         @provisionLogParser = Astute::LogParser::ParseProvisionLogs.new
       end
@@ -56,6 +56,20 @@ module Astute
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         begin
           @orchestrator.deploy(reporter, data['args']['task_uuid'], data['args']['deployment_info'])
+          reporter.report('status' => 'ready', 'progress' => 100)
+        rescue Timeout::Error
+          msg = "Timeout of deployment is exceeded."
+          Astute.logger.error msg
+          reporter.report('status' => 'error', 'error' => msg)
+        end
+      end
+
+      def task_deployment(data)
+        Astute.logger.info("'task_deployment' method called with data: #{data.inspect}")
+
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+        begin
+          @orchestrator.task_deployment(reporter, data['args']['task_uuid'], data['args']['deployment_info'])
           reporter.report('status' => 'ready', 'progress' => 100)
         rescue Timeout::Error
           msg = "Timeout of deployment is exceeded."

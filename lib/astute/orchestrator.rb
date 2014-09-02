@@ -15,8 +15,7 @@
 module Astute
 
   class Orchestrator
-    def initialize(deploy_engine=nil, log_parsing=false)
-      @deploy_engine = deploy_engine || Astute::DeploymentEngine::NailyFact
+    def initialize(log_parsing=false)
       @log_parsing = log_parsing
     end
 
@@ -33,18 +32,21 @@ module Astute
     end
 
     def deploy(up_reporter, task_id, deployment_info)
-      proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, deployment_info)
-      log_parser = @log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
-      context = Context.new(task_id, proxy_reporter, log_parser)
-      deploy_engine_instance = @deploy_engine.new(context)
-      Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
+      deploy_cluster(
+        up_reporter,
+        task_id,
+        deployment_info,
+        Astute::DeploymentEngine::NailyFact
+      )
+    end
 
-      deploy_engine_instance.deploy(deployment_info)
-
-      # Post deployment hooks
-      PostDeploymentActions.new(deployment_info, context).process
-
-      context.status
+    def task_deployment(up_reporter, task_id, deployment_info)
+      deploy_cluster(
+        up_reporter,
+        task_id,
+        deployment_info,
+        Astute::DeploymentEngine::Tasklib
+      )
     end
 
     def provision(reporter, task_id, engine_attrs, nodes)
@@ -234,6 +236,21 @@ module Astute
     end
 
     private
+
+    def deploy_cluster(up_reporter, task_id, deployment_info, deploy_engine)
+      proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, deployment_info)
+      log_parser = @log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
+      context = Context.new(task_id, proxy_reporter, log_parser)
+      deploy_engine_instance = deploy_engine.new(context)
+      Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
+
+      deploy_engine_instance.deploy(deployment_info)
+
+      # Post deployment hooks
+      PostDeploymentActions.new(deployment_info, context).process
+
+      context.status
+    end
 
     def report_result(result, reporter)
       default_result = {'status' => 'ready', 'progress' => 100}
