@@ -30,7 +30,9 @@ module Astute
 
     def initialize(deployment_info, context)
       super
-      @actions = []
+      @actions = [
+        PrePatching.new
+      ]
     end
 
   end
@@ -56,12 +58,12 @@ module Astute
       raise "Should be implemented!"
     end
 
-    def run_shell_command(context, node_uids, cmd)
+    def run_shell_command(context, node_uids, cmd, timeout=60)
       shell = MClient.new(context,
                           'execute_shell_command',
                           node_uids,
                           check_result=true,
-                          timeout=60,
+                          timeout=timeout,
                           retries=1)
 
       #TODO: return result for all nodes not only for first
