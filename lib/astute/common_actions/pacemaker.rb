@@ -53,7 +53,7 @@ module Astute
     def self.pacemaker_services_list(deployment_info)
       services_list = []
       #Heat engine service is present everywhere
-      services_list << heat_service_name(deployment_info)
+      services_list += heat_service_name(deployment_info)
 
       if deployment_info.first['quantum']
         services_list << 'p_neutron-openvswitch-agent'
@@ -79,8 +79,10 @@ module Astute
 
     def self.heat_service_name(deployment_info)
       case deployment_info.first['cobbler']['profile']
-      when /centos/i then 'openstack-heat-engine'
-      when /ubuntu/i then 'heat-engine'
+      when /centos/i
+        ['openstack-heat-engine', 'p_openstack-heat-engine']
+      when /ubuntu/i
+        ['heat-engine', 'p_heat-engine']
       end
     end
 

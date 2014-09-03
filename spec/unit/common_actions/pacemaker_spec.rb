@@ -59,12 +59,14 @@ describe Astute::Pacemaker do
   context 'controller < 3' do
     it 'should return stop service commands for pacemaker' do
       expect(pacemaker.commands(behavior='stop', deploy_data)).to eql(
-        ['crm resource stop openstack-heat-engine && sleep 3'])
+        ['crm resource stop openstack-heat-engine && sleep 3',
+         'crm resource stop p_openstack-heat-engine && sleep 3'])
     end
 
     it 'should return start service commands for HA pacemaker' do
       expect(pacemaker.commands(behavior='start', deploy_data)).to eql(
-        ['crm resource start openstack-heat-engine && sleep 3'])
+        ['crm resource start openstack-heat-engine && sleep 3',
+         'crm resource start p_openstack-heat-engine && sleep 3'])
     end
   end
 
@@ -82,23 +84,25 @@ describe Astute::Pacemaker do
 
     it 'should return stop service commands for pacemaker' do
       expect(pacemaker.commands(behavior='stop', ha_deploy_data)).to eql(
-        ['pcs resource ban openstack-heat-engine `crm_node -n` && sleep 3'])
+        ['pcs resource ban openstack-heat-engine `crm_node -n` && sleep 3',
+         'pcs resource ban p_openstack-heat-engine `crm_node -n` && sleep 3'])
     end
 
     it 'should return start service commands for pacemaker' do
       expect(pacemaker.commands(behavior='start', ha_deploy_data)).to eql(
-        ['pcs resource clear openstack-heat-engine `crm_node -n` && sleep 3'])
+        ['pcs resource clear openstack-heat-engine `crm_node -n` && sleep 3',
+         'pcs resource clear p_openstack-heat-engine `crm_node -n` && sleep 3'])
     end
   end
 
   it 'should return quantum service commands if quantum enable' do
     deploy_data.first['quantum'] = []
-    expect(pacemaker.commands(behavior='stop', deploy_data).size).to eql(5)
+    expect(pacemaker.commands(behavior='stop', deploy_data).size).to eql(6)
   end
 
   it 'should return ceilometer service commands if ceilometer enable' do
     deploy_data.first['ceilometer'] = { 'enabled' => true }
-    expect(pacemaker.commands(behavior='stop', deploy_data).size).to eql(3)
+    expect(pacemaker.commands(behavior='stop', deploy_data).size).to eql(4)
   end
 
 end
