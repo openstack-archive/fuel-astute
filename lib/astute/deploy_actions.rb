@@ -30,7 +30,9 @@ module Astute
 
     def initialize(deployment_info, context)
       super
-      @actions = []
+      @actions = [
+          StopOSTServices.new
+      ]
     end
 
   end
