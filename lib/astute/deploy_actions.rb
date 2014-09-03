@@ -50,6 +50,7 @@ module Astute
       @node_uids = []
       @context = context
       @actions = [
+        StopOSTServices.new,
         PrePatching.new
       ]
     end
