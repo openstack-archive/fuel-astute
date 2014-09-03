@@ -13,19 +13,29 @@
 #    under the License.
 
 module Astute
-  class PrePatchingHa < PreDeployAction
+  class PrePatchingHa < PreNodeAction
 
     def process(deployment_info, context)
       return if deployment_info.first['openstack_version_prev'].nil? ||
                 deployment_info.first['deployment_mode'] !~ /ha/i
 
-      controller_nodes = deployment_info.select{ |n| n['role'] =~ /controller/i }.map{ |n| n['uid'] }
-      return if controller_nodes.empty?
+      # Run only once for node. If one of role is controller or primary-controller
+      # generate new deployment_info block.
+      # Important for 'mongo' role which run early then 'controller'
+      current_uids = deployment_info.map{ |n| n['uid'] }
+      controllers = deployment_info.first['nodes'].select{ |n| current_uids.include?(n['uid']) && n['role'] =~ /controller/i }
+      c_deployment_info = deployment_info.select { |d_i| controllers.map{ |n| n['uid'] }.include? d_i['uid'] }
+
+      return if c_deployment_info.empty?
+      c_deployment_info.each do |c_d_i|
+        c_d_i['role'] = controllers.find{ |c| c['uid'] == c_d_i['uid'] }['role']
+      end
+      controller_nodes = c_deployment_info.map{ |n| n['uid'] }
 
       Astute.logger.info "Starting migration of pacemaker services from " \
         "nodes #{controller_nodes.inspect}"
 
-      Astute::Pacemaker.commands(action='stop', deployment_info).each do |pcmk_ban_cmd|
+      Astute::Pacemaker.commands(action='stop', c_deployment_info).each do |pcmk_ban_cmd|
         response = run_shell_command(context, controller_nodes, pcmk_ban_cmd)
 
         if response[:data][:exit_code] != 0

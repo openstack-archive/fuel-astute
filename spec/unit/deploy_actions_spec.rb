@@ -38,6 +38,25 @@ end
 describe Astute::PreNodeActions do
   include SpecHelpers
 
+  let(:deploy_data) {[{'uid' => '1'}, {'uid' => '2'}]}
+  let(:ctx) { mock }
+  let(:pre_node_actions) { Astute::PreNodeActions.new(ctx) }
+
+  it 'should pre node hooks' do
+    Astute::PrePatchingHa.any_instance.expects(:process)
+                                             .with(deploy_data, ctx)
+    Astute::StopOSTServices.any_instance.expects(:process)
+                                          .with(deploy_data, ctx)
+    Astute::PrePatching.any_instance.expects(:process)
+                                       .with(deploy_data, ctx)
+
+    pre_node_actions.process(deploy_data)
+  end
+end
+
+describe Astute::PreNodeActions do
+  include SpecHelpers
+
   let(:deploy_data1) {[{'uid' => '1'}, {'uid' => '2'}]}
   let(:deploy_data2) {[{'uid' => '1'}]}
   let(:ctx) { mock }

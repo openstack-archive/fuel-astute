@@ -29,9 +29,7 @@ module Astute
   class PreDeployActions < DeployActions
     def initialize(deployment_info, context)
       super
-      @actions = [
-        PrePatchingHa.new
-      ]
+      @actions = []
     end
   end
 
@@ -50,6 +48,8 @@ module Astute
       @node_uids = []
       @context = context
       @actions = [
+        PrePatchingHa.new,
+        StopOSTServices.new,
         PrePatching.new
       ]
     end
