@@ -32,6 +32,7 @@ module Astute
       super
       @actions = [
         PrePatching.new
+        PrePatchingHa.new
       ]
     end
 
