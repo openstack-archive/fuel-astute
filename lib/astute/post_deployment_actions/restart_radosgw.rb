@@ -13,7 +13,7 @@
 #    under the License.
 
 module Astute
-  class RestartRadosgw < PostDeployAction
+  class RestartRadosgw < PostDeploymentAction
 
     def process(deployment_info, context)
       ceph_node = deployment_info.find { |n| n['role'] == 'ceph-osd' }

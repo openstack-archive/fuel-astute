@@ -79,7 +79,12 @@ module Astute
               # Pre deploy hooks
               pre_node_actions.process(part)
               PreDeployActions.new(part, @ctx).process
+
               deploy_piece(part)
+
+              # Post deploy hook
+              PostDeployActions.new(part, @ctx).process
+
               fail_deploy = fail_critical_node?(part)
             else
               nodes_to_report = part.map do |n|

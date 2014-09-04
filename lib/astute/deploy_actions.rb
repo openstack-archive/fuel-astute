@@ -27,27 +27,22 @@ module Astute
   end
 
   class PreDeployActions < DeployActions
-
     def initialize(deployment_info, context)
       super
       @actions = [
+        StopOSTServices.new,
+        PrePatchingHa.new
       ]
     end
-
   end
 
   class PostDeployActions < DeployActions
-
     def initialize(deployment_info, context)
       super
       @actions = [
-        UpdateNoQuorumPolicy.new,
-        UploadCirrosImage.new,
-        RestartRadosgw.new,
-        UpdateClusterHostsInfo.new
+        PostPatchingHa.new
       ]
     end
-
   end
 
   class PreNodeActions
@@ -66,6 +61,18 @@ module Astute
 
       @actions.each { |action| action.process(nodes_to_process, @context) }
       @node_uids += nodes_to_process.map { |n| n['uid'] }
+    end
+  end
+
+  class PostDeploymentActions < DeployActions
+    def initialize(deployment_info, context)
+      super
+      @actions = [
+        UpdateNoQuorumPolicy.new,
+        UploadCirrosImage.new,
+        RestartRadosgw.new,
+        UpdateClusterHostsInfo.new
+      ]
     end
   end
 
@@ -101,5 +108,8 @@ module Astute
   class PreDeployAction < DeployAction; end
   class PostDeployAction < DeployAction; end
   class PreNodeAction < DeployAction; end
+  class PostNodeAction < DeployAction; end
+  class PreDeploymentAction < DeployAction; end
+  class PostDeploymentAction < DeployAction; end
 
 end
