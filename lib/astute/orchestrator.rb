@@ -41,8 +41,8 @@ module Astute
 
       deploy_engine_instance.deploy(deployment_info)
 
-      # Post deploy hooks
-      PostDeployActions.new(deployment_info, context).process
+      # Post deployment hooks
+      PostDeploymentActions.new(deployment_info, context).process
 
       context.status
     end
