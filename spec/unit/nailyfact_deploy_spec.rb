@@ -56,6 +56,7 @@ describe "NailyFact DeploymentEngine" do
       deploy_engine.stubs(:sync_time)
       Astute::PreDeployActions.any_instance.stubs(:process).returns(nil)
       Astute::PreNodeActions.any_instance.stubs(:process).returns(nil)
+      Astute::PreDeployActions.any_instance.stubs(:process).returns(nil)
     end
 
     context 'log parsing' do

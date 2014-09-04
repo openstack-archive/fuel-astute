@@ -34,11 +34,14 @@ require 'astute/cobbler_manager'
 require 'astute/image_provision'
 require 'astute/dump'
 require 'astute/deploy_actions'
-require 'astute/pre_node_actions/pre_patching'
-require 'astute/post_deploy_actions/update_no_quorum_policy'
-require 'astute/post_deploy_actions/restart_radosgw'
-require 'astute/post_deploy_actions/update_cluster_hosts_info'
-require 'astute/post_deploy_actions/upload_cirros_image'
+['/astute/pre_deploy_actions/*.rb',
+ '/astute/pre_node_actions/*.rb',
+ '/astute/post_deploy_actions/*.rb',
+ '/astute/post_deployment_actions/*.rb',
+ '/astute/common_actions/*.rb'
+ ].each do |path|
+  Dir[File.dirname(__FILE__) + path].each{ |f| require f }
+end
 require 'astute/ssh'
 require 'astute/ssh_actions/ssh_erase_nodes'
 require 'astute/ssh_actions/ssh_hard_reboot'

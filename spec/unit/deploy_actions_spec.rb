@@ -1,4 +1,4 @@
-#    Copyright 2013 Mirantis, Inc.
+#    Copyright 2014 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -14,12 +14,12 @@
 
 require File.join(File.dirname(__FILE__), '../spec_helper')
 
-describe Astute::PostDeployActions do
+describe Astute::PostDeploymentActions do
   include SpecHelpers
 
   let(:deploy_data) {[]}
   let(:ctx) { mock }
-  let(:post_deploy_actions) { Astute::PostDeployActions.new(deploy_data, ctx) }
+  let(:post_deployment_actions) { Astute::PostDeploymentActions.new(deploy_data, ctx) }
 
   it 'should run post hooks' do
     Astute::UpdateNoQuorumPolicy.any_instance.expects(:process)
@@ -31,7 +31,7 @@ describe Astute::PostDeployActions do
     Astute::UpdateClusterHostsInfo.any_instance.expects(:process)
                                                .with(deploy_data, ctx)
 
-    post_deploy_actions.process
+    post_deployment_actions.process
   end
 end
 
