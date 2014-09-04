@@ -38,6 +38,18 @@ module Astute
 
   end
 
+  class PostDeployNodeActions < DeployActions
+
+    def initialize(deployment_info, context)
+      super
+      @actions = [
+        PostPatchingHa.new
+      ]
+    end
+
+  end
+
+
   class PostDeployActions < DeployActions
 
     def initialize(deployment_info, context)
@@ -83,5 +95,6 @@ module Astute
 
   class PreDeployAction < DeployAction; end
   class PostDeployAction < DeployAction; end
+  class PostDeployNodeAction < DeployAction; end
 
 end
