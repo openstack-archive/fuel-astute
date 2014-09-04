@@ -31,7 +31,8 @@ module Astute
     def initialize(deployment_info, context)
       super
       @actions = [
-        PrePatching.new
+        PrePatching.new,
+        PrePatchingHa.new
       ]
     end
 
