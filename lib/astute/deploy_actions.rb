@@ -13,11 +13,32 @@
 #    under the License.
 
 module Astute
-  class PostDeployActions
+  class DeployActions
 
     def initialize(deployment_info, context)
       @deployment_info = deployment_info
       @context = context
+      @actions = []
+    end
+
+    def process
+      @actions.each { |action| action.process(@deployment_info, @context) }
+    end
+  end
+
+  class PreDeployActions < DeployActions
+
+    def initialize(deployment_info, context)
+      super
+      @actions = []
+    end
+
+  end
+
+  class PostDeployActions < DeployActions
+
+    def initialize(deployment_info, context)
+      super
       @actions = [
         UpdateNoQuorumPolicy.new,
         UploadCirrosImage.new,
@@ -26,12 +47,10 @@ module Astute
       ]
     end
 
-    def process
-      @actions.each { |action| action.process(@deployment_info, @context) }
-    end
   end
 
-  class PostDeployAction
+
+  class DeployAction
 
     def process(deployment_info, context)
       raise "Should be implemented!"
@@ -58,5 +77,8 @@ module Astute
       {:data => {}}
     end
   end
+
+  class PreDeployAction < DeployAction; end
+  class PostDeployAction < DeployAction; end
 
 end

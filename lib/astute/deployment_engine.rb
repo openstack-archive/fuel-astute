@@ -56,6 +56,9 @@ module Astute
 
           # Sync time
           sync_time(part.map{ |n| n['uid'] })
+
+          # Pre deploy hooks
+          PreDeployActions.new(part, @ctx).process
         end
       rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
