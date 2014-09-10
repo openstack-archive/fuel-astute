@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'rest-client', '~> 1.6.7'
   s.add_dependency 'popen4', '~> 0.1.2'
   s.add_dependency 'net-ssh-multi', '~> 1.1'
+  s.add_dependency 'facter'
 
   # Astute as service
   s.add_dependency 'amqp', '1.4.1'

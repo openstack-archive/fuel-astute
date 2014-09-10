@@ -16,7 +16,7 @@ module Astute
 
   class CirrosError < AstuteError; end
 
-  class UploadCirrosImage < PostDeployAction
+  class UploadCirrosImage < PostDeploymentAction
 
     def process(deployment_info, context)
       #FIXME: update context status to multirole support: possible situation where one of the

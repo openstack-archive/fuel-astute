@@ -14,7 +14,7 @@
 
 module Astute
 
-  class UpdateClusterHostsInfo < PostDeployAction
+  class UpdateClusterHostsInfo < PostDeploymentAction
 
     def process(deployment_info, context)
       Astute.logger.info "Updating /etc/hosts in all cluster nodes"
