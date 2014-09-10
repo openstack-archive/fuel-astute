@@ -13,7 +13,7 @@
 #    under the License.
 
 module Astute
-  class UpdateNoQuorumPolicy < PostDeployAction
+  class UpdateNoQuorumPolicy < PostDeploymentAction
 
     def process(deployment_info, context)
       # NOTE(bogdando) use 'suicide' if fencing is enabled in corosync
