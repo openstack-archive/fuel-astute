@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'amqp', '1.4.1'
   s.add_dependency 'raemon', '0.3.0'
 
+  s.add_development_dependency 'facter'
   s.add_development_dependency 'rake', '10.0.4'
   s.add_development_dependency 'rspec', '2.13.0'
   s.add_development_dependency 'mocha', '0.13.3'
