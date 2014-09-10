@@ -125,7 +125,7 @@ describe Astute::Orchestrator do
       nodes = [{'uid' => 1, 'role' => 'controller'}]
       Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
                                                        with(nodes)
-      Astute::PostDeployActions.any_instance.expects(:process).returns(nil)
+      Astute::PostDeploymentActions.any_instance.expects(:process).returns(nil)
       @orchestrator.deploy(@reporter, 'task_uuid', nodes)
     end
 
