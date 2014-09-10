@@ -1,0 +1,213 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'facter'
+
+# pre-deploy hook library
+module PreDeploy
+  @dry_run = false
+  @process_tree = nil
+  @osfamily = nil
+  @stop_services_regexp = %r{nova|cinder|glance|keystone|neutron|sahara|murano|ceilometer|heat|swift|apache2|httpd}
+
+  # get regexp that selects services and processes to stop
+  # @return [Regexp]
+  def self.stop_services_regexp
+     @stop_services_regexp
+  end
+
+  # set regexp that selects services and processes to stop
+  # @param value [Regexp]
+  def self.stop_services_regexp=(value)
+    @stop_services_regexp = value
+  end
+
+  # get osfamily from facter
+  # @return [String]
+  def self.osfamily
+    return @osfamily if @osfamily
+    @osfamily = Facter.value 'osfamily'
+  end
+
+  # get dry run without doing anything switch
+  # @return [TrueClass,FalseClass]
+  def self.dry_run
+    @dry_run
+  end
+
+  # set dry run without doing anything switch
+  # @param value [TrueClass,FalseClass]
+  def self.dry_run=(value)
+    @dry_run = value
+  end
+
+  # get ps from shell command
+  # @return [String]
+  def self.ps
+    `ps haxo pid,ppid,cmd`
+  end
+
+  # get service statu from shell command
+  # @return String
+  def self.services
+    `service --status-all 2>&1`
+  end
+
+  # same as process_tree but reset mnemoization
+  # @return [Hash<Integer => Hash<Symbol => String,Integer>>]
+  def self.process_tree_with_renew
+    @process_tree = nil
+    self.process_tree
+  end
+
+  # build process tree from process list
+  # @return [Hash<Integer => Hash<Symbol => String,Integer>>]
+  def self.process_tree
+    return @process_tree if @process_tree
+    @process_tree = {}
+    self.ps.split("\n").each do |p|
+      f = p.split
+      pid = f.shift.to_i
+      ppid = f.shift.to_i
+      cmd = f.join ' '
+
+      # create entry for this pid if not present
+      @process_tree[pid] = {
+          :children => []
+      } unless @process_tree.key? pid
+
+      # fill this entry
+      @process_tree[pid][:ppid] = ppid
+      @process_tree[pid][:pid] = pid
+      @process_tree[pid][:cmd] = cmd
+
+      # create entry for parent process if not present
+      @process_tree[ppid] = {
+          :children => []
+      } unless @process_tree.key? ppid
+
+      # fill parent's children
+      @process_tree[ppid][:children] << pid
+    end
+    @process_tree
+  end
+
+  # kill selected pid or array of them
+  # @param pids [Integer,String] Pids to kill
+  # @param signal [Integer,String] Which signal?
+  # @param recursive [TrueClass,FalseClass] Kill children too?
+  # @return [TrueClass,FalseClass] Was the signal sent? Process may still be present even on success.
+  def self.kill_pids(pids, signal = 9, recursive = true)
+    pids = Array pids
+
+    pids_to_kill = pids.inject([]) do |all_pids, pid|
+      pid = pid.to_i
+      if recursive
+        all_pids + self.get_children_pids(pid)
+      else
+        all_pids << pid
+      end
+    end
+
+    pids_to_kill.uniq!
+    pids_to_kill.sort!
+
+    return false unless pids_to_kill.any?
+    puts "Kill these pids: #{pids_to_kill.join ', '} with signal #{signal}"
+    self.run "kill -#{signal} #{pids_to_kill.join ' '}"
+  end
+
+  # recursion to find all children pids
+  # @return [Array<Integer>]
+  def self.get_children_pids(pid)
+    pid = pid.to_i
+    unless self.process_tree.key? pid
+      puts "No such pid: #{pid}"
+      return []
+    end
+    self.process_tree[pid][:children].inject([pid]) do |all_children_pids, child_pid|
+      all_children_pids + self.get_children_pids(child_pid)
+    end
+  end
+
+  # same as services_to_stop but reset mnemoization
+  # @return Array[String]
+  def self.services_to_stop_with_renew
+    @services_to_stop = nil
+    self.services_to_stop
+  end
+
+  # find running services that should be stopped
+  # uses service status and regex to filter
+  # @return [Array<String>]
+  def self.services_to_stop
+    return @services_to_stop if @services_to_stop
+    @services_to_stop = self.services.split("\n").inject([]) do |services_to_stop, service|
+      fields = service.chomp.split
+      running = if fields[4] == 'running...'
+                  fields[0]
+                elsif fields[1] == '+'
+                  fields[3]
+                else
+                  nil
+                end
+
+      if running =~ @stop_services_regexp
+        # replace wrong service name
+        running = 'httpd' if running == 'httpd.event' and self.osfamily == 'RedHat'
+        running = 'openstack-keystone' if running == 'keystone' and self.osfamily == 'RedHat'
+        services_to_stop << running
+      else
+        services_to_stop
+      end
+    end
+  end
+
+  # stop services that match stop_services_regex
+  def self.stop_services
+    self.services_to_stop.each do |service|
+      puts "Try to stop service: #{service}"
+      self.run "service #{service} stop"
+    end
+  end
+
+  # filter pids which cmd match regexp
+  # @param regexp <Regexp> Search pids by this regexp
+  # @return [Hash<Integer => Hash<Symbol => String,Integer>>]
+  def self.pids_by_regexp(regexp)
+    matched = {}
+    self.process_tree.each do |pid,process|
+      matched[pid] = process if process[:cmd] =~ regexp
+    end
+    matched
+  end
+
+  # kill pids that match stop_services_regexp
+  # @return <TrueClass,FalseClass>
+  def self.kill_pids_by_stop_regexp
+    pids = self.pids_by_regexp(@stop_services_regexp).keys
+    self.kill_pids pids
+  end
+
+  # here be other fixes
+  # TODO: not needed anymore?
+  def self.misc_fixes
+    if self.osfamily == 'Debian'
+      puts  'Enabling WSGI module'
+      self.run 'a2enmod wsgi'
+    end
+  end
+
+  # run the shell command with dry_run support
+  # @param cmd [String] Command to run
+  def self.run(cmd)
+    command = "#{self.dry_run ? 'echo' : ''} #{cmd} 2>&1"
+    system command
+  end
+end # class
+
+if __FILE__ == $0
+  # PreDeploy.dry_run = true
+  PreDeploy.misc_fixes
+  PreDeploy.stop_services
+  PreDeploy.kill_pids_by_stop_regexp
+end
