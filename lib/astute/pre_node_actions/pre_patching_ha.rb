@@ -16,6 +16,7 @@ module Astute
   class PrePatchingHa < PreNodeAction
 
     def process(deployment_info, context)
+      return
       return if deployment_info.first['openstack_version_prev'].nil? ||
                 deployment_info.first['deployment_mode'] !~ /ha/i
 
