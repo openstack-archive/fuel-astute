@@ -28,6 +28,7 @@ describe Astute::UpdateNoQuorumPolicy do
   let(:deploy_dat1) { [
                         {'uid' => 1,
                          'role' => 'primary-controller',
+                         'deployment_mode' => 'ha_compact',
                          'nodes' => [
                           {
                             'uid' => 1,
@@ -53,6 +54,7 @@ describe Astute::UpdateNoQuorumPolicy do
   let(:deploy_dat3) { [
                         {'uid' => 1,
                          'role' => 'primary-controller',
+                         'deployment_mode' => 'ha_compact',
                          'nodes' => [
                           {
                             'uid' => 1,
@@ -132,6 +134,12 @@ describe Astute::UpdateNoQuorumPolicy do
     update_no_quorum_policy.expects(:run_shell_command).once
                     .with(ctx, [1], anything)
                     .returns(:data => {:exit_code => 0})
+    update_no_quorum_policy.process(deploy_dat3, ctx)
+  end
+
+  it 'should not only in HA mode' do
+    deploy_dat3.first['deployment_mode'] = 'multinode'
+    update_no_quorum_policy.expects(:run_shell_command).never
     update_no_quorum_policy.process(deploy_dat3, ctx)
   end
 
