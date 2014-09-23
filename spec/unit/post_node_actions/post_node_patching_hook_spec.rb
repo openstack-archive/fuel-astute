@@ -14,7 +14,7 @@
 
 require File.join(File.dirname(__FILE__), '../../spec_helper')
 
-describe Astute::PrePatching do
+describe Astute::PostNodePatching do
   include SpecHelpers
 
   let(:ctx) do
@@ -39,68 +39,44 @@ describe Astute::PrePatching do
                       ]
                     }
 
-  let(:pre_patching) { Astute::PrePatching.new }
+  let(:post_node_patching) { Astute::PostNodePatching.new }
 
   it 'should run if upgrade/downgrade env' do
-    pre_patching.expects(:run_shell_command).once.returns(:data => {:exit_code => 0})
-    pre_patching.process(deploy_data, ctx)
+    post_node_patching.expects(:run_shell_command).once.returns(:data => {:exit_code => 0})
+    post_node_patching.process(deploy_data, ctx)
   end
 
   it 'should not run if deploy new env' do
     deploy_data.first.delete('openstack_version_prev')
-    pre_patching.process(deploy_data, ctx)
-    pre_patching.expects(:run_shell_command).never
+    post_node_patching.process(deploy_data, ctx)
+    post_node_patching.expects(:run_shell_command).never
 
-    pre_patching.process(deploy_data, ctx)
+    post_node_patching.process(deploy_data, ctx)
   end
 
   it 'should not change deployment status if command fail' do
-    pre_patching.expects(:run_shell_command).once.returns(:data => {:exit_code => 1})
+    post_node_patching.expects(:run_shell_command).once.returns(:data => {:exit_code => 1})
     ctx.expects(:report_and_update_status).never
 
-    pre_patching.process(deploy_data, ctx)
+    post_node_patching.process(deploy_data, ctx)
   end
 
   it 'should not change deployment status if shell exec using mcollective fail' do
-    pre_patching.expects(:run_shell_command).once.returns(:data => {})
+    post_node_patching.expects(:run_shell_command).once.returns(:data => {})
 
-    pre_patching.process(deploy_data, ctx)
+    post_node_patching.process(deploy_data, ctx)
     ctx.expects(:report_and_update_status).never
   end
 
-  describe '#getremovepackage_cmd' do
+  it 'should special command' do
+    post_node_patching.expects(:run_shell_command).with(
+      ctx,
+      ['1', '2'],
+      regexp_matches(/post-node/),
+      600
+    ).once.returns(:data => {:exit_code => 0})
 
-    it 'should use yum command for CenoOS system' do
-      pre_patching.expects(:run_shell_command).once.with(
-        ctx,
-        ['1', '2'],
-        regexp_matches(/yum/),
-        is_a(Integer))
-      .returns(:data => {:exit_code => 0})
-
-      pre_patching.process(deploy_data, ctx)
-    end
-
-    it 'should use aptitude command for Ubuntu system' do
-      new_deploy_data = deploy_data.clone
-      new_deploy_data.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
-      pre_patching.expects(:run_shell_command).once.with(
-        ctx,
-        ['1', '2'],
-        regexp_matches(/aptitude/),
-        is_a(Integer))
-      .returns(:data => {:exit_code => 0})
-
-      pre_patching.process(new_deploy_data, ctx)
-    end
-
-    it 'raise error if target system unknown' do
-      new_deploy_data = deploy_data.clone
-      new_deploy_data.first['cobbler']['profile'] = 'unknown'
-      pre_patching.expects(:run_shell_command).never
-      expect { pre_patching.process(new_deploy_data, ctx) }.to raise_error(Astute::DeploymentEngineError, /Unknown system/)
-    end
-
-  end # getremovepackage_cmd
+    post_node_patching.process(deploy_data, ctx)
+  end
 
 end
