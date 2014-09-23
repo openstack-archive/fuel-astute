@@ -30,7 +30,8 @@ module Astute
     def initialize(deployment_info, context)
       super
       @actions = [
-        ConnectFacts.new
+        ConnectFacts.new,
+        PreDeployPatching.new
       ]
     end
   end
@@ -39,21 +40,17 @@ module Astute
     def initialize(deployment_info, context)
       super
       @actions = [
-        PostPatchingHa.new
+        PostDeployPatching.new
       ]
     end
   end
 
-  class PreNodeActions
+  class NodeActions
 
     def initialize(context)
       @node_uids = []
       @context = context
-      @actions = [
-        PrePatchingHa.new,
-        StopOSTServices.new,
-        PrePatching.new
-      ]
+      @actions = []
     end
 
     def process(deployment_info)
@@ -66,7 +63,6 @@ module Astute
   end
 
   class PreDeploymentActions < DeployActions
-
     def initialize(deployment_info, context)
       super
       @actions = [
@@ -82,11 +78,27 @@ module Astute
         UploadFacts.new
       ]
     end
+  end
 
+  class PreNodeActions < NodeActions
+    def initialize(context)
+      super
+      @actions = [
+        PreNodePatching.new
+      ]
+    end
+  end
+
+  class PostNodeActions < NodeActions
+    def initialize(context)
+      super
+      @actions = [
+        PostNodePatching.new
+      ]
+    end
   end
 
   class PostDeploymentActions < DeployActions
-
     def initialize(deployment_info, context)
       super
       @actions = [
@@ -95,7 +107,6 @@ module Astute
         RestartRadosgw.new,
         UpdateClusterHostsInfo.new
       ]
-
     end
   end
 

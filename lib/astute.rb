@@ -43,6 +43,7 @@ require 'astute/nailgun_hooks'
  '/astute/pre_deploy_actions/*.rb',
  '/astute/pre_node_actions/*.rb',
  '/astute/post_deploy_actions/*.rb',
+ '/astute/post_node_actions/*.rb',
  '/astute/post_deployment_actions/*.rb',
  '/astute/common_actions/*.rb'
  ].each do |path|

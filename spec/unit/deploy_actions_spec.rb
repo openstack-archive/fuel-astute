@@ -78,27 +78,9 @@ describe Astute::PreDeployActions do
   it 'should run pre hooks' do
     Astute::ConnectFacts.any_instance.expects(:process)
                                     .with(deploy_data, ctx)
-
+    Astute::PreDeployPatching.any_instance.expects(:process)
+                                    .with(deploy_data, ctx)
     pre_deploy_actions.process
-  end
-end
-
-describe Astute::PreNodeActions do
-  include SpecHelpers
-
-  let(:deploy_data) {[{'uid' => '1'}, {'uid' => '2'}]}
-  let(:ctx) { mock }
-  let(:pre_node_actions) { Astute::PreNodeActions.new(ctx) }
-
-  it 'should pre node hooks' do
-    Astute::PrePatchingHa.any_instance.expects(:process)
-                                             .with(deploy_data, ctx)
-    Astute::StopOSTServices.any_instance.expects(:process)
-                                          .with(deploy_data, ctx)
-    Astute::PrePatching.any_instance.expects(:process)
-                                       .with(deploy_data, ctx)
-
-    pre_node_actions.process(deploy_data)
   end
 end
 
@@ -110,18 +92,56 @@ describe Astute::PreNodeActions do
   let(:ctx) { mock }
   let(:pre_node_actions) { Astute::PreNodeActions.new(ctx) }
 
+  it 'should pre node hooks' do
+    Astute::PreNodePatching.any_instance.expects(:process)
+                                       .with(deploy_data1, ctx)
+
+    pre_node_actions.process(deploy_data1)
+  end
+
   it 'should process nodes sending first' do
-    Astute::PrePatching.any_instance.expects(:process)
+    Astute::PreNodePatching.any_instance.expects(:process)
                                    .with(deploy_data1, ctx)
     pre_node_actions.process(deploy_data1)
   end
 
   it 'should not process repeated nodes' do
-    Astute::PrePatching.any_instance.expects(:process)
+    Astute::PreNodePatching.any_instance.expects(:process)
                                .with(deploy_data1, ctx)
     pre_node_actions.process(deploy_data1)
-    Astute::PrePatching.any_instance.expects(:process).never
+    Astute::PreNodePatching.any_instance.expects(:process).never
     pre_node_actions.process(deploy_data2)
+  end
+
+end
+
+describe Astute::PostNodeActions do
+  include SpecHelpers
+
+  let(:deploy_data1) {[{'uid' => '1'}, {'uid' => '2'}]}
+  let(:deploy_data2) {[{'uid' => '1'}]}
+  let(:ctx) { mock }
+  let(:post_node_actions) { Astute::PostNodeActions.new(ctx) }
+
+  it 'should post node hooks' do
+    Astute::PostNodePatching.any_instance.expects(:process)
+                                       .with(deploy_data1, ctx)
+
+    post_node_actions.process(deploy_data1)
+  end
+
+  it 'should process nodes sending first' do
+    Astute::PostNodePatching.any_instance.expects(:process)
+                                   .with(deploy_data1, ctx)
+    post_node_actions.process(deploy_data1)
+  end
+
+  it 'should not process repeated nodes' do
+    Astute::PostNodePatching.any_instance.expects(:process)
+                               .with(deploy_data1, ctx)
+    post_node_actions.process(deploy_data1)
+    Astute::PostNodePatching.any_instance.expects(:process).never
+    post_node_actions.process(deploy_data2)
   end
 
 end

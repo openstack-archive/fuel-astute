@@ -37,6 +37,7 @@ module Astute
       end
 
       pre_node_actions = PreNodeActions.new(@ctx)
+      post_node_actions = PostNodeActions.new(@ctx)
 
       fail_deploy = false
       # Sort by priority (the lower the number, the higher the priority)
@@ -58,6 +59,7 @@ module Astute
 
               # Post deploy hook
               PostDeployActions.new(part, @ctx).process
+              post_node_actions.process(part)
 
               fail_deploy = fail_critical_node?(part)
             else
