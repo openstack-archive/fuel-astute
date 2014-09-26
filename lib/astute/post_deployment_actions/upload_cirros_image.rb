@@ -44,7 +44,7 @@ re that it is correctly generated."
 
       os = node['test_vm_image']
 
-      cmd = ". /root/openrc && /usr/bin/glance index"
+      cmd = ". /root/openrc && /usr/bin/glance image-list"
       response = run_shell_command(context, Array(controller['uid']), cmd)
       if response[:data][:exit_code] != 0
         raise_cirros_error(
