@@ -57,7 +57,8 @@ describe Astute::PreDeploymentActions do
                                   .with(deploy_data, ctx)
     Astute::SyncTasks.any_instance.expects(:process)
                                   .with(deploy_data, ctx)
-
+    Astute::UploadFacts.any_instance.expects(:process)
+                                  .with(deploy_data, ctx)
     pre_deployment_actions.process
   end
 end
@@ -70,7 +71,7 @@ describe Astute::PreDeployActions do
   let(:pre_deploy_actions) { Astute::PreDeployActions.new(deploy_data, ctx) }
 
   it 'should run pre hooks' do
-    Astute::UploadFacts.any_instance.expects(:process)
+    Astute::ConnectFacts.any_instance.expects(:process)
                                     .with(deploy_data, ctx)
 
     pre_deploy_actions.process

@@ -30,7 +30,7 @@ module Astute
     def initialize(deployment_info, context)
       super
       @actions = [
-        UploadFacts.new
+        ConnectFacts.new
       ]
     end
   end
@@ -76,7 +76,8 @@ module Astute
         SyncPuppetStuff.new,
         SyncTasks.new,
         EnablePuppetDeploy.new,
-        SyncTime.new
+        SyncTime.new,
+        UploadFacts.new
       ]
     end
 
