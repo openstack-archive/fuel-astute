@@ -24,21 +24,35 @@ module Astute
       # URI to Tasklib tasks at the master node set by Nailgun
       master_ip = deployment_info.first['master_ip']
       tasks_source = deployment_info.first['tasks_source'] || "rsync://#{master_ip}:/puppet/tasks/"
-
       source = tasks_source.chomp('/').concat('/')
+
+      nodes_uids = only_uniq_nodes(deployment_info).map{ |n| n['uid'] }
+
+      perform_with_limit(nodes_uids) do |part|
+        rsync_tasks(context, source, part)
+      end
+    end
+
+    private
+
+    def rsync_tasks(context, source, nodes_uids)
       path = '/etc/puppet/tasks/'
       rsync_options = '-c -r --delete'
-
       rsync_cmd = "mkdir -p #{path} && rsync #{rsync_options} #{source} #{path}"
 
       sync_retries = 0
       while sync_retries < SYNC_RETRIES
         sync_retries += 1
-        response = run_shell_command(context, deployment_info.map{ |n| n['uid'] }.uniq, rsync_cmd, 300)
+        response = run_shell_command(
+          context,
+          nodes_uids,
+          rsync_cmd,
+          300
+        )
         break if response[:data][:exit_code] == 0
         Astute.logger.warn("Rsync problem. Try to repeat: #{sync_retries} attempt")
       end
+    end #rsync_tasks
 
-    end #process
   end #class
 end

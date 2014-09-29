@@ -13,13 +13,22 @@
 #    under the License.
 
 module Astute
-  class EnablePuppetDeploy < PreDeploymentAction
+  class ConnectFacts < PreDeployAction
 
-    # Unlock puppet (can be lock if puppet was killed by user)
     def process(deployment_info, context)
-      nodes_uids = only_uniq_nodes(deployment_info).map{ |n| n['uid'] }
-      puppetd = MClient.new(context, "puppetd", nodes_uids)
-      puppetd.enable
-    end #process
+      deployment_info.each{ |node| connect_facts(context, node) }
+      Astute.logger.info "#{context.task_id}: Connect role facts for nodes"
+    end
+
+    private
+
+    def connect_facts(context, node)
+      run_shell_command(
+        context,
+        [node['uid']],
+        "ln -s -f /etc/#{node['role']}.yaml /etc/astute.yaml"
+      )
+    end
+
   end #class
 end

@@ -18,8 +18,15 @@ module Astute
     # Upload ssh keys from master node to all cluster nodes
     def process(deployment_info, context)
       deployment_id = deployment_info.first['deployment_id'].to_s
-      node_uids = deployment_info.map{ |n| n['uid'] }
+      nodes_ids = only_uniq_nodes(deployment_info).map{ |n| n['uid'] }
+      perform_with_limit(nodes_ids) do |ids|
+        upload_keys(context, ids, deployment_id)
+      end
+    end
 
+    private
+
+    def upload_keys(context, node_uids, deployment_id)
       Astute.config.PUPPET_SSH_KEYS.each do |key_name|
         upload_mclient = MClient.new(context, "uploadfile", node_uids)
         [key_name, key_name + ".pub"].each do |ssh_key|
@@ -44,7 +51,7 @@ module Astute
                                )
         end
       end
-    end #process
+    end #upload_keys
 
   end #class
 end
