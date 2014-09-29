@@ -13,28 +13,29 @@
 #    under the License.
 
 module Astute
-  class UploadFacts < PreDeployAction
+  class UploadFacts < PreDeploymentAction
 
-    # Generate ssh keys to future uploading to all cluster nodes
     def process(deployment_info, context)
       deployment_info.each{ |node| upload_facts(context, node) }
       Astute.logger.info "#{context.task_id}: Required attrs/metadata passed via facts extension"
-    end #process
+    end
 
     private
 
     def upload_facts(context, node)
-      Astute.logger.info  "#{context.task_id}: storing metadata for node uid=#{node['uid']}"
+      Astute.logger.info  "#{context.task_id}: storing metadata for node uid=#{node['uid']} "\
+        "role=#{node['role']}"
       Astute.logger.debug "#{context.task_id}: stores metadata: #{node.to_yaml}"
 
       # This is synchronious RPC call, so we are sure that data were sent and processed remotely
       upload_mclient = Astute::MClient.new(context, "uploadfile", [node['uid']])
-      upload_mclient.upload(:path => '/etc/astute.yaml',
-                            :content => node.to_yaml,
-                            :overwrite => true,
-                            :parents => true,
-                            :permissions => '0600'
-                           )
+      upload_mclient.upload(
+        :path => "/etc/#{node['role']}.yaml",
+        :content => node.to_yaml,
+        :overwrite => true,
+        :parents => true,
+        :permissions => '0600'
+      )
     end
 
   end #class
