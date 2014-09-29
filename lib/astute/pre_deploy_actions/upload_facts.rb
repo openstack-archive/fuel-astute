@@ -24,17 +24,25 @@ module Astute
     private
 
     def upload_facts(context, node)
-      Astute.logger.info  "#{context.task_id}: storing metadata for node uid=#{node['uid']}"
+      Astute.logger.info  "#{context.task_id}: storing metadata for node uid=#{node['uid']} "\
+        "role=#{node['role']}"
       Astute.logger.debug "#{context.task_id}: stores metadata: #{node.to_yaml}"
 
       # This is synchronious RPC call, so we are sure that data were sent and processed remotely
       upload_mclient = Astute::MClient.new(context, "uploadfile", [node['uid']])
-      upload_mclient.upload(:path => '/etc/astute.yaml',
-                            :content => node.to_yaml,
-                            :overwrite => true,
-                            :parents => true,
-                            :permissions => '0600'
-                           )
+      upload_mclient.upload(
+        :path => "/etc/#{node['role']}.yaml",
+        :content => node.to_yaml,
+        :overwrite => true,
+        :parents => true,
+        :permissions => '0600'
+      )
+
+      run_shell_command(
+        context,
+        [node['uid']],
+        "ln -s -f /etc/#{node['role']}.yaml /etc/astute.yaml"
+      )
     end
 
   end #class
