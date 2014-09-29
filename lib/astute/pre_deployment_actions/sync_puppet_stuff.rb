@@ -38,7 +38,19 @@ module Astute
                                      " puppet_manifests_source '#{schemas.last}' not equivalent!"
       end
 
-      sync_mclient = MClient.new(context, "puppetsync", deployment_info.map{ |n| n['uid'] }.uniq)
+      nodes_uids = only_uniq_nodes(deployment_info).map{ |n| n['uid'] }
+
+      perform_with_limit(nodes_uids) do |part|
+        sync_puppet_stuff(context, part, schemas, modules_source, manifests_source)
+      end
+
+    end # process
+
+    private
+
+    def sync_puppet_stuff(context, node_uids, schemas, modules_source, manifests_source)
+      sync_mclient = MClient.new(context, "puppetsync", node_uids)
+
       case schemas.first
       when 'rsync'
         begin

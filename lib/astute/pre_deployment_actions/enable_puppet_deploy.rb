@@ -17,7 +17,7 @@ module Astute
 
     # Unlock puppet (can be lock if puppet was killed by user)
     def process(deployment_info, context)
-      nodes_uids = deployment_info.map{ |n| n['uid'] }
+      nodes_uids = only_uniq_nodes(deployment_info).map{ |n| n['uid'] }
       puppetd = MClient.new(context, "puppetd", nodes_uids)
       puppetd.enable
     end #process

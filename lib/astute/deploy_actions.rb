@@ -123,7 +123,19 @@ module Astute
                                                mcollective error: #{e.message}")
       {:data => {}}
     end
-  end
+
+    def only_uniq_nodes(nodes)
+      nodes.uniq { |n| n['uid'] }
+    end
+
+    # Prevent high load for tasks
+    def perform_with_limit(nodes, &block)
+      nodes.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |part|
+        block.call(part)
+      end
+    end
+
+  end # DeployAction
 
   class PreDeployAction < DeployAction; end
   class PostDeployAction < DeployAction; end

@@ -19,9 +19,13 @@ module Astute
     def process(deployment_info, context)
       return unless deployment_info.first['repo_metadata']
       content = generate_repo_source(deployment_info)
-      upload_repo_source(context, deployment_info, content)
-      regenerate_metadata(context, deployment_info)
-    end #process
+      deployment_info = only_uniq_nodes(deployment_info)
+
+      perform_with_limit(deployment_info) do |part|
+        upload_repo_source(context, part, content)
+        regenerate_metadata(context, part)
+      end
+    end
 
     private
 
