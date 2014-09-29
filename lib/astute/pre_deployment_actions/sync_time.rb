@@ -17,7 +17,7 @@ module Astute
 
     # Sync time
     def process(deployment_info, context)
-      nodes_uids = deployment_info.map{ |n| n['uid'] }
+      nodes_uids = only_uniq_nodes(deployment_info).map{ |n| n['uid'] }
       cmd = "ntpdate -u $(egrep '^server' /etc/ntp.conf | sed '/^#/d' | awk '{print $2}')"
       succeeded = false
 

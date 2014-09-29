@@ -29,11 +29,7 @@ module Astute
       Astute.logger.info "Deployment mode #{@ctx.deploy_log_parser.deploy_type}"
 
       begin
-        # Prevent to prepare too many nodes at once
-        deployment_info.uniq { |n| n['uid'] }.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |part|
-          # Pre deploy hooks
-          PreDeploymentActions.new(part, @ctx).process
-        end
+        PreDeploymentActions.new(deployment_info, @ctx).process
       rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
