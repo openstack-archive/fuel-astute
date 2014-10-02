@@ -62,8 +62,11 @@ module Astute
 
         # TODO(kozhukalov): do not forget about execute_shell_command timeout which is 3600
         # watch_provision_progress has PROVISIONING_TIMEOUT + 3600 is much longer than PROVISIONING_TIMEOUT
-        image_provision(reporter, task_id, nodes) if provision_method == 'image'
-
+        if provision_method == 'image'
+          # disabling pxe boot
+          cobbler.netboot_nodes(nodes, false)
+          image_provision(reporter, task_id, nodes)
+        end
         # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
         reboot_events = cobbler.reboot_nodes(nodes)
         failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
@@ -103,8 +106,6 @@ module Astute
           'progress' => 80,
           'msg' => 'Nodes have beed successfully provisioned. Next step is reboot.'
         })
-        # disabling pxe boot
-        cobbler.netboot_nodes(nodes, false)
       else
         err_msg = 'At least one of nodes have failed during provisioning'
         Astute.logger.error("#{task_id}: #{err_msg}")

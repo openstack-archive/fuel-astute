@@ -51,10 +51,10 @@ module Astute
     end
 
     def self.run_provision(ctx, nodes)
-      uids = nodes.map { |node| node['uid'].to_s }
-      Astute.logger.debug "#{ctx.task_id}: running provision script: #{uids.join(' ')}"
-      client = MClient.new(ctx, 'execute_shell_command', uids, check_result=true, retries=1)
-      client.execute(:cmd => '/usr/bin/provision')
+      uids = nodes.map { |node| node['uid'] }
+      Astute.logger.debug "#{ctx.task_id}: running provision script: #{uids.join(', ')}"
+      shell = MClient.new(ctx, 'execute_shell_command', uids, check_result=true, timeout=3600, retries=1)
+      shell.execute(:cmd => 'flock -n /var/lock/provision.lock /usr/bin/provision')
     end
 
     def self.report_error(ctx, msg)
