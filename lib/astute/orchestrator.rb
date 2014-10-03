@@ -133,17 +133,16 @@ module Astute
         Timeout.timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
           catch :done do
             loop do
-              sleep_not_greater_than(5) do
-                nodes_types = node_type(proxy_reporter, task_id, nodes.map {|n| n['uid']}, 2)
+              sleep_not_greater_than(20) do
+                nodes_types = node_type(proxy_reporter, task_id, nodes.map {|n| n['uid']}, 5)
                 target_uids, nodes_not_booted = analize_node_types(nodes_types, nodes_not_booted)
 
-                if nodes.length == target_uids.length
-                  Astute.logger.info "All nodes #{target_uids.join(',')} are provisioned."
+                if nodes_not_booted.empty?
+                  Astute.logger.info "All nodes are provisioned"
                   throw :done
                 end
 
-                Astute.logger.debug('Nodes list length is not equal to target ' +
-                  "nodes list length: #{nodes.length} != #{target_uids.length}")
+                Astute.logger.debug("Still provisioning follow nodes: #{nodes_not_booted}")
                 report_about_progress(proxy_reporter, provision_log_parser, target_uids, nodes)
               end
             end
