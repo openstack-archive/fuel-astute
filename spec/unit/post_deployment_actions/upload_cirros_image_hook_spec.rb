@@ -70,9 +70,22 @@ describe Astute::UploadCirrosImage do
     upload_cirros_image.process(deploy_data, ctx)
   end
 
-  it 'should raise deploy if glance glance was not installed properly' do
-    upload_cirros_image.expects(:run_shell_command)
+  it 'should tries to check glance several times' do
+    upload_cirros_image.stubs(:sleep).with(10).times(2)
+
+    upload_cirros_image.stubs(:run_shell_command)
                        .returns(:data => {:exit_code => 1})
+                       .then.returns(:data => {:exit_code => 1})
+                       .then.returns(:data => {:exit_code => 0})
+                       .then.returns(:data => {:exit_code => 0})
+
+    upload_cirros_image.process(deploy_data, ctx)
+  end
+
+  it 'should raise deploy if glance glance was not installed properly' do
+    upload_cirros_image.stubs(:run_shell_command)
+                       .returns(:data => {:exit_code => 1}).times(5)
+    upload_cirros_image.stubs(:sleep).with(10).times(4)
 
     ctx.expects(:report_and_update_status)
        .with('nodes' => [{
