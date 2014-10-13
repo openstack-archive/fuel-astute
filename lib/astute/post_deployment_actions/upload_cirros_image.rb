@@ -43,9 +43,18 @@ re that it is correctly generated."
       # }
 
       os = node['test_vm_image']
-
       cmd = ". /root/openrc && /usr/bin/glance image-list"
-      response = run_shell_command(context, Array(controller['uid']), cmd)
+
+      # waited until the glance is started because when vCenter used as a glance
+      # backend launch may takes up to 1 minute.
+      response = {}
+      5.times.each do |retries|
+        sleep 10 if retries > 0
+
+        response = run_shell_command(context, Array(controller['uid']), cmd)
+        break if response[:data][:exit_code] == 0
+      end
+
       if response[:data][:exit_code] != 0
         raise_cirros_error(
           context,
