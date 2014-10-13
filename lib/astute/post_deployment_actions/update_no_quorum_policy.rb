@@ -16,6 +16,8 @@ module Astute
   class UpdateNoQuorumPolicy < PostDeploymentAction
 
     def process(deployment_info, context)
+      return if deployment_info.first['deployment_mode'] !~ /ha/i
+
       # NOTE(bogdando) use 'suicide' if fencing is enabled in corosync
       xml = <<-EOF
       <diff>
