@@ -50,6 +50,7 @@ describe "NailyFact DeploymentEngine" do
     before(:each) do
       uniq_nodes_uid = deploy_data.map {|n| n['uid'] }.uniq
       Astute::PreDeploymentActions.any_instance.stubs(:process).returns(nil)
+      Astute::PostDeploymentActions.any_instance.stubs(:process).returns(nil)
       Astute::PreDeployActions.any_instance.stubs(:process).returns(nil)
       Astute::PreNodeActions.any_instance.stubs(:process).returns(nil)
       Astute::PreDeployActions.any_instance.stubs(:process).returns(nil)
