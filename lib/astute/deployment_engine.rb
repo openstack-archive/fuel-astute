@@ -22,7 +22,7 @@ module Astute
       @ctx = context
     end
 
-    def deploy(deployment_info)
+    def deploy(deployment_info, pre_deployment=[], post_deployment=[])
       raise "Deployment info are not provided!" if deployment_info.blank?
 
       @ctx.deploy_log_parser.deploy_type = deployment_info.first['deployment_mode']
@@ -34,6 +34,8 @@ module Astute
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
       end
+
+      NailgunHooks.new(pre_deployment, @ctx).process
 
       pre_node_actions = PreNodeActions.new(@ctx)
 
@@ -72,6 +74,11 @@ module Astute
           end
         end
       end
+
+      # Post deployment hooks
+      PostDeploymentActions.new(deployment_info, @ctx).process
+
+      NailgunHooks.new(post_deployment, @ctx).process
     end
 
     protected

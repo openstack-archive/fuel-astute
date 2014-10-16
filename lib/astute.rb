@@ -37,6 +37,7 @@ require 'astute/cobbler_manager'
 require 'astute/image_provision'
 require 'astute/dump'
 require 'astute/deploy_actions'
+require 'astute/nailgun_hooks'
 
 ['/astute/pre_deployment_actions/*.rb',
  '/astute/pre_deploy_actions/*.rb',
