@@ -45,6 +45,7 @@ describe Astute::DeploymentEngine do
       Astute::PostDeployActions.any_instance.stubs(:process).returns(nil)
       Astute::PreNodeActions.any_instance.stubs(:process).returns(nil)
       Astute::PreDeploymentActions.any_instance.stubs(:process).returns(nil)
+      Astute::PostDeploymentActions.any_instance.stubs(:process).returns(nil)
     end
 
     context 'hooks' do
@@ -75,6 +76,12 @@ describe Astute::DeploymentEngine do
 
       it 'should run post deploy hooks once for role' do
         Astute::PostDeployActions.any_instance.expects(:process).times(3)
+
+        deployer.deploy(nodes)
+      end
+
+      it 'should run post deployment hooks run once for all cluster' do
+        Astute::PostDeploymentActions.any_instance.expects(:process).once
 
         deployer.deploy(nodes)
       end
