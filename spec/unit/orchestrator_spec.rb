@@ -121,12 +121,20 @@ describe Astute::Orchestrator do
   end
 
   describe '#deploy' do
-    it "it calls deploy method with valid arguments" do
+    it "calls with valid arguments without nailgun hooks" do
       nodes = [{'uid' => 1, 'role' => 'controller'}]
       Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
-                                                       with(nodes)
-      Astute::PostDeploymentActions.any_instance.expects(:process).returns(nil)
+                                                       with(nodes, [], [])
       @orchestrator.deploy(@reporter, 'task_uuid', nodes)
+    end
+
+    it "calls with valid arguments including nailgun hooks" do
+      nodes = [{'uid' => 1, 'role' => 'controller'}]
+      pre_deployment = [{'type' => 'upload_file', 'uids' =>['1', '2', '3' ]}]
+      post_deployment = [{'type' => 'sync', 'uids' =>['3', '2', '1' ]}]
+      Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
+                                                       with(nodes, pre_deployment, post_deployment)
+      @orchestrator.deploy(@reporter, 'task_uuid', nodes, pre_deployment, post_deployment)
     end
 
     it "deploy method raises error if nodes list is empty" do

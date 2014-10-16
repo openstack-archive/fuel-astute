@@ -31,21 +31,25 @@ module Astute
       end
     end
 
-    def deploy(up_reporter, task_id, deployment_info)
+    def deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
       deploy_cluster(
         up_reporter,
         task_id,
         deployment_info,
-        Astute::DeploymentEngine::NailyFact
+        Astute::DeploymentEngine::NailyFact,
+        pre_deployment,
+        post_deployment
       )
     end
 
-    def task_deployment(up_reporter, task_id, deployment_info)
+    def task_deployment(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
       deploy_cluster(
         up_reporter,
         task_id,
         deployment_info,
-        Astute::DeploymentEngine::Tasklib
+        Astute::DeploymentEngine::Tasklib,
+        pre_deployment,
+        post_deployment
       )
     end
 
@@ -238,17 +242,14 @@ module Astute
 
     private
 
-    def deploy_cluster(up_reporter, task_id, deployment_info, deploy_engine)
+    def deploy_cluster(up_reporter, task_id, deployment_info, deploy_engine, pre_deployment, post_deployment)
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, deployment_info)
       log_parser = @log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
       context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
 
-      deploy_engine_instance.deploy(deployment_info)
-
-      # Post deployment hooks
-      PostDeploymentActions.new(deployment_info, context).process
+      deploy_engine_instance.deploy(deployment_info, pre_deployment, post_deployment)
 
       context.status
     end
