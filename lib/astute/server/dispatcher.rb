@@ -54,8 +54,15 @@ module Astute
         Astute.logger.info("'deploy' method called with data: #{data.inspect}")
 
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+
         begin
-          @orchestrator.deploy(reporter, data['args']['task_uuid'], data['args']['deployment_info'])
+          @orchestrator.deploy(
+            reporter,
+            data['args']['task_uuid'],
+            data['args']['deployment_info'],
+            data['args']['pre_deployment'] || [],
+            data['args']['post_deployment'] || []
+          )
           reporter.report('status' => 'ready', 'progress' => 100)
         rescue Timeout::Error
           msg = "Timeout of deployment is exceeded."

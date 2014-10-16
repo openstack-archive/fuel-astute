@@ -45,6 +45,7 @@ describe Astute::DeploymentEngine do
       Astute::PostDeployActions.any_instance.stubs(:process).returns(nil)
       Astute::PreNodeActions.any_instance.stubs(:process).returns(nil)
       Astute::PreDeploymentActions.any_instance.stubs(:process).returns(nil)
+      Astute::PostDeploymentActions.any_instance.stubs(:process).returns(nil)
     end
 
     context 'hooks' do
@@ -53,12 +54,47 @@ describe Astute::DeploymentEngine do
         [{'uid' => 1, 'priority' => 10}, {'uid' => 2, 'priority' => 0}, {'uid' => 1, 'priority' => 15}]
       }
 
+      let(:pre_deployment) {
+        [{
+          "priority" =>  100,
+          "type" =>  "upload_file",
+          "uids" =>  [1, 2],
+          "parameters" =>  {}
+        }]
+      }
+
+      let(:post_deployment) {
+        [{
+          "priority" =>  100,
+          "type" =>  "puppet",
+          "uids" =>  [1, 2],
+          "parameters" =>  {}
+        }]
+      }
+
       before(:each) { deployer.stubs(:deploy_piece) }
 
       it 'should run pre deployment hooks run once for all cluster' do
         Astute::PreDeploymentActions.any_instance.expects(:process).once
 
         deployer.deploy(nodes)
+      end
+
+      it 'should run pre and post deployment nailgun hooks run once for all cluster' do
+        pre_hook = mock('pre')
+        post_hook = mock('post')
+        hook_order = sequence('hook_order')
+
+        Astute::NailgunHooks.expects(:new).with(pre_deployment, ctx).returns(pre_hook)
+        Astute::NailgunHooks.expects(:new).with(post_deployment, ctx).returns(post_hook)
+
+        Astute::PreDeploymentActions.any_instance.expects(:process).in_sequence(hook_order)
+        pre_hook.expects(:process).in_sequence(hook_order)
+        deployer.expects(:deploy_piece).in_sequence(hook_order)
+        post_hook.expects(:process).in_sequence(hook_order)
+        Astute::PostDeploymentActions.any_instance.expects(:process).in_sequence(hook_order)
+
+        deployer.deploy(nodes, pre_deployment, post_deployment)
       end
 
       it 'should run pre node hooks once for node' do
@@ -78,14 +114,21 @@ describe Astute::DeploymentEngine do
 
         deployer.deploy(nodes)
       end
+
+      it 'should run post deployment hooks run once for all cluster' do
+        Astute::PostDeploymentActions.any_instance.expects(:process).once
+
+        deployer.deploy(nodes)
+      end
     end
 
     it 'deploy nodes by order' do
       nodes = [{'uid' => 1, 'priority' => 10}, {'uid' => 2, 'priority' => 0}, {'uid' => 1, 'priority' => 15}]
 
-      deployer.expects(:deploy_piece).with([{'uid' => 2, 'priority' => 0}])
-      deployer.expects(:deploy_piece).with([{'uid' => 1, 'priority' => 10}])
-      deployer.expects(:deploy_piece).with([{'uid' => 1, 'priority' => 15}])
+      deploy_order = sequence('deploy_order')
+      deployer.expects(:deploy_piece).with([{'uid' => 2, 'priority' => 0}]).in_sequence(deploy_order)
+      deployer.expects(:deploy_piece).with([{'uid' => 1, 'priority' => 10}]).in_sequence(deploy_order)
+      deployer.expects(:deploy_piece).with([{'uid' => 1, 'priority' => 15}]).in_sequence(deploy_order)
 
       deployer.deploy(nodes)
     end
