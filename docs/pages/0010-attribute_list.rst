@@ -1553,11 +1553,11 @@ $vips
 
 **FUEL way:** ::
 $vips = { # Do not convert to ARRAY, It can't work in 2.7
-  public_old => {
+  public => {
     nic    => $public_int,
     ip     => $public_virtual_ip,
   },
-  management_old => {
+  management => {
     nic    => $internal_int,
     ip     => $internal_virtual_ip,
   },
@@ -1568,11 +1568,11 @@ $vips = { # Do not convert to ARRAY, It can't work in 2.7
 *exists in consolidated code*
 
 $vips = { # Do not convert to ARRAY, It can't work in 2.7
-  public_old => {
+  public => {
     nic    => $public_int,
     ip     => $public_virtual_ip,
   },
-  management_old => {
+  management => {
     nic    => $internal_int,
     ip     => $internal_virtual_ip,
   },
