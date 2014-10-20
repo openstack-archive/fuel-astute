@@ -124,8 +124,15 @@ describe Astute::Orchestrator do
     it "calls with valid arguments without nailgun hooks" do
       nodes = [{'uid' => 1, 'role' => 'controller'}]
       Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
-                                                       with(nodes, [], [])
+                                                       with(nodes, [], [], dry_run=false)
       @orchestrator.deploy(@reporter, 'task_uuid', nodes)
+    end
+
+    it "calls with valid arguments without nailgun hooks using dry mode" do
+      nodes = [{'uid' => 1, 'role' => 'controller'}]
+      Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
+                                                       with(nodes, [], [], dry_run=true)
+      @orchestrator.deploy(@reporter, 'task_uuid', nodes, [], [], true)
     end
 
     it "calls with valid arguments including nailgun hooks" do
@@ -133,8 +140,17 @@ describe Astute::Orchestrator do
       pre_deployment = [{'type' => 'upload_file', 'uids' =>['1', '2', '3' ]}]
       post_deployment = [{'type' => 'sync', 'uids' =>['3', '2', '1' ]}]
       Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
-                                                       with(nodes, pre_deployment, post_deployment)
+                                                       with(nodes, pre_deployment, post_deployment, false)
       @orchestrator.deploy(@reporter, 'task_uuid', nodes, pre_deployment, post_deployment)
+    end
+
+    it "calls with valid arguments including nailgun hooks using dry mode" do
+      nodes = [{'uid' => 1, 'role' => 'controller'}]
+      pre_deployment = [{'type' => 'upload_file', 'uids' =>['1', '2', '3' ]}]
+      post_deployment = [{'type' => 'sync', 'uids' =>['3', '2', '1' ]}]
+      Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
+                                                       with(nodes, pre_deployment, post_deployment, true)
+      @orchestrator.deploy(@reporter, 'task_uuid', nodes, pre_deployment, post_deployment, true)
     end
 
     it "deploy method raises error if nodes list is empty" do

@@ -31,25 +31,27 @@ module Astute
       end
     end
 
-    def deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
+    def deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[], dry_run=false)
       deploy_cluster(
         up_reporter,
         task_id,
         deployment_info,
         Astute::DeploymentEngine::NailyFact,
         pre_deployment,
-        post_deployment
+        post_deployment,
+        dry_run
       )
     end
 
-    def task_deployment(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
+    def task_deployment(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[], dry_run=false)
       deploy_cluster(
         up_reporter,
         task_id,
         deployment_info,
         Astute::DeploymentEngine::Tasklib,
         pre_deployment,
-        post_deployment
+        post_deployment,
+        dry_run
       )
     end
 
@@ -242,14 +244,14 @@ module Astute
 
     private
 
-    def deploy_cluster(up_reporter, task_id, deployment_info, deploy_engine, pre_deployment, post_deployment)
+    def deploy_cluster(up_reporter, task_id, deployment_info, deploy_engine, pre_deployment, post_deployment, dry_run=false)
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, deployment_info)
       log_parser = @log_parsing ? LogParser::ParseDeployLogs.new : LogParser::NoParsing.new
       context = Context.new(task_id, proxy_reporter, log_parser)
       deploy_engine_instance = deploy_engine.new(context)
       Astute.logger.info "Using #{deploy_engine_instance.class} for deployment."
 
-      deploy_engine_instance.deploy(deployment_info, pre_deployment, post_deployment)
+      deploy_engine_instance.deploy(deployment_info, pre_deployment, post_deployment, dry_run)
 
       context.status
     end

@@ -80,6 +80,22 @@ describe Astute::DeploymentEngine do
         deployer.deploy(nodes)
       end
 
+      it 'should run only pre deployment hook if dry mode on' do
+        pre_hook = mock('pre')
+        Astute::NailgunHooks.expects(:new).with(pre_deployment, ctx).returns(pre_hook)
+        pre_hook.expects(:process).once
+        Astute::PreDeploymentActions.any_instance.expects(:process).once
+
+        deployer.expects(:deploy_piece).never
+        Astute::NailgunHooks.expects(:new).with(post_deployment, ctx).never
+        Astute::PreDeployActions.any_instance.expects(:process).never
+        Astute::PostDeployActions.any_instance.expects(:process).never
+        Astute::PreNodeActions.any_instance.expects(:process).never
+        Astute::PostDeploymentActions.any_instance.expects(:process).never
+
+        deployer.deploy(nodes, pre_deployment, post_deployment, dry_run=true)
+      end
+
       it 'should run pre and post deployment nailgun hooks run once for all cluster' do
         pre_hook = mock('pre')
         post_hook = mock('post')

@@ -22,7 +22,7 @@ module Astute
       @ctx = context
     end
 
-    def deploy(deployment_info, pre_deployment=[], post_deployment=[])
+    def deploy(deployment_info, pre_deployment=[], post_deployment=[], dry_run=false)
       raise "Deployment info are not provided!" if deployment_info.blank?
 
       @ctx.deploy_log_parser.deploy_type = deployment_info.first['deployment_mode']
@@ -34,8 +34,12 @@ module Astute
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
       end
-
       NailgunHooks.new(pre_deployment, @ctx).process
+
+      if dry_run
+        Astute.logger.warn "Main deployment will not start because dry run mode"
+        return
+      end
 
       pre_node_actions = PreNodeActions.new(@ctx)
 
