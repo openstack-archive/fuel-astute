@@ -20,9 +20,12 @@ module MCollective
     class Execute_shell_command < RPC::Agent
 
       action 'execute' do
-        reply[:exit_code] = run(request[:cmd],
-                                :stdout => :stdout,
-                                :stderr => :stderr)
+        reply[:exit_code] = run(
+          request[:cmd],
+          :stdout => :stdout,
+          :stderr => :stderr,
+          :cwd => request.fetch(:cwd, '/tmp')
+        )
         reply[:stdout] ||= ""
         reply[:stderr] ||= ""
       end

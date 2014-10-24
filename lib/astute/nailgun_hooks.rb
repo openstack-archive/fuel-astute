@@ -25,12 +25,28 @@ module Astute
       @nailgun_hooks.sort_by { |f| f['priority'] }.each do |hook|
         Astute.logger.info "Run hook #{hook.to_yaml}"
 
-        case hook['type']
+        success = case hook['type']
         when 'sync' then sync_hook(hook)
         when 'shell' then shell_hook(hook)
         when 'upload_file' then upload_file_hook(hook)
         when 'puppet' then puppet_hook(hook)
         else raise "Unknown hook type #{hook['type']}"
+        end
+
+        is_raise_on_error = hook.fetch('fail_deployment_on_error', true)
+
+        if !success && is_raise_on_error
+          nodes = hook['uids'].map do |uid|
+            { 'uid' => uid,
+              'status' => 'error',
+              'error_type' => 'deploy',
+              'role' => 'hook',
+              'hook' => hook['diagnostic_name']
+            }
+          end
+          @ctx.report_and_update_status('nodes' => nodes)
+          raise Astute::DeploymentEngineError,
+            "Failed to deploy plugin #{hook['diagnostic_name']}"
         end
       end
     end
@@ -43,27 +59,31 @@ module Astute
       validate_presence(hook['parameters'], 'puppet_modules')
 
       timeout = hook['parameters']['timeout'] || 300
-      cwd = hook['parameters']['cwd'] || "~/"
+      cwd = hook['parameters']['cwd'] || "/tmp"
 
       shell_command =  <<-PUPPET_CMD
-        cd #{cwd} &&
         puppet apply --debug --verbose --logdest syslog
         --modulepath=#{hook['parameters']['puppet_modules']}
         #{hook['parameters']['puppet_manifest']}
       PUPPET_CMD
       shell_command.tr!("\n"," ")
 
+      is_success = true
       perform_with_limit(hook['uids']) do |node_uids|
         response = run_shell_command(
           @ctx,
           node_uids,
           shell_command,
-          timeout
+          timeout,
+          cwd
         )
         if response[:data][:exit_code] != 0
           Astute.logger.warn("Puppet run failed. Check puppet logs for details")
+          is_success = false
         end
       end
+
+      is_success
     end #puppet_hook
 
     def upload_file_hook(hook)
@@ -73,9 +93,13 @@ module Astute
 
       hook['parameters']['content'] = hook['parameters']['data']
 
+      is_success = true
       perform_with_limit(hook['uids']) do |node_uids|
-        upload_file(@ctx, node_uids, hook['parameters'])
+        status = upload_file(@ctx, node_uids, hook['parameters'])
+        is_success = false if status == false
       end
+
+      is_success
     end
 
     def shell_hook(hook)
@@ -88,17 +112,22 @@ module Astute
 
       shell_command = "cd #{cwd} && #{hook['parameters']['cmd']}"
 
+      is_success = true
       perform_with_limit(hook['uids']) do |node_uids|
         response = run_shell_command(
           @ctx,
           node_uids,
           shell_command,
-          timeout
+          timeout,
+          cwd
         )
         if response[:data][:exit_code] != 0
           Astute.logger.warn("Shell command failed. Check debug output for details")
+          is_success = false
         end
       end
+
+      is_success
     end # shell_hook
 
 
@@ -115,27 +144,32 @@ module Astute
       rsync_options = '-c -r --delete'
       rsync_cmd = "mkdir -p #{path} && rsync #{rsync_options} #{source} #{path}"
 
+      is_success = false
+
       perform_with_limit(hook['uids']) do |node_uids|
-        sync_retries = 0
-        while sync_retries < 10
-          sync_retries += 1
+        10.times do |sync_retries|
           response = run_shell_command(
             @ctx,
             node_uids,
             rsync_cmd,
             timeout
           )
-          break if response[:data][:exit_code] == 0
+          if response[:data][:exit_code] == 0
+            is_success = true
+            break
+          end
           Astute.logger.warn("Rsync problem. Try to repeat: #{sync_retries} attempt")
         end
       end
+
+      is_success
     end # sync_hook
 
     def validate_presence(data, key)
       raise "Missing a required parameter #{key}" unless data[key].present?
     end
 
-    def run_shell_command(context, node_uids, cmd, timeout=60)
+    def run_shell_command(context, node_uids, cmd, timeout=60, cwd="/tmp")
       shell = MClient.new(context,
                           'execute_shell_command',
                           node_uids,
@@ -144,15 +178,18 @@ module Astute
                           retries=1)
 
       #TODO: return result for all nodes not only for first
-      response = shell.execute(:cmd => cmd).first
-      Astute.logger.debug("#{context.task_id}: cmd: #{cmd}
-                                               stdout: #{response[:data][:stdout]}
-                                               stderr: #{response[:data][:stderr]}
-                                               exit code: #{response[:data][:exit_code]}")
+      response = shell.execute(:cmd => cmd, :cwd => cwd).first
+      Astute.logger.debug(
+        "#{context.task_id}: cmd: #{cmd}\n" \
+        "cwd: #{cwd}\n" \
+        "stdout: #{response[:data][:stdout]}\n" \
+        "stderr: #{response[:data][:stderr]}\n" \
+        "exit code: #{response[:data][:exit_code]}")
       response
     rescue MClientTimeout, MClientError => e
-      Astute.logger.error("#{context.task_id}: cmd: #{cmd}
-                                               mcollective error: #{e.message}")
+      Astute.logger.error(
+        "#{context.task_id}: cmd: #{cmd} \n" \
+        "mcollective error: #{e.message}")
       {:data => {}}
     end
 
@@ -176,8 +213,11 @@ module Astute
         :group_owner => mco_params['group_owner'],
         :dir_permissions => mco_params['dir_permissions']
       )
+
+      true
     rescue MClientTimeout, MClientError => e
       Astute.logger.error("#{context.task_id}: mcollective upload_file agent error: #{e.message}")
+      false
     end
 
     def perform_with_limit(nodes, &block)
