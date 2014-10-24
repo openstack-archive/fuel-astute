@@ -30,12 +30,11 @@ module Astute
 
       begin
         PreDeploymentActions.new(deployment_info, @ctx).process
+        NailgunHooks.new(pre_deployment, @ctx).process
       rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
       end
-
-      NailgunHooks.new(pre_deployment, @ctx).process
 
       pre_node_actions = PreNodeActions.new(@ctx)
 
@@ -76,7 +75,21 @@ module Astute
       end
 
       # Post deployment hooks
-      NailgunHooks.new(post_deployment, @ctx).process
+      begin
+        NailgunHooks.new(post_deployment, @ctx).process
+      rescue => e
+        # We should fail all nodes in case of post deployment
+        # process. In other case they will not sending back
+        # for redeploy
+        nodes = deployment_info.uniq {|n| n['uid']}.map do |node|
+          { 'uid' => node['uid'],
+            'status' => 'error',
+            'error_type' => 'deploy',
+          }
+        end
+        @ctx.report_and_update_status('nodes' => nodes)
+        raise e
+      end
 
       PostDeploymentActions.new(deployment_info, @ctx).process
     end

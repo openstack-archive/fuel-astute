@@ -76,7 +76,13 @@ module Astute
 
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         begin
-          @orchestrator.task_deployment(reporter, data['args']['task_uuid'], data['args']['deployment_info'])
+          @orchestrator.task_deployment(
+            reporter,
+            data['args']['task_uuid'],
+            data['args']['deployment_info'],
+            data['args']['pre_deployment'] || [],
+            data['args']['post_deployment'] || []
+          )
           reporter.report('status' => 'ready', 'progress' => 100)
         rescue Timeout::Error
           msg = "Timeout of deployment is exceeded."
@@ -180,7 +186,7 @@ module Astute
         Astute.logger.info "Try to kill running task #{target_task_uuid}"
         service_data[:main_work_thread].kill
 
-        result = if service_data[:tasks_queue].current_task_method == 'deploy'
+        result = if ['deploy', 'task_deployment'].include? service_data[:tasks_queue].current_task_method
           @orchestrator.stop_puppet_deploy(reporter, task_uuid, nodes)
           @orchestrator.remove_nodes(reporter, task_uuid, data['args']['engine'], nodes)
         else

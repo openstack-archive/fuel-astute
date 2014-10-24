@@ -12,19 +12,28 @@ action "execute", :description => "Execute shell command" do
           :prompt         => "Shell command",
           :description    => "Shell command for running",
           :type           => :string,
-          :validation	  => '.*',
+          :validation	    => '.*',
           :optional       => false,
           :maxlength      => 0
 
-    output :stdout,
-           :description => "Output from #{:cmd}",
-           :display_as => "Output"
+  input :cwd,
+          :prompt         => "CWD",
+          :description    => "Path to folder where command will be run",
+          :type           => :string,
+          :validation     => '.*',
+          :optional       => false,
+          :default        => '/tmp',
+          :maxlength      => 0
 
-    output :stderr,
-           :description => "Stderr from #{:cmd}",
-           :display_as => "Stderr"
+  output :stdout,
+         :description => "Output from #{:cmd}",
+         :display_as => "Output"
 
-    output :exit_code,
-           :description => "Exit code of #{:cmd}",
-           :display_as => "Exit code"
+  output :stderr,
+         :description => "Stderr from #{:cmd}",
+         :display_as => "Stderr"
+
+  output :exit_code,
+         :description => "Exit code of #{:cmd}",
+         :display_as => "Exit code"
 end
