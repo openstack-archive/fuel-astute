@@ -22,7 +22,8 @@ module MCollective
       action 'execute' do
         reply[:exit_code] = run(request[:cmd],
                                 :stdout => :stdout,
-                                :stderr => :stderr)
+                                :stderr => :stderr,
+                                :cwd => request[:cwd])
         reply[:stdout] ||= ""
         reply[:stderr] ||= ""
       end

@@ -102,10 +102,12 @@ module Astute
             abort_messages messages[(i + 1)..-1]
             break
           rescue => ex
-            Astute.logger.error "Error running RPC method #{message['method']}: #{ex.message}, trace: #{ex.backtrace.inspect}"
+            Astute.logger.error "Error running RPC method #{message['method']}: #{ex.message}, "
+              "trace: #{ex.format_backtrace}"
             return_results message, {
               'status' => 'error',
-              'error'  => "Error occurred while running method '#{message['method']}'. Inspect Astute logs for the details"
+              'error'  => "Method #{message['method']}. #{ex.message}.\n" \
+                          "Inspect Astute logs for the details"
             }
             break
           end
