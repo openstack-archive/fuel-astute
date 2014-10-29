@@ -117,10 +117,10 @@ describe "NailyFact DeploymentEngine" do
 
       it "ha deploy should not raise any exception" do
         primary_controller = deploy_data.find { |n| n['role'] == 'primary-controller' }
-        Astute::PuppetdDeployer.expects(:deploy).with(ctx, [primary_controller], 2).once
+        Astute::PuppetdDeployer.expects(:deploy).with(ctx, [primary_controller], 1).once
 
         controller_nodes.each do |n|
-          Astute::PuppetdDeployer.expects(:deploy).with(ctx, [n], 2).once
+          Astute::PuppetdDeployer.expects(:deploy).with(ctx, [n], 1).once
         end
         Astute::PuppetdDeployer.expects(:deploy).with(ctx, compute_nodes, instance_of(Fixnum)).once
 

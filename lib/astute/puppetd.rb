@@ -19,7 +19,7 @@ require 'timeout'
 module Astute
   module PuppetdDeployer
 
-    def self.deploy(ctx, nodes, retries=2)
+    def self.deploy(ctx, nodes, retries=1)
       @ctx = ctx
       @nodes_roles = nodes.inject({}) { |h, n| h.merge({n['uid'] => n['role']}) }
       @node_retries = nodes.inject({}) { |h, n| h.merge({n['uid'] => retries}) }
