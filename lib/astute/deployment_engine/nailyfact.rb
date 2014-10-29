@@ -14,7 +14,7 @@
 
 class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
-  def deploy_piece(nodes, retries=2)
+  def deploy_piece(nodes, retries=1)
     return false unless validate_nodes(nodes)
 
     @ctx.reporter.report(nodes_status(nodes, 'deploying', {'progress' => 0}))
