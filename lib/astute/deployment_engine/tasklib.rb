@@ -22,7 +22,7 @@ class Astute::DeploymentEngine::Tasklib < Astute::DeploymentEngine
     4 => :not_found_such_task
   }
 
-  def deploy_piece(nodes, retries=2)
+  def deploy_piece(nodes, retries=1)
     return false unless validate_nodes(nodes)
 
     tasklib_deploy(nodes, retries)
