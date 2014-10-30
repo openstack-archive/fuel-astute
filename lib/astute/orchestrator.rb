@@ -55,30 +55,40 @@ module Astute
 
     def provision(reporter, task_id, engine_attrs, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
-      provision_method = engine_attrs['provision_method'] || 'cobbler'
 
       cobbler = CobblerManager.new(engine_attrs, reporter)
+
+      failed_nodes = []
+      not_provisioned_nodes = []
+      provisioned_nodes = []
+      not_rebooted_nodes = []
+      result_msg = {'nodes' => []}
+      max_failed_nodes = Astute.config[:ALLOWED_FAILED_NODES_PERCENT] / 100.0 * nodes.count
+      Astute.logger.info "Max nodes allowed to fail: #{max_failed_nodes}."
+
       begin
         remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=false)
         cobbler.add_nodes(nodes)
 
-        # if provision_method is 'image', we do not need to immediately
-        # reboot nodes. instead, we need to run image based provisioning
-        # process and then reboot nodes
+        nodes.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |piece|
+          failed = provision_piece(reporter, task_id, engine_attrs, piece, cobbler)
+          failed_nodes += failed
 
-        # TODO(kozhukalov): do not forget about execute_shell_command timeout which is 3600
-        # watch_provision_progress has PROVISIONING_TIMEOUT + 3600 is much longer than PROVISIONING_TIMEOUT
-        if provision_method == 'image'
-          # disabling pxe boot
-          cobbler.netboot_nodes(nodes, false)
-          image_provision(reporter, task_id, nodes)
+          if failed_nodes.present? and failed_nodes.count > max_failed_nodes
+            break
+          end
+
+          provisioned, not_provisioned = watch_provision_progress(reporter, task_id, piece)
+
+          provisioned_nodes += provisioned
+          not_provisioned_nodes += not_provisioned
+
+          if not_provisioned_nodes.present? and \
+              failed_nodes.count + not_provisioned_nodes.count > max_failed_nodes
+            break
+          end
         end
-        # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
-        reboot_events = cobbler.reboot_nodes(nodes)
-        failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
 
-        # control reboot for nodes which still in bootstrap state
-        control_reboot_using_ssh(reporter, task_id, nodes)
       rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
@@ -90,18 +100,62 @@ module Astute
       end
 
       if failed_nodes.present?
-        err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
-        Astute.logger.error(err_msg)
-        reporter.report({
+        not_rebooted_nodes = nodes.select{|node| failed_nodes.include? node[:name]}
+        not_rebooted_nodes = not_rebooted_nodes.map do |n|
+          {
+            'uid' => n,
             'status' => 'error',
-            'error' => err_msg,
-            'progress' => 100})
-
+            'error_msg' => "node did not reboot.",
+            'progress' => 100,
+            'error_type' => 'provision'
+          }
         unlock_nodes_discovery(reporter, task_id="", failed_nodes, nodes)
-        raise FailedToRebootNodesError.new(err_msg)
+        end
       end
 
-      watch_provision_progress(reporter, task_id, nodes)
+      if not_provisioned_nodes.present?
+        uids = not_provisioned_nodes.map {|n| n["uid"] }
+        names = nodes.select{|node| uids.include? node["uid"]}
+        names = names.map{|n| n["name"]}
+        Astute.logger.info "Not provisioned nodes: #{names}."
+        unlock_nodes_discovery(reporter, task_id="", names, nodes)
+      end
+
+      result_msg["nodes"] = provisioned_nodes + not_provisioned_nodes + not_rebooted_nodes
+
+      if failed_nodes.count + not_provisioned_nodes.count > max_failed_nodes
+        result_msg.merge!({
+            'status' => 'error',
+            'error' => 'Error occured while provisioning',
+            'progress' => 100})
+      else
+        result_msg.reverse_merge!({'status' => 'ready', 'progress' => 100})
+      end
+
+      reporter.report(result_msg)
+
+    end
+
+    def provision_piece(reporter, task_id, engine_attrs, nodes, cobbler)
+      provision_method = engine_attrs['provision_method'] || 'cobbler'
+      # if provision_method is 'image', we do not need to immediately
+      # reboot nodes. instead, we need to run image based provisioning
+      # process and then reboot nodes
+
+      # TODO(kozhukalov): do not forget about execute_shell_command timeout which is 3600
+      # watch_provision_progress has PROVISIONING_TIMEOUT + 3600 is much longer than PROVISIONING_TIMEOUT
+      if provision_method == 'image'
+        # disabling pxe boot
+        cobbler.netboot_nodes(nodes, false)
+        image_provision(reporter, task_id, nodes)
+      end
+      # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
+      reboot_events = cobbler.reboot_nodes(nodes)
+      not_rebooted_nodes = cobbler.check_reboot_nodes(reboot_events)
+
+      # control reboot for nodes which still in bootstrap state
+      control_reboot_using_ssh(reporter, task_id, nodes)
+      return not_rebooted_nodes
     end
 
     def image_provision(reporter, task_id, nodes)
@@ -132,10 +186,12 @@ module Astute
       provision_log_parser = @log_parsing ? LogParser::ParseProvisionLogs.new : LogParser::NoParsing.new
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(reporter)
 
+      Astute.logger.info "All nodes #{nodes.join(',')}."
       prepare_logs_for_parsing(provision_log_parser, nodes)
 
       nodes_not_booted = nodes.map{ |n| n['uid'] }
-      result_msg = {'nodes' => []}
+      provisioned_nodes = []
+      not_provisioned = []
       begin
         Timeout.timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
           catch :done do
@@ -159,7 +215,7 @@ module Astute
         end
       rescue Timeout::Error
         Astute.logger.error("Timeout of provisioning is exceeded. Nodes not booted: #{nodes_not_booted}")
-        nodes_progress = nodes_not_booted.map do |n|
+        not_provisioned = nodes_not_booted.map do |n|
           {
             'uid' => n,
             'status' => 'error',
@@ -169,25 +225,14 @@ module Astute
           }
         end
 
-        result_msg.merge!({
-            'status' => 'error',
-            'error' => 'Timeout of provisioning is exceeded',
-            'progress' => 100})
-
-        result_msg['nodes'] += nodes_progress
       end
 
       node_uids = nodes.map { |n| n['uid'] }
       (node_uids - nodes_not_booted).each do |uid|
-        result_msg['nodes'] << {'uid' => uid, 'progress' => 100, 'status' => 'provisioned'}
+        provisioned_nodes << {'uid' => uid, 'progress' => 100, 'status' => 'provisioned'}
       end
 
-      # If there was no errors, then set status to ready
-      result_msg.reverse_merge!({'status' => 'ready', 'progress' => 100})
-
-      proxy_reporter.report(result_msg)
-
-      result_msg
+      return provisioned_nodes, not_provisioned
     end
 
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true)
