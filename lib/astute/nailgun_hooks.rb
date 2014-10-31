@@ -57,27 +57,21 @@ module Astute
       validate_presence(hook, 'uids')
       validate_presence(hook['parameters'], 'puppet_manifest')
       validate_presence(hook['parameters'], 'puppet_modules')
+      validate_presence(hook['parameters'], 'cwd')
 
       timeout = hook['parameters']['timeout'] || 300
-      cwd = hook['parameters']['cwd'] || "/tmp"
-
-      shell_command =  <<-PUPPET_CMD
-        puppet apply --debug --verbose --logdest syslog
-        --modulepath=#{hook['parameters']['puppet_modules']}
-        #{hook['parameters']['puppet_manifest']}
-      PUPPET_CMD
-      shell_command.tr!("\n"," ")
 
       is_success = true
       perform_with_limit(hook['uids']) do |node_uids|
-        response = run_shell_command(
+        result = run_puppet(
           @ctx,
           node_uids,
-          shell_command,
-          timeout,
-          cwd
+          hook['parameters']['puppet_manifest'],
+          hook['parameters']['puppet_modules'],
+          hook['parameters']['cwd'],
+          timeout
         )
-        if response[:data][:exit_code] != 0
+        unless result
           Astute.logger.warn("Puppet run failed. Check puppet logs for details")
           is_success = false
         end
@@ -169,6 +163,28 @@ module Astute
       raise "Missing a required parameter #{key}" unless data[key].present?
     end
 
+    def run_puppet(context, node_uids, puppet_manifest, puppet_modules, cwd, timeout)
+      # Prevent send report status to Nailgun
+      hook_context = Context.new(context.task_id, HookReporter.new)
+      nodes = node_uids.map { |node_id| {'uid' => node_id.to_s, 'role' => 'hook'} }
+
+      Timeout::timeout(timeout) {
+        PuppetdDeployer.deploy(
+          hook_context,
+          nodes,
+          retries=2,
+          puppet_manifest,
+          puppet_modules,
+          cwd
+        )
+      }
+
+      !hook_context.status.has_value?('error')
+    rescue Astute::MClientTimeout, Astute::MClientError, Timeout::Error => e
+      Astute.logger.error("#{context.task_id}: puppet timeout error: #{e.message}")
+      false
+    end
+
     def run_shell_command(context, node_uids, cmd, timeout=60, cwd="/tmp")
       shell = MClient.new(context,
                           'execute_shell_command',
@@ -196,7 +212,7 @@ module Astute
     def upload_file(context, node_uids, mco_params={})
       upload_mclient = Astute::MClient.new(context, "uploadfile", Array(node_uids))
 
-      mco_params['overwrite'] = false if mco_params['overwrite'].nil?
+      mco_params['overwrite'] = true if mco_params['overwrite'].nil?
       mco_params['parents'] = true if mco_params['parents'].nil?
       mco_params['permissions'] ||= '0644'
       mco_params['user_owner']  ||= 'root'
@@ -227,4 +243,11 @@ module Astute
     end
 
   end # class
+
+  class HookReporter
+    def report(msg)
+      Astute.logger.debug msg
+    end
+  end
+
 end # module

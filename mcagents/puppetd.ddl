@@ -48,13 +48,41 @@ action "disable", :description => "Disable puppet" do
 end
 
 action "runonce", :description => "Invoke a single puppet run" do
-    #input :forcerun,
-    #    :prompt      => "Force puppet run",
-    #    :description => "Should the puppet run happen immediately?",
-    #    :type        => :string,
-    #    :validation  => '^.+$',
-    #    :optional    => true,
-    #    :maxlength   => 5
+
+    input :manifest,
+          :prompt         => "Path to manifest",
+          :description    => "Path to manifest (relative or absolutely)",
+          :type           => :string,
+          :validation     => :shellsafe,
+          :optional       => true,
+          :default        => '/etc/puppet/manifests/site.pp',
+          :maxlength      => 0
+
+    input :modules,
+          :prompt         => "Path to modules folder",
+          :description    => "Path to modules folder (relative or absolutely)",
+          :type           => :string,
+          :validation     => :shellsafe,
+          :optional       => true,
+          :default        => '/etc/puppet/modules',
+          :maxlength      => 0
+
+    input :cwd,
+          :prompt         => "CWD",
+          :description    => "Path to folder where command will be run",
+          :type           => :string,
+          :validation     => :shellsafe,
+          :optional       => true,
+          :default        => '/tmp',
+          :maxlength      => 0
+
+    input :puppet_debug,
+          :prompt      => "Puppet debug",
+          :description => "Puppet run mode: debug",
+          :type        => :boolean,
+          :validation  => :typecheck,
+          :default     => true,
+          :optional    => true
 
     output :output,
            :description => "Output from puppet",
