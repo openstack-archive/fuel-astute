@@ -530,16 +530,42 @@ describe Astute::NailgunHooks do
       expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
     end
 
-     it 'should run puppet command with timeout' do
+    it 'should validate presence of cwd parameter' do
+      puppet_hook['parameters'].delete('cwd')
       hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-      hooks.expects(:run_shell_command).once.with(
-        ctx,
-        [1,3],
-        regexp_matches(/puppet/),
-        puppet_hook['parameters']['timeout'],
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+
+     it 'should run puppet command using main mechanism' do
+      hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
+      PuppetdDeployer.expects(:deploy).once.with(
+        instance_of(Astute::Context),
+        [
+          {'uid' => 1, 'role' => 'hook'},
+          {'uid' => 3, 'role' => 'hook'}
+        ],
+        retries=2,
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
         puppet_hook['parameters']['cwd']
       )
-      .returns(:data => {:exit_code => 0})
+
+      Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
+      hooks.process
+    end
+
+    it 'should run puppet command with timeout' do
+      hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
+      hooks.expects(:run_puppet).once.with(
+        ctx,
+        [1,3],
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
+        puppet_hook['parameters']['cwd'],
+        puppet_hook['parameters']['timeout']
+      ).returns(true)
+      Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
 
       hooks.process
     end
@@ -547,14 +573,15 @@ describe Astute::NailgunHooks do
     it 'should use default timeout if it does not set' do
       puppet_hook['parameters'].delete('timeout')
       hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-      hooks.expects(:run_shell_command).once.with(
+      hooks.expects(:run_puppet).once.with(
         ctx,
         [1,3],
-        regexp_matches(/puppet/),
-        300,
-        puppet_hook['parameters']['cwd']
-      )
-      .returns(:data => {:exit_code => 0})
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
+        puppet_hook['parameters']['cwd'],
+        300
+      ).returns(true)
+      Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
 
       hooks.process
     end
@@ -563,25 +590,33 @@ describe Astute::NailgunHooks do
       Astute.config.MAX_NODES_PER_CALL = 1
 
       hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-      hooks.expects(:run_shell_command).once.with(
+      hooks.expects(:run_puppet).once.with(
         ctx,
         [1],
-        regexp_matches(/puppet/),
-        puppet_hook['parameters']['timeout'],
-        puppet_hook['parameters']['cwd']
-      )
-      .returns(:data => {:exit_code => 0})
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
+        puppet_hook['parameters']['cwd'],
+        puppet_hook['parameters']['timeout']
+      ).returns(true)
 
-      hooks.expects(:run_shell_command).once.with(
+      hooks.expects(:run_puppet).once.with(
         ctx,
         [3],
-        regexp_matches(/puppet/),
-        puppet_hook['parameters']['timeout'],
-        puppet_hook['parameters']['cwd']
-      )
-      .returns(:data => {:exit_code => 0})
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
+        puppet_hook['parameters']['cwd'],
+        puppet_hook['parameters']['timeout']
+      ).returns(true)
 
+      Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
       hooks.process
+    end
+
+    it 'if mclient failed and task is not critical -> do not raise error' do
+      hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
+      PuppetdDeployer.expects(:deploy).once.raises(Astute::MClientError)
+
+      expect {hooks.process}.to_not raise_error
     end
 
     context 'process data from mcagent in case of critical hook' do
@@ -590,23 +625,25 @@ describe Astute::NailgunHooks do
         ctx.stubs(:report_and_update_status)
       end
 
-      it 'if exit code eql 0 -> do not raise error' do
+      it 'if puppet success do not raise error' do
         hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 0}}).once
+        PuppetdDeployer.expects(:deploy).once
+        Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
 
         expect {hooks.process}.to_not raise_error
       end
 
-      it 'if exit code not eql 0 -> raise error' do
+      it 'if puppet fail -> raise error' do
         hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).once
+        PuppetdDeployer.expects(:deploy).once
+        Astute::Context.any_instance.stubs(:status).returns({'1' => 'error', '3' => 'success'})
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
       end
 
-      it 'if exit code not presence -> raise error' do
+      it 'if mclient failed -> raise error' do
         hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {}}).once
+        PuppetdDeployer.expects(:deploy).once.raises(Astute::MClientError)
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
       end
