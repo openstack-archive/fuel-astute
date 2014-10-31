@@ -19,11 +19,14 @@ require 'timeout'
 module Astute
   module PuppetdDeployer
 
-    def self.deploy(ctx, nodes, retries=2)
+    def self.deploy(ctx, nodes, retries=2, puppet_manifest=nil, puppet_modules=nil, cwd=nil)
       @ctx = ctx
       @nodes_roles = nodes.inject({}) { |h, n| h.merge({n['uid'] => n['role']}) }
       @node_retries = nodes.inject({}) { |h, n| h.merge({n['uid'] => retries}) }
       @nodes = nodes
+      @puppet_manifest = puppet_manifest || '/etc/puppet/manifests/site.pp'
+      @puppet_modules = puppet_modules || '/etc/puppet/modules'
+      @cwd = cwd || '/tmp'
 
       Astute.logger.debug "Waiting for puppet to finish deployment on all
                            nodes (timeout = #{Astute.config.PUPPET_TIMEOUT} sec)..."
@@ -51,7 +54,12 @@ module Astute
         @nodes.select { |n| stopped_uids.include? n['uid'] }
              .group_by { |n| n['debug'] }
              .each do |debug, stop_nodes|
-               puppetd(stop_nodes.map { |n| n['uid'] }).runonce(:puppet_debug => true)
+                puppetd(stop_nodes.map { |n| n['uid'] }).runonce(
+                  :puppet_debug => true,
+                  :manifest => @puppet_manifest,
+                  :modules  => @puppet_modules,
+                  :cwd => @cwd
+                )
              end
         break if running_uids.empty?
 

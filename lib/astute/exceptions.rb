@@ -27,5 +27,7 @@ module Astute
   class DeploymentEngineError < AstuteError; end
   # MClient errors
   class MClientError < AstuteError; end
+  # MClient timeout error
+  class MClientTimeout < Timeout::Error; end
 
 end
