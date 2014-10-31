@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+require 'timeout'
 
 module Astute
 
@@ -27,5 +28,7 @@ module Astute
   class DeploymentEngineError < AstuteError; end
   # MClient errors
   class MClientError < AstuteError; end
+  # MClient timeout error
+  class MClientTimeout < Timeout::Error; end
 
 end
