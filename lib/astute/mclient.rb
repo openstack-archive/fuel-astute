@@ -19,8 +19,6 @@ require 'timeout'
 
 module Astute
 
-  class MClientTimeout < Timeout::Error; end
-
   class MClient
     include MCollective::RPC
 

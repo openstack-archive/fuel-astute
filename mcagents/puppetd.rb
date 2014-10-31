@@ -42,8 +42,7 @@ module MCollective
         @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/sbin/daemonize -a \
                                                                                  -l #{@lockfile} \
                                                                                  -p #{@lockfile} \
-                                                                                 /usr/bin/puppet apply \
-                                                                                 /etc/puppet/manifests/site.pp"
+                                                                                 /usr/bin/puppet apply"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
         @lockmcofile = "/tmp/mcopuppetd.lock"
       end
@@ -173,7 +172,15 @@ module MCollective
       end
 
       def runonce_background
-        cmd = [@puppetd, "--logdest", 'syslog', '--trace', '--no-report']
+        cmd = [
+          @puppetd,
+          request.fetch(:manifest, '/etc/puppet/manifests/site.pp'),
+          "--modulepath=#{request.fetch(:modules, '/etc/puppet/modules')}",
+          '--logdest',
+          'syslog',
+          '--trace',
+          '--no-report'
+        ]
         unless request[:forcerun]
           if @splaytime && @splaytime > 0
             cmd << "--splaylimit" << @splaytime << "--splay"
@@ -187,7 +194,7 @@ module MCollective
         cmd = cmd.join(" ")
 
         output = reply[:output] || ''
-        run(cmd, :stdout => :output, :chomp => true)
+        run(cmd, :stdout => :output, :chomp => true, :cwd => request.fetch(:cwd, '/tmp'))
         reply[:output] = "Called #{cmd}, " + output + (reply[:output] || '')
       end
 
