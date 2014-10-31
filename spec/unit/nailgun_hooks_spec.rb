@@ -34,7 +34,7 @@ describe Astute::NailgunHooks do
       "type" =>  "upload_file",
       "fail_on_error" => false,
       "diagnostic_name" => "upload-example-1.0",
-      "uids" =>  [2, 3],
+      "uids" =>  ['2', '3'],
       "parameters" =>  {
         "path" =>  "/etc/yum.repos.d/fuel_awesome_plugin-0.1.0.repo",
         "data" =>  "[fuel_awesome_plugin-0.1.0]\\nname=Plugin fuel_awesome_plugin-0.1.0 repository\\nbaseurl=http => //10.20.0.2 => 8080/plugins/fuel_awesome_plugin-0.1.0/repositories/centos\\ngpgcheck=0"
@@ -48,7 +48,7 @@ describe Astute::NailgunHooks do
       "type" =>  "sync",
       "fail_on_error" => false,
       "diagnostic_name" => "sync-example-1.0",
-      "uids" =>  [1, 2],
+      "uids" =>  ['1', '2'],
       "parameters" =>  {
         "src" =>  "rsync://10.20.0.2/plugins/fuel_awesome_plugin-0.1.0/deployment_scripts/",
         "dst" =>  "/etc/fuel/plugins/fuel_awesome_plugin-0.1.0/"
@@ -62,7 +62,7 @@ describe Astute::NailgunHooks do
       "type" =>  "shell",
       "fail_on_error" => false,
       "diagnostic_name" => "shell-example-1.0",
-      "uids" =>  [1,2,3],
+      "uids" =>  ['1','2','3'],
       "parameters" =>  {
         "cmd" =>  "./deploy.sh",
         "cwd" =>  "/etc/fuel/plugins/fuel_awesome_plugin-0.1.0/",
@@ -77,7 +77,7 @@ describe Astute::NailgunHooks do
       "type" =>  "puppet",
       "fail_on_error" => false,
       "diagnostic_name" => "puppet-example-1.0",
-      "uids" =>  [1, 3],
+      "uids" =>  ['1', '3'],
       "parameters" =>  {
         "puppet_manifest" =>  "cinder_glusterfs.pp",
         "puppet_modules" =>  "modules",
@@ -112,7 +112,7 @@ describe Astute::NailgunHooks do
       wrong_hook = [{
         "priority" =>  300,
         "type" =>  "unknown",
-        "uids" =>  [1, 3],
+        "uids" =>  ['1', '3'],
         "parameters" =>  {
           "parameter" => "1"
         }
@@ -179,19 +179,19 @@ describe Astute::NailgunHooks do
         ctx.expects(:report_and_update_status).with(
           {'nodes' =>
             [
-              { 'uid' => 1,
+              { 'uid' => '1',
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
                 'hook' => "shell-example-1.0"
               },
-              { 'uid' => 2,
+              { 'uid' => '2',
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
                 'hook' => "shell-example-1.0"
               },
-              { 'uid' => 3,
+              { 'uid' => '3',
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
@@ -240,7 +240,7 @@ describe Astute::NailgunHooks do
       hooks = Astute::NailgunHooks.new([shell_hook], ctx)
       hooks.expects(:run_shell_command).once.with(
         ctx,
-        [1,2,3],
+        ['1','2','3'],
         regexp_matches(/deploy/),
         shell_hook['parameters']['timeout'],
         shell_hook['parameters']['cwd']
@@ -255,7 +255,7 @@ describe Astute::NailgunHooks do
       hooks = Astute::NailgunHooks.new([shell_hook], ctx)
       hooks.expects(:run_shell_command).once.with(
         ctx,
-        [1,2,3],
+        ['1','2','3'],
         regexp_matches(/deploy/),
         300,
         shell_hook['parameters']['cwd']
@@ -271,7 +271,7 @@ describe Astute::NailgunHooks do
       hooks = Astute::NailgunHooks.new([shell_hook], ctx)
       hooks.expects(:run_shell_command).once.with(
         ctx,
-        [1, 2],
+        ['1', '2'],
         regexp_matches(/deploy/),
         shell_hook['parameters']['timeout'],
         shell_hook['parameters']['cwd']
@@ -280,7 +280,7 @@ describe Astute::NailgunHooks do
 
       hooks.expects(:run_shell_command).once.with(
         ctx,
-        [3],
+        ['3'],
         regexp_matches(/deploy/),
         shell_hook['parameters']['timeout'],
         shell_hook['parameters']['cwd']
@@ -347,7 +347,7 @@ describe Astute::NailgunHooks do
 
       hooks.expects(:upload_file).once.with(
         ctx,
-        [2, 3],
+        ['2', '3'],
         has_entries(
           'content' => upload_file_hook['parameters']['data'],
           'path' => upload_file_hook['parameters']['path']
@@ -363,7 +363,7 @@ describe Astute::NailgunHooks do
 
       hooks.expects(:upload_file).once.with(
         ctx,
-        [2],
+        ['2'],
         has_entries(
           'content' => upload_file_hook['parameters']['data'],
           'path' => upload_file_hook['parameters']['path']
@@ -372,7 +372,7 @@ describe Astute::NailgunHooks do
 
       hooks.expects(:upload_file).once.with(
         ctx,
-        [3],
+        ['3'],
         has_entries(
           'content' => upload_file_hook['parameters']['data'],
           'path' => upload_file_hook['parameters']['path']
@@ -432,7 +432,7 @@ describe Astute::NailgunHooks do
       hooks = Astute::NailgunHooks.new([sync_hook], ctx)
       hooks.expects(:run_shell_command).once.with(
         ctx,
-        [1,2],
+        ['1','2'],
         regexp_matches(/deploy/),
         sync_hook['parameters']['timeout']
       )
@@ -446,7 +446,7 @@ describe Astute::NailgunHooks do
       hooks = Astute::NailgunHooks.new([sync_hook], ctx)
       hooks.expects(:run_shell_command).once.with(
         ctx,
-        [1,2],
+        ['1','2'],
         regexp_matches(/rsync/),
         300
       )
@@ -461,7 +461,7 @@ describe Astute::NailgunHooks do
       hooks = Astute::NailgunHooks.new([sync_hook], ctx)
       hooks.expects(:run_shell_command).once.with(
         ctx,
-        [1],
+        ['1'],
         regexp_matches(/rsync/),
         is_a(Integer)
       )
@@ -469,7 +469,7 @@ describe Astute::NailgunHooks do
 
       hooks.expects(:run_shell_command).once.with(
         ctx,
-        [2],
+        ['2'],
         regexp_matches(/rsync/),
         is_a(Integer)
       )
@@ -530,16 +530,42 @@ describe Astute::NailgunHooks do
       expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
     end
 
-     it 'should run puppet command with timeout' do
+    it 'should validate presence of cwd parameter' do
+      puppet_hook['parameters'].delete('cwd')
       hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-      hooks.expects(:run_shell_command).once.with(
-        ctx,
-        [1,3],
-        regexp_matches(/puppet/),
-        puppet_hook['parameters']['timeout'],
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+
+     it 'should run puppet command using main mechanism' do
+      hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
+      PuppetdDeployer.expects(:deploy).once.with(
+        instance_of(Astute::Context),
+        [
+          {'uid' => '1', 'role' => 'hook'},
+          {'uid' => '3', 'role' => 'hook'}
+        ],
+        retries=2,
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
         puppet_hook['parameters']['cwd']
       )
-      .returns(:data => {:exit_code => 0})
+
+      Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
+      hooks.process
+    end
+
+    it 'should run puppet command with timeout' do
+      hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
+      hooks.expects(:run_puppet).once.with(
+        ctx,
+        ['1','3'],
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
+        puppet_hook['parameters']['cwd'],
+        puppet_hook['parameters']['timeout']
+      ).returns(true)
+      Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
 
       hooks.process
     end
@@ -547,14 +573,15 @@ describe Astute::NailgunHooks do
     it 'should use default timeout if it does not set' do
       puppet_hook['parameters'].delete('timeout')
       hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-      hooks.expects(:run_shell_command).once.with(
+      hooks.expects(:run_puppet).once.with(
         ctx,
-        [1,3],
-        regexp_matches(/puppet/),
-        300,
-        puppet_hook['parameters']['cwd']
-      )
-      .returns(:data => {:exit_code => 0})
+        ['1','3'],
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
+        puppet_hook['parameters']['cwd'],
+        300
+      ).returns(true)
+      Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
 
       hooks.process
     end
@@ -563,25 +590,33 @@ describe Astute::NailgunHooks do
       Astute.config.MAX_NODES_PER_CALL = 1
 
       hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-      hooks.expects(:run_shell_command).once.with(
+      hooks.expects(:run_puppet).once.with(
         ctx,
-        [1],
-        regexp_matches(/puppet/),
-        puppet_hook['parameters']['timeout'],
-        puppet_hook['parameters']['cwd']
-      )
-      .returns(:data => {:exit_code => 0})
+        ['1'],
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
+        puppet_hook['parameters']['cwd'],
+        puppet_hook['parameters']['timeout']
+      ).returns(true)
 
-      hooks.expects(:run_shell_command).once.with(
+      hooks.expects(:run_puppet).once.with(
         ctx,
-        [3],
-        regexp_matches(/puppet/),
-        puppet_hook['parameters']['timeout'],
-        puppet_hook['parameters']['cwd']
-      )
-      .returns(:data => {:exit_code => 0})
+        ['3'],
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
+        puppet_hook['parameters']['cwd'],
+        puppet_hook['parameters']['timeout']
+      ).returns(true)
 
+      Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
       hooks.process
+    end
+
+    it 'if mclient failed and task is not critical -> do not raise error' do
+      hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
+      PuppetdDeployer.expects(:deploy).once.raises(Astute::MClientError)
+
+      expect {hooks.process}.to_not raise_error
     end
 
     context 'process data from mcagent in case of critical hook' do
@@ -590,23 +625,25 @@ describe Astute::NailgunHooks do
         ctx.stubs(:report_and_update_status)
       end
 
-      it 'if exit code eql 0 -> do not raise error' do
+      it 'if puppet success do not raise error' do
         hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 0}}).once
+        PuppetdDeployer.expects(:deploy).once
+        Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
 
         expect {hooks.process}.to_not raise_error
       end
 
-      it 'if exit code not eql 0 -> raise error' do
+      it 'if puppet fail -> raise error' do
         hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).once
+        PuppetdDeployer.expects(:deploy).once
+        Astute::Context.any_instance.stubs(:status).returns({'1' => 'error', '3' => 'success'})
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
       end
 
-      it 'if exit code not presence -> raise error' do
+      it 'if mclient failed -> raise error' do
         hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {}}).once
+        PuppetdDeployer.expects(:deploy).once.raises(Astute::MClientError)
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
       end

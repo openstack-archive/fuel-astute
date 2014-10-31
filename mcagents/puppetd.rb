@@ -39,11 +39,11 @@ module MCollective
         @log = @config.pluginconf["puppetd.log"] || "/var/log/puppet.log"
         @statefile = @config.pluginconf["puppetd.statefile"] || "/var/lib/puppet/state/state.yaml"
         @pidfile = @config.pluginconf["puppet.pidfile"] || "/var/run/puppet/agent.pid"
-        @puppetd = @config.pluginconf["puppetd.puppetd"] || "/usr/sbin/daemonize -a \
-                                                                                 -l #{@lockfile} \
-                                                                                 -p #{@lockfile} \
-                                                                                 /usr/bin/puppet apply \
-                                                                                 /etc/puppet/manifests/site.pp"
+        @puppetd = @config.pluginconf["puppetd.puppetd"] ||
+          "/usr/sbin/daemonize -a \
+           -l #{@lockfile} \
+           -p #{@lockfile} "
+        @puppetd_agent = "/usr/bin/puppet apply"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
         @lockmcofile = "/tmp/mcopuppetd.lock"
       end
@@ -173,7 +173,18 @@ module MCollective
       end
 
       def runonce_background
-        cmd = [@puppetd, "--logdest", 'syslog', '--trace', '--no-report']
+        cwd = request.fetch(:cwd, '/')
+        cmd = [
+          @puppetd,
+          "-c #{cwd}",
+          @puppetd_agent,
+          request.fetch(:manifest, '/etc/puppet/manifests/site.pp'),
+          "--modulepath=#{request.fetch(:modules, '/etc/puppet/modules')}",
+          '--logdest',
+          'syslog',
+          '--trace',
+          '--no-report'
+        ]
         unless request[:forcerun]
           if @splaytime && @splaytime > 0
             cmd << "--splaylimit" << @splaytime << "--splay"
@@ -187,7 +198,7 @@ module MCollective
         cmd = cmd.join(" ")
 
         output = reply[:output] || ''
-        run(cmd, :stdout => :output, :chomp => true)
+        run(cmd, :stdout => :output, :chomp => true, :cwd => cwd)
         reply[:output] = "Called #{cmd}, " + output + (reply[:output] || '')
       end
 

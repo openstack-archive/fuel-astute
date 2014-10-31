@@ -102,7 +102,7 @@ module Astute
             abort_messages messages[(i + 1)..-1]
             break
           rescue => ex
-            Astute.logger.error "Error running RPC method #{message['method']}: #{ex.message}, "
+            Astute.logger.error "Error running RPC method #{message['method']}: #{ex.message}, " \
               "trace: #{ex.format_backtrace}"
             return_results message, {
               'status' => 'error',
