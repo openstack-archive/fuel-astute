@@ -165,7 +165,7 @@ module Astute
 
     def run_puppet(context, node_uids, puppet_manifest, puppet_modules, cwd, timeout)
       # Prevent send report status to Nailgun
-      hook_context = Context.new(context.task_id, HookReporter.new)
+      hook_context = Context.new(context.task_id, HookReporter.new, LogParser::NoParsing.new)
       nodes = node_uids.map { |node_id| {'uid' => node_id.to_s, 'role' => 'hook'} }
 
       Timeout::timeout(timeout) {
