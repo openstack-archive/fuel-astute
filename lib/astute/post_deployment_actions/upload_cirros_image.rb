@@ -19,10 +19,11 @@ module Astute
   class UploadCirrosImage < PostDeploymentAction
 
     def process(deployment_info, context)
-      #FIXME: update context status to multirole support: possible situation where one of the
-      #       roles of node fail but if last status - success, we try to run code below.
+      # Mark controller node as error if present
+      node = deployment_info.find { |n| n['role'] == 'primary-controller' }
+      node = deployment_info.find { |n| n['role'] == 'controller' } unless node
+      node = deployment_info.last unless node
 
-      node = deployment_info.last
       controller = node['nodes'].find { |n| n['role'] == 'primary-controller' }
       controller = node['nodes'].find { |n| n['role'] == 'controller' } unless controller
 
@@ -56,11 +57,17 @@ re that it is correctly generated."
       end
 
       if response[:data][:exit_code] != 0
-        raise_cirros_error(
-          context,
-          node,
-          'Disabling the upload of disk image because glance was not installed properly'
-        )
+        msg = 'Disabling the upload of disk image because glance was not installed properly'
+        if context.status[node['uid']] != 'error'
+          raise_cirros_error(
+            context,
+            node,
+            msg
+          )
+        else
+          Astute.logger.error("#{context.task_id}: #{msg}")
+          return
+        end
       end
 
       cmd = ". /root/openrc && /usr/bin/glance image-list | grep #{os['img_name']}"
