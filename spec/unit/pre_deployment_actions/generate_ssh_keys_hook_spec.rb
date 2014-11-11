@@ -17,6 +17,14 @@ require File.join(File.dirname(__FILE__), '../../spec_helper')
 describe Astute::GenerateSshKeys do
   include SpecHelpers
 
+  around(:each) do |example|
+    old_puppet_ssh_keys = Astute.config.PUPPET_KEYS
+    old_ssh_keys_dir = Astute.config.PUPPET_SSH_KEYS_DIR
+    example.run
+    Astute.config.PUPPET_SSH_KEYS_DIR = old_ssh_keys_dir
+    Astute.config.PUPPET_KEYS = old_puppet_ssh_keys
+  end
+
   before(:each) do
     Astute.config.PUPPET_SSH_KEYS = ['nova']
   end
@@ -29,18 +37,6 @@ describe Astute::GenerateSshKeys do
 
   let(:deploy_data) { [{'uid' => 1, 'deployment_id' => 1}, {'uid' => 2}] }
   let(:generate_ssh_keys) { Astute::GenerateSshKeys.new }
-
-    # it 'should use Astute.config to get the ssh names that need to generate' do
-    #   deployer.expects(:generate_ssh_keys).with(nodes.first['deployment_id'])
-    #   deployer.expects(:upload_ssh_keys).with([1, 2], nodes.first['deployment_id'])
-    #   generate_ssh_keys(deploy_data, ctx)
-    # end
-
-  around(:each) do |example|
-    old_ssh_keys_dir = Astute.config.PUPPET_SSH_KEYS_DIR
-    example.run
-    Astute.config.PUPPET_SSH_KEYS_DIR = old_ssh_keys_dir
-  end
 
   it 'should raise error if deployment_id is not set' do
     nodes = [{'uid' => 1}, {'uid' => 2}]

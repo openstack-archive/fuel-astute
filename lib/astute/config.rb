@@ -68,8 +68,17 @@ module Astute
 
     conf[:PUPPET_SSH_KEYS_DIR] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
                                               # Do not change this at least your clear know what you do!
-    conf[:PUPPET_SSH_KEYS] = ['neutron', 'nova', 'ceph', 'mysql']  # name of ssh keys what will be generated
-                                                        #and uploaded to all nodes before deploy
+    conf[:PUPPET_SSH_KEYS] = [
+      'neutron',
+      'nova',
+      'ceph',
+      'mysql',
+    ]  # name of ssh keys what will be generated and uploaded to all nodes before deploy
+    conf[:PUPPET_KEYS] = [
+      'mongodb'
+    ] # name of keys what will be generated and uploaded to all nodes before deploy
+    conf[:PUPPET_KEYS_DIR] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
+                                               # Do not change this at least your clear know what you do!
     conf[:MAX_NODES_PER_CALL] = 50        # how many nodes to deploy in one puppet call
     conf[:SSH_RETRIES] = 5                # SSH tries to call ssh client before failure
     conf[:SSH_RETRY_TIMEOUT] = 30         # SSH sleeps for ## sec between retries

@@ -17,6 +17,12 @@ require File.join(File.dirname(__FILE__), '../../spec_helper')
 describe Astute::UploadSshKeys do
   include SpecHelpers
 
+  around(:each) do |example|
+    old_puppet_ssh_keys = Astute.config.PUPPET_SSH_KEYS
+    example.run
+    Astute.config.PUPPET_SSH_KEYS = old_puppet_ssh_keys
+  end
+
   before(:each) do
     Astute.config.PUPPET_SSH_KEYS = ['nova']
   end
