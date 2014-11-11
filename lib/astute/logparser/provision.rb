@@ -21,12 +21,16 @@ module Astute
 
       def get_pattern_for_node(node)
         os = node['profile']
-        if ['centos-x86_64'].include?(os)
-          pattern_spec_name = 'centos-anaconda-log-supposed-time-kvm'
-        elsif os == 'ubuntu_1204_x86_64'
-          pattern_spec_name = 'ubuntu-provisioning'
+        if node.key? 'ks_meta' and node['ks_meta'].key? 'image_data'
+          pattern_spec_name = 'image-based-provisioning' 
         else
-          raise Astute::ParseProvisionLogsError, "Cannot find profile for os with: #{os}"
+          if ['centos-x86_64'].include?(os)
+            pattern_spec_name = 'centos-anaconda-log-supposed-time-kvm'
+          elsif os == 'ubuntu_1204_x86_64'
+            pattern_spec_name = 'ubuntu-provisioning'
+          else
+            raise Astute::ParseProvisionLogsError, "Cannot find profile for os with: #{os}"
+          end
         end
 
         pattern_spec = deep_copy(Patterns::get_default_pattern(pattern_spec_name))
