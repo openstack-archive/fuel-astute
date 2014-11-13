@@ -144,13 +144,13 @@ module Astute
                 nodes_types = node_type(proxy_reporter, task_id, nodes.map {|n| n['uid']}, 5)
                 target_uids, nodes_not_booted = analize_node_types(nodes_types, nodes_not_booted)
 
-                Astute.logger.debug("Still provisioning follow nodes: #{nodes_not_booted}")
-                report_about_progress(proxy_reporter, provision_log_parser, target_uids, nodes)
-
                 if nodes_not_booted.empty?
                   Astute.logger.info "All nodes are provisioned"
                   throw :done
                 end
+
+                Astute.logger.debug("Still provisioning follow nodes: #{nodes_not_booted}")
+                report_about_progress(proxy_reporter, provision_log_parser, target_uids, nodes)
               end
             end
           end
