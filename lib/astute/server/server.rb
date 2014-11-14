@@ -83,6 +83,10 @@ module Astute
 
           @tasks_queue.add_task(data)
           dispatch(@tasks_queue)
+
+          # Clean up tasks queue to prevent wrong service job work flow for
+          # already finished tasks
+          @tasks_queue = TaskQueue.new
         end
       end
 
