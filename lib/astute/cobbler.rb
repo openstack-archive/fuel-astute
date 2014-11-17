@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 require 'xmlrpc/client'
 
 module Astute
@@ -106,6 +105,14 @@ module Astute
 
       def sync
         remote.call('sync', token)
+      rescue Net::ReadTimeout, XMLRPC::FaultException => e
+        retries ||= 0
+        retries += 1
+        raise e if retries > 2
+
+        Astute.logger.warn("Cobbler problem. Try to repeat: #{retries} attempt")
+        sleep 10
+        retry
       end
 
       def power(name, action)
