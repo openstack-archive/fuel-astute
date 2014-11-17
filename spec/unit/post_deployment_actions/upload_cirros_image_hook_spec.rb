@@ -144,7 +144,6 @@ describe Astute::UploadCirrosImage do
       no image was added before' do
     upload_cirros_image.stubs(:run_shell_command)
                        .returns(:data => {:exit_code => 0})
-                       .then.returns(:data => {:exit_code => 1})
                        .then.returns(:data => {:exit_code => 0})
     expect(upload_cirros_image.process(deploy_data, ctx)).to be_true
   end

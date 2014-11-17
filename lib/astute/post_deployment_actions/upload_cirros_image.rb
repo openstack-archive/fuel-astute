@@ -28,8 +28,8 @@ module Astute
       controller = node['nodes'].find { |n| n['role'] == 'controller' } unless controller
 
       if controller.nil?
-        Astute.logger.debug "Could not find controller in nodes in facts! Please check logs to be su
-re that it is correctly generated."
+        Astute.logger.debug "Could not find controller in nodes in facts! " \
+          "Please check logs to be sure that it is correctly generated."
         return
       end
       # controller['test_vm_image'] contains a hash like that:
@@ -70,27 +70,25 @@ re that it is correctly generated."
         end
       end
 
-      cmd = ". /root/openrc && /usr/bin/glance image-list | grep #{os['img_name']}"
+      cmd = <<-UPLOAD_IMAGE
+        . /root/openrc &&
+        (/usr/bin/glance image-list | grep -q #{os['img_name']}) ||
+        /usr/bin/glance image-create
+          --name \'#{os['img_name']}\'
+          --is-public #{os['public']}
+          --container-format=\'#{os['container_format']}\'
+            --disk-format=\'#{os['disk_format']}\'
+            --min-ram=#{os['min_ram']} #{os['glance_properties']}
+            --file \'#{os['img_path']}\'
+      UPLOAD_IMAGE
+      cmd.tr!("\n"," ")
+
       response = run_shell_command(context, Array(controller['uid']), cmd)
       if response[:data][:exit_code] == 0
-        Astute.logger.debug "Image \"#{os['img_name']}\" already added to stack"
+        Astute.logger.info "#{context.task_id}: Upload cirros " \
+          "image \"#{os['img_name']}\" is done"
       else
-        cmd = ". /root/openrc && \
-                 /usr/bin/glance image-create \
-                 --name \'#{os['img_name']}\' \
-                 --is-public #{os['public']} \
-                 --container-format=\'#{os['container_format']}\' \
-                 --disk-format=\'#{os['disk_format']}\' \
-                 --min-ram=#{os['min_ram']} \
-                 #{os['glance_properties']} \
-                 --file \'#{os['img_path']}\' \
-              "
-        response = run_shell_command(context, Array(controller['uid']), cmd)
-        if response[:data][:exit_code] == 0
-          Astute.logger.info("#{context.task_id}: Upload cirros image \"#{os['img_name']}\" is done")
-        else
-          raise_cirros_error(context, node, "Upload cirros \"#{os['img_name']}\" image failed")
-        end
+        raise_cirros_error(context, node, "Upload cirros \"#{os['img_name']}\" image failed")
       end
     end # process
 
