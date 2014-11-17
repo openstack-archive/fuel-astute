@@ -106,6 +106,14 @@ module Astute
 
       def sync
         remote.call('sync', token)
+      rescue Net::ReadTimeout => e
+        retries ||= 0
+        retries += 1
+        raise e if retries > 2
+
+        Astute.logger.warn("Cobbler problem. Try to repeat: #{retries} attempt")
+        sleep 10
+        retry
       end
 
       def power(name, action)
