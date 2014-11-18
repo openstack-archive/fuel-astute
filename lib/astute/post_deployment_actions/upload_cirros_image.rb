@@ -73,7 +73,8 @@ re that it is correctly generated."
         if response[:data][:exit_code] == 0
           Astute.logger.info("#{context.task_id}: Upload cirros image \"#{os['img_name']}\" is done")
         else
-          raise_cirros_error(context, node, "Upload cirros \"#{os['img_name']}\" image failed")
+          #raise_cirros_error(context, node, "Upload cirros \"#{os['img_name']}\" image failed")
+          return
         end
       end
     end # process
