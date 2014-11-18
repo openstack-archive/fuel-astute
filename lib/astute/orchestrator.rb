@@ -277,7 +277,7 @@ module Astute
       target_uids = types.reject{ |n| n['node_type'] != 'target' }.map{ |n| n['uid'] }
       Astute.logger.debug("Not target nodes will be rejected")
 
-      nodes_not_booted -= types.map { |n| n['uid'] }
+      nodes_not_booted -= target_uids
       Astute.logger.debug "Not provisioned: #{nodes_not_booted.join(',')}, got target OSes: #{target_uids.join(',')}"
       return target_uids, nodes_not_booted
     end
