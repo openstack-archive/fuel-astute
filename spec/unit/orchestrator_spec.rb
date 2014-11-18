@@ -411,9 +411,35 @@ describe Astute::Orchestrator do
       @orchestrator.stubs(:node_type)
         .returns([{'uid' => '1', 'node_type' => 'target' }])
         .then.returns([{'uid' => '2', 'node_type' => 'target' }])
-      @orchestrator.stubs(:analize_node_types)
-        .returns([['1'], []])
-        .then.returns([['2'], []])
+
+      success_msg = {
+        'status' => 'ready',
+        'progress' => 100,
+        'nodes' => [{
+            'uid' => '1',
+            'status' => 'provisioned',
+            'progress' => 100},
+          {
+            'uid' => '2',
+            'status' => 'provisioned',
+            'progress' => 100}
+        ]}
+
+      @reporter.expects(:report).with(success_msg).once
+      @orchestrator.watch_provision_progress(@reporter, data['task_uuid'], nodes)
+    end
+
+    it "bootstrap status should not recognize like success" do
+      nodes = [
+        { 'uid' => '1'},
+        { 'uid' => '2'}
+      ]
+      @orchestrator.stubs(:report_about_progress).returns()
+      @orchestrator.stubs(:node_type)
+        .returns([{'uid' => '1', 'node_type' => 'target' }])
+        .then.returns([{'uid' => '2', 'node_type' => 'bootstrap' }])
+        .then.returns([{'uid' => '2', 'node_type' => 'bootstrap' }])
+        .then.returns([{'uid' => '2', 'node_type' => 'target' }])
 
       success_msg = {
         'status' => 'ready',

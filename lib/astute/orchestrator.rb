@@ -256,10 +256,12 @@ module Astute
     def analize_node_types(types, nodes_not_booted)
       types.each { |t| Astute.logger.debug("Got node types: uid=#{t['uid']} type=#{t['node_type']}") }
       target_uids = types.reject{ |n| n['node_type'] != 'target' }.map{ |n| n['uid'] }
-      Astute.logger.debug("Not target nodes will be rejected")
+      reject_uids = types.reject{ |n| n['node_type'] == 'target' }.map{ |n| n['uid'] }
+      Astute.logger.debug("Not target nodes will be rejected: #{reject_uids.join(',')}")
 
-      nodes_not_booted -= types.map { |n| n['uid'] }
-      Astute.logger.debug "Not provisioned: #{nodes_not_booted.join(',')}, got target OSes: #{target_uids.join(',')}"
+      nodes_not_booted -= target_uids
+      Astute.logger.debug "Not provisioned: #{nodes_not_booted.join(',')}, " \
+       "got target OSes: #{target_uids.join(',')}"
       return target_uids, nodes_not_booted
     end
 
