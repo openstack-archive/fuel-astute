@@ -72,7 +72,7 @@ describe Astute::Orchestrator do
     end
 
     it 'should use NodeRemover to remove nodes' do
-      Astute::NodesRemover.any_instance.expects(:remove).once
+      Astute::NodesRemover.any_instance.expects(:remove).once.returns({})
       Astute::Rsyslogd.expects(:send_sighup).once
       @orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
     end
@@ -80,13 +80,52 @@ describe Astute::Orchestrator do
     it 'should return list of nodes which removed' do
       Astute::NodesRemover.any_instance.expects(:remove).once.returns({"nodes"=>[{"uid"=>"1"}]})
       Astute::Rsyslogd.stubs(:send_sighup).once
-      expect(@orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)).to eql({"nodes"=>[{"uid"=>"1"}]})
+      expect(@orchestrator.remove_nodes(
+        @reporter,
+        task_id="task_id",
+        engine_attrs,
+        nodes,
+        reboot=true
+      )).to eql({"nodes"=>[{"uid"=>"1"}]})
     end
+
+    context 'if exception in case of error enable' do
+      it 'should raise error if nodes removing operation via mcollective failed(error)' do
+        Astute::NodesRemover.any_instance.expects(:remove).once.returns({
+          'status' => 'error',
+          'error_nodes' => [{"uid"=>"1"}]
+        })
+        Astute::Rsyslogd.stubs(:send_sighup).never
+        expect {@orchestrator.remove_nodes(
+          @reporter,
+          task_id="task_id",
+          engine_attrs,
+          nodes,
+          reboot=true,
+          raise_if_error=true
+        )}.to raise_error(/Mcollective problem with nodes/)
+      end
+
+      it 'should raise error if nodes removing operation via mcollective failed(inaccessible)' do
+        Astute::NodesRemover.any_instance.expects(:remove).once.returns({
+          'inaccessible_nodes' => [{"uid"=>"1"}]
+        })
+        Astute::Rsyslogd.stubs(:send_sighup).never
+        expect {@orchestrator.remove_nodes(
+          @reporter,
+          task_id="task_id",
+          engine_attrs,
+          nodes,
+          reboot=true,
+          raise_if_error=true
+        )}.to raise_error(/Mcollective problem with nodes/)
+      end
+    end  #exception
 
     context 'cobbler' do
       it 'should remove nodes from cobbler if node exist' do
         Astute::Provision::Cobbler.any_instance.stubs(:system_exists?).returns(true).twice
-        Astute::NodesRemover.any_instance.stubs(:remove).once
+        Astute::NodesRemover.any_instance.stubs(:remove).once.returns({})
         Astute::Rsyslogd.expects(:send_sighup).once
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
@@ -96,7 +135,7 @@ describe Astute::Orchestrator do
 
       it 'should not try to remove nodes from cobbler if node do not exist' do
         Astute::Provision::Cobbler.any_instance.stubs(:system_exists?).returns(false)
-        Astute::NodesRemover.any_instance.stubs(:remove).once
+        Astute::NodesRemover.any_instance.stubs(:remove).once.returns({})
         Astute::Rsyslogd.expects(:send_sighup).once
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name']).never
@@ -108,17 +147,15 @@ describe Astute::Orchestrator do
         Astute::Provision::Cobbler.any_instance.stubs(:system_exists?)
                                   .returns(true)
                                   .then.returns(true)
-        Astute::NodesRemover.any_instance.stubs(:remove).once
+        Astute::NodesRemover.any_instance.stubs(:remove).once.returns({})
         Astute::Rsyslogd.expects(:send_sighup).once
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
 
         @orchestrator.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
       end
-
-    end
-
-  end
+    end #cobbler
+  end #remove_nodes
 
   describe '#deploy' do
     it "it calls deploy method with valid arguments" do
@@ -258,7 +295,8 @@ describe Astute::Orchestrator do
             data['task_uuid'],
             data['engine'],
             data['nodes'],
-            reboot=false
+            reboot=false,
+            fail_if_error=true
           ).returns([])
           @orchestrator.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end

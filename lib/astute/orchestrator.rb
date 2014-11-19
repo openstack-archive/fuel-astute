@@ -53,7 +53,14 @@ module Astute
 
       cobbler = CobblerManager.new(engine_attrs, reporter)
       begin
-        remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=false)
+        remove_nodes(
+          reporter,
+          task_id,
+          engine_attrs,
+          nodes,
+          reboot=false,
+          raise_if_error=true
+        )
         cobbler.add_nodes(nodes)
 
         # if provision_method is 'image', we do not need to immediately
@@ -74,7 +81,7 @@ module Astute
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
             'status' => 'error',
-            'error' => 'Cobbler error',
+            'error' => e.message,
             'progress' => 100})
         unlock_nodes_discovery(reporter, task_id, nodes.map {|n| n['slave_name']}, nodes)
         raise e
@@ -182,13 +189,19 @@ module Astute
       result_msg
     end
 
-    def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true)
+    def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true, raise_if_error=false)
       cobbler = CobblerManager.new(engine_attrs, reporter)
       cobbler.remove_nodes(nodes)
       ctx = Context.new(task_id, reporter)
       result = NodesRemover.new(ctx, nodes, reboot).remove
-      Rsyslogd.send_sighup(ctx, engine_attrs["master_ip"])
 
+      if (result['error_nodes'] || result['inaccessible_nodes']) && raise_if_error
+        bad_node_ids = result.fetch('error_nodes', []) +
+          result.fetch('inaccessible_nodes', [])
+        raise "Mcollective problem with nodes #{bad_node_ids}, please check log for details"
+      end
+
+      Rsyslogd.send_sighup(ctx, engine_attrs["master_ip"])
       result
     end
 
