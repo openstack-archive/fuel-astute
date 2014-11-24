@@ -149,7 +149,13 @@ module Astute
             loop do
               sleep_not_greater_than(20) do
                 nodes_types = node_type(proxy_reporter, task_id, nodes.map {|n| n['uid']}, 5)
-                target_uids, nodes_not_booted = analize_node_types(nodes_types, nodes_not_booted)
+                target_uids, nodes_not_booted, reject_uids = analize_node_types(nodes_types, nodes_not_booted)
+
+                if reject_uids.present?
+                  ctx ||= Context.new(task_id, proxy_reporter)
+                  reject_nodes = reject_uids.map { |uid| {'uid' => uid } }
+                  NodesRemover.new(ctx, reject_nodes, reboot=true).remove
+                end
 
                 if nodes_not_booted.empty?
                   Astute.logger.info "All nodes are provisioned"
@@ -294,7 +300,7 @@ module Astute
       nodes_not_booted -= target_uids
       Astute.logger.debug "Not provisioned: #{nodes_not_booted.join(',')}, " \
        "got target OSes: #{target_uids.join(',')}"
-      return target_uids, nodes_not_booted
+      return target_uids, nodes_not_booted, reject_uids
     end
 
     def sleep_not_greater_than(sleep_time, &block)

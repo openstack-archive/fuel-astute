@@ -475,7 +475,7 @@ describe Astute::Orchestrator do
       @orchestrator.watch_provision_progress(@reporter, data['task_uuid'], nodes)
     end
 
-    it "bootstrap status should not recognize like success" do
+    it "unexpecting bootstrap nodes should be ereased and rebooted" do
       nodes = [
         { 'uid' => '1'},
         { 'uid' => '2'}
@@ -486,6 +486,9 @@ describe Astute::Orchestrator do
         .then.returns([{'uid' => '2', 'node_type' => 'bootstrap' }])
         .then.returns([{'uid' => '2', 'node_type' => 'bootstrap' }])
         .then.returns([{'uid' => '2', 'node_type' => 'target' }])
+
+      Astute::NodesRemover.any_instance.expects(:remove)
+                          .twice.returns({"nodes"=>[{"uid"=>"2", }]})
 
       success_msg = {
         'status' => 'ready',
