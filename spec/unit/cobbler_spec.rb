@@ -20,8 +20,6 @@ include Astute::Provision
 describe Cobbler do
   include SpecHelpers
 
-
-
   it "should be able to be initialized with 'url'" do
     host = "host.domain.tld"
     port = "1234"
@@ -74,7 +72,7 @@ describe Cobbler do
         stubs(:new).returns(remote)
       end
     end
-    
+
     let(:data) do
       {
         'profile' => 'centos-x86_64',
@@ -185,6 +183,56 @@ describe Cobbler do
       cobbler.sync
       cobbler.sync
     end
+
+    it 'should try sync several time before raise a exception (Net)' do
+      remote = mock() do
+        stubs(:call).with('sync', 'remotetoken')
+          .raises(Net::ReadTimeout)
+          .then.returns(nil)
+        stubs(:call).twice.with('login', 'cobbler', 'cobbler').returns('remotetoken')
+      end
+      XMLRPC::Client = mock() do
+        stubs(:new).returns(remote)
+      end
+      cobbler = Astute::Provision::Cobbler.new
+      cobbler.stubs(:sleep).with(10).times(1)
+
+      expect { cobbler.sync }.to_not raise_exception(Net::ReadTimeout)
+    end
+
+    it 'should try sync several time before raise a exception (XMLRPC)' do
+      remote = mock() do
+        stubs(:call).with('sync', 'remotetoken')
+          .raises(XMLRPC::FaultException.new("", ""))
+          .then.returns(nil)
+        stubs(:call).twice.with('login', 'cobbler', 'cobbler').returns('remotetoken')
+      end
+      XMLRPC::Client = mock() do
+        stubs(:new).returns(remote)
+      end
+      cobbler = Astute::Provision::Cobbler.new
+      cobbler.stubs(:sleep).with(10).times(1)
+
+      expect { cobbler.sync }.to_not raise_exception(XMLRPC::FaultException)
+    end
+
+    it 'should raise a exception if sync do not succeed after several(3) tries' do
+      remote = mock() do
+        stubs(:call).with('sync', 'remotetoken')
+          .raises(Net::ReadTimeout)
+          .then.raises(Net::ReadTimeout)
+          .then.raises(Net::ReadTimeout)
+        stubs(:call).times(3).with('login', 'cobbler', 'cobbler').returns('remotetoken')
+      end
+      XMLRPC::Client = mock() do
+        stubs(:new).returns(remote)
+      end
+      cobbler = Astute::Provision::Cobbler.new
+      cobbler.stubs(:sleep).with(10).times(2)
+
+      expect { cobbler.sync }.to raise_exception(Net::ReadTimeout)
+    end
+
   end
 end
 
