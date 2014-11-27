@@ -2,7 +2,7 @@ metadata    :name        => "Execute shell command",
             :description => "Execute shell command",
             :author      => "Mirantis Inc.",
             :license     => "Apache License 2.0",
-            :version     => "0.0.1",
+            :version     => "6.0.0,
             :url         => "http://mirantis.com",
             :timeout     => 3600
 
