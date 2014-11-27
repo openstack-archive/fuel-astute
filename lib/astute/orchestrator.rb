@@ -247,18 +247,33 @@ module Astute
     end
 
     def verify_networks(reporter, task_id, nodes)
-      Network.check_network(Context.new(task_id, reporter), nodes)
+      ctx = Context.new(task_id, reporter)
+      validate_nodes_access(ctx, nodes)
+      Network.check_network(ctx, nodes)
     end
 
     def check_dhcp(reporter, task_id, nodes)
-      Network.check_dhcp(Context.new(task_id, reporter), nodes)
+      ctx = Context.new(task_id, reporter)
+      validate_nodes_access(ctx, nodes)
+      Network.check_dhcp(ctx, nodes)
     end
 
     def multicast_verification(reporter, task_id, nodes)
-      Network.multicast_verification(Context.new(task_id, reporter), nodes)
+      ctx = Context.new(task_id, reporter)
+      validate_nodes_access(ctx, nodes)
+      Network.multicast_verification(ctx, nodes)
     end
 
     private
+
+    def validate_nodes_access(ctx, nodes)
+      nodes_types = node_type(ctx.reporter, ctx.task_id, nodes.map{ |n| n['uid'] }, timeout=10)
+      not_avaliable_nodes = nodes.map { |n| n['uid'].to_s } - nodes_types.map { |n| n['uid'].to_s }
+      unless not_avaliable_nodes.empty?
+        raise "Network verification not avaliable because nodes #{not_avaliable_nodes} " \
+          "not avaliable via mcollective"
+      end
+    end
 
     def deploy_cluster(up_reporter, task_id, deployment_info, deploy_engine, pre_deployment, post_deployment)
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, deployment_info)
