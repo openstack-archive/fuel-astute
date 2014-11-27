@@ -2,7 +2,7 @@ metadata    :name        => "Network Probe Agent",
             :description => "Check network connectivity between nodes.",
             :author      => "Andrey Danin",
             :license     => "MIT",
-            :version     => "0.1",
+            :version     => "6.0.0",
             :url         => "http://mirantis.com",
             :timeout     => 240
 
