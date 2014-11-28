@@ -2,7 +2,7 @@ metadata  :name        => "Erase node bootloader and reboot it",
           :description => "Erase node bootloader and reboot it.",
           :author      => "Andrey Danin",
           :license     => "MIT",
-          :version     => "6.0.0",
+          :version     => "0.1",
           :url         => "http://mirantis.com",
           :timeout     => 40
 
