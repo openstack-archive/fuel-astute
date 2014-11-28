@@ -2,7 +2,7 @@ metadata:name             => "puppetsync",
           :description    => "Downloads latest version of Puppet manifests to managed servers",
           :author         => "Mirantis Inc",
           :license        => "Apache License 2.0",
-          :version        => "6.0.0",
+          :version        => "0.1",
           :url            => "http://mirantis.com",
           :timeout        => 300
 
