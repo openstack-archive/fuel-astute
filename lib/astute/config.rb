@@ -85,6 +85,8 @@ module Astute
 
     conf[:MAX_NODES_PER_REMOVE_CALL] = 10 # how many nodes to remove in one call
     conf[:NODES_REMOVE_INTERVAL] = 10     # sleeps for ## sec between remove calls
+    conf[:MAX_NODES_NET_VALIDATION] = 10  # how many nodes will send in parallel test packets
+                                          # during network verification
 
     conf[:DHCP_REPEAT] = 3                # Dhcp discover will be sended 3 times
 
