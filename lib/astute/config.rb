@@ -83,7 +83,8 @@ module Astute
 
     conf[:max_nodes_per_remove_call] = 10 # how many nodes to remove in one call
     conf[:nodes_remove_interval] = 10     # sleeps for ## sec between remove calls
-
+    conf[:max_nodes_net_validation] = 10  # how many nodes will send in parallel test packets
+                                          # during network verification
     conf[:dhcp_repeat] = 3                # Dhcp discover will be sended 3 times
 
     conf[:iops] = 120                     # Default IOPS master node IOPS performance
