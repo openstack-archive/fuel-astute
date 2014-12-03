@@ -96,25 +96,35 @@ module Astute
 
     private
     def self.start_frame_listeners(ctx, net_probe, nodes)
-      nodes.each do |node|
-        data_to_send = make_interfaces_to_send(node['networks'])
+      nodes.each_slice(10) do |nodes_part|
+        data_to_send = {}
+        nodes_part.each do |node|
+          data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'])
+        end
+
+        uids = nodes_part.map { |node| node['uid'].to_s }
 
         Astute.logger.debug(
-          "#{ctx.task_id}: Network checker listen: node: #{node['uid']} data: #{data_to_send.inspect}")
+          "#{ctx.task_id}: Network checker listen: node: #{uids} data: #{data_to_send.inspect}")
 
-        net_probe.discover(:nodes => [node['uid'].to_s])
+        net_probe.discover(:nodes => uids)
         net_probe.start_frame_listeners(:interfaces => data_to_send.to_json)
       end
     end
 
     def self.send_probing_frames(ctx, net_probe, nodes)
-      nodes.each do |node|
-        data_to_send = make_interfaces_to_send(node['networks'])
+      nodes.each_slice(10) do |nodes_part|
+        data_to_send = {}
+        nodes_part.each do |node|
+          data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'])
+        end
+
+        uids = nodes_part.map { |node| node['uid'].to_s }
 
         Astute.logger.debug(
-          "#{ctx.task_id}: Network checker send: node: #{node['uid']} data: #{data_to_send.inspect}")
+          "#{ctx.task_id}: Network checker send: nodes: #{uids} data: #{data_to_send.inspect}")
 
-        net_probe.discover(:nodes => [node['uid'].to_s])
+        net_probe.discover(:nodes => uids)
         net_probe.send_probing_frames(:interfaces => data_to_send.to_json)
       end
     end
