@@ -36,10 +36,29 @@ module Astute
       # TODO Everything breakes if agent not found. We have to handle that
       net_probe = MClient.new(ctx, "net_probe", uids)
 
-      start_frame_listeners(ctx, net_probe, nodes)
+      versioning = Versioning.new(ctx)
+      old_version, new_version = versioning.split_on_version(uids, '6.1.0')
+      old_uids = old_version.map { |node| node['uid'].to_s }
+      new_uids = new_version.map { |node| node['uid'].to_s }
+      old_nodes = nodes.select { |node| old_uids.include? node['uid'] }
+      new_nodes = nodes.select { |node| new_uids.include? node['uid'] }
+
+      if old_uids.present?
+        start_frame_listeners_60(ctx, net_probe, old_nodes)
+      end
+
+      if new_uids.present?
+        start_frame_listeners(ctx, net_probe, new_nodes)
+      end
       ctx.reporter.report({'progress' => 30})
 
-      send_probing_frames(ctx, net_probe, nodes)
+      if old_uids.present?
+        send_probing_frames_60(ctx, net_probe, old_nodes)
+      end
+
+      if new_uids.present?
+        send_probing_frames(ctx, net_probe, new_nodes)
+      end
       ctx.reporter.report({'progress' => 60})
 
       net_probe.discover(:nodes => uids)
@@ -96,6 +115,38 @@ module Astute
 
     private
     def self.start_frame_listeners(ctx, net_probe, nodes)
+      data_to_send = {}
+      nodes.each do |node|
+        data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'])
+      end
+
+      uids = nodes.map { |node| node['uid'].to_s }
+
+      Astute.logger.debug(
+        "#{ctx.task_id}: Network checker listen: nodes: #{uids} data: #{data_to_send.inspect}")
+
+      net_probe.discover(:nodes => uids)
+      net_probe.start_frame_listeners(:interfaces => data_to_send.to_json)
+    end
+
+    def self.send_probing_frames(ctx, net_probe, nodes)
+      nodes.each_slice(Astute.config[:max_nodes_net_validation]) do |nodes_part|
+        data_to_send = {}
+        nodes_part.each do |node|
+          data_to_send[node['uid'].to_s] = make_interfaces_to_send(node['networks'])
+        end
+
+        uids = nodes_part.map { |node| node['uid'].to_s }
+
+        Astute.logger.debug(
+          "#{ctx.task_id}: Network checker send: nodes: #{uids} data: #{data_to_send.inspect}")
+
+        net_probe.discover(:nodes => uids)
+        net_probe.send_probing_frames(:interfaces => data_to_send.to_json)
+      end
+    end
+
+    def self.start_frame_listeners_60(ctx, net_probe, nodes)
       nodes.each do |node|
         data_to_send = make_interfaces_to_send(node['networks'])
 
@@ -107,7 +158,7 @@ module Astute
       end
     end
 
-    def self.send_probing_frames(ctx, net_probe, nodes)
+    def self.send_probing_frames_60(ctx, net_probe, nodes)
       nodes.each do |node|
         data_to_send = make_interfaces_to_send(node['networks'])
 
