@@ -46,9 +46,15 @@ module Astute
     def self.puppetd_runonce(uids)
       started = Time.now.to_i
       while Time.now.to_i - started < Astute.config.PUPPET_FADE_TIMEOUT
-        running_uids = puppetd(uids).last_run_summary.select { |x|
-          ['running', 'idling'].include?(x.results[:data][:status])
+        summary_results = puppetd(uids).last_run_summary
+        running_uids = summary_results.select { |x|
+          ['running'].include?(x.results[:data][:status])
         }.map { |n| n.results[:sender] }
+        idling_uids = summary_results.select { |x|
+          ['idling'].include?(x.results[:data][:status])
+        }.map { |n| n.results[:sender] }
+
+        # Try to kill 'idling' process and run again by 'runonce' call
         stopped_uids = uids - running_uids
 
         @nodes.select { |n| stopped_uids.include? n['uid'] }
@@ -61,14 +67,20 @@ module Astute
                   :cwd => @cwd
                 )
              end
-        break if running_uids.empty?
+        break if running_uids.empty? && idling_uids.empty?
 
-        uids = running_uids
+        # Nodes on idling_uids can have 2 status after runonce call:
+        # 'stopped' or 'idling'. Stopped - good, idling - hung.
+        uids = running_uids + idling_uids
         sleep Astute.config.PUPPET_FADE_INTERVAL
       end
       Astute.logger.debug "puppetd_runonce completed within #{Time.now.to_i - started} seconds."
-      Astute.logger.warn "Following nodes have puppet hung: '#{running_uids.join(',')}'" if running_uids.present?
-      running_uids
+      if running_uids.present? || idling_uids.present?
+        Astute.logger.warn "Following nodes have puppet hung: \n " \
+          "running - '#{running_uids.join(',')}' \n " \
+          "idling - #{idling_uids.join(',')}"
+      end
+      running_uids + idling_uids
     end
 
     def self.calc_nodes_status(last_run, prev_run, hung_nodes=[])
@@ -115,8 +127,8 @@ module Astute
 
     def self.puppetd(uids)
       puppetd = MClient.new(@ctx, "puppetd", Array(uids))
-      puppetd.on_respond_timeout do |uids|
-        nodes = uids.map do |uid|
+      puppetd.on_respond_timeout do |error_uids|
+        nodes = error_uids.map do |uid|
           { 'uid' => uid, 'status' => 'error', 'error_type' => 'deploy', 'role' => @nodes_roles[uid] }
         end
         @ctx.report_and_update_status('nodes' => nodes)

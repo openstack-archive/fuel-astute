@@ -109,8 +109,9 @@ module MCollective
       end
 
       def rm_file file
+        return true unless File.exists?(file)
         begin
-          File.unlink(file)
+          File.unlink file
           return true
         rescue
           return false
@@ -119,9 +120,9 @@ module MCollective
 
       def puppet_daemon_status
         err_msg = ""
-        alive = !!puppet_pid
-        locked = File.exists?(@lockfile)
-        disabled = locked && File::Stat.new(@lockfile).zero?
+        alive = puppet_pid
+        locked = expected_puppet_pid == puppet_pid && !expected_puppet_pid.nil?
+        disabled = File.exists?(@lockfile) && File::Stat.new(@lockfile).zero?
 
         if locked && !disabled && !alive
           err_msg << "Process not running but not empty lockfile is present. Trying to remove lockfile..."
@@ -154,16 +155,9 @@ module MCollective
             reply.fail "Lock file and PID file exist; puppet is running."
 
           when 'idling' then       # signal daemon
-            pid = puppet_pid
-            begin
-              ::Process.kill('INT', pid)
-            rescue Errno::ESRCH => e
-              reply[:err_msg] = "Failed to signal the puppet apply daemon (process #{pid}): #{e}"
-            ensure
-              runonce_background
-              reply[:output] = "Kill old idling puppet process #{pid})." + (reply[:output] || '')
-            end
-
+            kill_process
+            set_status             # recalculate state after puppet kill
+            reply[:err_msg] = "Looks like another puppet run at the same time. Try to kill it"
           when 'stopped' then      # just run
             runonce_background
           else
@@ -255,13 +249,13 @@ module MCollective
 
         begin
           Timeout.timeout(30) do
-            Process.kill('TERM', puppet_pid)
+            Process.kill('TERM', puppet_pid) if puppet_pid
             while puppet_pid do
               sleep 1
             end
           end
         rescue Timeout::Error
-          Process.kill('KILL', puppet_pid)
+          Process.kill('KILL', puppet_pid) if puppet_pid
         end
         #FIXME: Daemonized process do not update lock file when we send signal to kill him
         raise "Should never happen. Some process block lock file in critical section" unless rm_file(@lockfile)
@@ -269,9 +263,26 @@ module MCollective
         reply.fail "Failed to kill the puppet daemon (process #{puppet_pid}): #{e}"
       end
 
+      def expected_puppet_pid
+        File.read(@lockfile).to_i
+      rescue Errno::ENOENT
+        nil
+      end
+
       def puppet_pid
         result = `ps -C puppet -o pid,comm --no-headers`.lines.first
-        result && result.strip.split(' ')[0].to_i
+        actual_pid = result && result.strip.split(' ')[0].to_i
+        expected_pid = expected_puppet_pid
+
+        case actual_pid
+        when expected_pid then expected_pid
+        else
+          reply[:err_msg] = "Potencial error. Looks like expecting puppet and actual are different. " \
+            "Expecting pid(lockfile): #{expected_pid}, actual(ps): #{actual_pid}"
+          actual_pid
+        end
+      rescue NoMethodError
+        nil
       end
 
       def lock_file(file_name, &block)

@@ -55,6 +55,13 @@ describe "Puppetd" do
       res
     end
 
+    let(:last_run_result_idling) do
+      res = deep_copy(last_run_result)
+      res[:data].merge!(:status => 'idling', :running => 0, :stopped => 0, :idling => 1)
+      res
+    end
+
+
     let(:last_run_result_fail) do
       res = deep_copy(last_run_result_running)
       res[:data].merge!(:runtime => 1358426000,
@@ -277,6 +284,25 @@ describe "Puppetd" do
 
       reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}])
       rpcclient.expects(:runonce).at_least_once.returns([rpcclient_valid_result])
+
+      MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+      Astute::PuppetdDeployer.deploy(ctx, nodes, retries=1)
+    end
+
+    it "retries to run puppet if it idling" do
+      rpcclient_valid_result = mock_mc_result(last_run_result)
+      rpcclient_failed = mock_mc_result(last_run_failed)
+      rpcclient_fail = mock_mc_result(last_run_result_fail)
+      rpcclient_succeed = mock_mc_result(last_run_result_finished)
+
+      rpcclient.stubs(:last_run_summary)
+          .returns([rpcclient_valid_result]).then
+          .returns([mock_mc_result(last_run_result_idling)]).then
+          .returns([rpcclient_valid_result]).then
+          .returns([rpcclient_succeed])
+
+      reporter.expects(:report).with('nodes' => [{'uid' => '1', 'status' => 'ready', 'progress' => 100, 'role' => 'compute'}])
+      rpcclient.expects(:runonce).twice.returns([rpcclient_valid_result])
 
       MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
       Astute::PuppetdDeployer.deploy(ctx, nodes, retries=1)
