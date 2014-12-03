@@ -85,7 +85,7 @@ module MCollective
         validate :interfaces, String
         config = {
           "action" => "listen",
-          "interfaces" => JSON.parse(request[:interfaces]),
+          "interfaces" => JSON.parse(request[:interfaces])[get_uid],
           "dump_file" => "/var/tmp/net-probe-dump",
           "ready_address" => "127.0.0.1",
           "ready_port" => 31338,
@@ -147,7 +147,7 @@ module MCollective
       def send_probing_frames
         validate :interfaces, String
         config = { "action" => "generate", "uid" => get_uid,
-                   "interfaces" => JSON.parse(request[:interfaces]) }
+                   "interfaces" => JSON.parse(request[:interfaces])[get_uid]}
         if request.data.key?('config')
           config.merge!(JSON.parse(request[:config]))
         end

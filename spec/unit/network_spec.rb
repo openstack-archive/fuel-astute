@@ -26,7 +26,7 @@ describe Astute::Network do
   def make_nodes(*uids)
     uids.map do |uid|
       {
-        'uid' => uid.to_s,
+        'uid' => uid,
         'networks' => [
           {
             'iface' => 'eth0',
@@ -67,21 +67,24 @@ describe Astute::Network do
       rpcclient = mock_rpcclient(nodes)
 
       rpcclient.expects(:get_probing_info).once.returns([mc_res1, mc_res2])
-      nodes.each do |node|
-        rpcclient.expects(:discover).with(:nodes => [node['uid']]).at_least_once
+      uids = nodes.map { |node| node['uid'].to_s }
 
-        data_to_send = {}
-        node['networks'].each{ |net| data_to_send[net['iface']] = net['vlans'].join(",") }
 
-        rpcclient.expects(:start_frame_listeners).
-          with(:interfaces => data_to_send.to_json).
-          returns([mc_valid_res]*2)
+      data_to_send = {}
+      nodes[0]['networks'].each{ |net| data_to_send[net['iface']] = net['vlans'].join(",") }
+      data_to_send = { '1' => data_to_send, '2' => data_to_send}
 
-        rpcclient.expects(:send_probing_frames).
-          with(:interfaces => data_to_send.to_json).
-          returns([mc_valid_res]*2)
-      end
+      rpcclient.expects(:start_frame_listeners).
+        with(:interfaces => data_to_send.to_json).
+        returns([mc_valid_res]*2)
+
+      rpcclient.expects(:send_probing_frames).
+        with(:interfaces => data_to_send.to_json).
+        returns([mc_valid_res]*2)
+      rpcclient.expects(:discover).with(:nodes => uids)
       Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+      res = [[], [{"version"=>"6.1.0", "uid"=>"2"}, {"version"=>"6.1.0", "uid"=>"1"}]]
+      Astute::Versioning.any_instance.stubs(:split_on_version).returns(res)
 
       res = Astute::Network.check_network(Astute::Context.new('task_uuid', reporter), nodes)
       expected = {"nodes" => [{"networks" => [{"iface"=>"eth0", "vlans"=>[100]}], "uid"=>"1"},
@@ -97,7 +100,7 @@ describe Astute::Network do
     it "returns all vlans passed if only one node provided" do
       nodes = make_nodes(1)
       res = Astute::Network.check_network(Astute::Context.new('task_uuid', reporter), nodes)
-      expected = {"nodes" => [{"uid"=>"1", "networks" => [{"iface"=>"eth0", "vlans"=>[100, 101]}]}]}
+      expected = {"nodes" => [{"uid"=>1, "networks" => [{"iface"=>"eth0", "vlans"=>[100, 101]}]}]}
       res.should eql(expected)
     end
   end
