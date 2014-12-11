@@ -25,8 +25,27 @@ describe Astute::Orchestrator do
   end
 
   describe '#verify_networks' do
+    it 'should validate nodes availability before check' do
+      nodes = [{'uid' => '1'}, {'uid' => '2'}]
+      @orchestrator.expects(:node_type).returns([
+        {'uid' => '1', 'node_type' => 'target'},
+        {'uid' => '2', 'node_type' => 'bootstrap'}
+      ])
+      Astute::Network.expects(:check_network).once
+      @orchestrator.verify_networks(@reporter, 'task_id', nodes)
+    end
+
+    it 'should raise error if nodes availability test failed' do
+      nodes = [{'uid' => '1'}, {'uid' => '2'}]
+      @orchestrator.expects(:node_type).returns([{'uid' => '1', 'node_type' => 'target'}])
+      Astute::Network.expects(:check_network).never
+      expect {@orchestrator.verify_networks(@reporter, 'task_id', nodes) }
+        .to raise_error(/Network verification not avaliable because/)
+    end
+
     it 'should check network configuration' do
       nodes = [{'uid' => '1'}]
+      @orchestrator.stubs(:validate_nodes_access)
       Astute::Network.expects(:check_network).with(instance_of(Astute::Context), nodes)
       @orchestrator.verify_networks(@reporter, 'task_id', nodes)
     end
