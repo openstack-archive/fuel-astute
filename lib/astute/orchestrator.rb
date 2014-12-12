@@ -53,6 +53,17 @@ module Astute
       )
     end
 
+    def granular_deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
+      deploy_cluster(
+        up_reporter,
+        task_id,
+        deployment_info,
+        Astute::DeploymentEngine::Nailgun,
+        pre_deployment,
+        post_deployment
+      )
+    end
+
     def provision(reporter, task_id, engine_attrs, nodes)
       raise "Nodes to provision are not provided!" if nodes.empty?
       provision_method = engine_attrs['provision_method'] || 'cobbler'
