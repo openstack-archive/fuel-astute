@@ -32,12 +32,15 @@ require 'astute/network'
 require 'astute/puppetd'
 require 'astute/deployment_engine/nailyfact'
 require 'astute/deployment_engine/tasklib'
+require 'astute/deployment_engine/granular_deployment'
 require 'astute/cobbler'
 require 'astute/cobbler_manager'
 require 'astute/image_provision'
 require 'astute/dump'
 require 'astute/deploy_actions'
 require 'astute/nailgun_hooks'
+require 'astute/puppet_task'
+require 'astute/task_manager'
 
 ['/astute/pre_deployment_actions/*.rb',
  '/astute/pre_deploy_actions/*.rb',
