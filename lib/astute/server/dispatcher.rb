@@ -91,6 +91,26 @@ module Astute
         end
       end
 
+      def granular_deploy(data)
+        Astute.logger.info("'granular_deploy' method called with data: #{data.inspect}")
+
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+        begin
+          @orchestrator.granular_deploy(
+            reporter,
+            data['args']['task_uuid'],
+            data['args']['deployment_info'],
+            data['args']['pre_deployment'] || [],
+            data['args']['post_deployment'] || []
+          )
+          reporter.report('status' => 'ready', 'progress' => 100)
+        rescue Timeout::Error
+          msg = "Timeout of deployment is exceeded."
+          Astute.logger.error msg
+          reporter.report('status' => 'error', 'error' => msg)
+        end
+      end
+
       def verify_networks(data)
         data.fetch('subtasks', []).each do |subtask|
           if self.respond_to?(subtask['method'])
@@ -114,7 +134,7 @@ module Astute
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         result = @orchestrator.multicast_verification(reporter, data['args']['task_uuid'], data['args']['nodes'])
         report_result(result, reporter)
-     end
+      end
 
       def dump_environment(data)
         task_id = data['args']['task_uuid']
