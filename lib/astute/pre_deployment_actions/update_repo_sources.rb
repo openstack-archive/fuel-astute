@@ -88,7 +88,7 @@ module Astute
       os = deployment_info.first['cobbler']['profile']
       case os
       when 'centos-x86_64' then 'centos'
-      when 'ubuntu_1204_x86_64' then 'ubuntu'
+      when 'ubuntu_1404_x86_64' then 'ubuntu'
       else
         raise DeploymentEngineError, "Unknown system #{os}"
       end
