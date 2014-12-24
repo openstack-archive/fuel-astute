@@ -73,10 +73,10 @@ describe Astute::UpdateRepoSources do
     end
 
     it 'should generate correct config for ubuntu' do
-      nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+      nodes.first['cobbler']['profile'] = 'ubuntu_1404_x86_64'
       nodes.first['repo_metadata']['Nailgun'] =
-          'http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 precise main'
-      content = "deb http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 precise main"
+          'http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 trusty main'
+      content = "deb http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 trusty main"
 
       update_repo_sources.expects(:upload_repo_source).with(ctx, nodes, content)
       update_repo_sources.process(nodes, ctx)
@@ -113,7 +113,7 @@ describe Astute::UpdateRepoSources do
     end
 
     it 'should upload config in correct place for ubuntu' do
-      nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+      nodes.first['cobbler']['profile'] = 'ubuntu_1404_x86_64'
 
       mclient.expects(:upload).with(:path => '/etc/apt/sources.list',
                     :content => repo_content,
@@ -145,20 +145,20 @@ describe Astute::UpdateRepoSources do
     end
 
     it 'should regenerate metadata for ubuntu' do
-      nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+      nodes.first['cobbler']['profile'] = 'ubuntu_1404_x86_64'
       mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(success_return)
       update_repo_sources.process(nodes, ctx)
     end
 
     it 'should raise error if metadata not updated' do
-      nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+      nodes.first['cobbler']['profile'] = 'ubuntu_1404_x86_64'
       mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(fail_return).times(Astute.config[:mc_retries])
       expect { update_repo_sources.process(nodes, ctx) }.to raise_error(Astute::DeploymentEngineError,
                 /Run command:/)
     end
 
     it 'should retry metadata update several time if get error' do
-      nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+      nodes.first['cobbler']['profile'] = 'ubuntu_1404_x86_64'
       mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(fail_return)
                                .then.returns(success_return).twice
       update_repo_sources.process(nodes, ctx)
