@@ -23,7 +23,7 @@ module Astute
         os = node['profile']
         if ['centos-x86_64'].include?(os)
           pattern_spec_name = 'centos-anaconda-log-supposed-time-kvm'
-        elsif os == 'ubuntu_1204_x86_64'
+        elsif os == 'ubuntu_1404_x86_64'
           pattern_spec_name = 'ubuntu-provisioning'
         else
           raise Astute::ParseProvisionLogsError, "Cannot find profile for os with: #{os}"

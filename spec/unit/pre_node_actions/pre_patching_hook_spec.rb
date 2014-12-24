@@ -83,7 +83,7 @@ describe Astute::PrePatching do
 
     it 'should use aptitude command for Ubuntu system' do
       new_deploy_data = deploy_data.clone
-      new_deploy_data.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
+      new_deploy_data.first['cobbler']['profile'] = 'ubuntu_1404_x86_64'
       pre_patching.expects(:run_shell_command).once.with(
         ctx,
         ['1', '2'],
