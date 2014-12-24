@@ -179,7 +179,7 @@ describe LogParser do
         'hostname' => 'slave-1.domain.tld',
         'role' => 'controller',
         'src_filename' => 'main-menu.log_',
-        'profile' => 'ubuntu_1204_x86_64'}
+        'profile' => 'ubuntu_1404_x86_64'}
 
       calculated_node = provision_parser_wrapper(node)
       calculated_node['statistics']['pcc'].should > 0.96
@@ -489,7 +489,7 @@ describe LogParser do
     it 'should not raise error if system is Ubuntu' do
       node = {
         'uid' => '1',
-        'profile' => 'ubuntu_1204_x86_64'
+        'profile' => 'ubuntu_1404_x86_64'
       }
       pattern_spec = deploy_parser.get_pattern_for_node(node)
       expect(pattern_spec['filename']).to be_eql "main-menu.log"
