@@ -24,23 +24,22 @@ module Astute
       @puppet_manifest = puppet_manifest || '/etc/puppet/manifests/site.pp'
       @puppet_modules = puppet_modules || '/etc/puppet/modules'
       @cwd = cwd || '/'
-      @time_obsorver = TimeObserver.new(timeout || Astute.config.PUPPET_TIMEOUT)
+      @time_observer = TimeObserver.new(timeout || Astute.config.PUPPET_TIMEOUT)
       @prev_summary = nil
       @is_hung = false
     end
 
     def run
       Astute.logger.debug "Waiting for puppet to finish deployment on " \
-        "node #{@node['uid']} (timeout = #{@time_obsorver.time_limit} sec)..."
-      @time_obsorver.start
+        "node #{@node['uid']} (timeout = #{@time_observer.time_limit} sec)..."
+      @time_observer.start
       @prev_summary ||= puppet_status
       puppetd_runonce
     end
 
     # expect to run this method with respect of Astute.config.PUPPET_FADE_INTERVAL
     def status
-      # TODO(vsharshov): Should we raise error?
-      raise Timeout::Error unless @time_obsorver.enough_time?
+      raise Timeout::Error unless @time_observer.enough_time?
 
       last_run = puppet_status
       status = node_status(last_run)
@@ -146,21 +145,21 @@ module Astute
         'error'
       when succeed?(last_run) && !@is_hung
         'succeed'
-      when (running?(last_run) || idling?(status)) && !@is_hung
+      when (running?(last_run) || idling?(last_run)) && !@is_hung
         'running'
-      when stopped?(status) && !succeed?(last_run) && !@is_hung
+      when stopped?(last_run) && !succeed?(last_run) && !@is_hung
         'error'
       else
         msg = "Unknow status: " \
           "is_hung #{@is_hung}, succeed? #{succeed?(last_run)}, " \
-          "running? #{running?(last_run)}, stopped? #{stopped?(status)}, " \
-          "idling? #{idling?(status)}"
+          "running? #{running?(last_run)}, stopped? #{stopped?(last_run)}, " \
+          "idling? #{idling?(last_run)}"
         raise msg
       end
     end
 
     def processing_succeed_node
-      Astute.logger.debug "Puppet completed within #{@time_obsorver.stop} seconds"
+      Astute.logger.debug "Puppet completed within #{@time_observer.stop} seconds"
       { 'uid' => @node['uid'], 'status' => 'ready', 'role' => @node['role'] }
     end
 
