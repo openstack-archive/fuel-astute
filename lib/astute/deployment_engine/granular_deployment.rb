@@ -43,7 +43,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
       report_nodes = nodes.uniq{ |n| n['uid'] }.map do |node|
         { 'uid' => node['uid'],
           'status' => 'error',
-          'role' => 'hook',
+          'role' => node['role'],
           'error_type' => 'deploy'
         }
       end
@@ -90,6 +90,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
     while @task_manager.task_in_queue?
       nodes_to_report = []
       @task_manager.node_uids.each do |node_id|
+        sleep Astute.config.PUPPET_DEPLOY_INTERVAL
         if task = @task_manager.current_task(node_id)
           case status = check_status(node_id)
           when 'ready'
@@ -112,12 +113,12 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
         else
           Astute.logger.debug "No more tasks provided for node #{node_id}"
         end
-
-        @ctx.report_and_update_status('nodes' => nodes_to_report) if nodes_to_report.present?
-
-        break unless @task_manager.task_in_queue?
-        sleep Astute.config.PUPPET_DEPLOY_INTERVAL
       end
+
+      @ctx.report_and_update_status('nodes' => nodes_to_report) if nodes_to_report.present?
+
+      break unless @task_manager.task_in_queue?
+      sleep Astute.config.PUPPET_DEPLOY_INTERVAL
     end
   end
 
@@ -146,6 +147,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
   end
 
   def process_running_node(node_id, task, nodes)
+    Astute.logger.debug "Task '#{task}' on node uid=#{node_id} deploying"
     begin
       # Pass nodes because logs calculation needs IP address of node, not just uid
       nodes_progress = @ctx.deploy_log_parser.progress_calculate(Array(node_id), nodes)
