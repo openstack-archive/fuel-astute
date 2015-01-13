@@ -96,7 +96,7 @@ module Astute
         failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
 
         # control reboot for nodes which still in bootstrap state
-        control_reboot_using_ssh(reporter, task_id, nodes)
+        # control_reboot_using_ssh(reporter, task_id, nodes)
       rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
