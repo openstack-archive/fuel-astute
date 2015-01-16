@@ -102,7 +102,7 @@ module Astute
 
 
       timeout = hook['parameters']['timeout'] || 300
-      cwd = hook['parameters']['cwd'] || "~/"
+      cwd = hook['parameters']['cwd'] || "/"
 
       shell_command = "cd #{cwd} && #{hook['parameters']['cmd']}"
 
