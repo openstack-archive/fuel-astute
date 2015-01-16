@@ -17,7 +17,10 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
   NAILGUN_STATUS = ['ready', 'error', 'deploying']
 
   def deploy_piece(nodes, retries=1)
+    nodes = remove_nodes_without_tasks(nodes)
     return false unless validate_nodes(nodes)
+
+    remove_nodes_without_tasks(nodes)
 
     @ctx.reporter.report(nodes_status(nodes, 'deploying', {'progress' => 0}))
     log_preparation(nodes)
@@ -172,6 +175,10 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
   rescue => e
     Astute.logger.warn "Some error occurred when prepare LogParser: " \
       "#{e.message}, trace: #{e.format_backtrace}"
+  end
+
+  def remove_nodes_without_tasks(nodes)
+    nodes.select{ |n| n['tasks'].present? }
   end
 
   class HookReporter
