@@ -18,6 +18,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
 
   def deploy_piece(nodes, retries=1)
     return false unless validate_nodes(nodes)
+    return false unless validate_tasks(nodes)
 
     @ctx.reporter.report(nodes_status(nodes, 'deploying', {'progress' => 0}))
     log_preparation(nodes)
@@ -172,6 +173,13 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
   rescue => e
     Astute.logger.warn "Some error occurred when prepare LogParser: " \
       "#{e.message}, trace: #{e.format_backtrace}"
+  end
+
+  def validate_tasks(nodes)
+    return true unless nodes.map{ |n| n['tasks'] }.flatten.empty?
+
+    Astute.logger.info "#{@ctx.task_id}: Tasks to deploy are not provided. Do nothing."
+    false
   end
 
   class HookReporter
