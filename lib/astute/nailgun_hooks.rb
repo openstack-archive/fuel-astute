@@ -30,6 +30,7 @@ module Astute
         when 'shell' then shell_hook(hook)
         when 'upload_file' then upload_file_hook(hook)
         when 'puppet' then puppet_hook(hook)
+        when 'reboot' then reboot_hook(hook)
         else raise "Unknown hook type #{hook['type']}"
         end
 
@@ -159,6 +160,46 @@ module Astute
       is_success
     end # sync_hook
 
+    def reboot_hook(hook)
+      validate_presence(hook, 'uids')
+      hook_timeout = hook['parameters']['timeout'] || 300
+
+      #NOTICE: require sync time between nodes and master node
+      control_time = Time.now.to_i
+
+      #TODO(vsharshov): will be enough for safe reboot without exceptions?
+      perform_with_limit(hook['uids']) do |node_uids|
+        run_shell_without_check(@ctx, node_uids, 'reboot', timeout=10)
+      end
+
+      already_rebooted = hook['uids'].inject({}) { |h, node| h.merge(node => false) }
+
+      begin
+        Timeout::timeout(hook_timeout) do
+          while already_rebooted.values.include?(false)
+            results = run_shell_without_check(@ctx, hook['uids'], "stat --printf='%Y' /proc/1", timeout=10)
+            results.each do |node_id, uptime|
+              next if already_rebooted[node_id]
+              already_rebooted[node_id] = true if uptime.to_i > control_time
+            end
+
+            sleep hook_timeout/10
+          end
+        end
+      rescue Timeout::Error => e
+        Astute.logger.warn("Time detection (#{timeout} sec) for node reboot has expired")
+      end
+
+      if already_rebooted.values.include?(false)
+        fail_nodes = already_rebooted.select {|k, v| !v }.keys
+        Astute.logger.warn("Reboot command failed for nodes #{fail_nodes}. " \
+          "Check debug output for details")
+        false
+      else
+        true
+      end
+    end # reboot_hook
+
     def validate_presence(data, key)
       raise "Missing a required parameter #{key}" unless data[key].present?
     end
@@ -239,6 +280,25 @@ module Astute
     def perform_with_limit(nodes, &block)
       nodes.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |part|
         block.call(part)
+      end
+    end
+
+    def run_shell_without_check(context, node_uids, cmd, timeout=10)
+      shell = MClient.new(
+        context,
+        'execute_shell_command',
+        node_uids,
+        check_result=false,
+        timeout=timeout
+      )
+      results = shell.execute(:cmd => cmd)
+      results.inject({}) do |h, res|
+        Astute.logger.debug(
+          "#{context.task_id}: cmd: #{cmd}\n" \
+          "stdout: #{res.results[:data][:stdout]}\n" \
+          "stderr: #{res.results[:data][:stderr]}\n" \
+          "exit code: #{res.results[:data][:exit_code]}")
+        h.merge({res.results[:sender] => res.results[:data][:stdout].chomp})
       end
     end
 
