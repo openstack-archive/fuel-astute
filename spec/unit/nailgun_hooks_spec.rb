@@ -87,12 +87,26 @@ describe Astute::NailgunHooks do
     }
   end
 
+  let(:reboot_hook) do
+    {
+      "priority" =>  600,
+      "type" =>  "reboot",
+      "fail_on_error" => false,
+      "diagnostic_name" => "reboot-example-1.0",
+      "uids" =>  ['2', '3'],
+      "parameters" =>  {
+        "timeout" =>  42
+      }
+    }
+  end
+
   let(:hooks_data) do
     [
       upload_file_hook,
       sync_hook,
       shell_hook,
-      puppet_hook
+      puppet_hook,
+      reboot_hook
     ]
   end
 
@@ -104,6 +118,7 @@ describe Astute::NailgunHooks do
       hooks.expects(:puppet_hook)
       hooks.expects(:shell_hook)
       hooks.expects(:sync_hook)
+      hooks.expects(:reboot_hook)
 
       hooks.process
     end
@@ -131,6 +146,7 @@ describe Astute::NailgunHooks do
       hooks.expects(:shell_hook).in_sequence(hook_order)
       hooks.expects(:sync_hook).in_sequence(hook_order)
       hooks.expects(:puppet_hook).in_sequence(hook_order)
+      hooks.expects(:reboot_hook).in_sequence(hook_order)
 
       hooks.process
     end
@@ -157,6 +173,7 @@ describe Astute::NailgunHooks do
         hooks.expects(:shell_hook).returns(false)
         hooks.expects(:sync_hook).never
         hooks.expects(:puppet_hook).never
+        hooks.expects(:reboot_hook).never
 
         hooks.process rescue nil
       end
@@ -167,6 +184,7 @@ describe Astute::NailgunHooks do
         hooks.expects(:shell_hook).returns(true)
         hooks.expects(:sync_hook).returns(false)
         hooks.expects(:puppet_hook).returns(true)
+        hooks.expects(:reboot_hook).returns(true)
 
         hooks.process
       end
@@ -210,6 +228,7 @@ describe Astute::NailgunHooks do
         hooks.expects(:shell_hook).returns(true)
         hooks.expects(:sync_hook).returns(false)
         hooks.expects(:puppet_hook).returns(true)
+        hooks.expects(:reboot_hook).returns(true)
 
         ctx.expects(:report_and_update_status).never
 
@@ -649,5 +668,209 @@ describe Astute::NailgunHooks do
       end
     end #context
   end # puppet_hook
+
+  context '#reboot_hook' do
+
+    it 'should validate presence of node uids' do
+      reboot_hook['uids'] = []
+      hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+
+    it 'should run reboot command with timeout - 10 sec' do
+      hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
+      hooks.expects(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        "reboot",
+        10,
+      )
+      .returns('2' => '', '3' => '')
+
+      time = Time.now.to_i + 100
+      hooks.stubs(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        regexp_matches(/stat/),
+        10,
+      )
+      .returns('2' => time.to_s, '3' => time.to_s)
+      hooks.stubs(:sleep)
+
+      hooks.process
+    end
+
+    it 'should run reboot validation command with timeout - 10 sec' do
+      hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
+      hooks.stubs(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        regexp_matches(/reboot/),
+        10,
+      )
+      .returns('2' => '', '3' => '')
+
+      time = Time.now.to_i + 100
+      hooks.expects(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        "stat --printf='%Y' /proc/1",
+        10,
+      )
+      .returns('2' => time.to_s, '3' => time.to_s)
+      hooks.stubs(:sleep)
+
+      hooks.process
+    end
+
+    it 'should sleep between checks for one-tenth of timeout' do
+      hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
+      hooks.stubs(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        regexp_matches(/reboot/),
+        10,
+      )
+      .returns('2' => '', '3' => '')
+
+      time = Time.now.to_i + 100
+      hooks.stubs(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        "stat --printf='%Y' /proc/1",
+        10,
+      )
+      .returns('2' => time.to_s, '3' => time.to_s)
+      hooks.expects(:sleep).with(reboot_hook['parameters']['timeout']/10)
+
+      hooks.process
+    end
+
+    it 'should use default timeout if it does not set' do
+      reboot_hook['parameters'].delete('timeout')
+      hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
+      hooks.stubs(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        regexp_matches(/reboot/),
+        10,
+      )
+      .returns('2' => '', '3' => '')
+
+      time = Time.now.to_i + 100
+      hooks.stubs(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        "stat --printf='%Y' /proc/1",
+        10,
+      )
+      .returns('2' => time.to_s, '3' => time.to_s)
+
+      hooks.expects(:sleep).with(300/10)
+
+      hooks.process
+    end
+
+    it 'should limit nodes processing in parallel' do
+      Astute.config.MAX_NODES_PER_CALL = 1
+
+      hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
+      hooks.expects(:run_shell_without_check).once.with(
+        ctx,
+        ['2'],
+        regexp_matches(/reboot/),
+        10,
+      )
+      .returns('2' => '')
+
+      hooks.expects(:run_shell_without_check).once.with(
+        ctx,
+        ['3'],
+        regexp_matches(/reboot/),
+        10,
+      )
+      .returns('3' => '')
+
+      hooks.stubs(:sleep)
+
+      time = Time.now.to_i + 100
+      hooks.stubs(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        "stat --printf='%Y' /proc/1",
+        10,
+      )
+      .returns('2' => time.to_s, '3' => time.to_s)
+
+      hooks.process
+    end
+
+    context 'process data from mcagent in case of critical hook' do
+
+      let(:hooks) do
+        reboot_hook['fail_on_error'] = true
+        reboot_hook['parameters']['timeout'] = 1
+
+        hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
+        hooks.stubs(:run_shell_without_check).once.with(
+          ctx,
+          ['2','3'],
+          regexp_matches(/reboot/),
+          10,
+        )
+        .returns('2' => '', '3' => '')
+
+        hooks.stubs(:sleep)
+
+        hooks
+      end
+
+      before(:each) do
+        ctx.stubs(:report_and_update_status)
+      end
+
+      it 'if reboot succeed -> do not raise error' do
+        time = Time.now.to_i + 100
+        hooks.stubs(:run_shell_without_check).once.with(
+          ctx,
+          ['2','3'],
+          "stat --printf='%Y' /proc/1",
+          10,
+        )
+        .returns('2' => time.to_s, '3' => time.to_s)
+
+        expect {hooks.process}.to_not raise_error
+      end
+
+      it 'if reboot failed -> raise error' do
+        time = Time.now.to_i + 100
+        bad_time = Time.now.to_i - 100
+        hooks.stubs(:run_shell_without_check).with(
+          ctx,
+          ['2','3'],
+          "stat --printf='%Y' /proc/1",
+          10,
+        )
+        .returns('2' => time.to_s, '3' => bad_time.to_s)
+
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+      end
+
+      it 'if reboot validate info not presence -> raise error' do
+        time = Time.now.to_i + 100
+        hooks.stubs(:run_shell_without_check).with(
+          ctx,
+          ['2','3'],
+          "stat --printf='%Y' /proc/1",
+          10,
+        )
+        .returns('2' => time.to_s)
+
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+      end
+    end #context
+
+  end #reboot_hook
 
 end # 'describe'
