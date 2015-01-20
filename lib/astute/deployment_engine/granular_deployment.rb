@@ -195,6 +195,46 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
     node['tasks'].present?
   end
 
+  # Pre/post hooks
+  def pre_deployment_actions(deployment_info, pre_deployment)
+    Astute::GranularPreDeploymentActions.new(deployment_info, @ctx).process
+    Astute::NailgunHooks.new(pre_deployment, @ctx).process
+  end
+
+  def pre_node_actions(part)
+    @action ||= Astute::GranularPreNodeActions.new(@ctx)
+    @action.process(part)
+  end
+
+  def pre_deploy_actions(part)
+    Astute::GranularPreDeployActions.new(part, @ctx).process
+  end
+
+  def post_deploy_actions(part)
+    Astute::GranularPostDeployActions.new(part, @ctx).process
+  end
+
+  def post_deployment_actions(deployment_info, post_deployment)
+    begin
+      Astute::NailgunHooks.new(post_deployment, @ctx).process
+    rescue => e
+      # We should fail all nodes in case of post deployment
+      # process. In other case they will not sending back
+      # for redeploy
+      nodes = deployment_info.uniq {|n| n['uid']}.map do |node|
+        { 'uid' => node['uid'],
+          'status' => 'error',
+          'role' => 'hook',
+          'error_type' => 'deploy',
+        }
+      end
+      @ctx.report_and_update_status('nodes' => nodes)
+      raise e
+    end
+
+    Astute::GranularPostDeploymentActions.new(deployment_info, @ctx).process
+  end
+
   class HookReporter
     def report(msg)
       Astute.logger.debug msg

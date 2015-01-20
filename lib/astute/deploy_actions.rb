@@ -44,7 +44,37 @@ module Astute
     end
   end
 
+  class GranularPostDeployActions < DeployActions
+    def initialize(deployment_info, context)
+      super
+      @actions = [
+        PostPatchingHa.new
+      ]
+    end
+  end
+
   class PreNodeActions
+
+    def initialize(context)
+      @node_uids = []
+      @context = context
+      @actions = [
+        PrePatchingHa.new,
+        StopOSTServices.new,
+        PrePatching.new
+      ]
+    end
+
+    def process(deployment_info)
+      nodes_to_process = deployment_info.select { |n| !@node_uids.include?(n['uid']) }
+      return if nodes_to_process.empty?
+
+      @actions.each { |action| action.process(nodes_to_process, @context) }
+      @node_uids += nodes_to_process.map { |n| n['uid'] }
+    end
+  end
+
+  class GranularPreNodeActions
 
     def initialize(context)
       @node_uids = []
@@ -85,7 +115,41 @@ module Astute
 
   end
 
+  class GranularPreDeploymentActions < DeployActions
+
+    def initialize(deployment_info, context)
+      super
+      @actions = [
+        SyncTime.new,
+        GenerateSshKeys.new,
+        GenerateKeys.new,
+        UploadSshKeys.new,
+        UploadKeys.new,
+        UpdateRepoSources.new,
+        SyncPuppetStuff.new,
+        SyncTasks.new,
+        EnablePuppetDeploy.new,
+        UploadFacts.new
+      ]
+    end
+
+  end
+
   class PostDeploymentActions < DeployActions
+
+    def initialize(deployment_info, context)
+      super
+      @actions = [
+        UpdateNoQuorumPolicy.new,
+        UploadCirrosImage.new,
+        RestartRadosgw.new,
+        UpdateClusterHostsInfo.new
+      ]
+
+    end
+  end
+
+  class GranularPostDeploymentActions < DeployActions
 
     def initialize(deployment_info, context)
       super
