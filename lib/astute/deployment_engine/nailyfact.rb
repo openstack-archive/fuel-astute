@@ -32,4 +32,43 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
     Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
   end
 
+  def pre_deployment_actions(deployment_info, pre_deployment)
+    PreDeploymentActions.new(deployment_info, @ctx).process
+    NailgunHooks.new(pre_deployment, @ctx).process
+  end
+
+  def pre_node_actions(part)
+    @action ||= PreNodeActions.new(@ctx)
+    @action.process(part)
+  end
+
+  def pre_deploy_actions(part)
+    PreDeployActions.new(part, @ctx).process
+  end
+
+  def post_deploy_actions(part)
+    PostDeployActions.new(part, @ctx).process
+  end
+
+  def post_deployment_actions(deployment_info, post_deployment)
+    begin
+      NailgunHooks.new(post_deployment, @ctx).process
+    rescue => e
+      # We should fail all nodes in case of post deployment
+      # process. In other case they will not sending back
+      # for redeploy
+      nodes = deployment_info.uniq {|n| n['uid']}.map do |node|
+        { 'uid' => node['uid'],
+          'status' => 'error',
+          'role' => 'hook',
+          'error_type' => 'deploy',
+        }
+      end
+      @ctx.report_and_update_status('nodes' => nodes)
+      raise e
+    end
+
+    PostDeploymentActions.new(deployment_info, @ctx).process
+  end
+
 end

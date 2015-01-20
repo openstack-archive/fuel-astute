@@ -18,7 +18,23 @@ require 'tmpdir'
 describe Astute::DeploymentEngine do
   include SpecHelpers
 
-  class Engine < Astute::DeploymentEngine; end
+  class Engine < Astute::DeploymentEngine;
+
+    def pre_deployment_actions(deployment_info, pre_deployment)
+    end
+
+    def pre_node_actions(part)
+    end
+
+    def pre_deploy_actions(part)
+    end
+
+    def post_deploy_actions(part)
+    end
+
+    def post_deployment_actions(deployment_info, post_deployment)
+    end
+  end
 
   let(:ctx) do
     tctx = mock_ctx
@@ -39,15 +55,6 @@ describe Astute::DeploymentEngine do
   let(:deployer) { Engine.new(ctx) }
 
   describe '#deploy' do
-
-    before(:each) do
-      Astute::PreDeployActions.any_instance.stubs(:process).returns(nil)
-      Astute::PostDeployActions.any_instance.stubs(:process).returns(nil)
-      Astute::PreNodeActions.any_instance.stubs(:process).returns(nil)
-      Astute::PreDeploymentActions.any_instance.stubs(:process).returns(nil)
-      Astute::PostDeploymentActions.any_instance.stubs(:process).returns(nil)
-    end
-
     context 'hooks' do
 
       let(:nodes) {
@@ -75,79 +82,45 @@ describe Astute::DeploymentEngine do
       before(:each) { deployer.stubs(:deploy_piece) }
 
       it 'should run pre deployment hooks run once for all cluster' do
-        Astute::PreDeploymentActions.any_instance.expects(:process).once
-
-        deployer.deploy(nodes)
-      end
-
-      context 'nailgun hooks' do
-        it 'should run pre and post deployment nailgun hooks run once for all cluster' do
-          pre_hook = mock('pre')
-          post_hook = mock('post')
-          hook_order = sequence('hook_order')
-
-          Astute::NailgunHooks.expects(:new).with(pre_deployment, ctx).returns(pre_hook)
-          Astute::NailgunHooks.expects(:new).with(post_deployment, ctx).returns(post_hook)
-
-          Astute::PreDeploymentActions.any_instance.expects(:process).in_sequence(hook_order)
-          pre_hook.expects(:process).in_sequence(hook_order)
-          deployer.expects(:deploy_piece).in_sequence(hook_order)
-          post_hook.expects(:process).in_sequence(hook_order)
-          Astute::PostDeploymentActions.any_instance.expects(:process).in_sequence(hook_order)
-
-          deployer.deploy(nodes, pre_deployment, post_deployment)
-        end
-
-        it 'should not do additional update for node status if pre hooks failed' do
-          pre_hook = mock('pre')
-          Astute::NailgunHooks.expects(:new).with(pre_deployment, ctx).returns(pre_hook)
-          pre_hook.expects(:process).raises(Astute::DeploymentEngineError)
-
-          ctx.expects(:report_and_update_status).never
-
-          expect {deployer.deploy(nodes, pre_deployment, post_deployment)}.to raise_error(Astute::DeploymentEngineError)
-        end
-
-        it 'should update all nodes status to error if post hooks failed' do
-          pre_hook = mock('pre')
-          post_hook = mock('post')
-          Astute::NailgunHooks.expects(:new).with(pre_deployment, ctx).returns(pre_hook)
-          pre_hook.expects(:process)
-
-          Astute::NailgunHooks.expects(:new).with(post_deployment, ctx).returns(post_hook)
-          post_hook.expects(:process).raises(Astute::DeploymentEngineError)
-
-          ctx.expects(:report_and_update_status).with({
-            'nodes' => [
-              {'uid' => 1, 'status' => 'error', 'error_type' => 'deploy', 'role' => 'hook'},
-              {'uid' => 2, 'status' => 'error', 'error_type' => 'deploy', 'role' => 'hook'}
-            ]
-          })
-
-          expect {deployer.deploy(nodes, pre_deployment, post_deployment)}.to raise_error(Astute::DeploymentEngineError)
-        end
-      end
-
-      it 'should run pre node hooks once for node' do
-        Astute::PreNodeActions.any_instance.expects(:process).twice
-
-        deployer.deploy(nodes)
-      end
-
-      it 'should run pre deploy hooks once for role' do
-        Astute::PreDeployActions.any_instance.expects(:process).times(3)
-
-        deployer.deploy(nodes)
-      end
-
-      it 'should run post deploy hooks once for role' do
-        Astute::PostDeployActions.any_instance.expects(:process).times(3)
+        deployer.expects(:pre_deployment_actions).with(nodes, []).once
 
         deployer.deploy(nodes)
       end
 
       it 'should run post deployment hooks run once for all cluster' do
-        Astute::PostDeploymentActions.any_instance.expects(:process).once
+        deployer.expects(:post_deployment_actions).with(nodes, []).once
+
+        deployer.deploy(nodes)
+      end
+
+      context 'hooks' do
+        it 'should run pre and post deployment nailgun hooks run once for all cluster' do
+          hook_order = sequence('hook_order')
+
+          deployer.expects(:pre_deployment_actions).in_sequence(hook_order)
+          deployer.expects(:deploy_piece).in_sequence(hook_order)
+          deployer.expects(:post_deployment_actions).in_sequence(hook_order)
+
+          deployer.deploy(nodes, pre_deployment, post_deployment)
+        end
+
+        it 'should not do additional update for node status if pre hooks failed' do
+          deployer.expects(:pre_deployment_actions).raises(Astute::DeploymentEngineError)
+
+          ctx.expects(:report_and_update_status).never
+
+          expect {deployer.deploy(nodes, pre_deployment, post_deployment)}.to raise_error(Astute::DeploymentEngineError)
+        end
+      end
+
+      it 'should run pre deploy hooks once for role' do
+        deployer.expects(:pre_deploy_actions).times(3)
+
+        deployer.deploy(nodes)
+      end
+
+      it 'should run post deploy hooks once for role' do
+        deployer.expects(:post_deploy_actions).times(3)
 
         deployer.deploy(nodes)
       end
