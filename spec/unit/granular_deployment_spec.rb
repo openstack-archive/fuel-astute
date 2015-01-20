@@ -145,6 +145,36 @@ describe "Granular deployment engine" do
       deploy_engine.deploy_piece(nodes)
     end
 
+    it 'should not run if no tasks exists' do
+      nodes[0]['tasks'] = []
+      nodes[1]['tasks'] = []
+
+      deploy_engine.expects(:deploy_nodes).never
+
+      ready_report = {'nodes' => [
+          {'uid' => '45',
+            'status' => 'ready',
+            'role' => 'ceph',
+            'progress' => 100},
+          {'uid' => '46',
+            'status' => 'ready',
+            'role' => 'compute',
+            'progress' => 100}]}
+
+      ctx.reporter.expects(:report).once.with(ready_report)
+
+      deploy_engine.deploy_piece(nodes)
+    end
+
+    it 'should process only nodes with tasks' do
+      ctx.stubs(:report_and_update_status)
+      nodes[0]['tasks'] = []
+
+      deploy_engine.expects(:deploy_nodes).with([nodes[1]])
+
+      deploy_engine.deploy_piece(nodes)
+    end
+
     it 'should report error status if error raised' do
       error_report = {'nodes' =>
         [

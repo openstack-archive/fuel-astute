@@ -17,6 +17,8 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
   NAILGUN_STATUS = ['ready', 'error', 'deploying']
 
   def deploy_piece(nodes, retries=1)
+    report_ready_for_nodes_without_tasks(nodes)
+    nodes = filter_nodes_with_tasks(nodes)
     return false unless validate_nodes(nodes)
 
     @ctx.reporter.report(nodes_status(nodes, 'deploying', {'progress' => 0}))
@@ -172,6 +174,25 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
   rescue => e
     Astute.logger.warn "Some error occurred when prepare LogParser: " \
       "#{e.message}, trace: #{e.format_backtrace}"
+  end
+
+  # If node doesn't have tasks, it means that node
+  # is ready, because it doesn't require deployment
+  def report_ready_for_nodes_without_tasks(nodes)
+    nodes_without_tasks = filter_nodes_without_tasks(nodes)
+    @ctx.reporter.report(nodes_status(nodes_without_tasks, 'ready', {'progress' => 100}))
+  end
+
+  def filter_nodes_with_tasks(nodes)
+    nodes.select { |n| node_with_tasks?(n) }
+  end
+
+  def filter_nodes_without_tasks(nodes)
+    nodes.select { |n| !node_with_tasks?(n) }
+  end
+
+  def node_with_tasks?(node)
+    node['tasks'].present?
   end
 
   class HookReporter
