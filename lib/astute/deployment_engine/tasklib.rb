@@ -114,6 +114,7 @@ class Astute::DeploymentEngine::Tasklib < Astute::DeploymentEngine
 
     while @task_manager.task_in_queue?
       nodes_to_report = []
+      sleep Astute.config.PUPPET_DEPLOY_INTERVAL
       @task_manager.node_uids.each do |node_id|
         if task = @task_manager.current_task(node_id)
           case status = check_status(node_id, task)
@@ -156,7 +157,6 @@ class Astute::DeploymentEngine::Tasklib < Astute::DeploymentEngine
       @ctx.report_and_update_status('nodes' => nodes_to_report) if nodes_to_report.present?
 
       break unless @task_manager.task_in_queue?
-      sleep Astute.config.PUPPET_DEPLOY_INTERVAL
     end
   end
 
