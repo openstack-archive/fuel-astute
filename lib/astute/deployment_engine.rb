@@ -29,14 +29,11 @@ module Astute
       Astute.logger.info "Deployment mode #{@ctx.deploy_log_parser.deploy_type}"
 
       begin
-        PreDeploymentActions.new(deployment_info, @ctx).process
-        NailgunHooks.new(pre_deployment, @ctx).process
+        pre_deployment_actions(deployment_info, pre_deployment)
       rescue => e
         Astute.logger.error("Unexpected error #{e.message} traceback #{e.format_backtrace}")
         raise e
       end
-
-      pre_node_actions = PreNodeActions.new(@ctx)
 
       fail_deploy = false
       # Sort by priority (the lower the number, the higher the priority)
@@ -51,14 +48,13 @@ module Astute
             if !fail_deploy
 
               # Pre deploy hooks
-              pre_node_actions.process(part)
-              PreDeployActions.new(part, @ctx).process
+              pre_node_actions(part)
+              pre_deploy_actions(part)
 
               deploy_piece(part)
 
               # Post deploy hook
-              PostDeployActions.new(part, @ctx).process
-
+              post_deploy_actions(part)
               fail_deploy = fail_critical_node?(part)
             else
               nodes_to_report = part.map do |n|
@@ -75,24 +71,7 @@ module Astute
       end
 
       # Post deployment hooks
-      begin
-        NailgunHooks.new(post_deployment, @ctx).process
-      rescue => e
-        # We should fail all nodes in case of post deployment
-        # process. In other case they will not sending back
-        # for redeploy
-        nodes = deployment_info.uniq {|n| n['uid']}.map do |node|
-          { 'uid' => node['uid'],
-            'status' => 'error',
-            'role' => 'hook',
-            'error_type' => 'deploy',
-          }
-        end
-        @ctx.report_and_update_status('nodes' => nodes)
-        raise e
-      end
-
-      PostDeploymentActions.new(deployment_info, @ctx).process
+      post_deployment_actions(deployment_info, post_deployment)
     end
 
     protected
@@ -153,6 +132,26 @@ module Astute
       Astute.logger.warn "#{@ctx.task_id}: Critical nodes with uids: #{stop_uids.join(', ')} " \
                          "fail to deploy. Stop deployment"
       true
+    end
+
+    def pre_deployment_actions(deployment_info, pre_deployment)
+      raise "Should be implemented"
+    end
+
+    def pre_node_actions(part)
+      raise "Should be implemented"
+    end
+
+    def pre_deploy_actions(part)
+      raise "Should be implemented"
+    end
+
+    def post_deploy_actions(part)
+      raise "Should be implemented"
+    end
+
+    def post_deployment_actions(deployment_info, post_deployment)
+      raise "Should be implemented"
     end
 
   end
