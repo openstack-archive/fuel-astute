@@ -135,7 +135,7 @@ module Astute
 
       timeout = hook['parameters']['timeout'] || 300
 
-      rsync_options = '-c -r --delete'
+      rsync_options = hook['parameters']['options']
       rsync_cmd = "mkdir -p #{path} && rsync #{rsync_options} #{source} #{path}"
 
       is_success = false
