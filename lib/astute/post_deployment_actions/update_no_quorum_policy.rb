@@ -52,9 +52,14 @@ module Astute
         ['controller', 'primary-controller'].include? n['role']
       }.size
       if controllers_count > 2
-        Astute.logger.info "Started updating no quorum policy for corosync cluster"
         primary_controller = deployment_info.find {|n| n['role'] == 'primary-controller' }
+        if context.status[primary_controller['uid']] == 'error'
+          Astute.logger.info "Update quorum policy for corosync cluster " \
+            "disabled because of primary-controller status is error"
+          return
+        end
 
+        Astute.logger.info "Started updating no quorum policy for corosync cluster"
         response = run_shell_command(context, Array(primary_controller['uid']), cmd)
         if response[:data][:exit_code] != 0
           Astute.logger.warn "#{context.task_id}: Failed to update no "\

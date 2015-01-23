@@ -109,8 +109,14 @@ describe Astute::UpdateNoQuorumPolicy do
     update_no_quorum_policy.process(deploy_dat3, ctx)
   end
 
-  it 'should run if deploy fail' do
+  it 'should not run if primary-controller fail' do
     ctx.stubs(:status).returns(1 => 'error', 2 => 'success')
+    update_no_quorum_policy.expects(:run_shell_command).never
+    update_no_quorum_policy.process(deploy_dat3, ctx)
+  end
+
+  it 'should run if not primary-controller fail' do
+    ctx.stubs(:status).returns(1 => 'success', 2 => 'error')
     update_no_quorum_policy.expects(:run_shell_command).once.returns(:data => {:exit_code => 0})
 
     update_no_quorum_policy.process(deploy_dat3, ctx)
@@ -137,7 +143,7 @@ describe Astute::UpdateNoQuorumPolicy do
     update_no_quorum_policy.process(deploy_dat3, ctx)
   end
 
-  it 'should not only in HA mode' do
+  it 'should only run in case of HA mode' do
     deploy_dat3.first['deployment_mode'] = 'multinode'
     update_no_quorum_policy.expects(:run_shell_command).never
     update_no_quorum_policy.process(deploy_dat3, ctx)
