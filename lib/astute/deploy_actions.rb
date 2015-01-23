@@ -166,7 +166,6 @@ module Astute
         UpdateNoQuorumPolicy.new,
         UploadCirrosImage.new,
         RestartRadosgw.new,
-        UpdateClusterHostsInfo.new
       ]
 
     end
