@@ -162,9 +162,7 @@ module Astute
 
     def initialize(deployment_info, context)
       super
-      @actions = [
-        UpdateClusterHostsInfo.new
-      ]
+      @actions = []
 
     end
   end
