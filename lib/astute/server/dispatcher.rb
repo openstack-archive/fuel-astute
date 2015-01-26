@@ -206,8 +206,8 @@ module Astute
         Astute.logger.info "Try to kill running task #{target_task_uuid}"
         service_data[:main_work_thread].kill
 
-        result = if ['deploy', 'task_deployment', 'granular_deploy'].include?
-            service_data[:tasks_queue].current_task_method
+        result = if ['deploy', 'task_deployment', 'granular_deploy'].include? (
+            service_data[:tasks_queue].current_task_method)
           @orchestrator.stop_puppet_deploy(reporter, task_uuid, nodes)
           @orchestrator.remove_nodes(reporter, task_uuid, data['args']['engine'], nodes)
         else
