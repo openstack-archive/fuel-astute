@@ -8,3 +8,6 @@ coverage.data
 # Need only on local machine for gem 
 Gemfile.lock
 docs/_build
+
+#Vim swap files
+*.swp
