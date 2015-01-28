@@ -69,27 +69,55 @@ module Astute
           return
         end
       end
+      
+      # Fixme! This case keep the current functionality.
+      # Remove it after multi HV support has been done
+      if os.kind_of?(Hash)
+        cmd = <<-UPLOAD_IMAGE
+          . /root/openrc &&
+          /usr/bin/glance image-list | grep -q #{os['img_name']} ||
+          /usr/bin/glance image-create
+            --name \'#{os['img_name']}\'
+            --is-public #{os['public']}
+            --container-format=\'#{os['container_format']}\'
+              --disk-format=\'#{os['disk_format']}\'
+              --min-ram=#{os['min_ram']} #{os['glance_properties']}
+              --file \'#{os['img_path']}\'
+        UPLOAD_IMAGE
+        cmd.tr!("\n"," ")
 
-      cmd = <<-UPLOAD_IMAGE
-        . /root/openrc &&
-        /usr/bin/glance image-list | grep -q #{os['img_name']} ||
-        /usr/bin/glance image-create
-          --name \'#{os['img_name']}\'
-          --is-public #{os['public']}
-          --container-format=\'#{os['container_format']}\'
-            --disk-format=\'#{os['disk_format']}\'
-            --min-ram=#{os['min_ram']} #{os['glance_properties']}
-            --file \'#{os['img_path']}\'
-      UPLOAD_IMAGE
-      cmd.tr!("\n"," ")
+        response = run_shell_command(context, Array(controller['uid']), cmd)
+        if response[:data][:exit_code] == 0
+          Astute.logger.info "#{context.task_id}: Upload cirros " \
+            "image \"#{os['img_name']}\" is done"
+        else
+          raise_cirros_error(context, node, "Upload cirros \"#{os['img_name']}\" image failed")
+        end
+      elsif os.kind_of?(Array)
+        os.each do |image|
+          cmd = <<-UPLOAD_IMAGE
+            . /root/openrc &&
+            /usr/bin/glance image-list | grep -q #{image['img_name']} ||
+            /usr/bin/glance image-create
+              --name \'#{image['img_name']}\'
+              --is-public #{image['public']}
+              --container-format=\'#{image['container_format']}\'
+                --disk-format=\'#{image['disk_format']}\'
+                --min-ram=#{image['min_ram']} #{image['glance_properties']}
+                --file \'#{image['img_path']}\'
+          UPLOAD_IMAGE
+          cmd.tr!("\n"," ")
 
-      response = run_shell_command(context, Array(controller['uid']), cmd)
-      if response[:data][:exit_code] == 0
-        Astute.logger.info "#{context.task_id}: Upload cirros " \
-          "image \"#{os['img_name']}\" is done"
-      else
-        raise_cirros_error(context, node, "Upload cirros \"#{os['img_name']}\" image failed")
+          response = run_shell_command(context, Array(controller['uid']), cmd)
+          if response[:data][:exit_code] == 0
+            Astute.logger.info "#{context.task_id}: Upload cirros " \
+              "image \"#{image['img_name']}\" is done"
+          else
+            raise_cirros_error(context, node, "Upload cirros \"#{image['img_name']}\" image failed")
+          end
+        end
       end
+
     end # process
 
     private
