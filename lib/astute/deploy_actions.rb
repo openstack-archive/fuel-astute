@@ -149,9 +149,6 @@ module Astute
     def initialize(deployment_info, context)
       super
       @actions = [
-        UpdateNoQuorumPolicy.new,
-        UploadCirrosImage.new,
-        RestartRadosgw.new,
         UpdateClusterHostsInfo.new
       ]
 
