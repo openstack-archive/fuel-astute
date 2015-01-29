@@ -103,22 +103,28 @@ module Astute
 
       timeout = hook['parameters']['timeout'] || 300
       cwd = hook['parameters']['cwd'] || "/"
+      retries = if hook['parameters']['retries'] then Astute.config.MC_RETRIES else 1
 
       shell_command = "cd #{cwd} && #{hook['parameters']['cmd']}"
 
-      is_success = true
-      perform_with_limit(hook['uids']) do |node_uids|
-        response = run_shell_command(
-          @ctx,
-          node_uids,
-          shell_command,
-          timeout,
-          cwd
-        )
+      is_success = false
+      retries.times.each do
+        perform_with_limit(hook['uids']) do |node_uids|
+          response = run_shell_command(
+            @ctx,
+            node_uids,
+            shell_command,
+            timeout,
+            cwd
+          )
+        end
         if response[:data][:exit_code] != 0
           Astute.logger.warn("Shell command failed. Check debug output for details")
-          is_success = false
+        else
+          is_success = true
         end
+        return if is_success
+        sleep Astute.config.MC_RETRY_INTERVAL
       end
 
       is_success
