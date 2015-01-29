@@ -305,14 +305,14 @@ describe Astute::NailgunHooks do
 
       it 'if exit code not eql 0 -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).once
+        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).times(Astute.config.MC_RETRIES)
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
       end
 
       it 'if exit code not presence -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {}}).once
+        hooks.expects(:run_shell_command).returns({:data => {}}).times(Astute.config.MC_RETRIES)
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
       end

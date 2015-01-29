@@ -129,7 +129,6 @@ module Astute
     def initialize(deployment_info, context)
       super
       @actions = [
-        SyncTime.new,
         GenerateSshKeys.new,
         GenerateKeys.new,
         UploadSshKeys.new,
