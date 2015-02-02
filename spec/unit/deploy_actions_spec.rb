@@ -58,7 +58,7 @@ describe Astute::PreDeploymentActions do
     Astute::UploadSshKeys.any_instance.expects(:process)
                                   .with(deploy_data, ctx)
     Astute::UploadKeys.any_instance.expects(:process)
-                                .with(deploy_data, ctx)
+                                  .with(deploy_data, ctx)
     Astute::SyncTasks.any_instance.expects(:process)
                                   .with(deploy_data, ctx)
     Astute::UploadFacts.any_instance.expects(:process)
