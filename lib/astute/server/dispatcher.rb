@@ -162,6 +162,21 @@ module Astute
         remove_nodes(data)
       end
 
+      def execute_tasks(data)
+        task_uuid = data['args']['task_uuid']
+        reporter = Astute::Server::Reporter.new(
+          @producer,
+          data['respond_to'],
+          task_uuid
+        )
+
+        @orchestrator.execute_tasks(
+          reporter,
+          task_uuid,
+          data['args']['tasks']
+        )
+      end
+
       #
       #  Service worker actions
       #
