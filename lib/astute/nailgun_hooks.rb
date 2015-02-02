@@ -16,9 +16,10 @@
 module Astute
   class NailgunHooks
 
-    def initialize(nailgun_hooks, context)
+    def initialize(nailgun_hooks, context, type='deploy')
       @nailgun_hooks = nailgun_hooks
       @ctx = context
+      @type = type
     end
 
     def process
@@ -34,19 +35,19 @@ module Astute
         end
 
         is_raise_on_error = hook.fetch('fail_on_error', true)
+        hook_name = hook['id'] || hook['diagnostic_name']
 
         if !success && is_raise_on_error
           nodes = hook['uids'].map do |uid|
             { 'uid' => uid,
               'status' => 'error',
-              'error_type' => 'deploy',
+              'error_type' => @type,
               'role' => 'hook',
-              'hook' => hook['diagnostic_name']
+              'hook' => hook_name
             }
           end
           @ctx.report_and_update_status('nodes' => nodes)
-          raise Astute::DeploymentEngineError,
-            "Failed to deploy plugin #{hook['diagnostic_name']}"
+          raise Astute::DeploymentEngineError, "Failed to deploy plugin #{hook_name}"
         end
       end
     end

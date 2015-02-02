@@ -31,6 +31,11 @@ module Astute
       end
     end
 
+    def execute_tasks(up_reporter, task_id, tasks)
+      ctx = Context.new(task_id, up_reporter)
+      Astute::NailgunHooks.new(tasks, ctx, 'execute_tasks').process
+    end
+
     def deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
       deploy_cluster(
         up_reporter,
