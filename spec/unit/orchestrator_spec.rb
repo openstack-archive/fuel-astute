@@ -709,4 +709,29 @@ describe Astute::Orchestrator do
     end
 
   end # stop_provision
+
+  describe '#execute_tasks' do
+    it 'should execute tasks using nailgun hooks' do
+      @orchestrator.stubs(:report_result)
+      Astute::NailgunHooks.any_instance.expects(:process)
+
+      @orchestrator.execute_tasks(@reporter, task_id="", tasks=[])
+    end
+
+    it 'should report succeed if all done without critical error' do
+      Astute::NailgunHooks.any_instance.stubs(:process)
+      @orchestrator.expects(:report_result).with({}, @reporter)
+
+      @orchestrator.execute_tasks(@reporter, task_id="", tasks=[])
+    end
+
+    it 'it should rescue exception if task failed' do
+      Astute::NailgunHooks.any_instance.stubs(:process)
+        .raises(Astute::DeploymentEngineError)
+
+      expect {@orchestrator.execute_tasks(@reporter, task_id="", tasks=[])}
+        .to raise_error(Astute::DeploymentEngineError)
+    end
+
+  end #execute_tasks
 end

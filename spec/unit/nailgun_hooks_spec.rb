@@ -61,7 +61,7 @@ describe Astute::NailgunHooks do
       "priority" =>  100,
       "type" =>  "shell",
       "fail_on_error" => false,
-      "diagnostic_name" => "shell-example-1.0",
+      "id" => "shell-example-1.0",
       "uids" =>  ['1','2','3'],
       "parameters" =>  {
         "cmd" =>  "./deploy.sh",
@@ -94,6 +94,18 @@ describe Astute::NailgunHooks do
       shell_hook,
       puppet_hook
     ]
+  end
+
+  context '#new' do
+    it 'should use default run type if no type setting' do
+      hooks = Astute::NailgunHooks.new(hooks_data, ctx)
+      expect(hooks.instance_variable_get("@type")).to eql('deploy')
+    end
+
+    it 'should use type if it set' do
+      hooks = Astute::NailgunHooks.new(hooks_data, ctx, 'execute_tasks')
+      expect(hooks.instance_variable_get("@type")).to eql('execute_tasks')
+    end
   end
 
   context "#process" do
