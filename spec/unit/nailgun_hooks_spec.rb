@@ -87,12 +87,29 @@ describe Astute::NailgunHooks do
     }
   end
 
+  let(:copy_files_hook) do
+    {
+      "priority" =>  100,
+      "type" =>  "copy_files",
+      "fail_on_error" => false,
+      "diagnostic_name" => "copy-example-1.0",
+      "uids" =>  ['2', '3'],
+      "parameters" =>  {
+        "files" => [{
+          "src" => "/etc/fuel/nova.key",
+          "dst" => "/etc/astute/nova.key"}],
+        "permissions" => "0600",
+        "dir_permissions" => "0700"
+      }
+    }
+  end
   let(:hooks_data) do
     [
       upload_file_hook,
       sync_hook,
       shell_hook,
-      puppet_hook
+      puppet_hook,
+      copy_files_hook
     ]
   end
 
@@ -104,6 +121,7 @@ describe Astute::NailgunHooks do
       hooks.expects(:puppet_hook)
       hooks.expects(:shell_hook)
       hooks.expects(:sync_hook)
+      hooks.expects(:copy_files_hook)
 
       hooks.process
     end
@@ -123,11 +141,14 @@ describe Astute::NailgunHooks do
     end
 
     it 'should run hooks by priority order' do
+      File.stubs(:file?).returns(true)
+      File.stubs(:readable?).returns(true)
+      File.stubs(:read).returns('')
       hooks = Astute::NailgunHooks.new(hooks_data, ctx)
 
       hook_order = sequence('hook_order')
-
       hooks.expects(:upload_file_hook).in_sequence(hook_order)
+      hooks.expects(:copy_files_hook).in_sequence(hook_order)
       hooks.expects(:shell_hook).in_sequence(hook_order)
       hooks.expects(:sync_hook).in_sequence(hook_order)
       hooks.expects(:puppet_hook).in_sequence(hook_order)
@@ -143,7 +164,7 @@ describe Astute::NailgunHooks do
       end
 
       it 'should raise exception if critical hook failed' do
-
+        File.stubs(:read).returns("")
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
         hooks.expects(:upload_file_hook).returns(true)
         hooks.expects(:shell_hook).returns(false)
@@ -219,6 +240,94 @@ describe Astute::NailgunHooks do
     end #hook
 
   end #process
+
+  context '#copy_files_hook' do
+
+    it 'should validate presence of node uids' do
+      copy_files_hook['uids'] = []
+      hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+
+    it 'should validate presence files' do
+      copy_files_hook['parameters'].delete('files')
+      hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+
+    it 'should upload file' do
+      File.stubs(:file?).returns(true)
+      File.stubs(:readable?).returns(true)
+      File.stubs(:read).returns("")
+      hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
+    
+      hooks.expects(:upload_file).once.with(
+        ctx,
+        ['2', '3'],
+        has_entries(
+          'content' => "",
+          'path' => copy_files_hook['parameters']['files'][0]['dst']
+        )
+      )
+    
+      hooks.process
+    end
+
+    it 'should limit nodes processing in parallel' do
+      Astute.config.MAX_NODES_PER_CALL = 1
+      File.stubs(:file?).returns(true)
+      File.stubs(:readable?).returns(true)
+      File.stubs(:read).returns("")
+      hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
+    
+      hooks.expects(:upload_file).once.with(
+        ctx,
+        ['2'],
+        has_entries(
+          'content' => "",
+          'path' => copy_files_hook['parameters']['files'][0]['dst']
+        )
+      )
+      hooks.expects(:upload_file).once.with(
+        ctx,
+        ['3'],
+        has_entries(
+          'content' => "",
+          'path' => copy_files_hook['parameters']['files'][0]['dst']
+        )
+      )
+      hooks.process
+    end
+
+    context 'process data from mcagent in case of critical hook' do
+      before(:each) do
+        copy_files_hook['fail_on_error'] = true
+        ctx.stubs(:report_and_update_status)
+      end
+
+      it 'mcagent success' do
+        File.stubs(:file?).returns(true)
+        File.stubs(:readable?).returns(true)
+        File.stubs(:read).returns("")
+        hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
+        hooks.expects(:upload_file).returns(true).once
+
+        expect {hooks.process}.to_not raise_error
+      end
+
+      it 'mcagent fail' do
+        File.stubs(:file?).returns(true)
+        File.stubs(:readable?).returns(true)
+        File.stubs(:read).returns("")
+        hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
+        hooks.expects(:upload_file).returns(false).once
+
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+      end
+    end #context
+  end#copy_files_hook
 
   context '#shell_hook' do
 
