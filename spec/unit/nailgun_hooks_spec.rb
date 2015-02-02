@@ -87,6 +87,20 @@ describe Astute::NailgunHooks do
     }
   end
 
+  let(:copy_files_hook) do
+    {
+      "priority" =>  100,
+      "type" =>  "copy_files",
+      "fail_on_error" => false,
+      "diagnostic_name" => "upload-example-1.0",
+      "uids" =>  ['2', '3'],
+      "parameters" =>  {
+        "srcs_and_dests:" =>  [["/etc/fuel/plugins/fuel_awesome_plugin-0.1.0/deploy.sh", "/etc/yum.repos.d/fuel.yaml"]],
+        "permissions:" => "0600",
+        "dir_permissions:" => "0700"
+      }
+    }
+  end
   let(:hooks_data) do
     [
       upload_file_hook,

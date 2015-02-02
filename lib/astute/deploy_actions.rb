@@ -110,10 +110,6 @@ module Astute
       super
       @actions = [
         SyncTime.new,
-        GenerateSshKeys.new,
-        GenerateKeys.new,
-        UploadSshKeys.new,
-        UploadKeys.new,
         UpdateRepoSources.new,
         SyncPuppetStuff.new,
         SyncTasks.new,
