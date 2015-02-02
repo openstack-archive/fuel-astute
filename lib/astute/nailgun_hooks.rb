@@ -26,6 +26,7 @@ module Astute
         Astute.logger.info "Run hook #{hook.to_yaml}"
 
         success = case hook['type']
+        when 'copy_files' then copy_files_hook(hook)
         when 'sync' then sync_hook(hook)
         when 'shell' then shell_hook(hook)
         when 'upload_file' then upload_file_hook(hook)
@@ -52,6 +53,25 @@ module Astute
     end
 
     private
+
+    def copy_files_hook(hook)
+      validate_presence(hook, 'uids')
+      validate_presence(hook['parameters'], 'srcs_and_dests')
+
+      is_success = true
+      hook['parameters']['srcs_and_dests'].each do |src, dest|
+        hook['parameters']['content'] = File.read(src)
+        hook['parameters']['path'] = dest
+        perform_with_limit(hook['uids']) do |node_uids|
+          status = upload_file(@ctx, node_uids, hook['parameters'])
+          if status == false
+            is_success = false 
+            break
+          end
+        end
+      end
+      is_success
+    end #copy_file_hook
 
     def puppet_hook(hook)
       validate_presence(hook, 'uids')
