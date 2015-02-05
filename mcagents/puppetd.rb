@@ -169,6 +169,7 @@ module MCollective
       def runonce_background
         cwd = request.fetch(:cwd, '/')
         cmd = [
+          'LC_ALL="en_US.UTF-8"',
           @puppetd,
           "-c #{cwd}",
           @puppetd_agent,
