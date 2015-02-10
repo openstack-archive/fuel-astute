@@ -35,9 +35,7 @@ describe Astute::UploadCirrosImage do
                             'public'            => 'true',
                             'img_name'          => 'TestVM',
                             'os_name'           => 'cirros',
-                            'img_path'          => '/opt/vm/cirros-x86_64-disk.img',
-                            'glance_properties' =>
-                              '--property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\''
+                            'img_path'          => '/opt/vm/cirros-x86_64-disk.img'
                          },
                          'nodes' => [{'uid'=>'1', 'role'=>'controller'},
                                      {'uid'=>'2', 'role'=>'compute'}]
@@ -52,9 +50,7 @@ describe Astute::UploadCirrosImage do
                             'public'            => 'true',
                             'img_name'          => 'TestVM',
                             'os_name'           => 'cirros',
-                            'img_path'          => '/opt/vm/cirros-x86_64-disk.img',
-                            'glance_properties' =>
-                              '--property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\''
+                            'img_path'          => '/opt/vm/cirros-x86_64-disk.img'
                          },
                         }
                       ]

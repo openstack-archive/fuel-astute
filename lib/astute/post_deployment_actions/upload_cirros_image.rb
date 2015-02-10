@@ -39,8 +39,7 @@ module Astute
       # 'public'            => 'true',
       # 'img_name'          => 'TestVM',
       # 'os_name'           => 'cirros',
-      # 'img_path'          => '/opt/vm/cirros-x86_64-disk.img',
-      # 'glance_properties' => '--property murano_image_info=\'{\"title\": \"Murano Demo\", \"type\": \"cirros.demo\"}\''
+      # 'img_path'          => '/opt/vm/cirros-x86_64-disk.img'
       # }
 
       os = node['test_vm_image']
@@ -78,7 +77,7 @@ module Astute
           --is-public #{os['public']}
           --container-format=\'#{os['container_format']}\'
             --disk-format=\'#{os['disk_format']}\'
-            --min-ram=#{os['min_ram']} #{os['glance_properties']}
+            --min-ram=#{os['min_ram']}
             --file \'#{os['img_path']}\'
       UPLOAD_IMAGE
       cmd.tr!("\n"," ")
