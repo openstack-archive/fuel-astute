@@ -102,15 +102,22 @@ module Astute
         failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
 
         # control reboot for nodes which still in bootstrap state
-	# Note: if the image based provisioning is used nodes are already
-	# provisioned and rebooting is not necessary. In fact the forced
-	# reboot can corrupt a node if it manages to reboot fast enough
-	# (see LP #1394599)
-	# XXX: actually there's a tiny probability to reboot a node being
-	# provisioned in a traditional way (by Debian installer or anaconda),
-	# however such a double reboot is not dangerous since cobbler will
-	# boot such a node into installer once again.
-	if provision_method != 'image'
+        # Note: if the image based provisioning is used nodes are already
+        # provisioned and rebooting is not necessary. In fact the forced
+        # reboot can corrupt a node if it manages to reboot fast enough
+        # (see LP #1394599)
+        # XXX: actually there's a tiny probability to reboot a node being
+        # provisioned in a traditional way (by Debian installer or anaconda),
+        # however such a double reboot is not dangerous since cobbler will
+        # boot such a node into installer once again.
+        if provision_method == 'image'
+          # We assume we have to give some time within reason
+          # to make sure the node went offline before
+          # watch_provision_progress tries to get its type and
+          # then runs the erasing procedure which sends sysrq as well
+          # (see LP #1420256)
+          sleep 10
+        else
           control_reboot_using_ssh(reporter, task_id, nodes)
         end
       rescue => e
