@@ -134,9 +134,6 @@ module Astute
         GenerateKeys.new,
         UploadSshKeys.new,
         UploadKeys.new,
-        UpdateRepoSources.new,
-        SyncPuppetStuff.new,
-        SyncTasks.new,
         EnablePuppetDeploy.new,
         UploadFacts.new
       ]
