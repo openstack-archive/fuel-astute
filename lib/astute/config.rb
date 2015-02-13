@@ -66,8 +66,7 @@ module Astute
     conf[:DUMP_TIMEOUT] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
 
-    conf[:PUPPET_SSH_KEYS_DIR] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
-                                              # Do not change this at least your clear know what you do!
+    conf[:KEYS_SRC_DIR] = '/var/www/nailgun/keys/' # path where ssh and openssl keys will be created
     conf[:PUPPET_SSH_KEYS] = [
       'neutron',
       'nova',
@@ -77,7 +76,7 @@ module Astute
     conf[:PUPPET_KEYS] = [
       'mongodb'
     ] # name of keys what will be generated and uploaded to all nodes before deploy
-    conf[:PUPPET_KEYS_DIR] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
+    conf[:KEYS_DST_DIR] = '/var/lib/astute' # folder where keys will be uploaded. Warning!
                                                # Do not change this at least your clear know what you do!
     conf[:MAX_NODES_PER_CALL] = 50        # how many nodes to deploy in one puppet call
     conf[:SSH_RETRIES] = 5                # SSH tries to call ssh client before failure

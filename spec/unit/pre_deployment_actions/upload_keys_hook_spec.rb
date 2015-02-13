@@ -45,7 +45,7 @@ describe Astute::UploadKeys do
     File.stubs(:read).returns("private key").once
     mclient.expects(:upload).with(
       :path => File.join(
-        Astute.config.PUPPET_KEYS_DIR,
+        Astute.config.KEYS_DST_DIR,
         'mongodb',
         'mongodb.key'
       ),
