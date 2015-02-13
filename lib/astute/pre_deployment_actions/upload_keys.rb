@@ -31,13 +31,13 @@ module Astute
         upload_mclient = MClient.new(context, "uploadfile", node_uids)
         key = key_name + '.key'
         source_path = File.join(
-          Astute.config.PUPPET_KEYS_DIR,
+          Astute.config.KEYS_SRC_DIR,
           deployment_id,
           key_name,
           key
         )
         destination_path = File.join(
-          Astute.config.PUPPET_KEYS_DIR,
+          Astute.config.KEYS_DST_DIR,
           key_name,
           key
         )

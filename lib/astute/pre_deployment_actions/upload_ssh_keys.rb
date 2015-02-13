@@ -31,12 +31,12 @@ module Astute
         upload_mclient = MClient.new(context, "uploadfile", node_uids)
         [key_name, key_name + ".pub"].each do |ssh_key|
           source_path = File.join(
-            Astute.config.PUPPET_SSH_KEYS_DIR,
+            Astute.config.KEYS_SRC_DIR,
             deployment_id,
             key_name,
             ssh_key)
           destination_path = File.join(
-            Astute.config.PUPPET_SSH_KEYS_DIR,
+            Astute.config.KEYS_DST_DIR,
             key_name,
             ssh_key)
           content = File.read(source_path)

@@ -25,7 +25,7 @@ module Astute
       raise "Deployment_id is missing" unless deployment_id
 
       Astute.config.PUPPET_SSH_KEYS.each do |key_name|
-        dir_path = File.join(Astute.config.PUPPET_SSH_KEYS_DIR, deployment_id.to_s, key_name)
+        dir_path = File.join(Astute.config.KEYS_SRC_DIR, deployment_id.to_s, key_name)
         key_path = File.join(dir_path, key_name)
 
         FileUtils.mkdir_p dir_path
