@@ -66,8 +66,7 @@ module Astute
     conf[:DUMP_TIMEOUT] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
 
-    conf[:PUPPET_SSH_KEYS_DIR] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
-                                              # Do not change this at least your clear know what you do!
+    conf[:PUPPET_GENERATE_KEYS_DIR] = '/var/www/nailgun/keys/' # path where ssh and openssl keys will be created
     conf[:PUPPET_SSH_KEYS] = [
       'neutron',
       'nova',

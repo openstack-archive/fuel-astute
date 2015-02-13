@@ -31,7 +31,7 @@ module Astute
         upload_mclient = MClient.new(context, "uploadfile", node_uids)
         key = key_name + '.key'
         source_path = File.join(
-          Astute.config.PUPPET_KEYS_DIR,
+          Astute.config.PUPPET_GENERATE_KEYS_DIR,
           deployment_id,
           key_name,
           key

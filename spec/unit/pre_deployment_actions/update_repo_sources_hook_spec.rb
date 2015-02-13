@@ -52,9 +52,9 @@ describe Astute::UpdateRepoSources do
   let(:update_repo_sources) { Astute::UpdateRepoSources.new }
 
   around(:each) do |example|
-    old_ssh_keys_dir = Astute.config.PUPPET_SSH_KEYS_DIR
+    old_ssh_keys_dir = Astute.config.PUPPET_KEYS_DIR
     example.run
-    Astute.config.PUPPET_SSH_KEYS_DIR = old_ssh_keys_dir
+    Astute.config.PUPPET_KEYS_DIR = old_ssh_keys_dir
   end
 
   context 'source configuration generation' do

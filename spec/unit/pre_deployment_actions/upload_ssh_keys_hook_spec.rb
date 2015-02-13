@@ -43,7 +43,7 @@ describe Astute::UploadSshKeys do
     Astute::MClient.any_instance.stubs(:check_results_with_retries).returns(mclient)
 
     File.stubs(:read).returns("private key").then.returns("public key")
-    mclient.expects(:upload).with(:path => File.join(Astute.config.PUPPET_SSH_KEYS_DIR, 'nova', 'nova'),
+    mclient.expects(:upload).with(:path => File.join(Astute.config.PUPPET_KEYS_DIR, 'nova', 'nova'),
                                   :content => "private key",
                                   :user_owner => 'root',
                                   :group_owner => 'root',
@@ -52,7 +52,7 @@ describe Astute::UploadSshKeys do
                                   :overwrite => true,
                                   :parents => true
                                  )
-    mclient.expects(:upload).with(:path => File.join(Astute.config.PUPPET_SSH_KEYS_DIR, 'nova', 'nova.pub'),
+    mclient.expects(:upload).with(:path => File.join(Astute.config.PUPPET_KEYS_DIR, 'nova', 'nova.pub'),
                                   :content => "public key",
                                   :user_owner => 'root',
                                   :group_owner => 'root',
