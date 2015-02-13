@@ -56,6 +56,13 @@ describe Astute::Node do
     node.to_hash.should == hash
     node.to_hash.should_not === node.instance_variable_get(:@table)
   end
+
+  it "can fetch default values" do
+    hash = {'uid' => '123'}
+      node = Astute::Node.new(hash)
+      node.fetch('uid', 'x').should == '123'
+      node.fetch('not-exists', 'x').should == 'x'
+  end
 end
 
 describe Astute::NodesHash do
