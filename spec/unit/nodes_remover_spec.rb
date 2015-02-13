@@ -36,6 +36,45 @@ describe Astute::NodesRemover do
     expect(Astute::NodesRemover.new(ctx, nodes).remove).to eq({"nodes"=>[{"uid"=>"1"}, {"uid"=>"2"}]})
   end
 
+  context 'nodes fail to erase' do
+    let(:nodes) { [
+        {'uid' => '1'},
+        {'uid' => '2', 'mclient_remove' => true},
+        {'uid' => '3', 'mclient_remove' => false}
+    ]}
+    let(:mcollective_answer) do
+      [
+        {:sender => '2', :statuscode => 0, :data => {:rebooted => true}}
+      ]
+    end
+
+    it "should report inaccessible nodes" do
+      expect(Astute::NodesRemover.new(ctx, nodes).remove).to eq(
+        { "nodes" => [
+            {'uid' => '3', 'mclient_remove' => false},
+            {'uid' => '2'},
+          ],
+          "inaccessible_nodes" => [{"uid"=>"1", "error"=>"Node not answered by RPC."}]
+        }
+      )
+    end
+  end
+
+  it "should call mclient only with 'mclient_remove' empty or set to true" do
+    nr = Astute::NodesRemover.new(ctx, [
+      {'uid' => '1'},
+      {'uid' => '2', 'mclient_remove' => true},
+      {'uid' => '3', 'mclient_remove' => false}
+    ])
+    nr.stubs(:mclient_remove_nodes).with(
+      Astute::NodesHash.build([
+        {'uid' => '1'},
+        {'uid' => '2', 'mclient_remove' => true}
+      ])
+    ).returns(mcollective_answer).once
+    nr.remove
+  end
+
   context 'nodes list empty' do
     it 'should do nothing if nodes list is empty' do
       Astute::NodesRemover.any_instance.expects(:mclient_remove_nodes).never

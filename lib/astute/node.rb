@@ -47,6 +47,10 @@ module Astute
     def to_hash
       @table.with_indifferent_access
     end
+
+    def fetch(key, default)
+      self[key] || default
+    end
   end
 
   class NodesHash < Hash
