@@ -193,6 +193,16 @@ describe Astute::PuppetTask do
       expect(puppet_task.status).to eql('deploying')
       expect(puppet_task.status).to eql('ready')
     end
+
+    it "error status for node if puppet failed (mcollective retries)" do
+      puppet_task.stubs(:puppet_status).returns(mco_puppet_stopped)
+         .then.raises(Astute::MClientTimeout)
+
+      puppet_task.stubs(:puppetd_runonce)
+      puppet_task.run
+
+      expect(puppet_task.status).to eql('error')
+    end
   end #status
 
 end
