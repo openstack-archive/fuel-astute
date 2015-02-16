@@ -15,6 +15,9 @@
 require 'timeout'
 
 module Astute
+
+  class RespondTimeoutError < AstuteError; end
+
   class PuppetTask
 
     def initialize(ctx, node, retries=1, puppet_manifest=nil, puppet_modules=nil, cwd=nil, timeout=nil)
@@ -59,6 +62,8 @@ module Astute
 
       # ready, error or deploying
       result.fetch('status', 'deploying')
+    rescue RespondTimeoutError
+      'error'
     end
 
     private
@@ -75,6 +80,7 @@ module Astute
           }
         end
         @ctx.report_and_update_status('nodes' => nodes)
+        raise Astute::RespondTimeoutError
       end
       puppetd
     end
