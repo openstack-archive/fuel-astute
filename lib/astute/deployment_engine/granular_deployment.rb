@@ -231,8 +231,6 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
       @ctx.report_and_update_status('nodes' => nodes)
       raise e
     end
-
-    Astute::GranularPostDeploymentActions.new(deployment_info, @ctx).process
   end
 
   class HookReporter

@@ -157,16 +157,6 @@ module Astute
     end
   end
 
-  class GranularPostDeploymentActions < DeployActions
-
-    def initialize(deployment_info, context)
-      super
-      @actions = []
-
-    end
-  end
-
-
   class DeployAction
 
     def process(deployment_info, context)
