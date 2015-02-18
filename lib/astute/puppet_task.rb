@@ -15,6 +15,7 @@
 require 'timeout'
 
 module Astute
+
   class PuppetTask
 
     def initialize(ctx, node, retries=1, puppet_manifest=nil, puppet_modules=nil, cwd=nil, timeout=nil)
@@ -59,6 +60,10 @@ module Astute
 
       # ready, error or deploying
       result.fetch('status', 'deploying')
+    rescue MClientTimeout
+      Astute.logger.warn "MCollective agents #{@node['uid']} " \
+        "didn't respond within the allotted time"
+      'error'
     end
 
     private
@@ -75,6 +80,7 @@ module Astute
           }
         end
         @ctx.report_and_update_status('nodes' => nodes)
+        raise MClientTimeout
       end
       puppetd
     end
