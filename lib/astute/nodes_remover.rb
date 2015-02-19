@@ -61,19 +61,36 @@ module Astute
       nodes.nodes.map(&:to_hash)
     end
 
+    # When :mclient_remove property is true (the default behavior), we send
+    # the node to mclient for removal (MBR, restarting etc), if it's false
+    # the node is skipped from mclient
+    def skipped_unskipped_mclient_nodes(nodes)
+      mclient_skipped_nodes = NodesHash.build(
+        nodes.values.select { |node| not node.fetch(:mclient_remove, true) }
+      )
+      mclient_nodes = NodesHash.build(
+        nodes.values.select { |node| node.fetch(:mclient_remove, true) }
+      )
+
+      Astute.logger.debug "#{@ctx.task_id}: Split nodes: #{mclient_skipped_nodes}, #{mclient_nodes}"
+
+      [mclient_skipped_nodes, mclient_nodes]
+    end
+
     def remove_nodes(nodes)
       if nodes.empty?
         Astute.logger.info "#{@ctx.task_id}: Nodes to remove are not provided. Do nothing."
         return Array.new(3){ NodesHash.new }
       end
 
-      responses = mclient_remove_nodes(nodes)
-      inaccessible_uids = nodes.uids - responses.map { |response| response[:sender] }
+      erased_nodes, mclient_nodes = skipped_unskipped_mclient_nodes(nodes)
+      responses = mclient_remove_nodes(mclient_nodes)
+      inaccessible_uids = mclient_nodes.uids - responses.map { |response| response[:sender] }
       inaccessible_nodes = NodesHash.build(inaccessible_uids.map do |uid|
         {'uid' => uid, 'error' => 'Node not answered by RPC.'}
       end)
       error_nodes = NodesHash.new
-      erased_nodes = NodesHash.new
+
       responses.each do |response|
         node = Node.new('uid' => response[:sender])
         if response[:statuscode] != 0
