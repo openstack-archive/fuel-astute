@@ -51,7 +51,7 @@ class Astute::DeploymentEngine::Tasklib < Astute::DeploymentEngine
     @task_manager = TaskManager.new(nodes)
     @debug = nodes.first['debug']
 
-    Timeout::timeout(Astute.config.PUPPET_TIMEOUT) do
+    Timeout::timeout(Astute.config.puppet_timeout) do
       pre_tasklib_deploy
 
       deploy_nodes
@@ -114,7 +114,7 @@ class Astute::DeploymentEngine::Tasklib < Astute::DeploymentEngine
 
     while @task_manager.task_in_queue?
       nodes_to_report = []
-      sleep Astute.config.PUPPET_DEPLOY_INTERVAL
+      sleep Astute.config.puppet_deploy_interval
       @task_manager.node_uids.each do |node_id|
         if task = @task_manager.current_task(node_id)
           case status = check_status(node_id, task)

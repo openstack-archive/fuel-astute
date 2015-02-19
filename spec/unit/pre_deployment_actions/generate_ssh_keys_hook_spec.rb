@@ -18,15 +18,15 @@ describe Astute::GenerateSshKeys do
   include SpecHelpers
 
   around(:each) do |example|
-    old_puppet_ssh_keys = Astute.config.PUPPET_KEYS
-    old_ssh_keys_dir = Astute.config.PUPPET_SSH_KEYS_DIR
+    old_puppet_ssh_keys = Astute.config.puppet_keys
+    old_ssh_keys_dir = Astute.config.puppet_ssh_keys_dir
     example.run
-    Astute.config.PUPPET_SSH_KEYS_DIR = old_ssh_keys_dir
-    Astute.config.PUPPET_KEYS = old_puppet_ssh_keys
+    Astute.config.puppet_ssh_keys_dir = old_ssh_keys_dir
+    Astute.config.puppet_keys = old_puppet_ssh_keys
   end
 
   before(:each) do
-    Astute.config.PUPPET_SSH_KEYS = ['nova']
+    Astute.config.puppet_ssh_keys = ['nova']
   end
 
   let(:ctx) do
@@ -48,7 +48,7 @@ describe Astute::GenerateSshKeys do
     generate_ssh_keys.stubs(:run_system_command).returns([0, "", ""])
 
     Dir.mktmpdir do |temp_dir|
-      Astute.config.PUPPET_SSH_KEYS_DIR = temp_dir
+      Astute.config.puppet_ssh_keys_dir = temp_dir
       generate_ssh_keys.process(deploy_data, ctx)
 
       expect { File.directory? File.join(temp_dir, 'nova') }.to be_true
@@ -85,7 +85,7 @@ describe Astute::GenerateSshKeys do
     FileUtils.stubs(:mkdir_p).returns(true)
     File.stubs(:directory?).returns(true)
 
-    key_path = File.join(Astute.config.PUPPET_SSH_KEYS_DIR, deploy_data.first['deployment_id'].to_s, 'nova', 'nova')
+    key_path = File.join(Astute.config.puppet_ssh_keys_dir, deploy_data.first['deployment_id'].to_s, 'nova', 'nova')
     cmd = "ssh-keygen -b 2048 -t rsa -N '' -f #{key_path} 2>&1"
     generate_ssh_keys.expects(:run_system_command).with(cmd).returns([0, "", ""])
 
@@ -94,7 +94,7 @@ describe Astute::GenerateSshKeys do
 
   it 'should not overwrite files' do
     Dir.mktmpdir do |temp_dir|
-      Astute.config.PUPPET_SSH_KEYS_DIR = temp_dir
+      Astute.config.puppet_ssh_keys_dir = temp_dir
       key_path = File.join(temp_dir,'nova', 'nova')
       FileUtils.mkdir_p File.join(temp_dir,'nova')
       File.open(key_path, 'w') { |file| file.write("say no overwrite") }
@@ -106,9 +106,9 @@ describe Astute::GenerateSshKeys do
   end
 
   it 'should check next key if find existing' do
-    Astute.config.PUPPET_SSH_KEYS = ['nova', 'test']
-    nova_key_path = File.join(Astute.config.PUPPET_SSH_KEYS_DIR, deploy_data.first['deployment_id'].to_s, 'nova', 'nova')
-    test_key_path = File.join(Astute.config.PUPPET_SSH_KEYS_DIR, deploy_data.first['deployment_id'].to_s, 'test', 'test')
+    Astute.config.puppet_ssh_keys = ['nova', 'test']
+    nova_key_path = File.join(Astute.config.puppet_ssh_keys_dir, deploy_data.first['deployment_id'].to_s, 'nova', 'nova')
+    test_key_path = File.join(Astute.config.puppet_ssh_keys_dir, deploy_data.first['deployment_id'].to_s, 'test', 'test')
 
     FileUtils.stubs(:mkdir_p).returns(true).twice
     File.stubs(:directory?).returns(true).twice

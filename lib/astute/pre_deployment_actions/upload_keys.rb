@@ -27,17 +27,17 @@ module Astute
     private
 
     def upload_keys(context, node_uids, deployment_id)
-      Astute.config.PUPPET_KEYS.each do |key_name|
+      Astute.config.puppet_keys.each do |key_name|
         upload_mclient = MClient.new(context, "uploadfile", node_uids)
         key = key_name + '.key'
         source_path = File.join(
-          Astute.config.PUPPET_KEYS_DIR,
+          Astute.config.puppet_keys_dir,
           deployment_id,
           key_name,
           key
         )
         destination_path = File.join(
-          Astute.config.PUPPET_KEYS_DIR,
+          Astute.config.puppet_keys_dir,
           key_name,
           key
         )

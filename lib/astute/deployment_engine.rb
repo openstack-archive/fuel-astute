@@ -44,7 +44,7 @@ module Astute
         # can perform multiple roles.
         group_by_uniq_values(nodes).each do |nodes_group|
           # Prevent deploy too many nodes at once
-          nodes_group.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |part|
+          nodes_group.each_slice(Astute.config[:max_nodes_per_call]) do |part|
             if !fail_deploy
 
               # Pre deploy hooks

@@ -25,7 +25,7 @@ module Astute
       @puppet_manifest = puppet_manifest || '/etc/puppet/manifests/site.pp'
       @puppet_modules = puppet_modules || '/etc/puppet/modules'
       @cwd = cwd || '/'
-      @time_observer = TimeObserver.new(timeout || Astute.config.PUPPET_TIMEOUT)
+      @time_observer = TimeObserver.new(timeout || Astute.config.puppet_timeout)
       @prev_summary = nil
       @is_hung = false
     end
@@ -38,7 +38,7 @@ module Astute
       puppetd_runonce
     end
 
-    # expect to run this method with respect of Astute.config.PUPPET_FADE_INTERVAL
+    # expect to run this method with respect of Astute.config.puppet_fade_interval
     def status
       raise Timeout::Error unless @time_observer.enough_time?
 
@@ -122,7 +122,7 @@ module Astute
     # Returns list of nodes uids which appear to be with hung puppet.
     def puppetd_runonce
       started = Time.now.to_i
-      while Time.now.to_i - started < Astute.config.PUPPET_FADE_TIMEOUT
+      while Time.now.to_i - started < Astute.config.puppet_fade_timeout
         status = puppet_status
 
         is_stopped = stopped?(status)
@@ -133,7 +133,7 @@ module Astute
         puppet_run if is_stopped || is_idling
 
         break if !is_running && !is_idling
-        sleep Astute.config.PUPPET_FADE_INTERVAL
+        sleep Astute.config.puppet_fade_interval
       end
 
       if is_running || is_idling

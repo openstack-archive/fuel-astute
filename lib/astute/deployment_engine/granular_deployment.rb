@@ -91,7 +91,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
 
     while @task_manager.task_in_queue?
       nodes_to_report = []
-      sleep Astute.config.PUPPET_DEPLOY_INTERVAL
+      sleep Astute.config.puppet_deploy_interval
       @task_manager.node_uids.each do |node_id|
         if task = @task_manager.current_task(node_id)
           case status = check_status(node_id)

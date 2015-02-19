@@ -72,10 +72,10 @@ module Astute
 
       succeeded = false
       nodes_uids = deployment_info.map{ |n| n['uid'] }.uniq
-      Astute.config.MC_RETRIES.times.each do
+      Astute.config.mc_retries.times.each do
         succeeded = run_shell_command_remotely(context, nodes_uids, cmd)
         return if succeeded
-        sleep Astute.config.MC_RETRY_INTERVAL
+        sleep Astute.config.mc_retry_interval
       end
 
       if !succeeded

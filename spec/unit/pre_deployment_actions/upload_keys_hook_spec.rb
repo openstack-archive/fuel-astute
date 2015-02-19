@@ -18,13 +18,13 @@ describe Astute::UploadKeys do
   include SpecHelpers
 
   around(:each) do |example|
-    old_puppet_keys = Astute.config.PUPPET_KEYS
+    old_puppet_keys = Astute.config.puppet_keys
     example.run
-    Astute.config.PUPPET_KEYS = old_puppet_keys
+    Astute.config.puppet_keys = old_puppet_keys
   end
 
   before(:each) do
-    Astute.config.PUPPET_KEYS = ['mongodb']
+    Astute.config.puppet_keys = ['mongodb']
   end
 
   let(:ctx) do
@@ -45,7 +45,7 @@ describe Astute::UploadKeys do
     File.stubs(:read).returns("private key").once
     mclient.expects(:upload).with(
       :path => File.join(
-        Astute.config.PUPPET_KEYS_DIR,
+        Astute.config.puppet_keys_dir,
         'mongodb',
         'mongodb.key'
       ),

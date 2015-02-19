@@ -278,13 +278,13 @@ describe Astute::DeploymentEngine do
 
       context 'limits' do
         around(:each) do |example|
-          old_value = Astute.config.MAX_NODES_PER_CALL
+          old_value = Astute.config.max_nodes_per_call
           example.run
-          Astute.config.MAX_NODES_PER_CALL = old_value
+          Astute.config.max_nodes_per_call = old_value
         end
 
         it 'should affect nodes with same priorities in next deployment group' do
-          Astute.config.MAX_NODES_PER_CALL = 1
+          Astute.config.max_nodes_per_call = 1
 
           nodes = [
             {'uid' => '2', 'priority' => 10, 'role' => 'primary-controller', 'fail_if_error' => true},
@@ -304,13 +304,13 @@ describe Astute::DeploymentEngine do
 
     context 'limits' do
       around(:each) do |example|
-        old_value = Astute.config.MAX_NODES_PER_CALL
+        old_value = Astute.config.max_nodes_per_call
         example.run
-        Astute.config.MAX_NODES_PER_CALL = old_value
+        Astute.config.max_nodes_per_call = old_value
       end
 
       it 'number of nodes running in parallel should be limited' do
-        Astute.config.MAX_NODES_PER_CALL = 1
+        Astute.config.max_nodes_per_call = 1
 
         nodes = [
           {'uid' => 1, 'priority' => 10, 'role' => 'compute'},

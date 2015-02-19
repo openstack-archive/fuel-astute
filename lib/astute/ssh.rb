@@ -18,7 +18,7 @@ require 'timeout'
 module Astute
   class Ssh
 
-    def self.execute(ctx, nodes, cmd, timeout=60, retries=Astute.config.SSH_RETRIES)
+    def self.execute(ctx, nodes, cmd, timeout=60, retries=Astute.config.ssh_retries)
       nodes_to_process = nodes.map { |n| n['admin_ip'] }
 
       Astute.logger.debug "Run shell command '#{cmd}' using ssh"
@@ -40,7 +40,7 @@ module Astute
 
         break if nodes_to_process.empty?
 
-        sleep Astute.config.SSH_RETRY_TIMEOUT
+        sleep Astute.config.ssh_retry_timeout
       end
 
       inaccessible_nodes = nodes_to_process
@@ -79,7 +79,7 @@ module Astute
       servers = []
       channel = nil
 
-      Net::SSH::Multi.start(:concurrent_connections => Astute.config.MAX_NODES_PER_CALL,
+      Net::SSH::Multi.start(:concurrent_connections => Astute.config.max_nodes_per_call,
                             :on_error => :warn) do |session|
         nodes.each do |name|
           session.use name,

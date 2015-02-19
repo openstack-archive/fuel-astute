@@ -23,9 +23,9 @@ describe Astute::NailgunHooks do
   let(:ctx) { mock_ctx }
 
   around(:each) do |example|
-    old_value = Astute.config.MAX_NODES_PER_CALL
+    old_value = Astute.config.max_nodes_per_call
     example.run
-    Astute.config.MAX_NODES_PER_CALL = old_value
+    Astute.config.max_nodes_per_call = old_value
   end
 
   let(:upload_file_hook) do
@@ -297,7 +297,7 @@ describe Astute::NailgunHooks do
     end
 
     it 'should limit nodes processing in parallel' do
-      Astute.config.MAX_NODES_PER_CALL = 2
+      Astute.config.max_nodes_per_call = 2
 
       hooks = Astute::NailgunHooks.new([shell_hook], ctx)
       hooks.expects(:run_shell_command).once.with(
@@ -336,14 +336,14 @@ describe Astute::NailgunHooks do
 
       it 'if exit code not eql 0 -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).times(Astute.config.MC_RETRIES)
+        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).times(Astute.config.mc_retries)
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
       end
 
       it 'if exit code not presence -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {}}).times(Astute.config.MC_RETRIES)
+        hooks.expects(:run_shell_command).returns({:data => {}}).times(Astute.config.mc_retries)
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
       end
@@ -389,7 +389,7 @@ describe Astute::NailgunHooks do
     end
 
     it 'should limit nodes processing in parallel' do
-      Astute.config.MAX_NODES_PER_CALL = 1
+      Astute.config.max_nodes_per_call = 1
       hooks = Astute::NailgunHooks.new([upload_file_hook], ctx)
 
       hooks.expects(:upload_file).once.with(
@@ -487,7 +487,7 @@ describe Astute::NailgunHooks do
     end
 
     it 'should limit nodes processing in parallel' do
-      Astute.config.MAX_NODES_PER_CALL = 1
+      Astute.config.max_nodes_per_call = 1
 
       hooks = Astute::NailgunHooks.new([sync_hook], ctx)
       hooks.expects(:run_shell_command).once.with(
@@ -618,7 +618,7 @@ describe Astute::NailgunHooks do
     end
 
     it 'should limit nodes processing in parallel' do
-      Astute.config.MAX_NODES_PER_CALL = 1
+      Astute.config.max_nodes_per_call = 1
 
       hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
       hooks.expects(:run_puppet).once.with(
@@ -796,7 +796,7 @@ describe Astute::NailgunHooks do
     end
 
     it 'should limit nodes processing in parallel' do
-      Astute.config.MAX_NODES_PER_CALL = 1
+      Astute.config.max_nodes_per_call = 1
 
       hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
 
