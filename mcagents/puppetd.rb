@@ -276,9 +276,11 @@ module MCollective
 
         case actual_pid
         when expected_pid then expected_pid
+        when nil then nil
         else
-          reply[:err_msg] = "Potencial error. Looks like expecting puppet and actual are different. " \
-            "Expecting pid(lockfile): #{expected_pid}, actual(ps): #{actual_pid}"
+          reply[:err_msg] = "Potencial error. Looks like expecting puppet " \
+            "and actual are different. Expecting pid(lockfile): " \
+            "#{expected_pid}, actual(ps): #{actual_pid}"
           actual_pid
         end
       rescue NoMethodError
