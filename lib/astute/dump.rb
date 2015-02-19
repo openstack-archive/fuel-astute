@@ -17,7 +17,7 @@ module Astute
   module Dump
     def self.dump_environment(ctx, settings)
       lastdump = settings['lastdump']
-      timeout = Astute.config.DUMP_TIMEOUT
+      timeout = Astute.config.dump_timeout
       shell = MClient.new(ctx, 'execute_shell_command', ['master'], check_result=true, timeout=timeout, retries=1)
       upload_file = MClient.new(ctx, 'uploadfile', ['master'])
       begin

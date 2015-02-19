@@ -113,8 +113,8 @@ describe Astute::NodesRemover do
       )
     end
 
-    it 'should try maximum MC_RETRIES + 1 times to erase node if node get error' do
-      retries = Astute.config[:MC_RETRIES]
+    it 'should try maximum mc_retries + 1 times to erase node if node get error' do
+      retries = Astute.config[:mc_retries]
       expect(retries).to eq(10)
 
       remover = Astute::NodesRemover.new(ctx, nodes)
@@ -122,8 +122,8 @@ describe Astute::NodesRemover do
       remover.remove
     end
 
-    it 'should try maximum MC_RETRIES + 1 times to erase node if node is inaccessible' do
-      retries = Astute.config[:MC_RETRIES]
+    it 'should try maximum mc_retries + 1 times to erase node if node is inaccessible' do
+      retries = Astute.config[:mc_retries]
       expect(retries).to eq(10)
 
       remover = Astute::NodesRemover.new(ctx, nodes)
@@ -182,9 +182,9 @@ describe Astute::NodesRemover do
 
   context 'nodes limits' do
     around(:each) do |example|
-      old_value = Astute.config.MAX_NODES_PER_REMOVE_CALL
+      old_value = Astute.config.max_nodes_per_remove_call
       example.run
-      Astute.config.MAX_NODES_PER_REMOVE_CALL = old_value
+      Astute.config.max_nodes_per_remove_call = old_value
     end
 
     let(:mcollective_answer1) do
@@ -196,7 +196,7 @@ describe Astute::NodesRemover do
     end
 
     before(:each) do
-      Astute.config.MAX_NODES_PER_REMOVE_CALL = 1
+      Astute.config.max_nodes_per_remove_call = 1
 
       Astute::NodesRemover.any_instance.expects(:mclient_remove_piece_nodes).twice
                           .returns(mcollective_answer1)
@@ -208,7 +208,7 @@ describe Astute::NodesRemover do
     end
 
     it 'should sleep between group of nodes' do
-      Astute::NodesRemover.any_instance.expects(:sleep).with(Astute.config.NODES_REMOVE_INTERVAL)
+      Astute::NodesRemover.any_instance.expects(:sleep).with(Astute.config.nodes_remove_interval)
       Astute::NodesRemover.new(ctx, nodes).remove
     end
 

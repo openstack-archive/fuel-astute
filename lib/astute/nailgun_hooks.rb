@@ -105,8 +105,8 @@ module Astute
 
       timeout = hook['parameters']['timeout'] || 300
       cwd = hook['parameters']['cwd'] || "/"
-      retries = hook['parameters']['retries'] || Astute.config.MC_RETRIES
-      interval = hook['parameters']['interval'] || Astute.config.MC_RETRY_INTERVAL
+      retries = hook['parameters']['retries'] || Astute.config.mc_retries
+      interval = hook['parameters']['interval'] || Astute.config.mc_retry_interval
       shell_command = "cd #{cwd} && #{hook['parameters']['cmd']}"
 
       is_success = false
@@ -288,7 +288,7 @@ module Astute
     end
 
     def perform_with_limit(nodes, &block)
-      nodes.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |part|
+      nodes.each_slice(Astute.config[:max_nodes_per_call]) do |part|
         block.call(part)
       end
     end

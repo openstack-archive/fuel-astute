@@ -27,16 +27,16 @@ module Astute
     private
 
     def upload_keys(context, node_uids, deployment_id)
-      Astute.config.PUPPET_SSH_KEYS.each do |key_name|
+      Astute.config.puppet_ssh_keys.each do |key_name|
         upload_mclient = MClient.new(context, "uploadfile", node_uids)
         [key_name, key_name + ".pub"].each do |ssh_key|
           source_path = File.join(
-            Astute.config.PUPPET_SSH_KEYS_DIR,
+            Astute.config.puppet_ssh_keys_dir,
             deployment_id,
             key_name,
             ssh_key)
           destination_path = File.join(
-            Astute.config.PUPPET_SSH_KEYS_DIR,
+            Astute.config.puppet_ssh_keys_dir,
             key_name,
             ssh_key)
           content = File.read(source_path)

@@ -24,7 +24,7 @@ module Astute
 
     attr_accessor :retries
 
-    def initialize(ctx, agent, nodes=nil, check_result=true, timeout=nil, retries=Astute.config.MC_RETRIES)
+    def initialize(ctx, agent, nodes=nil, check_result=true, timeout=nil, retries=Astute.config.mc_retries)
       @task_id = ctx.task_id
       @agent = agent
       @nodes = nodes.map { |n| n.to_s } if nodes
