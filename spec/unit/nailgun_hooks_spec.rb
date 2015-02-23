@@ -483,6 +483,22 @@ describe Astute::NailgunHooks do
       expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
     end
 
+    it 'should allow empty file data' do
+      upload_file_hook['parameters']['data'] = ""
+      hooks = Astute::NailgunHooks.new([upload_file_hook], ctx)
+
+      hooks.expects(:upload_file).once.with(
+        ctx,
+        ['2', '3'],
+        has_entries(
+          'content' => upload_file_hook['parameters']['data'],
+          'path' => upload_file_hook['parameters']['path']
+        )
+      )
+
+      hooks.process
+    end
+
     it 'should upload file' do
       hooks = Astute::NailgunHooks.new([upload_file_hook], ctx)
 

@@ -111,7 +111,7 @@ module Astute
     def upload_file_hook(hook)
       validate_presence(hook, 'uids')
       validate_presence(hook['parameters'], 'path')
-      validate_presence(hook['parameters'], 'data')
+      validate_existence(hook['parameters'], 'data')
 
       hook['parameters']['content'] = hook['parameters']['data']
 
@@ -238,6 +238,10 @@ module Astute
 
     def validate_presence(data, key)
       raise "Missing a required parameter #{key}" unless data[key].present?
+    end
+
+    def validate_existence(data, key)
+      raise "Missing a required parameter #{key}" unless data.key?(key)
     end
 
     def run_puppet(context, node_uids, puppet_manifest, puppet_modules, cwd, timeout)
