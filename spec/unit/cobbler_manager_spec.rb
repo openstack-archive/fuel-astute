@@ -42,9 +42,23 @@ describe Astute::CobblerManager do
           'name_servers_search' => 'some.domain.tld domain.tld',
           'netboot_enabled' => '1',
           'ks_meta' => {
-            'repo_metadata'=>{
-              'repo1' => 'ip_address:port/patch param1 param2',
-              'repo2' => 'ip_address:port/patch'
+            'repo_setup' => {
+              'repos' => [
+                {
+                  "type" => "deb",
+                  "name" => "repo1",
+                  "uri" => "ip_address:port/patch",
+                  "suite" => "param1",
+                  "section" => "param2",
+                  "priority" => 1001
+                },
+                {
+                  "type" => "rpm",
+                  "name" => "repo2",
+                  "uri" => "ip_address:port/patch",
+                  "priority" => 1
+                }
+              ]
             }
           },
           'interfaces' => {
@@ -108,7 +122,7 @@ describe Astute::CobblerManager do
         data['nodes'][0]['slave_name'],
         has_entry("ks_meta" => {
           "repo_metadata" =>
-            "repo1=\"ip_address:port/patch param1 param2\",repo2=\"ip_address:port/patch\""
+            "repo1=\"ip_address:port/patch param1 param2\",repo2=\"ip_address:port/patch  \""
         }),
         {:item_preremove => true}
       ).once

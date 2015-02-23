@@ -36,9 +36,16 @@ module Astute
         cobbler_name = node['slave_name']
         begin
           Astute.logger.info("Adding #{cobbler_name} into cobbler")
-          if node.fetch('ks_meta',{})['repo_metadata']
-             converted_metadata = node['ks_meta']['repo_metadata'].map { |k,v| "#{k}=\"#{v}\""}.join(',')
+          if node.fetch('ks_meta',{})['repo_setup']
+             converted_metadata = node['ks_meta']['repo_setup']['repos'].map {
+                 |r| "#{r['name']}=\"#{r['uri']} #{r['suite']} #{r['section']}\""
+             }.join(',')
+
+             # both preseed and kickstart are working with repo_metadada key,
+             # so we have to save "simplified" version of repo_setup to
+             # this key.
              node['ks_meta']['repo_metadata'] = converted_metadata
+             node['ks_meta'].delete('repo_setup')
           end
           @engine.item_from_hash('system', cobbler_name, node, :item_preremove => true)
         rescue RuntimeError => e
