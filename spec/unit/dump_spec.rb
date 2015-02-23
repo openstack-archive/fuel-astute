@@ -21,7 +21,8 @@ describe 'dump_environment' do
   let(:ctx) { mock_ctx }
   let(:settings) do
     {
-      'lastdump' => '/last/dump/path'
+      'lastdump' => '/last/dump/path',
+      'timeout' => 300,
     }
   end
   let(:rpc_mock) { mock_rpcclient }
@@ -61,6 +62,14 @@ describe 'dump_environment' do
     rpc_mock.expects(:upload).returns([mock_mc_result])
     rpc_mock.expects(:execute).returns(exec_result(1, '', 'stderr'))
     Astute::Dump.expects(:report_error).with(ctx, "exit code: 1 stderr: stderr")
+    Astute::Dump.dump_environment(ctx, settings)
+  end
+
+  it "non default timeout should be used" do
+    rpc_mock.expects(:upload).returns([mock_mc_result])
+    rpc_mock.expects(:execute).returns(exec_result)
+    Astute::MClient.stubs(:new).returns(agent).expects(
+        ctx, 'execute_shell_command', ['master'], check_result=true, timeout=settings['timeout'], retries=0)
     Astute::Dump.dump_environment(ctx, settings)
   end
 
