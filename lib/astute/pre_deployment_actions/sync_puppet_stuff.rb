@@ -21,8 +21,8 @@ module Astute
     # Sync puppet manifests and modules to every node
     def process(deployment_info, context)
       master_ip = deployment_info.first['master_ip']
-      modules_source = deployment_info.first['puppet_modules_source'] || "rsync://#{master_ip}:/puppet/modules/"
-      manifests_source = deployment_info.first['puppet_manifests_source'] || "rsync://#{master_ip}:/puppet/manifests/"
+      modules_source = deployment_info.first['puppet']['modules']
+      manifests_source = deployment_info.first['puppet']['manifests']
       # Paths to Puppet modules and manifests at the master node set by Nailgun
       # Check fuel source code /deployment/puppet/nailgun/manifests/puppetsync.pp
       schemas = [modules_source, manifests_source].map do |url|
@@ -34,8 +34,8 @@ module Astute
       end
 
       if schemas.select{ |x| x != schemas.first }.present?
-        raise DeploymentEngineError, "Scheme for puppet_modules_source '#{schemas.first}' and" \
-                                     " puppet_manifests_source '#{schemas.last}' not equivalent!"
+        raise DeploymentEngineError, "Scheme for puppet modules '#{schemas.first}' and" \
+                                     " puppet manifests '#{schemas.last}' not equivalent!"
       end
 
       nodes_uids = only_uniq_nodes(deployment_info).map{ |n| n['uid'] }

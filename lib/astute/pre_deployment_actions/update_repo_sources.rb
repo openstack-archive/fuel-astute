@@ -17,7 +17,7 @@ module Astute
 
     # Update packages source list
     def process(deployment_info, context)
-      return unless deployment_info.first['repo_metadata']
+      return unless deployment_info.first['repo_setup']['repos']
       content = generate_repo_source(deployment_info)
       deployment_info = only_uniq_nodes(deployment_info)
 
@@ -30,9 +30,9 @@ module Astute
     private
 
     def generate_repo_source(deployment_info)
-      ubuntu_source = -> (name, url) { "deb #{url}" }
-      centos_source = -> (name, url) do
-        ["[#{name.downcase}]", "name=#{name}", "baseurl=#{url}", "gpgcheck=0"].join("\n")
+      ubuntu_source = -> (repo) { "deb #{repo['uri']} #{repo['suite']} #{repo['section']}" }
+      centos_source = -> (repo) do
+        ["[#{repo['name'].downcase}]", "name=#{repo['name']}", "baseurl=#{repo['uri']}", "gpgcheck=0"].join("\n")
       end
 
       formatter = case target_os(deployment_info)
@@ -41,8 +41,8 @@ module Astute
                   end
 
       content = []
-      deployment_info.first['repo_metadata'].each do |name, url|
-        content << formatter.call(name,url)
+      deployment_info.first['repo_setup']['repos'].each do |repo|
+        content << formatter.call(repo)
       end
       content.join("\n")
     end

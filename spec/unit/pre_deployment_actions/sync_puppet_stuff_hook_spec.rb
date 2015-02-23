@@ -29,8 +29,10 @@ describe Astute::SyncPuppetStuff do
                   {'uid' => 1,
                    'deployment_id' => 1,
                    'master_ip' => '10.20.0.2',
-                   'puppet_modules_source' => 'rsync://10.20.0.2:/puppet/modules/',
-                   'puppet_manifests_source' => 'rsync://10.20.0.2:/puppet/manifests/'
+                   'puppet' => {
+                      'modules' => 'rsync://10.20.0.2:/puppet/modules/',
+                      'manifests' => 'rsync://10.20.0.2:/puppet/manifests/'
+                   }
                   },
                   {'uid' => 2}
                 ]
@@ -56,8 +58,8 @@ describe Astute::SyncPuppetStuff do
   it 'should able to customize path for puppet modules and manifests' do
     modules_source = 'rsync://10.20.0.2:/puppet/vX/modules/'
     manifests_source = 'rsync://10.20.0.2:/puppet/vX/manifests/'
-    nodes.first['puppet_modules_source'] = modules_source
-    nodes.first['puppet_manifests_source'] = manifests_source
+    nodes.first['puppet']['modules'] = modules_source
+    nodes.first['puppet']['manifests'] = manifests_source
     mclient.expects(:rsync).with(:modules_source => modules_source,
                                  :manifests_source => manifests_source
                                  )
@@ -84,21 +86,20 @@ describe Astute::SyncPuppetStuff do
   end
 
   it 'should raise exception if modules/manifests schema of uri is not equal' do
-    nodes.first['puppet_manifests_source'] = 'rsync://10.20.0.2:/puppet/vX/modules/'
-    nodes.first['puppet_manifests_source'] = 'http://10.20.0.2:/puppet/vX/manifests/'
+    nodes.first['puppet']['manifests'] = 'http://10.20.0.2:/puppet/vX/manifests/'
     expect { sync_puppet_stuff.process(nodes, ctx) }.to raise_error(Astute::DeploymentEngineError,
-        /Scheme for puppet_modules_source 'rsync' and puppet_manifests_source/)
+        /Scheme for puppet modules 'rsync' and puppet manifests/)
   end
 
   it 'should raise exception if modules/manifests source uri is incorrect' do
-    nodes.first['puppet_manifests_source'] = ':/puppet/modules/'
+    nodes.first['puppet']['manifests'] = ':/puppet/modules/'
     expect { sync_puppet_stuff.process(nodes, ctx) }.to raise_error(Astute::DeploymentEngineError,
                                                        /bad URI/)
   end
 
   it 'should raise exception if schema of uri is incorrect' do
-    nodes.first['puppet_modules_source'] = 'http2://localhost/puppet/modules/'
-    nodes.first['puppet_manifests_source'] = 'http2://localhost/puppet/manifests/'
+    nodes.first['puppet']['modules'] = 'http2://localhost/puppet/modules/'
+    nodes.first['puppet']['manifests'] = 'http2://localhost/puppet/manifests/'
     mclient.expects(:rsync).never
     expect { sync_puppet_stuff.process(nodes, ctx) }.to raise_error(Astute::DeploymentEngineError,
                                                        /Unknown scheme /)

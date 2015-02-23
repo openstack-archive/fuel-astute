@@ -42,8 +42,15 @@ describe Astute::UpdateRepoSources do
        'cobbler' => {
           'profile' => 'centos-x86_64'
        },
-       'repo_metadata' => {
-          'Nailgun' => 'http://10.20.0.2:8080/centos/fuelweb/x86_64/',
+       'repo_setup' => {
+         'repos' => [
+           {
+             "type" => "rpm",
+             "name" => "Nailgun",
+             "uri" => "http://10.20.0.2:8080/centos/fuelweb/x86_64/",
+             "priority" => 1
+           }
+         ]
        }
       },
       {'uid' => 2}
@@ -74,8 +81,11 @@ describe Astute::UpdateRepoSources do
 
     it 'should generate correct config for ubuntu' do
       nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
-      nodes.first['repo_metadata']['Nailgun'] =
-          'http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 precise main'
+      nodes.first['repo_setup']['repos'][0]['uri'] =
+          'http://10.20.0.2:8080/ubuntu/fuelweb/x86_64'
+      nodes.first['repo_setup']['repos'][0]['suite'] = 'precise'
+      nodes.first['repo_setup']['repos'][0]['section'] = 'main'
+
       content = "deb http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 precise main"
 
       update_repo_sources.expects(:upload_repo_source).with(ctx, nodes, content)
