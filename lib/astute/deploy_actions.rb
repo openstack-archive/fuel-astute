@@ -129,10 +129,6 @@ module Astute
     def initialize(deployment_info, context)
       super
       @actions = [
-        GenerateSshKeys.new,
-        GenerateKeys.new,
-        UploadSshKeys.new,
-        UploadKeys.new,
         EnablePuppetDeploy.new,
         UploadFacts.new
       ]
