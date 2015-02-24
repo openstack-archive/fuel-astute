@@ -197,7 +197,7 @@ module Astute
 
     # Prevent high load for tasks
     def perform_with_limit(nodes, &block)
-      nodes.each_slice(Astute.config[:MAX_NODES_PER_CALL]) do |part|
+      nodes.each_slice(Astute.config[:max_nodes_per_call]) do |part|
         block.call(part)
       end
     end

@@ -55,38 +55,38 @@ module Astute
     conf = {}
 
     # Library settings
-    conf[:PUPPET_TIMEOUT] = 90 * 60       # maximum time it waits for the whole deployment
-    conf[:PUPPET_DEPLOY_INTERVAL] = 2     # sleep for ## sec, then check puppet status again
-    conf[:PUPPET_FADE_TIMEOUT] = 120      # how long it can take for puppet to exit after dumping to last_run_summary
-    conf[:MC_RETRIES] = 10                # MClient tries to call mcagent before failure
-    conf[:MC_RETRY_INTERVAL] = 1          # MClient sleeps for ## sec between retries
-    conf[:PUPPET_FADE_INTERVAL] = 30      # retry every ## seconds to check puppet state if it was running
-    conf[:PROVISIONING_TIMEOUT] = 90 * 60 # timeout for booting target OS in provision
-    conf[:REBOOT_TIMEOUT] = 240           # how long it can take for node to reboot
-    conf[:DUMP_TIMEOUT] = 3600            # maximum time it waits for the dump (meaningles to be larger
+    conf[:puppet_timeout] = 90 * 60       # maximum time it waits for single puppet run
+    conf[:puppet_deploy_interval] = 2     # sleep for ## sec, then check puppet status again
+    conf[:puppet_fade_timeout] = 120      # how long it can take for puppet to exit after dumping to last_run_summary
+    conf[:mc_retries] = 10                # MClient tries to call mcagent before failure
+    conf[:mc_retry_interval] = 1          # MClient sleeps for ## sec between retries
+    conf[:puppet_fade_interval] = 30      # retry every ## seconds to check puppet state if it was running
+    conf[:provisioning_timeout] = 90 * 60 # timeout for booting target OS in provision
+    conf[:reboot_timeout] = 240           # how long it can take for node to reboot
+    conf[:dump_timeout] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
 
-    conf[:PUPPET_SSH_KEYS_DIR] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
+    conf[:puppet_ssh_keys_dir] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
                                               # Do not change this at least your clear know what you do!
-    conf[:PUPPET_SSH_KEYS] = [
+    conf[:puppet_ssh_keys] = [
       'neutron',
       'nova',
       'ceph',
       'mysql',
     ]  # name of ssh keys what will be generated and uploaded to all nodes before deploy
-    conf[:PUPPET_KEYS] = [
+    conf[:puppet_keys] = [
       'mongodb'
     ] # name of keys what will be generated and uploaded to all nodes before deploy
-    conf[:PUPPET_KEYS_DIR] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
+    conf[:puppet_keys_dir] = '/var/lib/astute' # folder where ssh keys will be saved. Warning!
                                                # Do not change this at least your clear know what you do!
-    conf[:MAX_NODES_PER_CALL] = 50        # how many nodes to deploy in one puppet call
-    conf[:SSH_RETRIES] = 5                # SSH tries to call ssh client before failure
-    conf[:SSH_RETRY_TIMEOUT] = 30         # SSH sleeps for ## sec between retries
+    conf[:max_nodes_per_call] = 50        # how many nodes to deploy in one puppet call
+    conf[:ssh_retries] = 5                # SSH tries to call ssh client before failure
+    conf[:ssh_retry_timeout] = 30         # SSH sleeps for ## sec between retries
 
-    conf[:MAX_NODES_PER_REMOVE_CALL] = 10 # how many nodes to remove in one call
-    conf[:NODES_REMOVE_INTERVAL] = 10     # sleeps for ## sec between remove calls
+    conf[:max_nodes_per_remove_call] = 10 # how many nodes to remove in one call
+    conf[:nodes_remove_interval] = 10     # sleeps for ## sec between remove calls
 
-    conf[:DHCP_REPEAT] = 3                # Dhcp discover will be sended 3 times
+    conf[:dhcp_repeat] = 3                # Dhcp discover will be sended 3 times
 
     conf[:iops] = 120                     # Default IOPS master node IOPS performance
     conf[:splay_factor] = 180             # Formula: 20(amount of nodes nodes) div 120(iops) = 0.1667

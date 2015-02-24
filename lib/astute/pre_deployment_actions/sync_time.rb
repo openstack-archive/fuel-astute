@@ -21,10 +21,10 @@ module Astute
       cmd = "ntpdate -u $(egrep '^server' /etc/ntp.conf | sed '/^#/d' | awk '{print $2}')"
       succeeded = false
 
-      Astute.config.MC_RETRIES.times.each do
+      Astute.config.mc_retries.times.each do
         succeeded = run_shell_command_remotely(context, nodes_uids, cmd)
         return if succeeded
-        sleep Astute.config.MC_RETRY_INTERVAL
+        sleep Astute.config.mc_retry_interval
       end
 
       if !succeeded

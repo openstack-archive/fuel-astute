@@ -16,7 +16,7 @@ module Astute
   class Rsyslogd
 
     def self.send_sighup(ctx, master_ip)
-        timeout = Astute.config.SSH_RETRY_TIMEOUT
+        timeout = Astute.config.ssh_retry_timeout
         shell = MClient.new(ctx, 'execute_shell_command', ['master'],
                             check_result=true, timeout=timeout, retries=1)
         cmd = "ssh root@#{master_ip} 'pkill -HUP rsyslogd'"

@@ -18,7 +18,7 @@ describe Astute::GenerateKeys do
   include SpecHelpers
 
   before(:each) do
-    Astute.config.PUPPET_KEYS = ['mongodb']
+    Astute.config.puppet_keys = ['mongodb']
   end
 
   let(:ctx) do
@@ -31,11 +31,11 @@ describe Astute::GenerateKeys do
   let(:generate_keys) { Astute::GenerateKeys.new }
 
   around(:each) do |example|
-    old_keys_dir = Astute.config.PUPPET_KEYS_DIR
-    old_puppet_keys = Astute.config.PUPPET_KEYS
+    old_keys_dir = Astute.config.puppet_keys_dir
+    old_puppet_keys = Astute.config.puppet_keys
     example.run
-    Astute.config.PUPPET_KEYS_DIR = old_keys_dir
-    Astute.config.PUPPET_KEYS = old_puppet_keys
+    Astute.config.puppet_keys_dir = old_keys_dir
+    Astute.config.puppet_keys = old_puppet_keys
   end
 
   it 'should raise error if deployment_id is not set' do
@@ -48,7 +48,7 @@ describe Astute::GenerateKeys do
     generate_keys.stubs(:run_system_command).returns([0, "", ""])
 
     Dir.mktmpdir do |temp_dir|
-      Astute.config.PUPPET_KEYS_DIR = temp_dir
+      Astute.config.puppet_keys_dir = temp_dir
       generate_keys.process(deploy_data, ctx)
 
       expect { File.directory? File.join(temp_dir, 'mongodb.key') }.to be_true
@@ -86,7 +86,7 @@ describe Astute::GenerateKeys do
     File.stubs(:directory?).returns(true)
 
     key_path = File.join(
-      Astute.config.PUPPET_KEYS_DIR,
+      Astute.config.puppet_keys_dir,
       deploy_data.first['deployment_id'].to_s,
       'mongodb',
       'mongodb.key'
@@ -99,7 +99,7 @@ describe Astute::GenerateKeys do
 
   it 'should not overwrite files' do
     Dir.mktmpdir do |temp_dir|
-      Astute.config.PUPPET_KEYS_DIR = temp_dir
+      Astute.config.puppet_keys_dir = temp_dir
       key_path = File.join(temp_dir,'mongodb', 'mongodb.key')
       FileUtils.mkdir_p File.join(temp_dir, 'mongodb')
       File.open(key_path, 'w') { |file| file.write("say no overwrite") }
@@ -111,15 +111,15 @@ describe Astute::GenerateKeys do
   end
 
   it 'should check next key if find existing' do
-    Astute.config.PUPPET_KEYS = ['mongodb', 'test']
+    Astute.config.puppet_keys = ['mongodb', 'test']
     mongodb_key_path = File.join(
-      Astute.config.PUPPET_KEYS_DIR,
+      Astute.config.puppet_keys_dir,
       deploy_data.first['deployment_id'].to_s,
       'mongodb',
       'mongodb.key'
     )
     test_key_path = File.join(
-      Astute.config.PUPPET_KEYS_DIR,
+      Astute.config.puppet_keys_dir,
       deploy_data.first['deployment_id'].to_s,
       'test',
       'test.key'

@@ -18,7 +18,7 @@ describe Astute::UpdateRepoSources do
   include SpecHelpers
 
   before(:each) do
-    Astute.config.PUPPET_SSH_KEYS = ['nova']
+    Astute.config.puppet_ssh_keys = ['nova']
   end
 
   let(:ctx) do
@@ -52,9 +52,9 @@ describe Astute::UpdateRepoSources do
   let(:update_repo_sources) { Astute::UpdateRepoSources.new }
 
   around(:each) do |example|
-    old_ssh_keys_dir = Astute.config.PUPPET_SSH_KEYS_DIR
+    old_ssh_keys_dir = Astute.config.puppet_ssh_keys_dir
     example.run
-    Astute.config.PUPPET_SSH_KEYS_DIR = old_ssh_keys_dir
+    Astute.config.puppet_ssh_keys_dir = old_ssh_keys_dir
   end
 
   context 'source configuration generation' do
@@ -152,7 +152,7 @@ describe Astute::UpdateRepoSources do
 
     it 'should raise error if metadata not updated' do
       nodes.first['cobbler']['profile'] = 'ubuntu_1204_x86_64'
-      mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(fail_return).times(Astute.config[:MC_RETRIES])
+      mclient.expects(:execute).with(:cmd => 'apt-get clean; apt-get update').returns(fail_return).times(Astute.config[:mc_retries])
       expect { update_repo_sources.process(nodes, ctx) }.to raise_error(Astute::DeploymentEngineError,
                 /Run command:/)
     end

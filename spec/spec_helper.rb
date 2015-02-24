@@ -31,14 +31,14 @@ Dir[File.join(File.dirname(__FILE__), 'unit/fixtures/*.rb')].each { |file| requi
 
 # NOTE(mihgen): I hate to wait for unit tests to complete,
 #               resetting time to sleep significantly increases tests speed
-Astute.config.PUPPET_DEPLOY_INTERVAL = 0
-Astute.config.PUPPET_FADE_INTERVAL = 0
-Astute.config.PUPPET_FADE_TIMEOUT = 1
-Astute.config.MC_RETRY_INTERVAL = 0
-Astute.config.PROVISIONING_TIMEOUT = 0
-Astute.config.REBOOT_TIMEOUT = 0
-Astute.config.SSH_RETRY_TIMEOUT = 0
-Astute.config.NODES_REMOVE_INTERVAL = 0
+Astute.config.puppet_deploy_interval = 0
+Astute.config.puppet_fade_interval = 0
+Astute.config.puppet_fade_timeout = 1
+Astute.config.mc_retry_interval = 0
+Astute.config.provisioning_timeout = 0
+Astute.config.reboot_timeout = 0
+Astute.config.ssh_retry_timeout = 0
+Astute.config.nodes_remove_interval = 0
 Astute.logger = Logger.new(STDERR)
 
 RSpec.configure do |c|

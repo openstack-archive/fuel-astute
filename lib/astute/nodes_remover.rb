@@ -28,10 +28,10 @@ module Astute
       #   3. If exception is raised here, we should not fully fall into error, but only failed node
       erased_nodes, error_nodes, inaccessible_nodes = remove_nodes(@nodes)
       retry_remove_nodes(error_nodes, erased_nodes,
-                         Astute.config[:MC_RETRIES], Astute.config[:MC_RETRY_INTERVAL])
+                         Astute.config[:mc_retries], Astute.config[:mc_retry_interval])
 
       retry_remove_nodes(inaccessible_nodes, erased_nodes,
-                         Astute.config[:MC_RETRIES], Astute.config[:MC_RETRY_INTERVAL])
+                         Astute.config[:mc_retries], Astute.config[:mc_retry_interval])
 
       answer = {'nodes' => serialize_nodes(erased_nodes)}
 
@@ -122,8 +122,8 @@ module Astute
       Astute.logger.info "#{@ctx.task_id}: Starting removing of nodes: #{nodes.uids.inspect}"
       results = []
 
-      nodes.uids.sort.each_slice(Astute.config[:MAX_NODES_PER_REMOVE_CALL]).with_index do |part, i|
-        sleep Astute.config[:NODES_REMOVE_INTERVAL] if i != 0
+      nodes.uids.sort.each_slice(Astute.config[:max_nodes_per_remove_call]).with_index do |part, i|
+        sleep Astute.config[:nodes_remove_interval] if i != 0
         results += mclient_remove_piece_nodes(part)
       end
       results

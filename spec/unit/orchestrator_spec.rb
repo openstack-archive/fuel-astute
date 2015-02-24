@@ -530,19 +530,19 @@ describe Astute::Orchestrator do
 
   describe '#stop_provision' do
     around(:each) do |example|
-      old_ssh_retries = Astute.config.SSH_RETRIES
-      old_mc_retries = Astute.config.MC_RETRIES
-      old_nodes_rm_interal = Astute.config.NODES_REMOVE_INTERVAL
+      old_ssh_retries = Astute.config.ssh_retries
+      old_mc_retries = Astute.config.mc_retries
+      old_nodes_rm_interal = Astute.config.nodes_remove_interval
       example.run
-      Astute.config.SSH_RETRIES = old_ssh_retries
-      Astute.config.MC_RETRIES = old_mc_retries
-      Astute.config.NODES_REMOVE_INTERVAL = old_nodes_rm_interal
+      Astute.config.ssh_retries = old_ssh_retries
+      Astute.config.mc_retries = old_mc_retries
+      Astute.config.nodes_remove_interval = old_nodes_rm_interal
     end
 
     before(:each) do
-      Astute.config.SSH_RETRIES = 1
-      Astute.config.MC_RETRIES = 1
-      Astute.config.NODES_REMOVE_INTERVAL = 0
+      Astute.config.ssh_retries = 1
+      Astute.config.mc_retries = 1
+      Astute.config.nodes_remove_interval = 0
     end
 
     it 'erase nodes using ssh' do
@@ -666,7 +666,7 @@ describe Astute::Orchestrator do
       Astute::NodesRemover.any_instance.stubs(:remove)
                           .once.returns({"nodes"=>[{"uid"=>"1", }]})
 
-      @orchestrator.expects(:sleep).with(Astute.config.NODES_REMOVE_INTERVAL)
+      @orchestrator.expects(:sleep).with(Astute.config.nodes_remove_interval)
 
       @orchestrator.stop_provision(@reporter,
                              data['task_uuid'],
@@ -675,8 +675,8 @@ describe Astute::Orchestrator do
     end
 
     it 'perform several attempts to find and erase nodes using mcollective' do
-      Astute.config.MC_RETRIES = 2
-      Astute.config.NODES_REMOVE_INTERVAL = 0
+      Astute.config.mc_retries = 2
+      Astute.config.nodes_remove_interval = 0
 
       @orchestrator.stubs(:stop_provision_via_ssh)
                    .returns({'nodes' => [{'uid' => "1"}],

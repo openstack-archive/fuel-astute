@@ -91,7 +91,7 @@ module Astute
         # process and then reboot nodes
 
         # TODO(kozhukalov): do not forget about execute_shell_command timeout which is 3600
-        # watch_provision_progress has PROVISIONING_TIMEOUT + 3600 is much longer than PROVISIONING_TIMEOUT
+        # watch_provision_progress has provisioning_timeout + 3600 is much longer than provisioning_timeout
         if provision_method == 'image'
           # disabling pxe boot
           cobbler.netboot_nodes(nodes, false)
@@ -171,7 +171,7 @@ module Astute
       nodes_not_booted = nodes.map{ |n| n['uid'] }
       result_msg = {'nodes' => []}
       begin
-        Timeout.timeout(Astute.config.PROVISIONING_TIMEOUT) do  # Timeout for booting target OS
+        Timeout.timeout(Astute.config.provisioning_timeout) do  # Timeout for booting target OS
           catch :done do
             loop do
               sleep_not_greater_than(20) do
@@ -375,8 +375,8 @@ module Astute
       mco_result = {}
       nodes_uids = nodes.map{ |n| n['uid'] }
 
-      Astute.config.MC_RETRIES.times do |i|
-        sleep Astute.config.NODES_REMOVE_INTERVAL
+      Astute.config.mc_retries.times do |i|
+        sleep Astute.config.nodes_remove_interval
 
         Astute.logger.debug "Trying to connect to nodes #{nodes_uids} using mcollective"
         nodes_types = node_type(ctx.reporter, ctx.task_id, nodes_uids, 2)

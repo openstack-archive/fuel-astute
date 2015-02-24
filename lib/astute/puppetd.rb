@@ -28,7 +28,7 @@ module Astute
       @cwd = cwd || '/'
 
       Astute.logger.debug "Waiting for puppet to finish deployment on all
-                           nodes (timeout = #{Astute.config.PUPPET_TIMEOUT} sec)..."
+                           nodes (timeout = #{Astute.config.puppet_timeout} sec)..."
       time_before = Time.now
 
       deploy_nodes
@@ -45,7 +45,7 @@ module Astute
       puppet_tasks.each(&:run)
 
       while puppet_tasks.any? { |t| t.status == 'deploying' }
-        sleep Astute.config.PUPPET_DEPLOY_INTERVAL
+        sleep Astute.config.puppet_deploy_interval
       end
     end
 

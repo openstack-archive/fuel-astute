@@ -87,7 +87,7 @@ module Astute
       begin
         Astute.logger.debug("Waiting for reboot to be complete: nodes: #{reboot_events.keys}")
         failed_nodes = []
-        Timeout::timeout(Astute.config.REBOOT_TIMEOUT) do
+        Timeout::timeout(Astute.config.reboot_timeout) do
           while not reboot_events.empty?
             reboot_events.each do |node_name, event_id|
               event_status = @engine.event_status(event_id)
