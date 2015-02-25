@@ -49,7 +49,12 @@ module Astute
             }
           end
           @ctx.report_and_update_status('nodes' => nodes)
-          raise Astute::DeploymentEngineError, "Failed to deploy plugin #{hook_name}"
+          error_message = "Failed to execute hook #{hook_name}.
+
+          #{hook.to_yaml}"
+
+          raise Astute::DeploymentEngineError, error_message
+
         end
       end
     end
