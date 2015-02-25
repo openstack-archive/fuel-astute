@@ -5,6 +5,8 @@
 coverage
 coverage.data
 
-# Need only on local machine for gem 
+# Need only on local machine for gem
 Gemfile.lock
 docs/_build
+
+raemon/
