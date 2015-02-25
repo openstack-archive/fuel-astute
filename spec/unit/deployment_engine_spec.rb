@@ -207,7 +207,7 @@ describe Astute::DeploymentEngine do
         )
 
         ctx.stubs(:report_and_update_status)
-        deployer.deploy(nodes)
+        expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
       end
 
       it 'should not stop deployment if fail non-critical node' do
@@ -256,7 +256,7 @@ describe Astute::DeploymentEngine do
         deployer.stubs(:deploy_piece).twice
 
         ctx.expects(:report_and_update_status).never
-        deployer.deploy(nodes)
+        expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
       end
 
       it 'should not affect parallel nodes in same running group' do
@@ -273,7 +273,7 @@ describe Astute::DeploymentEngine do
 
         ctx.expects(:report_and_update_status).never
 
-        deployer.deploy(nodes)
+        expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
       end
 
       context 'limits' do
@@ -297,7 +297,7 @@ describe Astute::DeploymentEngine do
 
           ctx.expects(:report_and_update_status).never
 
-          deployer.deploy(nodes)
+          expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
         end
       end # 'limits'
     end
