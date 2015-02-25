@@ -63,8 +63,12 @@ module Astute
                   'role' => n['role']
                 }
               end
+              # TODO(dshulyak) maybe we should print all failed tasks for this nodes
+              # but i am not sure how it will look like
               Astute.logger.warn "This nodes: #{nodes_to_report} will " \
                 "not deploy because at least one critical node deployment fail"
+              uids = critical_failed_nodes(part)
+              raise Astute::DeploymentEngineError, "Deployment failed on nodes #{uids.join(', ')}"
             end
           end
         end
@@ -125,13 +129,19 @@ module Astute
       nodes_status = @ctx.status
       return false unless nodes_status.has_value?('error')
 
-      stop_uids = part.select{ |n| n['fail_if_error'] }.map{ |n| n['uid'] } &
-                  nodes_status.select { |k, v| v == 'error' }.keys
+      stop_uids = critical_failed_nodes(part)
+
       return false if stop_uids.empty?
 
       Astute.logger.warn "#{@ctx.task_id}: Critical nodes with uids: #{stop_uids.join(', ')} " \
                          "fail to deploy. Stop deployment"
       true
+    end
+
+    def critical_failed_nodes(part)
+        stop_uids = part.select{ |n| n['fail_if_error'] }.map{ |n| n['uid'] } &
+                    @ctx.status.select { |k, v| v == 'error' }.keys
+        stop_uids
     end
 
     def pre_deployment_actions(deployment_info, pre_deployment)
