@@ -113,17 +113,6 @@ describe Astute::DeploymentEngine do
         end
       end
 
-      it 'should run pre deploy hooks once for role' do
-        deployer.expects(:pre_deploy_actions).times(3)
-
-        deployer.deploy(nodes)
-      end
-
-      it 'should run post deploy hooks once for role' do
-        deployer.expects(:post_deploy_actions).times(3)
-
-        deployer.deploy(nodes)
-      end
     end
 
     it 'deploy nodes by order' do
@@ -207,7 +196,7 @@ describe Astute::DeploymentEngine do
         )
 
         ctx.stubs(:report_and_update_status)
-        deployer.deploy(nodes)
+        expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
       end
 
       it 'should not stop deployment if fail non-critical node' do
@@ -256,7 +245,7 @@ describe Astute::DeploymentEngine do
         deployer.stubs(:deploy_piece).twice
 
         ctx.expects(:report_and_update_status).never
-        deployer.deploy(nodes)
+        expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
       end
 
       it 'should not affect parallel nodes in same running group' do
@@ -273,7 +262,7 @@ describe Astute::DeploymentEngine do
 
         ctx.expects(:report_and_update_status).never
 
-        deployer.deploy(nodes)
+        expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
       end
 
       context 'limits' do
@@ -297,7 +286,7 @@ describe Astute::DeploymentEngine do
 
           ctx.expects(:report_and_update_status).never
 
-          deployer.deploy(nodes)
+          expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
         end
       end # 'limits'
     end
