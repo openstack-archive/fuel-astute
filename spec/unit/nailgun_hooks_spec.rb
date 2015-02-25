@@ -198,7 +198,7 @@ describe Astute::NailgunHooks do
         hooks.expects(:upload_file_hook).returns(true)
         hooks.expects(:shell_hook).returns(false)
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin shell-example-1.0/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook shell-example-1.0/)
       end
 
       it 'should not process next hooks if critical hook failed' do
@@ -308,7 +308,7 @@ describe Astute::NailgunHooks do
     end
 
     it 'should limit nodes processing in parallel' do
-      Astute.config.MAX_NODES_PER_CALL = 1
+      Astute.config.max_nodes_per_call = 1
       File.stubs(:file?).returns(true)
       File.stubs(:readable?).returns(true)
       File.stubs(:read).returns("")
@@ -356,7 +356,7 @@ describe Astute::NailgunHooks do
         hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
         hooks.expects(:upload_file).returns(false).once
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
     end #context
   end#copy_files_hook
@@ -448,14 +448,14 @@ describe Astute::NailgunHooks do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
         hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).times(Astute.config.mc_retries)
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
 
       it 'if exit code not presence -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
         hooks.expects(:run_shell_command).returns({:data => {}}).times(Astute.config.mc_retries)
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
     end #context
 
@@ -540,7 +540,7 @@ describe Astute::NailgunHooks do
         hooks = Astute::NailgunHooks.new([upload_file_hook], ctx)
         hooks.expects(:upload_file).returns(false).once
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
     end #context
 
@@ -636,14 +636,14 @@ describe Astute::NailgunHooks do
         hooks = Astute::NailgunHooks.new([sync_hook], ctx)
         hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).times(10)
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
 
       it 'if exit code not presence -> raise error' do
         hooks = Astute::NailgunHooks.new([sync_hook], ctx)
         hooks.expects(:run_shell_command).returns({:data => {}}).times(10)
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
     end #context
 
@@ -779,14 +779,14 @@ describe Astute::NailgunHooks do
         PuppetdDeployer.expects(:deploy).once
         Astute::Context.any_instance.stubs(:status).returns({'1' => 'error', '3' => 'success'})
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
 
       it 'if mclient failed -> raise error' do
         hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
         PuppetdDeployer.expects(:deploy).once.raises(Astute::MClientError)
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
     end #context
   end # puppet_hook
@@ -1014,7 +1014,7 @@ describe Astute::NailgunHooks do
         )
         .returns('2' => (time - 5).to_s, '3' => time.to_s)
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
 
       it 'if reboot validate info not presence -> raise error' do
@@ -1035,7 +1035,7 @@ describe Astute::NailgunHooks do
           10,
         ).returns({})
 
-        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to deploy plugin/)
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
     end #context
 
