@@ -308,7 +308,7 @@ describe Astute::NailgunHooks do
     end
 
     it 'should limit nodes processing in parallel' do
-      Astute.config.MAX_NODES_PER_CALL = 1
+      Astute.config.max_nodes_per_call = 1
       File.stubs(:file?).returns(true)
       File.stubs(:readable?).returns(true)
       File.stubs(:read).returns("")
