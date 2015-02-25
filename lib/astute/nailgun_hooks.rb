@@ -62,7 +62,7 @@ module Astute
 
       is_success = true
       hook['parameters']['files'].each do |file|
-        if File.file?(file['src']) && File.readable?(file['src'])
+        if File.file?(file['src']) and File.readable?(file['src'])
           parameters = {
             'content' => File.read(file['src']),
             'path' => file['dst'],
