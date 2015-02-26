@@ -46,34 +46,8 @@ module Astute
           raise_if_error=true
         )
         cobbler.add_nodes(nodes)
+        watch_provision_progress(reporter, task_id, nodes, engine_attrs)
 
-        # if provision_method is 'image', we do not need to immediately
-        # reboot nodes. instead, we need to run image based provisioning
-        # process and then reboot nodes
-
-        # TODO(kozhukalov): do not forget about execute_shell_command timeout which is 3600
-        # watch_provision_progress has provisioning_timeout + 3600 is much longer than provisioning_timeout
-        if provision_method == 'image'
-          # disabling pxe boot
-          cobbler.netboot_nodes(nodes, false)
-          image_provision(reporter, task_id, nodes)
-        end
-        # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
-        reboot_events = cobbler.reboot_nodes(nodes)
-        failed_nodes  = cobbler.check_reboot_nodes(reboot_events)
-
-        # control reboot for nodes which still in bootstrap state
-        # Note: if the image based provisioning is used nodes are already
-        # provisioned and rebooting is not necessary. In fact the forced
-        # reboot can corrupt a node if it manages to reboot fast enough
-        # (see LP #1394599)
-        # XXX: actually there's a tiny probability to reboot a node being
-        # provisioned in a traditional way (by Debian installer or anaconda),
-        # however such a double reboot is not dangerous since cobbler will
-        # boot such a node into installer once again.
-        if provision_method != 'image'
-          control_reboot_using_ssh(reporter, task_id, nodes)
-        end
       rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
@@ -84,19 +58,7 @@ module Astute
         raise e
       end
 
-      if failed_nodes.present?
-        err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
-        Astute.logger.error(err_msg)
-        reporter.report({
-            'status' => 'error',
-            'error' => err_msg,
-            'progress' => 100})
-
-        unlock_nodes_discovery(reporter, task_id="", failed_nodes, nodes)
-        raise FailedToRebootNodesError.new(err_msg)
-      end
-
-      watch_provision_progress(reporter, task_id, nodes)
+      return
     end
 
     def image_provision(reporter, task_id, nodes)
@@ -120,45 +82,67 @@ module Astute
       end
     end
 
-    def watch_provision_progress(reporter, task_id, nodes)
-      raise "Nodes to provision are not provided!" if nodes.empty?
+    def watch_provision_progress(reporter, task_id, nodes_to_provision, engine_attrs)
+      raise "Nodes to provision are not provided!" if nodes_to_provision.empty?
 
       provision_log_parser = @log_parsing ? LogParser::ParseProvisionLogs.new : LogParser::NoParsing.new
       proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(reporter)
 
-      prepare_logs_for_parsing(provision_log_parser, nodes)
+      prepare_logs_for_parsing(provision_log_parser, nodes_to_provision)
 
-      nodes_not_booted = nodes.map{ |n| n['uid'] }
+      nodes_not_booted = [] #nodes.map{ |n| n['uid'] }
+      nodes = []
       result_msg = {'nodes' => []}
-      begin
-        Timeout.timeout(Astute.config.provisioning_timeout) do  # Timeout for booting target OS
-          catch :done do
-            loop do
-              sleep_not_greater_than(20) do
-                nodes_types = node_type(proxy_reporter, task_id, nodes.map {|n| n['uid']}, 5)
-                target_uids, nodes_not_booted, reject_uids = analize_node_types(nodes_types, nodes_not_booted)
-
-                if reject_uids.present?
-                  ctx ||= Context.new(task_id, proxy_reporter)
-                  reject_nodes = reject_uids.map { |uid| {'uid' => uid } }
-                  NodesRemover.new(ctx, reject_nodes, reboot=true).remove
-                end
-
-                if nodes_not_booted.empty?
-                  Astute.logger.info "All nodes are provisioned"
-                  throw :done
-                end
-
-                Astute.logger.debug("Still provisioning follow nodes: #{nodes_not_booted}")
-                report_about_progress(proxy_reporter, provision_log_parser, target_uids, nodes)
-              end
+      nodes_timeout = {}
+      timeouted_nodes = []
+      max_nodes = Astute.config[:max_nodes_per_call]
+      Astute.logger.debug("Starting provision")
+      catch :done do
+        loop do
+          sleep_not_greater_than(20) do
+            #provision more
+            if nodes_not_booted.count < max_nodes and nodes_to_provision.count > 0
+              new_nodes = nodes_to_provision.shift(max_nodes - nodes_not_booted.count)
+		      Astute.logger.debug("Provisioning nodes: #{new_nodes}")
+              provision_piece(reporter, task_id, engine_attrs, new_nodes)
+              nodes_not_booted += new_nodes.map{ |n| n['uid'] }
+              nodes += new_nodes
+              timeout_time = Time.now.utc + Astute.config.provisioning_timeout
+              new_nodes.each {|n| nodes_timeout[n['uid']] = timeout_time}
             end
+
+            nodes_types = node_type(proxy_reporter, task_id, nodes.map {|n| n['uid']}, 5)
+            target_uids, nodes_not_booted, reject_uids = analize_node_types(nodes_types, nodes_not_booted)
+
+            if reject_uids.present?
+              ctx ||= Context.new(task_id, proxy_reporter)
+              reject_nodes = reject_uids.map { |uid| {'uid' => uid } }
+              NodesRemover.new(ctx, reject_nodes, reboot=true).remove
+            end
+
+            #check timouted nodes
+            nodes_not_booted.each do |uid|
+                time_now = Time.now.utc
+                if nodes_timeout[uid] < time_now
+                    timeouted_nodes.push(uid)
+                end
+            end
+            nodes_not_booted -= timeouted_nodes
+
+            if nodes_not_booted.empty? and nodes_to_provision.empty?
+              Astute.logger.info "Provisioning finished"
+              throw :done
+            end
+
+            Astute.logger.debug("Still provisioning following nodes: #{nodes_not_booted}")
+            report_about_progress(proxy_reporter, provision_log_parser, target_uids, nodes)
           end
-          # We are here if jumped by throw from while cycle
         end
-      rescue Timeout::Error
-        Astute.logger.error("Timeout of provisioning is exceeded. Nodes not booted: #{nodes_not_booted}")
-        nodes_progress = nodes_not_booted.map do |n|
+      end
+      #handle timeouted nodes
+      if timeouted_nodes.present?
+        Astute.logger.error("Timeout of provisioning is exceeded. Nodes not booted: #{timeouted_nodes}")
+        nodes_progress = timeouted_nodes.map do |n|
           {
             'uid' => n,
             'status' => 'error',
@@ -177,7 +161,7 @@ module Astute
       end
 
       node_uids = nodes.map { |n| n['uid'] }
-      (node_uids - nodes_not_booted).each do |uid|
+      (node_uids - timeouted_nodes).each do |uid|
         result_msg['nodes'] << {'uid' => uid, 'progress' => 100, 'status' => 'provisioned'}
       end
 
@@ -223,7 +207,60 @@ module Astute
       result
     end
 
+    def provision_piece(reporter, task_id, engine_attrs, nodes)
+      cobbler = CobblerManager.new(engine_attrs, reporter)
+      provision_method = engine_attrs['provision_method'] || 'cobbler'
+
+      # if provision_method is 'image', we do not need to immediately
+      # reboot nodes. instead, we need to run image based provisioning
+      # process and then reboot nodes
+
+      # TODO(kozhukalov): do not forget about execute_shell_command timeout which is 3600
+      # watch_provision_progress has provisioning_timeout + 3600 is much longer than provisioning_timeout   
+      if provision_method == 'image'
+        # disabling pxe boot
+        cobbler.netboot_nodes(nodes, false)
+        image_provision(reporter, task_id, nodes)
+      end
+      # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
+      reboot_events = cobbler.reboot_nodes(nodes)
+      failed_nodes = cobbler.check_reboot_nodes(reboot_events)
+
+      # control reboot for nodes which still in bootstrap state
+      # Note: if the image based provisioning is used nodes are already
+      # provisioned and rebooting is not necessary. In fact the forced
+      # reboot can corrupt a node if it manages to reboot fast enough
+      # (see LP #1394599)
+      # XXX: actually there's a tiny probability to reboot a node being
+      # provisioned in a traditional way (by Debian installer or anaconda),
+      # however such a double reboot is not dangerous since cobbler will
+      # boot such a node into installer once again.
+      if provision_method != 'image'
+        control_reboot_using_ssh(reporter, task_id, nodes)
+      end
+      if failed_nodes.present?
+        err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
+        Astute.logger.error(err_msg)
+        reporter.report({
+            'status' => 'error',
+            'error' => err_msg,
+            'progress' => 100})
+
+        unlock_nodes_discovery(reporter, task_id="", failed_nodes, nodes)
+        raise FailedToRebootNodesError.new(err_msg)
+      end
+
+    end
+
     private
+
+    def report_result(result, reporter)
+      default_result = {'status' => 'ready', 'progress' => 100}
+
+      result = {} unless result.instance_of?(Hash)
+      status = default_result.merge(result)
+      reporter.report(status)
+    end
 
     def prepare_logs_for_parsing(provision_log_parser, nodes)
       sleep_not_greater_than(10) do # Wait while nodes going to reboot

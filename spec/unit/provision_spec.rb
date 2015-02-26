@@ -285,7 +285,7 @@ describe Astute::Provisioner do
 
         it 'should try to reboot nodes using ssh(insurance for cobbler)' do
           @provisioner.expects(:control_reboot_using_ssh).with(@reporter, data['task_uuid'], data['nodes']).once
-          @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+          @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
       end
 
@@ -310,14 +310,14 @@ describe Astute::Provisioner do
         it "raise error if failed node find" do
           expect do
             @provisioner.stubs(:watch_provision_progress).returns(nil)
-            @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+            @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'])
           end.to raise_error(Astute::FailedToRebootNodesError)
         end
 
         it "should try to unlock nodes discovery" do
           @provisioner.expects(:unlock_nodes_discovery)
           begin
-            @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+            @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'])
           rescue
           end
         end
@@ -344,7 +344,7 @@ describe Astute::Provisioner do
     end
 
     it "raises error if nodes list is empty" do
-      expect {@provisioner.watch_provision_progress(@reporter, data['task_uuid'], {})}.
+      expect {@provisioner.watch_provision_progress(@reporter, data['task_uuid'], {}, data['engine'])}.
                             to raise_error(/Nodes to provision are not provided!/)
     end
 
@@ -352,10 +352,11 @@ describe Astute::Provisioner do
       Astute::LogParser::ParseProvisionLogs.any_instance do
         expects(:prepare).with(data['nodes']).once
       end
+      @provisioner.stubs(:provision_piece).returns(nil)
       @provisioner.stubs(:report_about_progress).returns()
       @provisioner.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
 
-      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
+      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'])
     end
 
     it "ignore problem with parsing provision log" do
@@ -364,24 +365,28 @@ describe Astute::Provisioner do
       end
 
       @provisioner.stubs(:report_about_progress).returns()
+      @provisioner.stubs(:provision_piece).returns(nil)
       @provisioner.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
 
-      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
+      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'])
     end
 
     it 'provision nodes using mclient' do
       @provisioner.stubs(:report_about_progress).returns()
+      @provisioner.stubs(:provision_piece).returns(nil)
       @provisioner.expects(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
 
-      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
+      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'])
     end
 
     it "fail if timeout of provisioning is exceeded" do
+      @provisioner.stubs(:report_about_progress).returns()
+      Astute.config.provisioning_timeout = -5
+      @provisioner.stubs(:node_type).returns([])
+      @provisioner.stubs(:provision_piece).returns(nil)
       Astute::LogParser::ParseProvisionLogs.any_instance do
         stubs(:prepare).returns()
       end
-
-      Timeout.stubs(:timeout).raises(Timeout::Error)
 
       msg = 'Timeout of provisioning is exceeded'
 
@@ -397,11 +402,12 @@ describe Astute::Provisioner do
             'error_type' => 'provision'}]}
 
       @reporter.expects(:report).with(error_msg).once
-      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
+      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'])
     end
 
     it 'success report if all nodes were provisioned' do
       @provisioner.stubs(:report_about_progress).returns()
+      @provisioner.stubs(:provision_piece).returns(nil)
       @provisioner.expects(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
       @provisioner.stubs(:analize_node_types).returns([['1'], []])
 
@@ -414,15 +420,17 @@ describe Astute::Provisioner do
             'progress' => 100}]}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'])
+      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'])
     end
 
     it 'success report if all nodes report about success at least once' do
+      Astute.config.provisioning_timeout = 5
       nodes = [
         { 'uid' => '1'},
         { 'uid' => '2'}
       ]
       @provisioner.stubs(:report_about_progress).returns()
+      @provisioner.stubs(:provision_piece).returns(nil)
       @provisioner.stubs(:node_type)
         .returns([{'uid' => '1', 'node_type' => 'target' }])
         .then.returns([{'uid' => '2', 'node_type' => 'target' }])
@@ -441,15 +449,17 @@ describe Astute::Provisioner do
         ]}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], nodes)
+      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], nodes, data['engine'])
     end
 
     it "unexpecting bootstrap nodes should be ereased and rebooted" do
+      Astute.config.provisioning_timeout = 5
       nodes = [
         { 'uid' => '1'},
         { 'uid' => '2'}
       ]
       @provisioner.stubs(:report_about_progress).returns()
+      @provisioner.stubs(:provision_piece).returns(nil)
       @provisioner.stubs(:node_type)
         .returns([{'uid' => '1', 'node_type' => 'target' }])
         .then.returns([{'uid' => '2', 'node_type' => 'bootstrap' }])
@@ -473,7 +483,7 @@ describe Astute::Provisioner do
         ]}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], nodes)
+      @provisioner.watch_provision_progress(@reporter, data['task_uuid'], nodes, data['engine'])
     end
 
   end
