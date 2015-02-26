@@ -78,6 +78,7 @@ module Astute
     ] # name of keys what will be generated and uploaded to all nodes before deploy
     conf[:keys_dst_dir] = '/var/lib/astute' # folder where keys will be uploaded. Warning!
     conf[:max_nodes_per_call] = 50        # how many nodes to deploy in one puppet call
+    conf[:max_nodes_to_provision] = 50    # how many nodes to provision simultaneously
     conf[:ssh_retries] = 5                # SSH tries to call ssh client before failure
     conf[:ssh_retry_timeout] = 30         # SSH sleeps for ## sec between retries
 
