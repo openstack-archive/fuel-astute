@@ -92,6 +92,8 @@ module Astute
                                           # and last node in group should be 30 sec. Empirical observation.
                                           # Please increase if nodes could not provisioning
 
+    conf[:max_nodes_to_fail] = 10         # Percent of nodes which can fail
+
     # Server settings
     conf[:broker_host] = 'localhost'
     conf[:broker_port] = 5672
