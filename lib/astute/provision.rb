@@ -37,7 +37,10 @@ module Astute
 
       raise "Nodes to provision are not provided!" if nodes.empty?
 
+      fault_tolerance = provisioning_info.fetch('fault_tolerance', [])
+
       cobbler = CobblerManager.new(engine_attrs, reporter)
+      result_msg = {'nodes' => []}
       begin
         remove_nodes(
           reporter,
@@ -48,8 +51,14 @@ module Astute
           raise_if_error=true
         )
         cobbler.add_nodes(nodes)
-        provision_and_watch_progress(reporter, task_id, nodes, engine_attrs, provision_method)
+        failed_nodes, timeouted_uids = provision_and_watch_progress(reporter,
+                                                                    task_id,
+                                                                    Array.new(nodes),
+                                                                    engine_attrs,
+                                                                    provision_method,
+                                                                    fault_tolerance)
 
+        failed_uids = failed_nodes.map { |n| n['uid'] }
       rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
@@ -59,6 +68,32 @@ module Astute
         unlock_nodes_discovery(reporter, task_id, nodes.map {|n| n['slave_name']}, nodes)
         raise e
       end
+
+      handle_failed_nodes(failed_uids, result_msg)
+      if failed_nodes.count > 0
+        unlock_nodes_discovery(reporter, task_id, failed_nodes.map {|n| n['slave_name']}, nodes)
+      end
+      handle_timeouted_nodes(timeouted_uids, result_msg)
+
+      node_uids = nodes.map { |n| n['uid'] }
+
+      (node_uids - timeouted_uids - failed_uids).each do |uid|
+        result_msg['nodes'] << {'uid' => uid, 'progress' => 100, 'status' => 'provisioned'}
+      end
+
+      if should_fail(failed_uids + timeouted_uids, fault_tolerance)
+        result_msg['status'] = 'error'
+        result_msg['error'] = 'Too many nodes failed to provision'
+        result_msg['progress'] = 100
+      end
+
+      # If there was no errors, then set status to ready
+      result_msg.reverse_merge!({'status' => 'ready', 'progress' => 100})
+      Astute.logger.info "Message: #{result_msg}"
+
+      reporter.report(result_msg)
+
+      result_msg
     end
 
     def image_provision(reporter, task_id, nodes)
@@ -82,7 +117,12 @@ module Astute
       end
     end
 
-    def provision_and_watch_progress(reporter, task_id, nodes_to_provision, engine_attrs, provision_method)
+    def provision_and_watch_progress(reporter,
+                                     task_id,
+                                     nodes_to_provision,
+                                     engine_attrs,
+                                     provision_method,
+                                     fault_tolerance)
       raise "Nodes to provision are not provided!" if nodes_to_provision.empty?
 
       provision_log_parser = @log_parsing ? LogParser::ParseProvisionLogs.new : LogParser::NoParsing.new
@@ -92,9 +132,9 @@ module Astute
 
       nodes_not_booted = []
       nodes = []
-      result_msg = {'nodes' => []}
       nodes_timeout = {}
-      timeouted_nodes = []
+      timeouted_uids = []
+      failed_nodes = []
       max_nodes = Astute.config[:max_nodes_to_provision]
       Astute.logger.debug("Starting provision")
       catch :done do
@@ -103,10 +143,15 @@ module Astute
             #provision more
             if nodes_not_booted.count < max_nodes && nodes_to_provision.count > 0
               new_nodes = nodes_to_provision.shift(max_nodes - nodes_not_booted.count)
+
               Astute.logger.debug("Provisioning nodes: #{new_nodes}")
-              provision_piece(reporter, task_id, engine_attrs, new_nodes, provision_method)
+              failed_nodes += provision_piece(reporter, task_id, engine_attrs, new_nodes, provision_method)
+              Astute.logger.info "Nodes failed to reboot: #{failed_nodes} "
+
               nodes_not_booted += new_nodes.map{ |n| n['uid'] }
+              nodes_not_booted -= failed_nodes.map{ |n| n['uid'] }
               nodes += new_nodes
+
               timeout_time = Time.now.utc + Astute.config.provisioning_timeout
               new_nodes.each {|n| nodes_timeout[n['uid']] = timeout_time}
             end
@@ -124,12 +169,19 @@ module Astute
             nodes_not_booted.each do |uid|
                 time_now = Time.now.utc
                 if nodes_timeout[uid] < time_now
-                    timeouted_nodes.push(uid)
+                    Astute.logger.info "Node timed out to provision: #{uid} "
+                    timeouted_uids.push(uid)
                 end
             end
-            nodes_not_booted -= timeouted_nodes
+            nodes_not_booted -= timeouted_uids
 
-            if nodes_not_booted.empty? && nodes_to_provision.empty?
+            failed_uids = failed_nodes.map { |n| n['uid'] }
+            if should_fail(failed_uids + timeouted_uids, fault_tolerance)
+              Astute.logger.debug("Aborting provision. To many nodes failed: #{failed_uids + timeouted_uids}")
+              return failed_nodes, timeouted_uids
+            end
+
+            if nodes_not_booted.empty? and nodes_to_provision.empty?
               Astute.logger.info "Provisioning finished"
               throw :done
             end
@@ -139,38 +191,7 @@ module Astute
           end
         end
       end
-      #handle timeouted nodes
-      if timeouted_nodes.present?
-        Astute.logger.error("Timeout of provisioning is exceeded. Nodes not booted: #{timeouted_nodes}")
-        nodes_progress = timeouted_nodes.map do |n|
-          {
-            'uid' => n,
-            'status' => 'error',
-            'error_msg' => "Timeout of provisioning is exceeded",
-            'progress' => 100,
-            'error_type' => 'provision'
-          }
-        end
-
-        result_msg.merge!({
-            'status' => 'error',
-            'error' => 'Timeout of provisioning is exceeded',
-            'progress' => 100})
-
-        result_msg['nodes'] += nodes_progress
-      end
-
-      node_uids = nodes.map { |n| n['uid'] }
-      (node_uids - timeouted_nodes).each do |uid|
-        result_msg['nodes'] << {'uid' => uid, 'progress' => 100, 'status' => 'provisioned'}
-      end
-
-      # If there was no errors, then set status to ready
-      result_msg.reverse_merge!({'status' => 'ready', 'progress' => 100})
-
-      proxy_reporter.report(result_msg)
-
-      result_msg
+      return failed_nodes, timeouted_uids
     end
 
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true, raise_if_error=false)
@@ -237,18 +258,7 @@ module Astute
       if provision_method != 'image'
         control_reboot_using_ssh(reporter, task_id, nodes)
       end
-      if failed_nodes.present?
-        err_msg = "Nodes failed to reboot: #{failed_nodes.inspect}"
-        Astute.logger.error(err_msg)
-        reporter.report({
-            'status' => 'error',
-            'error' => err_msg,
-            'progress' => 100})
-
-        unlock_nodes_discovery(reporter, task_id="", failed_nodes, nodes)
-        raise FailedToRebootNodesError.new(err_msg)
-      end
-
+      return failed_nodes
     end
 
     private
@@ -391,6 +401,51 @@ module Astute
         result[node_status] = (res1.fetch(node_status, []) + res2.fetch(node_status, [])).uniq
         result
       end
+    end
+
+    def handle_failed_nodes(failed_uids, result_msg)
+      if failed_uids.present?
+        Astute.logger.error("Provision of some nodes failed. Failed nodes: #{failed_uids}")
+        nodes_progress = failed_uids.map do |n|
+          {
+            'uid' => n,
+            'status' => 'error',
+            'error_msg' => "Failed to provision",
+            'progress' => 100,
+            'error_type' => 'provision'
+          }
+        end
+        result_msg['nodes'] += nodes_progress
+      end
+    end
+
+    def  handle_timeouted_nodes(timeouted_uids, result_msg)
+      if timeouted_uids.present?
+        Astute.logger.error("Timeout of provisioning is exceeded. Nodes not booted: #{timeouted_uids}")
+        nodes_progress = timeouted_uids.map do |n|
+          {
+            'uid' => n,
+            'status' => 'error',
+            'error_msg' => "Timeout of provisioning is exceeded",
+            'progress' => 100,
+            'error_type' => 'provision'
+          }
+        end
+        result_msg['nodes'] += nodes_progress
+      end
+    end
+
+    def should_fail(failed_nodes, fault_tolerance)
+      return failed_nodes.present? if fault_tolerance.empty?
+
+      fault_tolerance.each do |group|
+        failed_from_group = failed_nodes.select { |uid| group['uids'].include? uid }
+        max_to_fail = group['percentage'] / 100.0 * group['uids'].count
+        if failed_from_group.count > max_to_fail
+          return true
+        end
+      end
+      false
     end
 
   end
