@@ -22,8 +22,6 @@ module Astute
   class ParseProvisionLogsError < AstuteError; end
   # Image provisioning errors
   class FailedImageProvisionError < AstuteError; end
-  # Failed to reboot nodes
-  class FailedToRebootNodesError < AstuteError; end
   # Deployment engine error
   class DeploymentEngineError < AstuteError; end
   # MClient errors
