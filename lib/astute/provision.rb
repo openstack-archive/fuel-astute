@@ -15,6 +15,7 @@
 module Astute
 
   class Provisioner
+
     def initialize(log_parsing=false)
       @log_parsing = log_parsing
     end
@@ -31,9 +32,11 @@ module Astute
       end
     end
 
-    def provision(reporter, task_id, engine_attrs, nodes)
+    def provision(reporter, task_id, provisioning_info, provision_method)
+      engine_attrs = provisioning_info['engine']
+      nodes = provisioning_info['nodes']
+
       raise "Nodes to provision are not provided!" if nodes.empty?
-      provision_method = engine_attrs['provision_method'] || 'cobbler'
 
       cobbler = CobblerManager.new(engine_attrs, reporter)
       begin

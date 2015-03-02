@@ -156,7 +156,7 @@ describe Astute::Provisioner do
         "username"=>"cobbler",
         "password"=>"cobbler",
         "master_ip"=>"127.0.0.1",
-        "provision_method"=>"cobbler",
+        "provision_method"=>"classic",
       },
       "task_uuid"=>"a5c44b9a-285a-4a0c-ae65-2ed6b3d250f4",
       "nodes" => [
@@ -660,4 +660,3 @@ describe Astute::Provisioner do
 
   end # stop_provision
 end
-
