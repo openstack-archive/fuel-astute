@@ -156,7 +156,7 @@ describe Astute::Provisioner do
         "username"=>"cobbler",
         "password"=>"cobbler",
         "master_ip"=>"127.0.0.1",
-        "provision_method"=>"cobbler",
+        "provision_method"=>"classic",
       },
       "task_uuid"=>"a5c44b9a-285a-4a0c-ae65-2ed6b3d250f4",
       "nodes" => [
@@ -209,7 +209,8 @@ describe Astute::Provisioner do
     context 'cobler cases' do
       it "raise error if cobler settings empty" do
         @provisioner.stubs(:watch_provision_progress).returns(nil)
-        expect {@provisioner.provision(@reporter, data['task_uuid'], {}, data['nodes'])}.
+        data['engine'] = {}
+        expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'classic')}.
                               to raise_error(/Settings for Cobbler must be set/)
       end
     end
@@ -233,7 +234,8 @@ describe Astute::Provisioner do
       end
 
       it "raises error if nodes list is empty" do
-        expect {@provisioner.provision(@reporter, data['task_uuid'], data['engine'], {})}.
+        data['nodes'] = []
+        expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'classic')}.
                               to raise_error(/Nodes to provision are not provided!/)
       end
 
@@ -243,7 +245,7 @@ describe Astute::Provisioner do
         end
         Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
 
-        @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+        @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
       end
 
       before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:power_reboot).returns(333) }
@@ -256,14 +258,14 @@ describe Astute::Provisioner do
           Astute::Provision::Cobbler.any_instance.stubs(:event_status).
                                                   returns([Time.now.to_f, 'controller-1', 'complete'])
 
-          @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+          @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
         end
 
         it "sync engine state" do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
           end
-          @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+          @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
         end
 
         it "should erase mbr for nodes" do
@@ -275,17 +277,17 @@ describe Astute::Provisioner do
             reboot=false,
             fail_if_error=true
           ).returns([])
-          @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+          @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
         end
 
         it 'should not try to unlock node discovery' do
           @provisioner.expects(:unlock_nodes_discovery).never
-          @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+          @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
         end
 
         it 'should try to reboot nodes using ssh(insurance for cobbler)' do
           @provisioner.expects(:control_reboot_using_ssh).with(@reporter, data['task_uuid'], data['nodes']).once
-          @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+          @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
         end
       end
 
@@ -302,7 +304,7 @@ describe Astute::Provisioner do
           end
           begin
             @provisioner.stubs(:watch_provision_progress).returns(nil)
-            @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+            @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
           rescue
           end
         end
@@ -310,14 +312,14 @@ describe Astute::Provisioner do
         it "raise error if failed node find" do
           expect do
             @provisioner.stubs(:watch_provision_progress).returns(nil)
-            @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+            @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
           end.to raise_error(Astute::FailedToRebootNodesError)
         end
 
         it "should try to unlock nodes discovery" do
           @provisioner.expects(:unlock_nodes_discovery)
           begin
-            @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+            @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
           rescue
           end
         end
@@ -325,7 +327,7 @@ describe Astute::Provisioner do
         it 'should not try to reboot nodes using ssh(insurance for cobbler)' do
           @provisioner.expects(:control_reboot_using_ssh).never
           begin
-            @provisioner.provision(@reporter, data['task_uuid'], data['engine'], data['nodes'])
+            @provisioner.provision(@reporter, data['task_uuid'], data, 'classic')
           rescue
           end
         end
@@ -660,4 +662,3 @@ describe Astute::Provisioner do
 
   end # stop_provision
 end
-
