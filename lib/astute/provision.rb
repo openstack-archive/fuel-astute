@@ -56,6 +56,9 @@ module Astute
         if provision_method == 'image'
           # disabling pxe boot
           cobbler.netboot_nodes(nodes, false)
+          # change node type to prevent unexpected erase
+          change_nodes_type(reporter, task_id, nodes)
+
           image_provision(reporter, task_id, nodes)
         end
         # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
@@ -239,7 +242,7 @@ module Astute
     def analize_node_types(types, nodes_not_booted)
       types.each { |t| Astute.logger.debug("Got node types: uid=#{t['uid']} type=#{t['node_type']}") }
       target_uids = types.reject{ |n| n['node_type'] != 'target' }.map{ |n| n['uid'] }
-      reject_uids = types.reject{ |n| n['node_type'] == 'target' }.map{ |n| n['uid'] }
+      reject_uids = types.reject{ |n| ['target', 'image'].include? n['node_type']  }.map{ |n| n['uid'] }
       Astute.logger.debug("Not target nodes will be rejected: #{reject_uids.join(',')}")
 
       nodes_not_booted -= target_uids
@@ -355,6 +358,23 @@ module Astute
         result[node_status] = (res1.fetch(node_status, []) + res2.fetch(node_status, [])).uniq
         result
       end
+    end
+
+    def change_nodes_type(reporter, task_id="", nodes)
+      nodes_uids = nodes.map{ |n| n['uid'] }
+      shell = MClient.new(Context.new(task_id, reporter),
+                          'execute_shell_command',
+                          nodes_uids,
+                          check_result=false,
+                          timeout=5)
+      mco_result = shell.execute(:cmd => "echo 'image' > /etc/nailgun_systemtype")
+      result = mco_result.map do |n|
+        {
+          'uid'       => n.results[:sender],
+          'exit code' => n.results[:data][:exit_code]
+        }
+      end
+      Astute.logger.debug "Change node type to image. Result: #{result}"
     end
 
   end
