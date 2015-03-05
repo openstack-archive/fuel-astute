@@ -2,7 +2,7 @@ metadata    :name        => "Fake Agent",
             :description => "Fake Agent",
             :author      => "Mirantis Inc.",
             :license     => "Apache License 2.0",
-            :version     => "6.0.0",
+            :version     => "6.0.1",
             :url         => "http://mirantis.com",
             :timeout     => 20
 
