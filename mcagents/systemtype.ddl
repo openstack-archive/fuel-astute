@@ -2,7 +2,7 @@ metadata    :name        => "systemtype",
             :description => "Checks system type out of file",
             :author      => "Mirantis Inc",
             :license     => "Apache License 2.0",
-            :version     => "6.0.0",
+            :version     => "6.0.1",
             :url         => 'http://www.mirantis.com/',
             :timeout     => 60
 
