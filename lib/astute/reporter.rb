@@ -93,7 +93,8 @@ module Astute
       def node_validate(node)
         validates_basic_fields(node)
 
-        calculate_multiroles_node_progress(node) if deploy?
+        # Ignore hooks report for multiroles progress
+        calculate_multiroles_node_progress(node) if deploy? && node['role'] != 'hook'
 
         normalization_progress(node)
 
@@ -156,7 +157,7 @@ module Astute
         end
 
         # No more status update will be for node which failed and have fail_if_error as true
-        fail_if_error = @nodes.select { |n| n['uid'] == node['uid'] && n['role'] == node['role'] }[0]['fail_if_error']
+        fail_if_error = @nodes.find { |n| n['uid'] == node['uid'] && n['role'] == node['role'] }['fail_if_error']
         fail_now = fail_if_error && node['status'] == 'error'
 
         if all_roles_amount - finish_roles_amount != 1 && !fail_now
