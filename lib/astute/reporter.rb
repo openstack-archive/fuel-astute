@@ -156,7 +156,8 @@ module Astute
         end
 
         # No more status update will be for node which failed and have fail_if_error as true
-        fail_if_error = @nodes.select { |n| n['uid'] == node['uid'] && n['role'] == node['role'] }[0]['fail_if_error']
+        node = @nodes.find { |n| n['uid'] == node['uid'] && n['role'] == node['role'] }
+        fail_if_error = node ? node['fail_if_error'] : true
         fail_now = fail_if_error && node['status'] == 'error'
 
         if all_roles_amount - finish_roles_amount != 1 && !fail_now
