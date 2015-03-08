@@ -43,6 +43,7 @@ require 'astute/nailgun_hooks'
 require 'astute/puppet_task'
 require 'astute/task_manager'
 require 'astute/pre_delete'
+require 'astute/version'
 
 ['/astute/pre_deployment_actions/*.rb',
  '/astute/pre_deploy_actions/*.rb',
