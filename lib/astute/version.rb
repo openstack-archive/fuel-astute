@@ -14,5 +14,45 @@
 
 
 module Astute
-  VERSION = '6.0.0'
+  VERSION = '6.1.0'
+  class Versioning
+    def initialize(context)
+      @ctx = context
+    end
+
+    def get_versions(nodes_uids, timeout=nil)
+      result = []
+      with_version = []
+      rpcutil = MClient.new(@ctx, "rpcutil", nodes_uids, check_result=true, timeout)
+      inventory = rpcutil.inventory
+      inventory.each do |node|
+        if node.results[:data][:agents].include? 'version'
+          with_version.push(node.results[:sender])
+        end
+      end
+      no_version = nodes_uids - with_version
+      version = MClient.new(@ctx, "version", with_version, check_result=true, timeout)
+      versions = version.get_version
+      versions.each do |node|
+        uid = node.results[:sender]
+        result << {'version' => node.results[:data][:version],
+                   'uid' => uid}
+      end
+
+      # times before versioning
+      no_version.each do |uid|
+        result << {'version' => '6.0.0',
+                   'uid' => uid}
+      end
+      result
+    end
+
+    def split_on_version(reporter, task_id, nodes_uids, version, timeout=nil)
+      versions = get_versions(nodes_uids, timeout)
+      version = Gem::Version.new(version)
+      smaller = versions.select{ |n|  Gem::Version.new(n["version"]) < version }
+      eq_and_bigger = versions.select{ |n|  Gem::Version.new(n["version"]) >= version }
+      [smaller, eq_and_bigger]
+    end
+  end
 end
