@@ -31,9 +31,11 @@ module Astute
       end
     end
 
-    def provision(reporter, task_id, engine_attrs, nodes)
+    def provision(reporter, task_id, provisioning_info, provision_method)
+      engine_attrs = provisioning_info['engine']
+      nodes = provisioning_info['nodes']
+
       raise "Nodes to provision are not provided!" if nodes.empty?
-      provision_method = engine_attrs['provision_method'] || 'cobbler'
 
       cobbler = CobblerManager.new(engine_attrs, reporter)
       begin
@@ -46,7 +48,7 @@ module Astute
           raise_if_error=true
         )
         cobbler.add_nodes(nodes)
-        provision_and_watch_progress(reporter, task_id, nodes, engine_attrs)
+        provision_and_watch_progress(reporter, task_id, nodes, engine_attrs, provision_method)
 
       rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
@@ -80,7 +82,7 @@ module Astute
       end
     end
 
-    def provision_and_watch_progress(reporter, task_id, nodes_to_provision, engine_attrs)
+    def provision_and_watch_progress(reporter, task_id, nodes_to_provision, engine_attrs, provision_method)
       raise "Nodes to provision are not provided!" if nodes_to_provision.empty?
 
       provision_log_parser = @log_parsing ? LogParser::ParseProvisionLogs.new : LogParser::NoParsing.new
@@ -102,7 +104,7 @@ module Astute
             if nodes_not_booted.count < max_nodes && nodes_to_provision.count > 0
               new_nodes = nodes_to_provision.shift(max_nodes - nodes_not_booted.count)
               Astute.logger.debug("Provisioning nodes: #{new_nodes}")
-              provision_piece(reporter, task_id, engine_attrs, new_nodes)
+              provision_piece(reporter, task_id, engine_attrs, new_nodes, provision_method)
               nodes_not_booted += new_nodes.map{ |n| n['uid'] }
               nodes += new_nodes
               timeout_time = Time.now.utc + Astute.config.provisioning_timeout
@@ -205,9 +207,8 @@ module Astute
       result
     end
 
-    def provision_piece(reporter, task_id, engine_attrs, nodes)
+    def provision_piece(reporter, task_id, engine_attrs, nodes, provision_method)
       cobbler = CobblerManager.new(engine_attrs, reporter)
-      provision_method = engine_attrs['provision_method'] || 'cobbler'
 
       # if provision_method is 'image', we do not need to immediately
       # reboot nodes. instead, we need to run image based provisioning
