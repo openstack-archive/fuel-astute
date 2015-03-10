@@ -18,7 +18,7 @@ module Astute
 
   class PuppetTask
 
-    def initialize(ctx, node, retries=1, puppet_manifest=nil, puppet_modules=nil, cwd=nil, timeout=nil)
+    def initialize(ctx, node, retries=1, puppet_manifest=nil, puppet_modules=nil, cwd=nil, timeout=nil, puppet_debug=false)
       @ctx = ctx
       @node = node
       @retries = retries
@@ -28,6 +28,7 @@ module Astute
       @time_observer = TimeObserver.new(timeout || Astute.config.puppet_timeout)
       @prev_summary = nil
       @is_hung = false
+      @puppet_debug = puppet_debug
     end
 
     def run
@@ -91,7 +92,7 @@ module Astute
 
     def puppet_run
       puppetd.runonce(
-        :puppet_debug => true,
+        :puppet_debug => @puppet_debug,
         :manifest => @puppet_manifest,
         :modules  => @puppet_modules,
         :cwd => @cwd

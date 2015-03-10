@@ -58,11 +58,25 @@ describe "NailyFact DeploymentEngine" do
 
     context 'log parsing' do
       let(:deploy_data) do
-        [{'uid' => 1, 'role' => 'controller', 'deployment_mode' => 'unknown', 'deployment_id' => '123'}]
+        [{
+          'uid' => 1,
+          'role' => 'controller',
+          'deployment_mode' => 'unknown',
+          'deployment_id' => '123',
+          'puppet_debug' => true
+        }]
       end
 
       it "it should not raise an exception if deployment mode is unknown" do
-        Astute::PuppetdDeployer.stubs(:deploy).with(ctx, deploy_data, instance_of(Fixnum)).once
+        Astute::PuppetdDeployer.stubs(:deploy).with(
+          ctx,
+          deploy_data,
+          instance_of(Fixnum),
+          nil,
+          nil,
+          nil,
+          true
+        ).once
         expect {deploy_engine.deploy(deploy_data)}.to_not raise_exception
       end
     end
@@ -74,8 +88,24 @@ describe "NailyFact DeploymentEngine" do
 
       it "should not raise any exception" do
         # we got two calls, one for controller (high priority), and another for all computes (same low priority)
-        Astute::PuppetdDeployer.expects(:deploy).with(ctx, controller_nodes, instance_of(Fixnum)).once
-        Astute::PuppetdDeployer.expects(:deploy).with(ctx, compute_nodes, instance_of(Fixnum)).once
+        Astute::PuppetdDeployer.expects(:deploy).with(
+          ctx,
+          controller_nodes,
+          instance_of(Fixnum),
+          nil,
+          nil,
+          nil,
+          true
+        ).once
+        Astute::PuppetdDeployer.expects(:deploy).with(
+          ctx,
+          compute_nodes,
+          instance_of(Fixnum),
+          nil,
+          nil,
+          nil,
+          true
+        ).once
 
         expect {deploy_engine.deploy(deploy_data)}.to_not raise_exception
       end
@@ -118,12 +148,36 @@ describe "NailyFact DeploymentEngine" do
 
       it "ha deploy should not raise any exception" do
         primary_controller = deploy_data.find { |n| n['role'] == 'primary-controller' }
-        Astute::PuppetdDeployer.expects(:deploy).with(ctx, [primary_controller], 1).once
+        Astute::PuppetdDeployer.expects(:deploy).with(
+          ctx,
+          [primary_controller],
+          1,
+          nil,
+          nil,
+          nil,
+          true
+        ).once
 
         controller_nodes.each do |n|
-          Astute::PuppetdDeployer.expects(:deploy).with(ctx, [n], 1).once
+          Astute::PuppetdDeployer.expects(:deploy).with(
+            ctx,
+            [n],
+            1,
+            nil,
+            nil,
+            nil,
+            true
+          ).once
         end
-        Astute::PuppetdDeployer.expects(:deploy).with(ctx, compute_nodes, instance_of(Fixnum)).once
+        Astute::PuppetdDeployer.expects(:deploy).with(
+          ctx,
+          compute_nodes,
+          instance_of(Fixnum),
+          nil,
+          nil,
+          nil,
+          true
+        ).once
 
         deploy_engine.deploy(deploy_data)
       end
