@@ -33,14 +33,26 @@ module Astute
       #  Main worker actions
       #
 
-      def provision(data)
+      def image_provision(data)
+        provision(data, 'image')
+      end
+
+      def native_provision(data)
+        provision(data, 'native')
+      end
+
+      def provision(data, provision_method)
+
         Astute.logger.info("'provision' method called with data: #{data.inspect}")
 
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         begin
-          result = @orchestrator.provision(reporter, data['args']['task_uuid'],
-                                  data['args']['provisioning_info']['engine'],
-                                  data['args']['provisioning_info']['nodes'])
+          result = @orchestrator.provision(
+            reporter,
+            data['args']['task_uuid'],
+            data['args']['provisioning_info'],
+            provision_method
+          )
 
         #TODO(vsharshov): Refactoring the deployment aborting messages (StopIteration)
         rescue => e
