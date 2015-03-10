@@ -19,7 +19,7 @@ function license_check() {
   # License information must be in every source file
   cd_workspace
 
-  tmpfile=`tempfile`
+  tmpfile=`mktemp`
   find * -not -path "docs/*" -regex ".*\.\(rb\)" -type f -print0 | xargs -0 grep -Li License
   files_with_no_license=`wc -l $tmpfile | awk '{print $1}'`
   if [ $files_with_no_license -gt 0 ]; then
