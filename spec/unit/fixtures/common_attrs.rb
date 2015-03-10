@@ -17,8 +17,9 @@ module Fixtures
 
   def self.common_attrs(deployment_mode, nodes)
     nodes.each do |node|
-      node.merge(
+      node.merge!(
         "deployment_id" => 1,
+        "puppet_debug" => true,
         "storage_network_range" => "172.16.0.0/24",
         "auto_assign_floating_ip" => false,
         "mysql" => {
@@ -51,7 +52,7 @@ module Fixtures
       )
     end
   end
-  
+
   def self.controller_nodes(nodes)
     controller_nodes = nodes.select{ |n| n['role'] == 'controller' }.map { |e| deep_copy e }
   end

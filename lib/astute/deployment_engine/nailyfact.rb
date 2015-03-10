@@ -27,7 +27,15 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
 
     Astute.logger.info "#{@ctx.task_id}: Starting deployment"
 
-    Astute::PuppetdDeployer.deploy(@ctx, nodes, retries)
+    Astute::PuppetdDeployer.deploy(
+      @ctx,
+      nodes,
+      retries,
+      puppet_manifest=nil,
+      puppet_modules=nil,
+      cwd=nil,
+      puppet_debug=nodes.first['puppet_debug']
+    )
     nodes_roles = nodes.map { |n| {n['uid'] => n['role']} }
     Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
   end

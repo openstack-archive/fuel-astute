@@ -17,7 +17,7 @@ module Fixtures
     deploy_info = Fixtures.common_attrs('ha', Fixtures.ha_nodes)
     deploy_info.each do |node|
       node.merge(
-        'management_vip' => "192.168.0.111"     
+        'management_vip' => "192.168.0.111"
       )
     end
   end
