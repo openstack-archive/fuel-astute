@@ -63,14 +63,16 @@ module Astute
       )
     end
 
-    def provision(reporter, task_id, engine_attrs, nodes)
-        provisioner = Provisioner.new(@log_parsing)
-        provisioner.provision(reporter, task_id, engine_attrs, nodes)
-    end
+    def provision(reporter, task_id, provisioning_info, provision_method)
+      if provisioning_info['pre_provision']
+        execute_tasks(reporter, task_id, provisioning_info['pre_provision'])
+      end
+      provisioner = Provisioner.new(@log_parsing)
+      provisioner.provision(reporter, task_id, provisioning_info, provision_method)
 
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true, raise_if_error=false)
-        provisioner = Provisioner.new(@log_parsing)
-        provisioner.remove_nodes(reporter, task_id, engine_attrs, nodes, reboot, raise_if_error)
+      provisioner = Provisioner.new(@log_parsing)
+      provisioner.remove_nodes(reporter, task_id, engine_attrs, nodes, reboot, raise_if_error)
     end
 
     def stop_puppet_deploy(reporter, task_id, nodes)
