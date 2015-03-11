@@ -320,6 +320,19 @@ describe "ProxyReporter" do
         msgs.each {|msg| @reporter.report(msg)}
       end
 
+      it 'should not use multiroles calculation in case of hooks errors' do
+        msgs = [ {'nodes' => [{'uid' => 1, 'status' => 'deploying', 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'ready', 'role' => 'controller'}]},
+                 {'nodes' => [{'uid' => 1, 'status' => 'error', 'error_type' => 'deploy', 'role' => 'hook', 'hook' => nil}]}
+               ]
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 0,  'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'deploying', 'progress' => 50, 'role' => 'controller'}])
+        up_reporter.expects(:report).with('nodes' => [{'uid' => 1, 'status' => 'error', 'error_type' => 'deploy', 'role' => 'hook', 'hook' => nil}])
+        up_reporter.expects(:report).never
+
+        msgs.each {|msg| @reporter.report(msg)}
+      end
+
     end
 
   end
