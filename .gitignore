@@ -9,5 +9,10 @@ coverage.data
 Gemfile.lock
 docs/_build
 
+
 #Vim swap files
 *.swp
+
+# Local raemon copy
+raemon/
+
