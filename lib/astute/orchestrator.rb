@@ -20,8 +20,8 @@ module Astute
     end
 
     def node_type(reporter, task_id, nodes_uids, timeout=nil)
-        provisioner = Provisioner.new(@log_parsing)
-        provisioner.node_type(reporter, task_id, nodes_uids, timeout)
+      provisioner = Provisioner.new(@log_parsing)
+      provisioner.node_type(reporter, task_id, nodes_uids, timeout)
     end
 
     def execute_tasks(up_reporter, task_id, tasks)
@@ -38,7 +38,7 @@ module Astute
         Astute::DeploymentEngine::NailyFact,
         pre_deployment,
         post_deployment
-      )
+       )
     end
 
     def task_deployment(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
@@ -63,14 +63,23 @@ module Astute
       )
     end
 
-    def provision(reporter, task_id, engine_attrs, nodes)
-        provisioner = Provisioner.new(@log_parsing)
-        provisioner.provision(reporter, task_id, engine_attrs, nodes)
+    def provision(reporter, task_id, provisioning_info, provision_method)
+      if provisioning_info['pre_provision']
+        execute_tasks(reporter, task_id, provisioning_info['pre_provision'])
+      end
+      # NOTE(kozhukalov): Some of our pre-provision tasks need cobbler to be synced
+      # once those tasks are finished. It looks like the easiest way to do this
+      # inside mcollective docker container is to use Astute binding capabilities.
+      cobbler = CobblerManager.new(provisioning_info['engine'], reporter)
+      cobbler.sync
+
+      provisioner = Provisioner.new(@log_parsing)
+      provisioner.provision(reporter, task_id, provisioning_info, provision_method)
     end
 
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true, raise_if_error=false)
-        provisioner = Provisioner.new(@log_parsing)
-        provisioner.remove_nodes(reporter, task_id, engine_attrs, nodes, reboot, raise_if_error)
+      provisioner = Provisioner.new(@log_parsing)
+      provisioner.remove_nodes(reporter, task_id, engine_attrs, nodes, reboot, raise_if_error)
     end
 
     def stop_puppet_deploy(reporter, task_id, nodes)
