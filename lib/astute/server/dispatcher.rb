@@ -160,7 +160,12 @@ module Astute
         nodes = data['args']['nodes']
         engine = data['args']['engine']
 
-        result = @orchestrator.check_ceph_osds(reporter, task_uuid, nodes)
+        # Only run the check for DeletionTask, not for ClusterDeletionTask
+        if data['respond_to'] == 'remove_nodes_resp'
+          result = @orchestrator.check_ceph_osds(reporter, task_uuid, nodes)
+        else
+          result = {'status' => 'ready'}
+        end
 
         if result["status"] == "ready"
           if nodes.empty?
