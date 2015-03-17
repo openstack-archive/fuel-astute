@@ -160,11 +160,15 @@ module Astute
         nodes = data['args']['nodes']
         engine = data['args']['engine']
 
-        result = if nodes.empty?
-          Astute.logger.debug("#{task_uuid} Node list is empty")
-          nil
-        else
-          @orchestrator.remove_nodes(reporter, task_uuid, engine, nodes)
+        result = @orchestrator.check_ceph_osds(reporter, task_uuid, nodes)
+
+        if result["status"] == "ready"
+          if nodes.empty?
+            Astute.logger.debug("#{task_uuid} Node list is empty")
+            result = nil
+          else
+            result = @orchestrator.remove_nodes(reporter, task_uuid, engine, nodes)
+          end
         end
 
         report_result(result, reporter)
