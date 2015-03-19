@@ -154,21 +154,31 @@ module Astute
         @orchestrator.dump_environment(reporter, task_id, data['args']['settings'])
       end
 
+      def remove_nodes_w_check(data)
+        task_uuid = data['args']['task_uuid']
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
+        nodes = data['args']['nodes']
+
+        result = @orchestrator.check_ceph_osds(reporter, task_uuid, nodes)
+
+        if result['status'] == 'ready'
+          remove_nodes(data)
+        else
+          report_result(result, reporter)
+        end
+      end
+
       def remove_nodes(data)
         task_uuid = data['args']['task_uuid']
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
         nodes = data['args']['nodes']
         engine = data['args']['engine']
 
-        result = @orchestrator.check_ceph_osds(reporter, task_uuid, nodes)
-
-        if result["status"] == "ready"
-          if nodes.empty?
-            Astute.logger.debug("#{task_uuid} Node list is empty")
-            result = nil
-          else
-            result = @orchestrator.remove_nodes(reporter, task_uuid, engine, nodes)
-          end
+        result = if nodes.empty?
+          Astute.logger.debug("#{task_uuid} Node list is empty")
+          nil
+        else
+          @orchestrator.remove_nodes(reporter, task_uuid, engine, nodes)
         end
 
         report_result(result, reporter)
