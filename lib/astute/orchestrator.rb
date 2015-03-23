@@ -65,8 +65,10 @@ module Astute
 
     def provision(reporter, task_id, provisioning_info, provision_method)
       if provisioning_info['pre_provision']
-        execute_tasks(reporter, task_id, provisioning_info['pre_provision'])
+        ctx = Context.new(task_id, reporter)
+        Astute::NailgunHooks.new(provisioning_info['pre_provision'], ctx, 'provision').process
       end
+
       # NOTE(kozhukalov): Some of our pre-provision tasks need cobbler to be synced
       # once those tasks are finished. It looks like the easiest way to do this
       # inside mcollective docker container is to use Astute binding capabilities.
