@@ -24,7 +24,7 @@ module MCollective
       # Look at https://github.com/torvalds/linux/blob/master/Documentation/devices.txt
       # Please also update the device codes here
       # https://github.com/stackforge/fuel-web/blob/master/bin/agent#L43
-      STORAGE_CODES = [3, 8, 65, 66, 67, 68, 69, 70, 71, 104, 105, 106, 107, 108, 109, 110, 111, 202, 252, 253]
+      STORAGE_CODES = [3, 8, 65, 66, 67, 68, 69, 70, 71, 104, 105, 106, 107, 108, 109, 110, 111, 202, 252, 253, 259]
 
       action "erase_node" do
         erase_node
@@ -135,7 +135,7 @@ module MCollective
       end
 
       def erase_partitions(dev)
-        Dir["/dev/#{dev}[0-9]*"].each do |part|
+        Dir["/dev/#{dev}{p,}[0-9]*"].each do |part|
           system("dd if=/dev/zero of=#{part} bs=1M count=10 oflag=direct")
         end
       end
