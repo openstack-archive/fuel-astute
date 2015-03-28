@@ -37,29 +37,38 @@ describe Astute::Versioning do
                         :facts=>{"mcollective"=>"1"}, :classes=>[]}}
     nodes = [{'uid' => '1'}, {'uid' => '2'}]
 
-    version_result = mock_mc_result(version_result)
-    noversion_result = mock_mc_result(noversion_result)
+    @version_result = mock_mc_result(version_result)
+    @noversion_result = mock_mc_result(noversion_result)
 
     result = {:sender=>"1", :statuscode=>0, :statusmsg=>"OK", :data=>{:version=>"6.1.0"}}
-    mc_res = mock_mc_result(result)
-    mc_timeout = 5
-
-    rpcclient = mock_rpcclient()
-    rpcclient.expects(:inventory).once.returns([version_result, noversion_result])
-    rpcclient.expects(:get_version).once.returns([mc_res])
+    @mc_res = mock_mc_result(result)
   end
 
   describe 'get_version' do
     it 'returns nodes with versions' do
+      rpcclient = mock_rpcclient()
+      rpcclient.expects(:inventory).once.returns([@version_result, @noversion_result])
+      rpcclient.expects(:get_version).once.returns([@mc_res])
       expect(@versioning.get_versions(["1", "2"])
       ).to eql([{"version"=>"6.1.0", "uid"=>"1"}, {"version"=>"6.0.0", "uid"=>"2"}])
+    end
+
+    it 'does not fail if only old nodes are available' do
+      rpcclient = mock_rpcclient()
+      rpcclient.expects(:inventory).once.returns([@noversion_result])
+      expect(@versioning.get_versions(["2"])
+      ).to eql([{"version"=>"6.0.0", "uid"=>"2"}])
     end
   end
 
   describe 'split_on_version' do
     it 'splits on version' do
+      rpcclient = mock_rpcclient()
+      rpcclient.expects(:inventory).once.returns([@version_result, @noversion_result])
+      rpcclient.expects(:get_version).once.returns([@mc_res])
       expect(@versioning.split_on_version(["1", "2"], '6.1.0')
       ).to eql([[{"version"=>"6.0.0", "uid"=>"2"}], [{"version"=>"6.1.0", "uid"=>"1"}]])
     end
   end
+
 end
