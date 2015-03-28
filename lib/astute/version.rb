@@ -31,12 +31,14 @@ module Astute
         end
       end
       no_version = nodes_uids - with_version
-      version = MClient.new(@ctx, "version", with_version, check_result=true, timeout)
-      versions = version.get_version
-      versions.each do |node|
-        uid = node.results[:sender]
-        result << {'version' => node.results[:data][:version],
-                   'uid' => uid}
+      if with_version.present? 
+        version = MClient.new(@ctx, "version", with_version, check_result=true, timeout)
+        versions = version.get_version
+        versions.each do |node|
+          uid = node.results[:sender]
+          result << {'version' => node.results[:data][:version],
+                     'uid' => uid}
+        end
       end
 
       # times before versioning
