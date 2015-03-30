@@ -98,23 +98,11 @@ module Astute
 
     def image_provision(reporter, task_id, nodes)
       failed_uids_provis = ImageProvision.provision(Context.new(task_id, reporter), nodes)
-      if failed_uids_provis.empty?
-        reporter.report({
-          'status' => 'provisioning',
-          'progress' => 80,
-          'msg' => 'Nodes have beed successfully provisioned. Next step is reboot.'
-        })
-      else
-        err_msg = 'At least one of nodes have failed during provisioning'
-        Astute.logger.error("#{task_id}: #{err_msg}")
-        reporter.report({
-          'status' => 'error',
-          'progress' => 100,
-          'msg' => err_msg,
-          'error_type' => 'provision'
-        })
-        raise FailedImageProvisionError.new(err_msg)
+      result = []
+      failed_uids_provis.each do |uid|
+          result << {'uid' => uid}
       end
+      result
     end
 
     def provision_and_watch_progress(reporter,
@@ -230,6 +218,7 @@ module Astute
 
     def provision_piece(reporter, task_id, engine_attrs, nodes, provision_method)
       cobbler = CobblerManager.new(engine_attrs, reporter)
+      failed_nodes = []
 
       # if provision_method is 'image', we do not need to immediately
       # reboot nodes. instead, we need to run image based provisioning
@@ -242,11 +231,11 @@ module Astute
         cobbler.netboot_nodes(nodes, false)
         # change node type to prevent unexpected erase
         change_nodes_type(reporter, task_id, nodes)
-        image_provision(reporter, task_id, nodes)
+        failed_nodes |= image_provision(reporter, task_id, nodes)
       end
       # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
       reboot_events = cobbler.reboot_nodes(nodes)
-      failed_nodes = cobbler.check_reboot_nodes(reboot_events)
+      failed_nodes |= cobbler.check_reboot_nodes(reboot_events)
 
       # control reboot for nodes which still in bootstrap state
       # Note: if the image based provisioning is used nodes are already
