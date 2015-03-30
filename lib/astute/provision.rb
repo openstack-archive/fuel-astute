@@ -51,14 +51,13 @@ module Astute
           raise_if_error=true
         )
         cobbler.add_nodes(nodes)
-        failed_nodes, timeouted_uids = provision_and_watch_progress(reporter,
+        failed_uids, timeouted_uids = provision_and_watch_progress(reporter,
                                                                     task_id,
                                                                     Array.new(nodes),
                                                                     engine_attrs,
                                                                     provision_method,
                                                                     fault_tolerance)
 
-        failed_uids = failed_nodes.map { |n| n['uid'] }
       rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
@@ -70,8 +69,8 @@ module Astute
       end
 
       handle_failed_nodes(failed_uids, result_msg)
-      if failed_nodes.count > 0
-        unlock_nodes_discovery(reporter, task_id, failed_nodes.map {|n| n['slave_name']}, nodes)
+      if failed_uids.count > 0
+        unlock_nodes_discovery(reporter, task_id, failed_uids, nodes)
       end
       handle_timeouted_nodes(timeouted_uids, result_msg)
 
@@ -98,23 +97,6 @@ module Astute
 
     def image_provision(reporter, task_id, nodes)
       failed_uids_provis = ImageProvision.provision(Context.new(task_id, reporter), nodes)
-      if failed_uids_provis.empty?
-        reporter.report({
-          'status' => 'provisioning',
-          'progress' => 80,
-          'msg' => 'Nodes have beed successfully provisioned. Next step is reboot.'
-        })
-      else
-        err_msg = 'At least one of nodes have failed during provisioning'
-        Astute.logger.error("#{task_id}: #{err_msg}")
-        reporter.report({
-          'status' => 'error',
-          'progress' => 100,
-          'msg' => err_msg,
-          'error_type' => 'provision'
-        })
-        raise FailedImageProvisionError.new(err_msg)
-      end
     end
 
     def provision_and_watch_progress(reporter,
@@ -134,7 +116,7 @@ module Astute
       nodes = []
       nodes_timeout = {}
       timeouted_uids = []
-      failed_nodes = []
+      failed_uids = []
       max_nodes = Astute.config[:max_nodes_to_provision]
       Astute.logger.debug("Starting provision")
       catch :done do
@@ -145,11 +127,11 @@ module Astute
               new_nodes = nodes_to_provision.shift(max_nodes - nodes_not_booted.count)
 
               Astute.logger.debug("Provisioning nodes: #{new_nodes}")
-              failed_nodes += provision_piece(reporter, task_id, engine_attrs, new_nodes, provision_method)
-              Astute.logger.info "Nodes failed to reboot: #{failed_nodes} "
+              failed_uids += provision_piece(reporter, task_id, engine_attrs, new_nodes, provision_method)
+              Astute.logger.info "Nodes failed to reboot: #{failed_uids} "
 
               nodes_not_booted += new_nodes.map{ |n| n['uid'] }
-              nodes_not_booted -= failed_nodes.map{ |n| n['uid'] }
+              nodes_not_booted -= failed_uids
               nodes += new_nodes
 
               timeout_time = Time.now.utc + Astute.config.provisioning_timeout
@@ -175,10 +157,9 @@ module Astute
             end
             nodes_not_booted -= timeouted_uids
 
-            failed_uids = failed_nodes.map { |n| n['uid'] }
             if should_fail(failed_uids + timeouted_uids, fault_tolerance)
               Astute.logger.debug("Aborting provision. To many nodes failed: #{failed_uids + timeouted_uids}")
-              return failed_nodes, timeouted_uids
+              return failed_uids, timeouted_uids
             end
 
             if nodes_not_booted.empty? and nodes_to_provision.empty?
@@ -191,7 +172,7 @@ module Astute
           end
         end
       end
-      return failed_nodes, timeouted_uids
+      return failed_uids, timeouted_uids
     end
 
     def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true, raise_if_error=false)
@@ -230,6 +211,7 @@ module Astute
 
     def provision_piece(reporter, task_id, engine_attrs, nodes, provision_method)
       cobbler = CobblerManager.new(engine_attrs, reporter)
+      failed_uids = []
 
       # if provision_method is 'image', we do not need to immediately
       # reboot nodes. instead, we need to run image based provisioning
@@ -242,11 +224,13 @@ module Astute
         cobbler.netboot_nodes(nodes, false)
         # change node type to prevent unexpected erase
         change_nodes_type(reporter, task_id, nodes)
-        image_provision(reporter, task_id, nodes)
+        failed_uids |= image_provision(reporter, task_id, nodes)
       end
       # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
       reboot_events = cobbler.reboot_nodes(nodes)
-      failed_nodes = cobbler.check_reboot_nodes(reboot_events)
+      not_rebooted = cobbler.check_reboot_nodes(reboot_events)
+      not_rebooted = nodes.select { |n| not_rebooted.include?(n['slave_name'])}
+      failed_uids |= not_rebooted.map { |n| n['uid']}
 
       # control reboot for nodes which still in bootstrap state
       # Note: if the image based provisioning is used nodes are already
@@ -260,7 +244,7 @@ module Astute
       if provision_method != 'image'
         control_reboot_using_ssh(reporter, task_id, nodes)
       end
-      return failed_nodes
+      return failed_uids
     end
 
     private
@@ -369,8 +353,8 @@ module Astute
       ssh_result
     end
 
-    def unlock_nodes_discovery(reporter, task_id="", failed_nodes, nodes)
-      nodes_uids = nodes.select{ |n| failed_nodes.include?(n['slave_name']) }
+    def unlock_nodes_discovery(reporter, task_id="", failed_uids, nodes)
+      nodes_uids = nodes.select{ |n| failed_uids.include?(n['uid']) }
                         .map{ |n| n['uid'] }
       shell = MClient.new(Context.new(task_id, reporter),
                           'execute_shell_command',
@@ -454,11 +438,11 @@ module Astute
       end
     end
 
-    def should_fail(failed_nodes, fault_tolerance)
-      return failed_nodes.present? if fault_tolerance.empty?
+    def should_fail(failed_uids, fault_tolerance)
+      return failed_uids.present? if fault_tolerance.empty?
 
       fault_tolerance.each do |group|
-        failed_from_group = failed_nodes.select { |uid| group['uids'].include? uid }
+        failed_from_group = failed_uids.select { |uid| group['uids'].include? uid }
         max_to_fail = group['percentage'] / 100.0 * group['uids'].count
         if failed_from_group.count > max_to_fail
           return true
