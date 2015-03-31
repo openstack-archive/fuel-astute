@@ -141,24 +141,29 @@ module Astute
       is_success = false
 
       perform_with_limit(hook['uids']) do |node_uids|
-        retries.times do |retry_number|
-          response = run_shell_command(
-            @ctx,
-            node_uids,
-            shell_command,
-            timeout,
-            cwd
-          )
-          if response[:data][:exit_code] == 0
-            is_success = true
-            break
+        Timeout::timeout(timeout) do
+          retries.times do |retry_number|
+            response = run_shell_command(
+              @ctx,
+              node_uids,
+              shell_command,
+              timeout,
+              cwd
+            )
+            if response[:data][:exit_code] == 0
+              is_success = true
+              break
+            end
+            Astute.logger.warn("Problem while performing cmd. Try to repeat: #{retry_number} attempt")
+            sleep interval
           end
-          Astute.logger.warn("Problem while performing cmd. Try to repeat: #{retry_number} attempt")
-          sleep interval
         end
       end
 
       is_success
+    rescue Astute::MClientTimeout, Astute::MClientError, Timeout::Error => e
+      Astute.logger.error("#{@ctx.task_id}: shell timeout error: #{e.message}")
+      false
     end # shell_hook
 
 
