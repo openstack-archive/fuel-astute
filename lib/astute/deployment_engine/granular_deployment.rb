@@ -107,7 +107,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
             progress_report = process_running_node(node_id, task, nodes)
             nodes_to_report << progress_report if progress_report
           when 'error'
-            Astute.logger.error "Task '#{task}' on node #{node_id} valid, but failed"
+            Astute.logger.error "Task '#{task}' failed on node #{node_id}"
             nodes_to_report << process_fail_node(node_id, task)
           else
             raise "Internal error. Known status '#{status}', but handler not provided"
