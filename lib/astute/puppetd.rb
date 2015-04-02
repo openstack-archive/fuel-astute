@@ -19,13 +19,14 @@ require 'timeout'
 module Astute
   module PuppetdDeployer
 
-    def self.deploy(ctx, nodes, retries=2, puppet_manifest=nil, puppet_modules=nil, cwd=nil)
+    def self.deploy(ctx, nodes, retries=2, puppet_manifest=nil, puppet_modules=nil, cwd=nil, puppet_debug=false)
       @ctx = ctx
       @retries = retries
       @nodes = nodes
       @puppet_manifest = puppet_manifest || '/etc/puppet/manifests/site.pp'
       @puppet_modules = puppet_modules || '/etc/puppet/modules'
       @cwd = cwd || '/'
+      @puppet_debug = puppet_debug
 
       Astute.logger.debug "Waiting for puppet to finish deployment on all
                            nodes (timeout = #{Astute.config.puppet_timeout} sec)..."
@@ -50,7 +51,7 @@ module Astute
     end
 
     def self.puppet_task(n)
-      PuppetTask.new(@ctx, n, @retries, @puppet_manifest, @puppet_modules, @cwd)
+      PuppetTask.new(@ctx, n, @retries, @puppet_manifest, @puppet_modules, @cwd, @puppet_debug)
     end
 
   end
