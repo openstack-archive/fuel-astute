@@ -391,6 +391,20 @@ describe Astute::NailgunHooks do
       hooks.process
     end
 
+    it 'should run shell command with global timeout (including retries)' do
+      hooks = Astute::NailgunHooks.new([shell_hook], ctx)
+      hooks.stubs(:run_shell_command).once.with(
+        ctx,
+        ['1','2','3'],
+        regexp_matches(/deploy/),
+        shell_hook['parameters']['timeout'],
+        shell_hook['parameters']['cwd']
+      )
+      .raises(Timeout::Error)
+
+      expect {hooks.process}.to_not raise_error
+    end
+
     it 'should use default timeout if it does not set' do
       shell_hook['parameters'].delete('timeout')
       hooks = Astute::NailgunHooks.new([shell_hook], ctx)
@@ -454,6 +468,13 @@ describe Astute::NailgunHooks do
       it 'if exit code not presence -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
         hooks.expects(:run_shell_command).returns({:data => {}}).times(Astute.config.mc_retries)
+
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
+      end
+
+      it 'if timeout -> raise error' do
+        hooks = Astute::NailgunHooks.new([shell_hook], ctx)
+        hooks.expects(:run_shell_command).raises(Timeout::Error)
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
