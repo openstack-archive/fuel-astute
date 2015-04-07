@@ -103,7 +103,7 @@ module Astute
             dispatch_message message, service_data
           rescue StopIteration
             Astute.logger.debug "Dispatching aborted by #{message['method']}"
-            abort_messages messages[(i + 1)..-1]
+            abort_messages data[(i + 1)..-1]
             break
           rescue => ex
             Astute.logger.error "Error running RPC method #{message['method']}: #{ex.message}, " \
