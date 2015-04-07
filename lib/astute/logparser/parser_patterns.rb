@@ -239,6 +239,31 @@ module Astute
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
         },
 
+        'image-based-provisioning' =>
+          {'type' => 'pattern-list',
+           'chunk_size' => 10000,
+           'pattern_list' => [
+             {'pattern' => '*** Preparing image space ***', 'progress' => 0.01},
+             {'pattern' => 'Creating temporary chroot directory', 'progress' => 0.30},
+             {'pattern' => '*** Shipping image content ***', 'progress' => 0.40},
+             {'pattern' => 'Preventing services from being get started', 'progress' => 0.45},
+             {'pattern' => 'Installing base operating system using debootstrap', 'progress' => 0.50},
+             {'pattern' => '*** Finalizing image space ***', 'progress' => 0.60},
+             {'pattern' => '--- Provisioning (do_provisioning) ---', 'progress' => 0.71},
+             {'pattern' => '--- Partitioning disks (do_partitioning) ---', 'progress' => 0.75},
+             {'pattern' => '--- Creating configdrive (do_configdrive) ---', 'progress' => 0.80},
+             {'pattern' => 'Next chunk',
+              'number' => 500,
+              'p_min' => 0.80,
+              'p_max' => 0.90},
+             {'pattern' => 'All necessary images are available.', 'progress' => 0.70},
+             {'pattern' => '--- Installing bootloader (do_bootloader) ---', 'progress' => 0.90},
+           {'pattern' => 'Umounting target file systems', 'progress' => 0.95},
+          ],
+          'filename' => 'bootstrap/fuel-agent.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
+        },
+
         'ubuntu-provisioning' =>
           {'type' => 'supposed-time',
           'chunk_size' => 10000,
