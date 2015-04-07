@@ -172,7 +172,11 @@ describe Astute::Provisioner do
           'name_servers' => '1.2.3.4 1.2.3.100',
           'name_servers_search' => 'some.domain.tld domain.tld',
           'netboot_enabled' => '1',
-          'ks_meta' => 'some_param=1 another_param=2',
+          'ks_meta' => {
+            'gw' => '10.20.0.2',
+            'mco_enable' => 1,
+            'mco_vhost' => 'mcollective'
+          },
           'interfaces' => {
             'eth0' => {
               'mac_address' => '00:00:00:00:00:00',
@@ -816,6 +820,7 @@ describe Astute::Provisioner do
 
       data['nodes'] << {
         "uid" => '2',
+        'profile' => 'centos-x86_64',
         "slave_name"=>"controller-2",
         "admin_ip" =>'1.2.3.6'
       }
@@ -835,7 +840,7 @@ describe Astute::Provisioner do
   end # stop_provision
 
   describe 'provision_piece' do
-    let(:nodes) { [{'uid' => '1', 'slave_name' => 'node1'}] }
+    let(:nodes) { [{'uid' => '1', 'slave_name' => 'node1', 'profile' => 'centos-x86_64'}] }
     let(:engine_attrs) do
       {
         "url"=>"http://localhost/cobbler_api",
