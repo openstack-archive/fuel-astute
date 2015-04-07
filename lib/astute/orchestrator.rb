@@ -64,9 +64,21 @@ module Astute
     end
 
     def provision(reporter, task_id, provisioning_info, provision_method)
+      provisioner = Provisioner.new(@log_parsing)
       if provisioning_info['pre_provision']
         ctx = Context.new(task_id, reporter)
-        Astute::NailgunHooks.new(provisioning_info['pre_provision'], ctx, 'provision').process
+        provisioner.report_image_provision(
+          reporter,
+          task_id,
+          provisioning_info['nodes'],
+          LogParser::ParseImageBuildLogs.new
+        ) do
+          Astute::NailgunHooks.new(
+            provisioning_info['pre_provision'],
+            ctx,
+            'provision'
+          ).process
+        end
       end
 
       # NOTE(kozhukalov): Some of our pre-provision tasks need cobbler to be synced
@@ -75,7 +87,6 @@ module Astute
       cobbler = CobblerManager.new(provisioning_info['engine'], reporter)
       cobbler.sync
 
-      provisioner = Provisioner.new(@log_parsing)
       provisioner.provision(reporter, task_id, provisioning_info, provision_method)
     end
 
