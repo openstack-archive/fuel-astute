@@ -239,6 +239,39 @@ module Astute
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
         },
 
+        'provisioning-image-building' =>
+        {'type' => 'pattern-list',
+         'chunk_size' => 10000,
+         'pattern_list' => [
+           {'pattern' => 'All necessary images are available.', 'progress' => 0.80},
+           {'pattern' => '--- Building image (do_build_image) ---', 'progress' => 0.01},
+           {'pattern' => '*** Shipping image content ***', 'progress' => 0.02},
+           {'pattern' => 'Running deboostrap completed', 'progress' => 0.23},
+           {'pattern' => 'Running apt-get install completed', 'progress' => 0.64},
+           {'pattern' => '--- Building image END (do_build_image) ---', 'progress' => 0.79}
+         ],
+         'filename' => "fuel-agent-env",
+         'path_format' => "/var/log/<%= @pattern_spec['filename']%>-<%= @pattern_spec['cluster_id']%>.log"
+        },
+
+        'image-based-provisioning' =>
+          {'type' => 'pattern-list',
+           'chunk_size' => 10000,
+           'pattern_list' => [
+             {'pattern' => '--- Provisioning (do_provisioning) ---', 'progress' => 0.81},
+             {'pattern' => '--- Partitioning disks (do_partitioning) ---', 'progress' => 0.85},
+             {'pattern' => '--- Creating configdrive (do_configdrive) ---', 'progress' => 0.90},
+             {'pattern' => 'Next chunk',
+              'number' => 500,
+              'p_min' => 0.90,
+              'p_max' => 0.96},
+             {'pattern' => '--- Installing bootloader (do_bootloader) ---', 'progress' => 0.97},
+           {'pattern' => 'Umounting target file systems', 'progress' => 0.98},
+          ],
+          'filename' => 'bootstrap/fuel-agent.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
+        },
+
         'ubuntu-provisioning' =>
           {'type' => 'supposed-time',
           'chunk_size' => 10000,
