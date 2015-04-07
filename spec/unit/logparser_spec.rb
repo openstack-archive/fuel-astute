@@ -109,21 +109,24 @@ describe LogParser do
   end
 
   context "Correlation coeff. (PCC) of Provisioning progress bar calculation" do
-    def provision_parser_wrapper(node)
+    def provision_parser_wrapper(
+        node,
+        deploy_parser=Astute::LogParser::ParseProvisionLogs.new,
+        date_regexp = '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
+        date_format = '%Y-%m-%dT%H:%M:%S',
+        path = nil
+        )
       uids = [node['uid']]
       nodes = [node]
       time_delta = 5.0/24/60/60
       log_delay = 6*time_delta
-      date_regexp = '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'
-      date_format = '%Y-%m-%dT%H:%M:%S'
 
       Dir.mktmpdir do |dir|
         Astute::LogParser::PATH_PREFIX.replace("#{dir}/")
-        deploy_parser = Astute::LogParser::ParseProvisionLogs.new
+        Astute::LogParser::ParseImageBuildLogs::PATH_PREFIX.replace("#{dir}/")
         pattern_spec = deploy_parser.get_pattern_for_node(node)
         # Create temp log files and structures.
-        path = "#{pattern_spec['path_prefix']}#{node['hostname']}/#{pattern_spec['filename']}"
-
+        path = "#{pattern_spec['path_prefix']}" + (path || "#{node['hostname']}/#{pattern_spec['filename']}")
         FileUtils.mkdir_p(File.dirname(path))
         node['file'] = File.open(path, 'w')
         src_filename = File.join(File.dirname(__FILE__), "..", "example-logs", node['src_filename'])
@@ -153,7 +156,6 @@ describe LogParser do
         # Clear temp files.
         node['file'].close
         File.unlink(node['file'].path)
-        Dir.unlink(File.dirname(node['file'].path))
       end
 
       return node
@@ -183,6 +185,26 @@ describe LogParser do
 
       calculated_node = provision_parser_wrapper(node)
       calculated_node['statistics']['pcc'].should > 0.96
+    end
+
+    it "should be greather than 0.98 for Image Based Provisioning" do
+      node = {
+        'uid' => '1',
+        'ip' => '1.0.0.1',
+        'hostname' => 'slave-1.domain.tld',
+        'role' => 'controller',
+        'src_filename' => 'fuel-agent-env-1.log_',
+        'profile' => 'ubuntu_1404_x86_64'}
+
+      deploy_parser = Astute::LogParser::ParseImageBuildLogs.new
+      deploy_parser.cluster_id = 1
+      calculated_node = provision_parser_wrapper(
+        node,
+        deploy_parser,
+        date_regexp = '^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}',
+        date_format = '%Y-%m-%d %H:%M:%S',
+        path="fuel-agent-env-1.log")
+      calculated_node['statistics']['pcc'].should > 0.98
     end
 
   end
