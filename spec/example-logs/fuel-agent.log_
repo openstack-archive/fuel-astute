@@ -1,0 +1,1284 @@
+2015-03-30 13:54:51.700 29297 DEBUG stevedore.extension [-] found extension EntryPoint.parse('nailgun = fuel_agent.drivers.nailgun:Nailgun')
+2015-03-30 13:54:51.742 29297 DEBUG fuel_agent.manager [-] --- Provisioning (do_provisioning) ---
+2015-03-30 13:54:51.742 29297 DEBUG fuel_agent.manager [-] --- Parsing data (do_parsing) ---
+2015-03-30 13:54:51.742 29297 DEBUG fuel_agent.drivers.nailgun [-] --- Preparing partition scheme ---
+2015-03-30 13:54:51.761 29297 DEBUG fuel_agent.drivers.nailgun [-] Looping over all disks in provision data
+2015-03-30 13:54:51.762 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing disk sda
+2015-03-30 13:54:51.762 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding gpt table on disk sda
+2015-03-30 13:54:51.762 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --report
+2015-03-30 13:54:51.765 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb
+2015-03-30 13:54:51.768 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb
+2015-03-30 13:54:51.771 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb1
+2015-03-30 13:54:51.774 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb1
+2015-03-30 13:54:51.777 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb2
+2015-03-30 13:54:51.780 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb2
+2015-03-30 13:54:51.783 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb3
+2015-03-30 13:54:51.786 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb3
+2015-03-30 13:54:51.789 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb4
+2015-03-30 13:54:51.792 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb4
+2015-03-30 13:54:51.794 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda
+2015-03-30 13:54:51.797 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda
+2015-03-30 13:54:51.800 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda1
+2015-03-30 13:54:51.803 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda1
+2015-03-30 13:54:51.806 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda2
+2015-03-30 13:54:51.809 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda2
+2015-03-30 13:54:51.812 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda3
+2015-03-30 13:54:51.815 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda3
+2015-03-30 13:54:51.818 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda4
+2015-03-30 13:54:51.821 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda4
+2015-03-30 13:54:51.823 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda5
+2015-03-30 13:54:51.827 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda5
+2015-03-30 13:54:51.829 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda6
+2015-03-30 13:54:51.832 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda6
+2015-03-30 13:54:51.835 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/md127
+2015-03-30 13:54:51.838 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/md127
+2015-03-30 13:54:51.841 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/dm-0
+2015-03-30 13:54:51.844 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/dm-0
+2015-03-30 13:54:51.846 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/dm-1
+2015-03-30 13:54:51.849 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/dm-1
+2015-03-30 13:54:51.852 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/dm-2
+2015-03-30 13:54:51.855 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/dm-2
+2015-03-30 13:54:51.858 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding bootloader stage0 on disk sda
+2015-03-30 13:54:51.858 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding bios_grub partition on disk sda: size=24
+2015-03-30 13:54:51.858 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding UEFI partition on disk sda: size=200
+2015-03-30 13:54:51.858 29297 DEBUG fuel_agent.drivers.nailgun [-] Looping over all volumes on disk sda
+2015-03-30 13:54:51.859 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=None type=boot size=300 mount=None vg=None
+2015-03-30 13:54:51.859 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=Boot type=raid size=200 mount=/boot vg=None
+2015-03-30 13:54:51.859 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding partition on disk sda: size=200
+2015-03-30 13:54:51.859 29297 DEBUG fuel_agent.drivers.nailgun [-] Partition name: /dev/sda3
+2015-03-30 13:54:51.859 29297 DEBUG fuel_agent.drivers.nailgun [-] Attaching partition to RAID by its mount point /boot
+2015-03-30 13:54:51.859 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=None type=lvm_meta_pool size=0 mount=None vg=None
+2015-03-30 13:54:51.860 29297 DEBUG fuel_agent.drivers.nailgun [-] Volume size is zero. Skipping.
+2015-03-30 13:54:51.860 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=None type=pv size=31808 mount=None vg=os
+2015-03-30 13:54:51.860 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding partition on disk sda: size=31808
+2015-03-30 13:54:51.860 29297 DEBUG fuel_agent.drivers.nailgun [-] Partition name: /dev/sda4
+2015-03-30 13:54:51.860 29297 DEBUG fuel_agent.drivers.nailgun [-] Creating pv on partition: pv=/dev/sda4 vg=os
+2015-03-30 13:54:51.860 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=cephjournal type=partition size=0 mount=none vg=None
+2015-03-30 13:54:51.860 29297 DEBUG fuel_agent.drivers.nailgun [-] Volume size is zero. Skipping.
+2015-03-30 13:54:51.861 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=ceph type=partition size=0 mount=none vg=None
+2015-03-30 13:54:51.861 29297 DEBUG fuel_agent.drivers.nailgun [-] Volume size is zero. Skipping.
+2015-03-30 13:54:51.861 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=None type=pv size=44011 mount=None vg=vm
+2015-03-30 13:54:51.861 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding partition on disk sda: size=44011
+2015-03-30 13:54:51.861 29297 DEBUG fuel_agent.drivers.nailgun [-] Partition name: /dev/sda5
+2015-03-30 13:54:51.861 29297 DEBUG fuel_agent.drivers.nailgun [-] Creating pv on partition: pv=/dev/sda5 vg=vm
+2015-03-30 13:54:51.861 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding configdrive partition on disk sda: size=20
+2015-03-30 13:54:51.862 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing disk sdb
+2015-03-30 13:54:51.862 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding gpt table on disk sdb
+2015-03-30 13:54:51.862 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding bootloader stage0 on disk sdb
+2015-03-30 13:54:51.862 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding bios_grub partition on disk sdb: size=24
+2015-03-30 13:54:51.862 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding UEFI partition on disk sdb: size=200
+2015-03-30 13:54:51.862 29297 DEBUG fuel_agent.drivers.nailgun [-] Looping over all volumes on disk sdb
+2015-03-30 13:54:51.863 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=None type=boot size=300 mount=None vg=None
+2015-03-30 13:54:51.863 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=Boot type=raid size=200 mount=/boot vg=None
+2015-03-30 13:54:51.863 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding partition on disk sdb: size=200
+2015-03-30 13:54:51.863 29297 DEBUG fuel_agent.drivers.nailgun [-] Partition name: /dev/sdb3
+2015-03-30 13:54:51.863 29297 DEBUG fuel_agent.drivers.nailgun [-] Attaching partition to RAID by its mount point /boot
+2015-03-30 13:54:51.863 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=None type=lvm_meta_pool size=128 mount=None vg=None
+2015-03-30 13:54:51.863 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=None type=pv size=0 mount=None vg=os
+2015-03-30 13:54:51.864 29297 DEBUG fuel_agent.drivers.nailgun [-] Volume size is zero. Skipping.
+2015-03-30 13:54:51.864 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=cephjournal type=partition size=0 mount=none vg=None
+2015-03-30 13:54:51.864 29297 DEBUG fuel_agent.drivers.nailgun [-] Volume size is zero. Skipping.
+2015-03-30 13:54:51.864 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=ceph type=partition size=953241 mount=none vg=None
+2015-03-30 13:54:51.864 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding partition on disk sdb: size=953241
+2015-03-30 13:54:51.864 29297 DEBUG fuel_agent.drivers.nailgun [-] Partition name: /dev/sdb4
+2015-03-30 13:54:51.864 29297 DEBUG fuel_agent.drivers.nailgun [-] Setting partition GUID: 4fbd7e29-9d25-41b8-afd0-062c0ceff05d
+2015-03-30 13:54:51.864 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing volume: name=None type=pv size=0 mount=None vg=vm
+2015-03-30 13:54:51.865 29297 DEBUG fuel_agent.drivers.nailgun [-] Volume size is zero. Skipping.
+2015-03-30 13:54:51.865 29297 DEBUG fuel_agent.drivers.nailgun [-] Looping over all volume groups in provision data
+2015-03-30 13:54:51.865 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing vg os
+2015-03-30 13:54:51.865 29297 DEBUG fuel_agent.drivers.nailgun [-] Looping over all logical volumes in vg os
+2015-03-30 13:54:51.865 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing lv root
+2015-03-30 13:54:51.865 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding lv to vg os: name=root, size=15360
+2015-03-30 13:54:51.865 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding file system on lv: mount=/ type=ext4
+2015-03-30 13:54:51.866 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing lv swap
+2015-03-30 13:54:51.866 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding lv to vg os: name=swap, size=16384
+2015-03-30 13:54:51.866 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding file system on lv: mount=swap type=swap
+2015-03-30 13:54:51.866 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing vg vm
+2015-03-30 13:54:51.866 29297 DEBUG fuel_agent.drivers.nailgun [-] Looping over all logical volumes in vg vm
+2015-03-30 13:54:51.866 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing lv nova
+2015-03-30 13:54:51.866 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding lv to vg vm: name=nova, size=43947
+2015-03-30 13:54:51.867 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding file system on lv: mount=/var/lib/nova type=xfs
+2015-03-30 13:54:51.867 29297 DEBUG fuel_agent.drivers.nailgun [-] Appending kernel parameters: console=ttyS0,9600 console=tty0 rootdelay=90 nomodeset
+2015-03-30 13:54:51.867 29297 DEBUG fuel_agent.drivers.nailgun [-] --- Preparing configdrive scheme ---
+2015-03-30 13:54:51.867 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding common parameters
+2015-03-30 13:54:51.867 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding puppet parameters
+2015-03-30 13:54:51.867 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding mcollective parameters
+2015-03-30 13:54:51.867 29297 DEBUG fuel_agent.drivers.nailgun [-] Setting configdrive profile ubuntu_1404_x86_64
+2015-03-30 13:54:51.868 29297 DEBUG fuel_agent.drivers.nailgun [-] --- Preparing image scheme ---
+2015-03-30 13:54:51.868 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.yaml, byte range: 0
+2015-03-30 13:54:51.880 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:54:51.881 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:54:51.881 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64.yaml HTTP/1.1" 206 2991
+2015-03-30 13:54:51.882 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.yaml on 1 retry
+2015-03-30 13:54:51.916 29297 DEBUG fuel_agent.drivers.nailgun [-] Looping over all file systems in partition scheme
+2015-03-30 13:54:51.916 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing fs /boot
+2015-03-30 13:54:51.916 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding image for fs /boot: uri=http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz format=ext2 container=gzip
+2015-03-30 13:54:51.916 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing fs /
+2015-03-30 13:54:51.917 29297 DEBUG fuel_agent.drivers.nailgun [-] Adding image for fs /: uri=http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz format=ext4 container=gzip
+2015-03-30 13:54:51.917 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing fs swap
+2015-03-30 13:54:51.917 29297 DEBUG fuel_agent.drivers.nailgun [-] There is no image for fs swap. Skipping.
+2015-03-30 13:54:51.917 29297 DEBUG fuel_agent.drivers.nailgun [-] Processing fs /var/lib/nova
+2015-03-30 13:54:51.917 29297 DEBUG fuel_agent.drivers.nailgun [-] There is no image for fs /var/lib/nova. Skipping.
+2015-03-30 13:54:51.917 29297 DEBUG fuel_agent.manager [-] --- Partitioning disks (do_partitioning) ---
+2015-03-30 13:54:51.917 29297 DEBUG fuel_agent.utils.md_utils [-] Trying to wipe out all md devices
+2015-03-30 13:54:51.918 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mdadm --detail /dev/md127
+2015-03-30 13:54:51.923 29297 DEBUG fuel_agent.utils.md_utils [-] Found md devices: [{'name': '/dev/md127', 'Raid Level': 'raid1', 'devices': ['/dev/sda3', '/dev/sdb3'], 'UUID': 'bootstrap)', 'Failed Devices': '0', 'State': 'clean', 'Version': '0.90', 'Spare Devices': '0', 'Active Devices': '2', 'Raid Devices': '2'}]
+2015-03-30 13:54:51.924 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:51.927 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mdadm --stop /dev/md127
+2015-03-30 13:54:52.009 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mdadm --remove /dev/md127
+2015-03-30 13:54:52.012 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mdadm --zero-superblock --force /dev/sda3
+2015-03-30 13:54:52.019 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mdadm --zero-superblock --force /dev/sdb3
+2015-03-30 13:54:52.182 29297 DEBUG fuel_agent.utils.md_utils [-] Found md devices: []
+2015-03-30 13:54:52.182 29297 DEBUG fuel_agent.utils.md_utils [-] Found md devices: []
+2015-03-30 13:54:52.182 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvdisplay -C --noheading --units m --options lv_name,lv_size,vg_name,lv_uuid --separator ;
+2015-03-30 13:54:52.259 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found logical volumes: [{'path': '/dev/os/root', 'uuid': 't2igMA-REbk-d6j0-ytEP-DCrj-QIAY-XWuACO', 'vg': 'os', 'name': 'root', 'size': 15360}, {'path': '/dev/os/swap', 'uuid': 'BB30HT-XRSJ-TkhT-NDq2-3Ymy-0Qru-HeLs8c', 'vg': 'os', 'name': 'swap', 'size': 16384}, {'path': '/dev/vm/nova', 'uuid': 'zASjme-GRDY-pWg4-svHZ-2fLW-c2dv-zxYLm1', 'vg': 'vm', 'name': 'nova', 'size': 43948}]
+2015-03-30 13:54:52.259 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvdisplay -C --noheading --units m --options lv_name,lv_size,vg_name,lv_uuid --separator ;
+2015-03-30 13:54:52.273 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found logical volumes: [{'path': '/dev/os/root', 'uuid': 't2igMA-REbk-d6j0-ytEP-DCrj-QIAY-XWuACO', 'vg': 'os', 'name': 'root', 'size': 15360}, {'path': '/dev/os/swap', 'uuid': 'BB30HT-XRSJ-TkhT-NDq2-3Ymy-0Qru-HeLs8c', 'vg': 'os', 'name': 'swap', 'size': 16384}, {'path': '/dev/vm/nova', 'uuid': 'zASjme-GRDY-pWg4-svHZ-2fLW-c2dv-zxYLm1', 'vg': 'vm', 'name': 'nova', 'size': 43948}]
+2015-03-30 13:54:52.273 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvremove -f /dev/os/root
+2015-03-30 13:54:52.297 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvdisplay -C --noheading --units m --options lv_name,lv_size,vg_name,lv_uuid --separator ;
+2015-03-30 13:54:52.315 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found logical volumes: [{'path': '/dev/os/swap', 'uuid': 'BB30HT-XRSJ-TkhT-NDq2-3Ymy-0Qru-HeLs8c', 'vg': 'os', 'name': 'swap', 'size': 16384}, {'path': '/dev/vm/nova', 'uuid': 'zASjme-GRDY-pWg4-svHZ-2fLW-c2dv-zxYLm1', 'vg': 'vm', 'name': 'nova', 'size': 43948}]
+2015-03-30 13:54:52.315 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvremove -f /dev/os/swap
+2015-03-30 13:54:52.342 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvdisplay -C --noheading --units m --options lv_name,lv_size,vg_name,lv_uuid --separator ;
+2015-03-30 13:54:52.358 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found logical volumes: [{'path': '/dev/vm/nova', 'uuid': 'zASjme-GRDY-pWg4-svHZ-2fLW-c2dv-zxYLm1', 'vg': 'vm', 'name': 'nova', 'size': 43948}]
+2015-03-30 13:54:52.358 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvremove -f /dev/vm/nova
+2015-03-30 13:54:52.382 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgdisplay -C --noheading --units m --options vg_name,vg_uuid,vg_size,vg_free --separator ;
+2015-03-30 13:54:52.399 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found volume groups: [{'size': 31748, 'name': 'os', 'free': 31748, 'uuid': 'qeNtRp-YEgd-HS5l-f04h-0qTB-63ab-ptue0m'}, {'size': 43952, 'name': 'vm', 'free': 43952, 'uuid': '3DO9er-vhUy-jGPS-ikFl-Bg1r-pa9d-LUUEm9'}]
+2015-03-30 13:54:52.399 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgdisplay -C --noheading --units m --options vg_name,vg_uuid,vg_size,vg_free --separator ;
+2015-03-30 13:54:52.414 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found volume groups: [{'size': 31748, 'name': 'os', 'free': 31748, 'uuid': 'qeNtRp-YEgd-HS5l-f04h-0qTB-63ab-ptue0m'}, {'size': 43952, 'name': 'vm', 'free': 43952, 'uuid': '3DO9er-vhUy-jGPS-ikFl-Bg1r-pa9d-LUUEm9'}]
+2015-03-30 13:54:52.415 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgremove -f os
+2015-03-30 13:54:52.428 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgdisplay -C --noheading --units m --options vg_name,vg_uuid,vg_size,vg_free --separator ;
+2015-03-30 13:54:52.440 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found volume groups: [{'size': 43952, 'name': 'vm', 'free': 43952, 'uuid': '3DO9er-vhUy-jGPS-ikFl-Bg1r-pa9d-LUUEm9'}]
+2015-03-30 13:54:52.441 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgremove -f vm
+2015-03-30 13:54:52.455 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvdisplay -C --noheading --units m --options pv_name,vg_name,pv_size,dev_size,pv_uuid --separator ;
+2015-03-30 13:54:52.643 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found physical volumes: [{'uuid': 'lQCdK1-KSUQ-2r3b-Q3vY-b16J-oaXG-WeRHDt', 'devsize': 31808, 'name': '/dev/sda4', 'psize': 31808, 'vg': None}, {'uuid': 'EjpF6h-rVak-OKOR-XchZ-CQMS-Brck-5AtZCT', 'devsize': 44011, 'name': '/dev/sda5', 'psize': 44011, 'vg': None}]
+2015-03-30 13:54:52.643 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvdisplay -C --noheading --units m --options pv_name,vg_name,pv_size,dev_size,pv_uuid --separator ;
+2015-03-30 13:54:52.792 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found physical volumes: [{'uuid': 'lQCdK1-KSUQ-2r3b-Q3vY-b16J-oaXG-WeRHDt', 'devsize': 31808, 'name': '/dev/sda4', 'psize': 31808, 'vg': None}, {'uuid': 'EjpF6h-rVak-OKOR-XchZ-CQMS-Brck-5AtZCT', 'devsize': 44011, 'name': '/dev/sda5', 'psize': 44011, 'vg': None}]
+2015-03-30 13:54:52.793 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvremove -ff -y /dev/sda4
+2015-03-30 13:54:52.811 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvdisplay -C --noheading --units m --options pv_name,vg_name,pv_size,dev_size,pv_uuid --separator ;
+2015-03-30 13:54:52.829 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found physical volumes: [{'uuid': 'EjpF6h-rVak-OKOR-XchZ-CQMS-Brck-5AtZCT', 'devsize': 44011, 'name': '/dev/sda5', 'psize': 44011, 'vg': None}]
+2015-03-30 13:54:52.829 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvremove -ff -y /dev/sda5
+2015-03-30 13:54:52.847 29297 DEBUG fuel_agent.manager [-] Enabling udev's rules blacklisting
+2015-03-30 13:54:52.849 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm control --reload-rules
+2015-03-30 13:54:52.851 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=0 count=5 of=/dev/sda
+2015-03-30 13:54:52.900 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=22 count=5 of=/dev/sda
+2015-03-30 13:54:52.947 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=22 count=5 of=/dev/sda
+2015-03-30 13:54:52.995 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=222 count=5 of=/dev/sda
+2015-03-30 13:54:53.043 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=222 count=5 of=/dev/sda
+2015-03-30 13:54:53.091 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=422 count=5 of=/dev/sda
+2015-03-30 13:54:53.139 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=422 count=5 of=/dev/sda
+2015-03-30 13:54:53.188 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=32230 count=5 of=/dev/sda
+2015-03-30 13:54:53.237 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=32230 count=5 of=/dev/sda
+2015-03-30 13:54:53.284 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=76241 count=5 of=/dev/sda
+2015-03-30 13:54:53.332 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=76241 count=5 of=/dev/sda
+2015-03-30 13:54:53.381 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=76261 count=5 of=/dev/sda
+2015-03-30 13:54:53.429 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=0 count=5 of=/dev/sdb
+2015-03-30 13:54:53.446 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=22 count=5 of=/dev/sdb
+2015-03-30 13:54:53.464 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=22 count=5 of=/dev/sdb
+2015-03-30 13:54:53.481 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=222 count=5 of=/dev/sdb
+2015-03-30 13:54:53.499 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=222 count=5 of=/dev/sdb
+2015-03-30 13:54:53.516 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=422 count=5 of=/dev/sdb
+2015-03-30 13:54:53.534 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=422 count=5 of=/dev/sdb
+2015-03-30 13:54:53.552 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: dd if=/dev/zero bs=1M seek=953663 count=5 of=/dev/sdb
+2015-03-30 13:54:53.570 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create gpt partition table on device /dev/sda
+2015-03-30 13:54:53.570 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.573 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sda mklabel gpt
+2015-03-30 13:54:53.609 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:53.609 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sda begin=1 end=25
+2015-03-30 13:54:53.610 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.612 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sda -m unit MiB print free
+2015-03-30 13:54:53.618 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sda:76319MiB:scsi:512:4096:gpt:ATA INTEL SSDSC2BB08;
+1:0.02MiB:76319MiB:76319MiB:free;
+
+2015-03-30 13:54:53.618 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sda', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA INTEL SSDSC2BB08', 'size': 76319}, 'parts': [{'begin': 1, 'num': 1, 'end': 76319, 'fstype': 'free', 'size': 76319}]}
+2015-03-30 13:54:53.619 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.621 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sda unit MiB mkpart primary 1 25
+2015-03-30 13:54:53.648 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:53.649 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to set partition flag: dev=/dev/sda num=1 flag=bios_grub state=on
+2015-03-30 13:54:53.649 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.652 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sda set 1 bios_grub on
+2015-03-30 13:54:53.675 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:53.675 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sda begin=25 end=225
+2015-03-30 13:54:53.675 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.678 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sda -m unit MiB print free
+2015-03-30 13:54:53.684 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sda:76319MiB:scsi:512:4096:gpt:ATA INTEL SSDSC2BB08;
+1:0.02MiB:1.00MiB:0.98MiB:free;
+1:1.00MiB:25.0MiB:24.0MiB::primary:bios_grub;
+1:25.0MiB:76319MiB:76294MiB:free;
+
+2015-03-30 13:54:53.685 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sda', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA INTEL SSDSC2BB08', 'size': 76319}, 'parts': [{'begin': 1, 'num': 1, 'end': 1, 'fstype': 'free', 'size': 1}, {'begin': 1, 'num': 1, 'end': 25, 'fstype': None, 'size': 24}, {'begin': 25, 'num': 1, 'end': 76319, 'fstype': 'free', 'size': 76294}]}
+2015-03-30 13:54:53.685 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.688 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sda unit MiB mkpart primary 25 225
+2015-03-30 13:54:53.711 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:53.711 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sda begin=225 end=425
+2015-03-30 13:54:53.711 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.714 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sda -m unit MiB print free
+2015-03-30 13:54:53.721 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sda:76319MiB:scsi:512:4096:gpt:ATA INTEL SSDSC2BB08;
+1:0.02MiB:1.00MiB:0.98MiB:free;
+1:1.00MiB:25.0MiB:24.0MiB::primary:bios_grub;
+2:25.0MiB:225MiB:200MiB::primary:;
+1:225MiB:76319MiB:76094MiB:free;
+
+2015-03-30 13:54:53.722 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sda', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA INTEL SSDSC2BB08', 'size': 76319}, 'parts': [{'begin': 1, 'num': 1, 'end': 1, 'fstype': 'free', 'size': 1}, {'begin': 1, 'num': 1, 'end': 25, 'fstype': None, 'size': 24}, {'begin': 25, 'num': 2, 'end': 225, 'fstype': None, 'size': 200}, {'begin': 225, 'num': 1, 'end': 76319, 'fstype': 'free', 'size': 76094}]}
+2015-03-30 13:54:53.722 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.725 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sda unit MiB mkpart primary 225 425
+2015-03-30 13:54:53.748 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:53.748 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sda begin=425 end=32233
+2015-03-30 13:54:53.749 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.751 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sda -m unit MiB print free
+2015-03-30 13:54:53.760 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sda:76319MiB:scsi:512:4096:gpt:ATA INTEL SSDSC2BB08;
+1:0.02MiB:1.00MiB:0.98MiB:free;
+1:1.00MiB:25.0MiB:24.0MiB::primary:bios_grub;
+2:25.0MiB:225MiB:200MiB::primary:;
+3:225MiB:425MiB:200MiB::primary:;
+1:425MiB:76319MiB:75894MiB:free;
+
+2015-03-30 13:54:53.760 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sda', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA INTEL SSDSC2BB08', 'size': 76319}, 'parts': [{'begin': 1, 'num': 1, 'end': 1, 'fstype': 'free', 'size': 1}, {'begin': 1, 'num': 1, 'end': 25, 'fstype': None, 'size': 24}, {'begin': 25, 'num': 2, 'end': 225, 'fstype': None, 'size': 200}, {'begin': 225, 'num': 3, 'end': 425, 'fstype': None, 'size': 200}, {'begin': 425, 'num': 1, 'end': 76319, 'fstype': 'free', 'size': 75894}]}
+2015-03-30 13:54:53.760 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.763 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sda unit MiB mkpart primary 425 32233
+2015-03-30 13:54:53.792 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:53.792 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sda begin=32233 end=76244
+2015-03-30 13:54:53.792 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.795 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sda -m unit MiB print free
+2015-03-30 13:54:53.804 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sda:76319MiB:scsi:512:4096:gpt:ATA INTEL SSDSC2BB08;
+1:0.02MiB:1.00MiB:0.98MiB:free;
+1:1.00MiB:25.0MiB:24.0MiB::primary:bios_grub;
+2:25.0MiB:225MiB:200MiB::primary:;
+3:225MiB:425MiB:200MiB::primary:;
+4:425MiB:32233MiB:31808MiB::primary:;
+1:32233MiB:76319MiB:44086MiB:free;
+
+2015-03-30 13:54:53.805 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sda', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA INTEL SSDSC2BB08', 'size': 76319}, 'parts': [{'begin': 1, 'num': 1, 'end': 1, 'fstype': 'free', 'size': 1}, {'begin': 1, 'num': 1, 'end': 25, 'fstype': None, 'size': 24}, {'begin': 25, 'num': 2, 'end': 225, 'fstype': None, 'size': 200}, {'begin': 225, 'num': 3, 'end': 425, 'fstype': None, 'size': 200}, {'begin': 425, 'num': 4, 'end': 32233, 'fstype': None, 'size': 31808}, {'begin': 32233, 'num': 1, 'end': 76319, 'fstype': 'free', 'size': 44086}]}
+2015-03-30 13:54:53.805 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.808 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sda unit MiB mkpart primary 32233 76244
+2015-03-30 13:54:53.846 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:53.846 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sda begin=76244 end=76264
+2015-03-30 13:54:53.846 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.849 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sda -m unit MiB print free
+2015-03-30 13:54:53.861 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sda:76319MiB:scsi:512:4096:gpt:ATA INTEL SSDSC2BB08;
+1:0.02MiB:1.00MiB:0.98MiB:free;
+1:1.00MiB:25.0MiB:24.0MiB::primary:bios_grub;
+2:25.0MiB:225MiB:200MiB::primary:;
+3:225MiB:425MiB:200MiB::primary:;
+4:425MiB:32233MiB:31808MiB::primary:;
+5:32233MiB:76244MiB:44011MiB::primary:;
+1:76244MiB:76319MiB:75.1MiB:free;
+
+2015-03-30 13:54:53.862 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sda', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA INTEL SSDSC2BB08', 'size': 76319}, 'parts': [{'begin': 1, 'num': 1, 'end': 1, 'fstype': 'free', 'size': 1}, {'begin': 1, 'num': 1, 'end': 25, 'fstype': None, 'size': 24}, {'begin': 25, 'num': 2, 'end': 225, 'fstype': None, 'size': 200}, {'begin': 225, 'num': 3, 'end': 425, 'fstype': None, 'size': 200}, {'begin': 425, 'num': 4, 'end': 32233, 'fstype': None, 'size': 31808}, {'begin': 32233, 'num': 5, 'end': 76244, 'fstype': None, 'size': 44011}, {'begin': 76244, 'num': 1, 'end': 76319, 'fstype': 'free', 'size': 76}]}
+2015-03-30 13:54:53.862 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.865 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sda unit MiB mkpart primary 76244 76264
+2015-03-30 13:54:53.903 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:53.903 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create gpt partition table on device /dev/sdb
+2015-03-30 13:54:53.904 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:53.906 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sdb mklabel gpt
+2015-03-30 13:54:54.427 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:54.428 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sdb begin=1 end=25
+2015-03-30 13:54:54.428 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:54.431 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sdb -m unit MiB print free
+2015-03-30 13:54:54.436 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sdb:953870MiB:scsi:512:4096:gpt:ATA WDC WD1003FZEX-0;
+1:0.02MiB:953870MiB:953870MiB:free;
+
+2015-03-30 13:54:54.436 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sdb', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA WDC WD1003FZEX-0', 'size': 953870}, 'parts': [{'begin': 1, 'num': 1, 'end': 953870, 'fstype': 'free', 'size': 953870}]}
+2015-03-30 13:54:54.436 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:54.439 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sdb unit MiB mkpart primary 1 25
+2015-03-30 13:54:54.635 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:54.636 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to set partition flag: dev=/dev/sdb num=1 flag=bios_grub state=on
+2015-03-30 13:54:54.636 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:54.639 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sdb set 1 bios_grub on
+2015-03-30 13:54:54.835 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:54.835 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sdb begin=25 end=225
+2015-03-30 13:54:54.835 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:54.838 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sdb -m unit MiB print free
+2015-03-30 13:54:54.844 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sdb:953870MiB:scsi:512:4096:gpt:ATA WDC WD1003FZEX-0;
+1:0.02MiB:1.00MiB:0.98MiB:free;
+1:1.00MiB:25.0MiB:24.0MiB::primary:bios_grub;
+1:25.0MiB:953870MiB:953845MiB:free;
+
+2015-03-30 13:54:54.844 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sdb', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA WDC WD1003FZEX-0', 'size': 953870}, 'parts': [{'begin': 1, 'num': 1, 'end': 1, 'fstype': 'free', 'size': 1}, {'begin': 1, 'num': 1, 'end': 25, 'fstype': None, 'size': 24}, {'begin': 25, 'num': 1, 'end': 953870, 'fstype': 'free', 'size': 953845}]}
+2015-03-30 13:54:54.845 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:54.847 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sdb unit MiB mkpart primary 25 225
+2015-03-30 13:54:55.052 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:55.052 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sdb begin=225 end=425
+2015-03-30 13:54:55.052 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:55.055 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sdb -m unit MiB print free
+2015-03-30 13:54:55.135 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sdb:953870MiB:scsi:512:4096:gpt:ATA WDC WD1003FZEX-0;
+1:0.02MiB:1.00MiB:0.98MiB:free;
+1:1.00MiB:25.0MiB:24.0MiB::primary:bios_grub;
+2:25.0MiB:225MiB:200MiB::primary:;
+1:225MiB:953870MiB:953645MiB:free;
+
+2015-03-30 13:54:55.136 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sdb', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA WDC WD1003FZEX-0', 'size': 953870}, 'parts': [{'begin': 1, 'num': 1, 'end': 1, 'fstype': 'free', 'size': 1}, {'begin': 1, 'num': 1, 'end': 25, 'fstype': None, 'size': 24}, {'begin': 25, 'num': 2, 'end': 225, 'fstype': None, 'size': 200}, {'begin': 225, 'num': 1, 'end': 953870, 'fstype': 'free', 'size': 953645}]}
+2015-03-30 13:54:55.136 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:55.139 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sdb unit MiB mkpart primary 225 425
+2015-03-30 13:54:55.326 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:55.327 29297 DEBUG fuel_agent.utils.partition_utils [-] Trying to create a partition: dev=/dev/sdb begin=425 end=953666
+2015-03-30 13:54:55.327 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:55.330 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -s /dev/sdb -m unit MiB print free
+2015-03-30 13:54:55.413 29297 DEBUG fuel_agent.utils.partition_utils [-] Info output:
+BYT;
+/dev/sdb:953870MiB:scsi:512:4096:gpt:ATA WDC WD1003FZEX-0;
+1:0.02MiB:1.00MiB:0.98MiB:free;
+1:1.00MiB:25.0MiB:24.0MiB::primary:bios_grub;
+2:25.0MiB:225MiB:200MiB::primary:;
+3:225MiB:425MiB:200MiB::primary:;
+1:425MiB:953870MiB:953445MiB:free;
+
+2015-03-30 13:54:55.414 29297 DEBUG fuel_agent.utils.partition_utils [-] Info result: {'generic': {'dev': '/dev/sdb', 'physical_block': 4096, 'table': 'gpt', 'logical_block': 512, 'model': 'ATA WDC WD1003FZEX-0', 'size': 953870}, 'parts': [{'begin': 1, 'num': 1, 'end': 1, 'fstype': 'free', 'size': 1}, {'begin': 1, 'num': 1, 'end': 25, 'fstype': None, 'size': 24}, {'begin': 25, 'num': 2, 'end': 225, 'fstype': None, 'size': 200}, {'begin': 225, 'num': 3, 'end': 425, 'fstype': None, 'size': 200}, {'begin': 425, 'num': 1, 'end': 953870, 'fstype': 'free', 'size': 953445}]}
+2015-03-30 13:54:55.414 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:55.417 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: parted -a optimal -s /dev/sdb unit MiB mkpart primary 425 953666
+2015-03-30 13:54:55.602 29297 DEBUG fuel_agent.utils.partition_utils [-] Parted output:
+
+2015-03-30 13:54:55.602 29297 DEBUG fuel_agent.utils.partition_utils [-] Setting partition GUID: dev=/dev/sdb num=4 guid=4fbd7e29-9d25-41b8-afd0-062c0ceff05d
+2015-03-30 13:54:55.602 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm settle --quiet
+2015-03-30 13:54:55.605 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: sgdisk --typecode=4:4fbd7e29-9d25-41b8-afd0-062c0ceff05d /dev/sdb
+2015-03-30 13:54:56.627 29297 DEBUG fuel_agent.manager [-] Disabling udev's rules blacklisting
+2015-03-30 13:54:56.628 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm control --reload-rules
+2015-03-30 13:54:56.631 29297 DEBUG fuel_agent.utils.md_utils [-] Trying to wipe out all md devices
+2015-03-30 13:54:56.632 29297 DEBUG fuel_agent.utils.md_utils [-] Found md devices: []
+2015-03-30 13:54:56.632 29297 DEBUG fuel_agent.utils.md_utils [-] Found md devices: []
+2015-03-30 13:54:56.632 29297 DEBUG fuel_agent.utils.md_utils [-] Found md devices: []
+2015-03-30 13:54:56.632 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvdisplay -C --noheading --units m --options lv_name,lv_size,vg_name,lv_uuid --separator ;
+2015-03-30 13:54:56.664 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found logical volumes: []
+2015-03-30 13:54:56.664 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgdisplay -C --noheading --units m --options vg_name,vg_uuid,vg_size,vg_free --separator ;
+2015-03-30 13:54:56.671 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found volume groups: []
+2015-03-30 13:54:56.671 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvdisplay -C --noheading --units m --options pv_name,vg_name,pv_size,dev_size,pv_uuid --separator ;
+2015-03-30 13:54:56.678 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found physical volumes: []
+2015-03-30 13:54:56.678 29297 DEBUG fuel_agent.utils.md_utils [-] Found md devices: []
+2015-03-30 13:54:56.679 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --report
+2015-03-30 13:54:56.681 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb
+2015-03-30 13:54:56.684 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb
+2015-03-30 13:54:56.688 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb1
+2015-03-30 13:54:56.690 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb1
+2015-03-30 13:54:56.693 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb2
+2015-03-30 13:54:56.696 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb2
+2015-03-30 13:54:56.699 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb3
+2015-03-30 13:54:56.702 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb3
+2015-03-30 13:54:56.705 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sdb4
+2015-03-30 13:54:56.708 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sdb4
+2015-03-30 13:54:56.711 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda
+2015-03-30 13:54:56.714 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda
+2015-03-30 13:54:56.717 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda1
+2015-03-30 13:54:56.720 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda1
+2015-03-30 13:54:56.722 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda2
+2015-03-30 13:54:56.725 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda2
+2015-03-30 13:54:56.728 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda3
+2015-03-30 13:54:56.731 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda3
+2015-03-30 13:54:56.734 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda4
+2015-03-30 13:54:56.737 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda4
+2015-03-30 13:54:56.740 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda5
+2015-03-30 13:54:56.743 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda5
+2015-03-30 13:54:56.745 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: udevadm info --query=property --export --name=/dev/sda6
+2015-03-30 13:54:56.748 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blockdev --getsz --getro --getss --getpbsz --getsize64 --getiomin --getioopt --getra --getalignoff --getmaxsect /dev/sda6
+2015-03-30 13:54:56.751 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mdadm --zero-superblock --force /dev/sda3
+2015-03-30 13:54:56.755 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mdadm --zero-superblock --force /dev/sdb3
+2015-03-30 13:54:56.764 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mdadm --create --force /dev/md0 -e0.90 --level=mirror --raid-devices=2 /dev/sda3 /dev/sdb3
+2015-03-30 13:54:56.823 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvdisplay -C --noheading --units m --options pv_name,vg_name,pv_size,dev_size,pv_uuid --separator ;
+2015-03-30 13:54:56.833 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found physical volumes: []
+2015-03-30 13:54:56.833 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvcreate --metadatacopies 2 --metadatasize 28m /dev/sda4
+2015-03-30 13:54:57.143 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvdisplay -C --noheading --units m --options pv_name,vg_name,pv_size,dev_size,pv_uuid --separator ;
+2015-03-30 13:54:57.167 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found physical volumes: [{'uuid': '0WaX6y-Gjsl-qpt0-4cF9-PNgL-DxPw-8rdvt4', 'devsize': 31808, 'name': '/dev/sda4', 'psize': 31808, 'vg': None}]
+2015-03-30 13:54:57.167 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvcreate --metadatacopies 2 --metadatasize 28m /dev/sda5
+2015-03-30 13:54:57.199 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgdisplay -C --noheading --units m --options vg_name,vg_uuid,vg_size,vg_free --separator ;
+2015-03-30 13:54:57.210 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found volume groups: []
+2015-03-30 13:54:57.210 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvdisplay -C --noheading --units m --options pv_name,vg_name,pv_size,dev_size,pv_uuid --separator ;
+2015-03-30 13:54:57.227 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found physical volumes: [{'uuid': '0WaX6y-Gjsl-qpt0-4cF9-PNgL-DxPw-8rdvt4', 'devsize': 31808, 'name': '/dev/sda4', 'psize': 31808, 'vg': None}, {'uuid': 'Mw7kjl-rDfJ-m8oL-iA63-a8y1-11QT-v34WnF', 'devsize': 44011, 'name': '/dev/sda5', 'psize': 44011, 'vg': None}]
+2015-03-30 13:54:57.227 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgcreate os /dev/sda4
+2015-03-30 13:54:57.368 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgdisplay -C --noheading --units m --options vg_name,vg_uuid,vg_size,vg_free --separator ;
+2015-03-30 13:54:57.381 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found volume groups: [{'size': 31748, 'name': 'os', 'free': 31748, 'uuid': 'AE1k3C-UZc4-ljJo-pw2y-AjBe-Wsrh-L2r6kO'}]
+2015-03-30 13:54:57.381 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: pvdisplay -C --noheading --units m --options pv_name,vg_name,pv_size,dev_size,pv_uuid --separator ;
+2015-03-30 13:54:57.400 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found physical volumes: [{'uuid': '0WaX6y-Gjsl-qpt0-4cF9-PNgL-DxPw-8rdvt4', 'devsize': 31808, 'name': '/dev/sda4', 'psize': 31748, 'vg': 'os'}, {'uuid': 'Mw7kjl-rDfJ-m8oL-iA63-a8y1-11QT-v34WnF', 'devsize': 44011, 'name': '/dev/sda5', 'psize': 44011, 'vg': None}]
+2015-03-30 13:54:57.400 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgcreate vm /dev/sda5
+2015-03-30 13:54:57.444 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgdisplay -C --noheading --units m --options vg_name,vg_uuid,vg_size,vg_free --separator ;
+2015-03-30 13:54:57.461 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found volume groups: [{'size': 31748, 'name': 'os', 'free': 31748, 'uuid': 'AE1k3C-UZc4-ljJo-pw2y-AjBe-Wsrh-L2r6kO'}, {'size': 43952, 'name': 'vm', 'free': 43952, 'uuid': 'e5sXOL-eORb-ujtd-SNiF-er1O-cqeH-rrCuSH'}]
+2015-03-30 13:54:57.461 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvdisplay -C --noheading --units m --options lv_name,lv_size,vg_name,lv_uuid --separator ;
+2015-03-30 13:54:57.476 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found logical volumes: []
+2015-03-30 13:54:57.476 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvcreate -L 15360m -n root os
+2015-03-30 13:54:57.510 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgdisplay -C --noheading --units m --options vg_name,vg_uuid,vg_size,vg_free --separator ;
+2015-03-30 13:54:57.530 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found volume groups: [{'size': 31748, 'name': 'os', 'free': 16388, 'uuid': 'AE1k3C-UZc4-ljJo-pw2y-AjBe-Wsrh-L2r6kO'}, {'size': 43952, 'name': 'vm', 'free': 43952, 'uuid': 'e5sXOL-eORb-ujtd-SNiF-er1O-cqeH-rrCuSH'}]
+2015-03-30 13:54:57.530 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvdisplay -C --noheading --units m --options lv_name,lv_size,vg_name,lv_uuid --separator ;
+2015-03-30 13:54:57.545 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found logical volumes: [{'path': '/dev/os/root', 'uuid': 'JprydI-BKlX-FAtK-BTAF-Minm-gq58-z9Sp6l', 'vg': 'os', 'name': 'root', 'size': 15360}]
+2015-03-30 13:54:57.545 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvcreate -L 16384m -n swap os
+2015-03-30 13:54:57.588 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: vgdisplay -C --noheading --units m --options vg_name,vg_uuid,vg_size,vg_free --separator ;
+2015-03-30 13:54:57.614 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found volume groups: [{'size': 31748, 'name': 'os', 'free': 4, 'uuid': 'AE1k3C-UZc4-ljJo-pw2y-AjBe-Wsrh-L2r6kO'}, {'size': 43952, 'name': 'vm', 'free': 43952, 'uuid': 'e5sXOL-eORb-ujtd-SNiF-er1O-cqeH-rrCuSH'}]
+2015-03-30 13:54:57.615 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvdisplay -C --noheading --units m --options lv_name,lv_size,vg_name,lv_uuid --separator ;
+2015-03-30 13:54:57.631 29297 DEBUG fuel_agent.utils.lvm_utils [-] Found logical volumes: [{'path': '/dev/os/root', 'uuid': 'JprydI-BKlX-FAtK-BTAF-Minm-gq58-z9Sp6l', 'vg': 'os', 'name': 'root', 'size': 15360}, {'path': '/dev/os/swap', 'uuid': 'FRdfgn-qFKG-BjOp-1W7U-crkX-xjHp-cqOOsZ', 'vg': 'os', 'name': 'swap', 'size': 16384}]
+2015-03-30 13:54:57.631 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: lvcreate -L 43947m -n nova vm
+2015-03-30 13:54:57.673 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mkswap /dev/mapper/os-swap
+2015-03-30 13:54:57.678 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mkfs.xfs /dev/mapper/vm-nova
+2015-03-30 13:55:01.169 29297 DEBUG fuel_agent.manager [-] --- Creating configdrive (do_configdrive) ---
+2015-03-30 13:55:01.203 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: write-mime-multipart --output=/tmp/user-data /tmp/boothook.txt:text/cloud-boothook /tmp/cloud_config.txt:text/cloud-config
+2015-03-30 13:55:01.252 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: genisoimage -output /tmp/config-drive.img -volid cidata -joliet -rock /tmp/user-data /tmp/meta-data
+2015-03-30 13:55:01.259 29297 DEBUG fuel_agent.manager [-] --- Copying images (do_copyimage) ---
+2015-03-30 13:55:01.259 29297 DEBUG fuel_agent.manager [-] Processing image: http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz
+2015-03-30 13:55:01.259 29297 DEBUG fuel_agent.manager [-] Appending uri processor: http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz
+2015-03-30 13:55:01.259 29297 DEBUG fuel_agent.manager [-] Appending HTTP processor
+2015-03-30 13:55:01.260 29297 DEBUG fuel_agent.manager [-] Appending GZIP processor
+2015-03-30 13:55:01.260 29297 DEBUG fuel_agent.manager [-] Appending TARGET processor: /dev/md0
+2015-03-30 13:55:01.260 29297 DEBUG fuel_agent.manager [-] Launching image processing chain
+2015-03-30 13:55:01.260 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz, byte range: 0
+2015-03-30 13:55:01.262 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:02.035 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:02.060 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64-boot.img.gz HTTP/1.1" 206 31185373
+2015-03-30 13:55:02.061 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz on 1 retry
+2015-03-30 13:55:02.061 29297 DEBUG fuel_agent.utils.artifact_utils [-] Expected content length 31185373 for http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz
+2015-03-30 13:55:02.061 29297 DEBUG fuel_agent.utils.artifact_utils [-] Processor target: /dev/md0
+2015-03-30 13:55:02.061 29297 DEBUG fuel_agent.utils.artifact_utils [-] Opening file: /dev/md0 for write
+2015-03-30 13:55:03.063 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:03.063 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:03.065 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz, byte range: 0
+2015-03-30 13:55:03.066 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:03.306 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:03.311 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64-boot.img.gz HTTP/1.1" 206 31185373
+2015-03-30 13:55:03.311 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz on 1 retry
+2015-03-30 13:55:05.018 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:05.018 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:05.018 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz, byte range: 0
+2015-03-30 13:55:05.020 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:05.421 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:05.437 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64-boot.img.gz HTTP/1.1" 206 31185373
+2015-03-30 13:55:05.438 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz on 1 retry
+2015-03-30 13:55:06.439 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:06.439 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:06.440 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz, byte range: 0
+2015-03-30 13:55:06.441 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:07.443 29297 DEBUG fuel_agent.utils.utils [-] Got non-critical error when accessing to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz on 1 attempt: (<urllib3.connectionpool.HTTPConnectionPool object at 0x1d02e50>, 'Connection to 10.20.0.2 timed out. (connect timeout=1.0)')
+2015-03-30 13:55:09.447 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:09.703 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:09.709 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64-boot.img.gz HTTP/1.1" 206 31185373
+2015-03-30 13:55:09.709 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz on 2 retry
+2015-03-30 13:55:09.809 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 0
+2015-03-30 13:55:09.995 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 1
+2015-03-30 13:55:10.086 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 2
+2015-03-30 13:55:11.133 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:11.133 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:11.134 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz, byte range: 3145728
+2015-03-30 13:55:11.136 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:12.137 29297 DEBUG fuel_agent.utils.utils [-] Got non-critical error when accessing to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz on 1 attempt: (<urllib3.connectionpool.HTTPConnectionPool object at 0x1cd1510>, 'Connection to 10.20.0.2 timed out. (connect timeout=1.0)')
+2015-03-30 13:55:14.141 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:14.142 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:14.143 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64-boot.img.gz HTTP/1.1" 206 28039645
+2015-03-30 13:55:14.144 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64-boot.img.gz on 2 retry
+2015-03-30 13:55:14.182 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 3
+2015-03-30 13:55:14.214 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 4
+2015-03-30 13:55:14.253 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 5
+2015-03-30 13:55:14.289 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 6
+2015-03-30 13:55:14.328 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 7
+2015-03-30 13:55:14.377 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 8
+2015-03-30 13:55:14.411 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 9
+2015-03-30 13:55:14.448 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 10
+2015-03-30 13:55:14.482 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 11
+2015-03-30 13:55:14.515 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 12
+2015-03-30 13:55:14.555 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 13
+2015-03-30 13:55:14.605 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 14
+2015-03-30 13:55:14.653 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 15
+2015-03-30 13:55:14.687 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 16
+2015-03-30 13:55:14.789 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 17
+2015-03-30 13:55:14.815 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 18
+2015-03-30 13:55:14.836 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 19
+2015-03-30 13:55:14.857 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 20
+2015-03-30 13:55:14.876 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 21
+2015-03-30 13:55:14.893 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 22
+2015-03-30 13:55:14.911 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 23
+2015-03-30 13:55:14.929 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 24
+2015-03-30 13:55:14.954 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 25
+2015-03-30 13:55:14.983 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 26
+2015-03-30 13:55:15.010 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 27
+2015-03-30 13:55:15.029 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 28
+2015-03-30 13:55:15.035 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 29
+2015-03-30 13:55:15.035 29297 DEBUG fuel_agent.utils.artifact_utils [-] Flushing file: /dev/md0
+2015-03-30 13:55:15.397 29297 DEBUG fuel_agent.utils.artifact_utils [-] File is written: /dev/md0
+2015-03-30 13:55:15.397 29297 DEBUG fuel_agent.manager [-] Trying to compare image checksum
+2015-03-30 13:55:15.624 29297 DEBUG fuel_agent.manager [-] Checksum matches successfully: md5=e305cc3551dfd83f1370905fd4d6678d
+2015-03-30 13:55:15.624 29297 DEBUG fuel_agent.manager [-] Extending image file systems
+2015-03-30 13:55:15.624 29297 DEBUG fuel_agent.manager [-] Extending ext2 /dev/md0
+2015-03-30 13:55:15.624 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: e2fsck -yf /dev/md0
+2015-03-30 13:55:15.697 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: resize2fs /dev/md0
+2015-03-30 13:55:15.856 29297 DEBUG fuel_agent.manager [-] Processing image: http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz
+2015-03-30 13:55:15.856 29297 DEBUG fuel_agent.manager [-] Appending uri processor: http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz
+2015-03-30 13:55:15.856 29297 DEBUG fuel_agent.manager [-] Appending HTTP processor
+2015-03-30 13:55:15.856 29297 DEBUG fuel_agent.manager [-] Appending GZIP processor
+2015-03-30 13:55:15.857 29297 DEBUG fuel_agent.manager [-] Appending TARGET processor: /dev/mapper/os-root
+2015-03-30 13:55:15.857 29297 DEBUG fuel_agent.manager [-] Launching image processing chain
+2015-03-30 13:55:15.857 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz, byte range: 0
+2015-03-30 13:55:15.858 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:15.862 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:15.866 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64.img.gz HTTP/1.1" 206 561720569
+2015-03-30 13:55:15.867 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 1 retry
+2015-03-30 13:55:15.867 29297 DEBUG fuel_agent.utils.artifact_utils [-] Expected content length 561720569 for http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz
+2015-03-30 13:55:15.867 29297 DEBUG fuel_agent.utils.artifact_utils [-] Processor target: /dev/mapper/os-root
+2015-03-30 13:55:15.867 29297 DEBUG fuel_agent.utils.artifact_utils [-] Opening file: /dev/mapper/os-root for write
+2015-03-30 13:55:15.936 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 0
+2015-03-30 13:55:16.135 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 1
+2015-03-30 13:55:16.241 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 2
+2015-03-30 13:55:16.278 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 3
+2015-03-30 13:55:17.381 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:17.381 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:17.382 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz, byte range: 4194304
+2015-03-30 13:55:17.384 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:18.384 29297 DEBUG fuel_agent.utils.utils [-] Got non-critical error when accessing to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 1 attempt: (<urllib3.connectionpool.HTTPConnectionPool object at 0x1d02f50>, 'Connection to 10.20.0.2 timed out. (connect timeout=1.0)')
+2015-03-30 13:55:20.388 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:20.389 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:20.391 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64.img.gz HTTP/1.1" 206 557526265
+2015-03-30 13:55:20.391 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 2 retry
+2015-03-30 13:55:20.448 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 4
+2015-03-30 13:55:21.558 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:21.558 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:21.558 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz, byte range: 5242880
+2015-03-30 13:55:21.560 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:22.491 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:22.539 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64.img.gz HTTP/1.1" 206 556477689
+2015-03-30 13:55:22.540 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 1 retry
+2015-03-30 13:55:23.449 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 5
+2015-03-30 13:55:23.480 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 6
+2015-03-30 13:55:23.608 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 7
+2015-03-30 13:55:23.642 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 8
+2015-03-30 13:55:23.675 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 9
+2015-03-30 13:55:23.718 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 10
+2015-03-30 13:55:23.757 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 11
+2015-03-30 13:55:23.793 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 12
+2015-03-30 13:55:23.833 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 13
+2015-03-30 13:55:24.848 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:24.848 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:24.849 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz, byte range: 14680064
+2015-03-30 13:55:24.851 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:24.931 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:24.966 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64.img.gz HTTP/1.1" 206 547040505
+2015-03-30 13:55:24.967 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 1 retry
+2015-03-30 13:55:25.415 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 14
+2015-03-30 13:55:25.460 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 15
+2015-03-30 13:55:25.507 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 16
+2015-03-30 13:55:25.545 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 17
+2015-03-30 13:55:25.579 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 18
+2015-03-30 13:55:25.600 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 19
+2015-03-30 13:55:25.640 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 20
+2015-03-30 13:55:25.688 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 21
+2015-03-30 13:55:25.729 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 22
+2015-03-30 13:55:25.758 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 23
+2015-03-30 13:55:25.790 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 24
+2015-03-30 13:55:25.823 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 25
+2015-03-30 13:55:25.850 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 26
+2015-03-30 13:55:25.882 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 27
+2015-03-30 13:55:25.911 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 28
+2015-03-30 13:55:25.943 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 29
+2015-03-30 13:55:25.968 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 30
+2015-03-30 13:55:25.993 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 31
+2015-03-30 13:55:26.026 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 32
+2015-03-30 13:55:26.058 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 33
+2015-03-30 13:55:26.091 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 34
+2015-03-30 13:55:26.116 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 35
+2015-03-30 13:55:26.138 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 36
+2015-03-30 13:55:26.165 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 37
+2015-03-30 13:55:26.187 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 38
+2015-03-30 13:55:26.213 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 39
+2015-03-30 13:55:26.238 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 40
+2015-03-30 13:55:26.252 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 41
+2015-03-30 13:55:26.270 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 42
+2015-03-30 13:55:26.303 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 43
+2015-03-30 13:55:26.338 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 44
+2015-03-30 13:55:26.370 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 45
+2015-03-30 13:55:26.402 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 46
+2015-03-30 13:55:26.433 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 47
+2015-03-30 13:55:26.461 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 48
+2015-03-30 13:55:26.482 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 49
+2015-03-30 13:55:26.508 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 50
+2015-03-30 13:55:26.552 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 51
+2015-03-30 13:55:26.582 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 52
+2015-03-30 13:55:26.618 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 53
+2015-03-30 13:55:26.653 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 54
+2015-03-30 13:55:26.679 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 55
+2015-03-30 13:55:26.698 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 56
+2015-03-30 13:55:26.713 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 57
+2015-03-30 13:55:26.754 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 58
+2015-03-30 13:55:26.770 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 59
+2015-03-30 13:55:26.805 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 60
+2015-03-30 13:55:26.839 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 61
+2015-03-30 13:55:26.863 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 62
+2015-03-30 13:55:26.887 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 63
+2015-03-30 13:55:26.913 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 64
+2015-03-30 13:55:26.945 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 65
+2015-03-30 13:55:26.967 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 66
+2015-03-30 13:55:26.987 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 67
+2015-03-30 13:55:27.011 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 68
+2015-03-30 13:55:27.033 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 69
+2015-03-30 13:55:27.054 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 70
+2015-03-30 13:55:27.082 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 71
+2015-03-30 13:55:27.108 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 72
+2015-03-30 13:55:27.136 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 73
+2015-03-30 13:55:27.153 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 74
+2015-03-30 13:55:27.166 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 75
+2015-03-30 13:55:27.182 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 76
+2015-03-30 13:55:27.213 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 77
+2015-03-30 13:55:27.250 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 78
+2015-03-30 13:55:27.279 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 79
+2015-03-30 13:55:27.314 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 80
+2015-03-30 13:55:27.343 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 81
+2015-03-30 13:55:27.372 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 82
+2015-03-30 13:55:27.401 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 83
+2015-03-30 13:55:27.433 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 84
+2015-03-30 13:55:27.461 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 85
+2015-03-30 13:55:27.493 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 86
+2015-03-30 13:55:27.525 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 87
+2015-03-30 13:55:27.554 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 88
+2015-03-30 13:55:27.585 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 89
+2015-03-30 13:55:27.611 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 90
+2015-03-30 13:55:27.641 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 91
+2015-03-30 13:55:27.662 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 92
+2015-03-30 13:55:27.683 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 93
+2015-03-30 13:55:27.711 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 94
+2015-03-30 13:55:27.739 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 95
+2015-03-30 13:55:27.773 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 96
+2015-03-30 13:55:27.803 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 97
+2015-03-30 13:55:27.827 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 98
+2015-03-30 13:55:27.861 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 99
+2015-03-30 13:55:27.893 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 100
+2015-03-30 13:55:27.918 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 101
+2015-03-30 13:55:27.946 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 102
+2015-03-30 13:55:27.972 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 103
+2015-03-30 13:55:27.994 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 104
+2015-03-30 13:55:28.018 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 105
+2015-03-30 13:55:28.045 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 106
+2015-03-30 13:55:28.072 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 107
+2015-03-30 13:55:28.098 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 108
+2015-03-30 13:55:28.128 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 109
+2015-03-30 13:55:28.152 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 110
+2015-03-30 13:55:28.186 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 111
+2015-03-30 13:55:28.221 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 112
+2015-03-30 13:55:28.243 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 113
+2015-03-30 13:55:28.270 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 114
+2015-03-30 13:55:28.297 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 115
+2015-03-30 13:55:28.324 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 116
+2015-03-30 13:55:28.349 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 117
+2015-03-30 13:55:28.371 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 118
+2015-03-30 13:55:28.399 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 119
+2015-03-30 13:55:28.428 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 120
+2015-03-30 13:55:28.448 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 121
+2015-03-30 13:55:28.469 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 122
+2015-03-30 13:55:28.500 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 123
+2015-03-30 13:55:28.523 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 124
+2015-03-30 13:55:28.566 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 125
+2015-03-30 13:55:28.592 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 126
+2015-03-30 13:55:28.617 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 127
+2015-03-30 13:55:28.656 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 128
+2015-03-30 13:55:28.672 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 129
+2015-03-30 13:55:28.696 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 130
+2015-03-30 13:55:28.723 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 131
+2015-03-30 13:55:28.760 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 132
+2015-03-30 13:55:28.777 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 133
+2015-03-30 13:55:28.798 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 134
+2015-03-30 13:55:28.808 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 135
+2015-03-30 13:55:28.828 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 136
+2015-03-30 13:55:28.854 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 137
+2015-03-30 13:55:28.874 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 138
+2015-03-30 13:55:28.883 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 139
+2015-03-30 13:55:28.937 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 140
+2015-03-30 13:55:28.960 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 141
+2015-03-30 13:55:28.984 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 142
+2015-03-30 13:55:29.012 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 143
+2015-03-30 13:55:29.038 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 144
+2015-03-30 13:55:29.073 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 145
+2015-03-30 13:55:29.091 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 146
+2015-03-30 13:55:29.138 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 147
+2015-03-30 13:55:29.157 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 148
+2015-03-30 13:55:29.178 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 149
+2015-03-30 13:55:29.201 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 150
+2015-03-30 13:55:29.226 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 151
+2015-03-30 13:55:29.259 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 152
+2015-03-30 13:55:29.272 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 153
+2015-03-30 13:55:29.313 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 154
+2015-03-30 13:55:29.340 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 155
+2015-03-30 13:55:29.362 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 156
+2015-03-30 13:55:29.380 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 157
+2015-03-30 13:55:29.414 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 158
+2015-03-30 13:55:29.442 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 159
+2015-03-30 13:55:29.477 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 160
+2015-03-30 13:55:29.505 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 161
+2015-03-30 13:55:29.533 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 162
+2015-03-30 13:55:29.558 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 163
+2015-03-30 13:55:29.583 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 164
+2015-03-30 13:55:29.606 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 165
+2015-03-30 13:55:29.629 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 166
+2015-03-30 13:55:29.651 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 167
+2015-03-30 13:55:29.690 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 168
+2015-03-30 13:55:29.719 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 169
+2015-03-30 13:55:29.741 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 170
+2015-03-30 13:55:29.764 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 171
+2015-03-30 13:55:29.786 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 172
+2015-03-30 13:55:29.812 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 173
+2015-03-30 13:55:29.843 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 174
+2015-03-30 13:55:29.863 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 175
+2015-03-30 13:55:29.890 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 176
+2015-03-30 13:55:29.905 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 177
+2015-03-30 13:55:29.916 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 178
+2015-03-30 13:55:29.932 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 179
+2015-03-30 13:55:29.958 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 180
+2015-03-30 13:55:29.972 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 181
+2015-03-30 13:55:30.003 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 182
+2015-03-30 13:55:30.050 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 183
+2015-03-30 13:55:30.085 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 184
+2015-03-30 13:55:30.116 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 185
+2015-03-30 13:55:30.159 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 186
+2015-03-30 13:55:30.170 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 187
+2015-03-30 13:55:30.183 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 188
+2015-03-30 13:55:30.213 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 189
+2015-03-30 13:55:30.248 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 190
+2015-03-30 13:55:30.297 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 191
+2015-03-30 13:55:30.318 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 192
+2015-03-30 13:55:30.363 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 193
+2015-03-30 13:55:30.401 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 194
+2015-03-30 13:55:30.433 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 195
+2015-03-30 13:55:30.465 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 196
+2015-03-30 13:55:30.495 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 197
+2015-03-30 13:55:30.590 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 198
+2015-03-30 13:55:30.620 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 199
+2015-03-30 13:55:30.651 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 200
+2015-03-30 13:55:31.676 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:31.676 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:31.676 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz, byte range: 210763776
+2015-03-30 13:55:31.678 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:32.679 29297 DEBUG fuel_agent.utils.utils [-] Got non-critical error when accessing to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 1 attempt: (<urllib3.connectionpool.HTTPConnectionPool object at 0x1cd1650>, 'Connection to 10.20.0.2 timed out. (connect timeout=1.0)')
+2015-03-30 13:55:34.683 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:34.689 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:34.771 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64.img.gz HTTP/1.1" 206 350956793
+2015-03-30 13:55:34.772 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 2 retry
+2015-03-30 13:55:34.802 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 201
+2015-03-30 13:55:34.824 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 202
+2015-03-30 13:55:34.849 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 203
+2015-03-30 13:55:34.871 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 204
+2015-03-30 13:55:34.895 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 205
+2015-03-30 13:55:34.922 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 206
+2015-03-30 13:55:34.945 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 207
+2015-03-30 13:55:34.974 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 208
+2015-03-30 13:55:35.001 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 209
+2015-03-30 13:55:35.026 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 210
+2015-03-30 13:55:35.056 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 211
+2015-03-30 13:55:35.087 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 212
+2015-03-30 13:55:35.116 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 213
+2015-03-30 13:55:35.146 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 214
+2015-03-30 13:55:35.205 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 215
+2015-03-30 13:55:35.319 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 216
+2015-03-30 13:55:35.435 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 217
+2015-03-30 13:55:35.534 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 218
+2015-03-30 13:55:35.639 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 219
+2015-03-30 13:55:35.715 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 220
+2015-03-30 13:55:35.797 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 221
+2015-03-30 13:55:35.874 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 222
+2015-03-30 13:55:35.945 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 223
+2015-03-30 13:55:36.011 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 224
+2015-03-30 13:55:36.075 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 225
+2015-03-30 13:55:36.139 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 226
+2015-03-30 13:55:36.194 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 227
+2015-03-30 13:55:36.258 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 228
+2015-03-30 13:55:36.311 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 229
+2015-03-30 13:55:36.368 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 230
+2015-03-30 13:55:36.419 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 231
+2015-03-30 13:55:36.473 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 232
+2015-03-30 13:55:36.523 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 233
+2015-03-30 13:55:36.573 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 234
+2015-03-30 13:55:36.623 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 235
+2015-03-30 13:55:36.676 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 236
+2015-03-30 13:55:36.723 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 237
+2015-03-30 13:55:36.764 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 238
+2015-03-30 13:55:36.812 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 239
+2015-03-30 13:55:36.856 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 240
+2015-03-30 13:55:36.900 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 241
+2015-03-30 13:55:36.944 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 242
+2015-03-30 13:55:36.984 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 243
+2015-03-30 13:55:37.026 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 244
+2015-03-30 13:55:37.070 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 245
+2015-03-30 13:55:37.113 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 246
+2015-03-30 13:55:37.149 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 247
+2015-03-30 13:55:37.190 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 248
+2015-03-30 13:55:37.232 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 249
+2015-03-30 13:55:37.274 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 250
+2015-03-30 13:55:37.315 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 251
+2015-03-30 13:55:37.353 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 252
+2015-03-30 13:55:37.395 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 253
+2015-03-30 13:55:37.435 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 254
+2015-03-30 13:55:37.473 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 255
+2015-03-30 13:55:37.517 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 256
+2015-03-30 13:55:37.552 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 257
+2015-03-30 13:55:37.590 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 258
+2015-03-30 13:55:37.628 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 259
+2015-03-30 13:55:37.669 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 260
+2015-03-30 13:55:37.707 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 261
+2015-03-30 13:55:37.748 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 262
+2015-03-30 13:55:37.790 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 263
+2015-03-30 13:55:37.824 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 264
+2015-03-30 13:55:37.862 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 265
+2015-03-30 13:55:37.901 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 266
+2015-03-30 13:55:37.943 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 267
+2015-03-30 13:55:37.983 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 268
+2015-03-30 13:55:38.017 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 269
+2015-03-30 13:55:38.054 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 270
+2015-03-30 13:55:38.093 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 271
+2015-03-30 13:55:38.125 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 272
+2015-03-30 13:55:38.159 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 273
+2015-03-30 13:55:38.199 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 274
+2015-03-30 13:55:38.245 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 275
+2015-03-30 13:55:38.296 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 276
+2015-03-30 13:55:38.332 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 277
+2015-03-30 13:55:38.358 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 278
+2015-03-30 13:55:38.394 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 279
+2015-03-30 13:55:38.424 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 280
+2015-03-30 13:55:38.469 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 281
+2015-03-30 13:55:38.513 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 282
+2015-03-30 13:55:38.550 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 283
+2015-03-30 13:55:38.597 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 284
+2015-03-30 13:55:38.627 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 285
+2015-03-30 13:55:38.657 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 286
+2015-03-30 13:55:38.694 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 287
+2015-03-30 13:55:38.732 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 288
+2015-03-30 13:55:38.783 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 289
+2015-03-30 13:55:38.826 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 290
+2015-03-30 13:55:38.867 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 291
+2015-03-30 13:55:38.937 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 292
+2015-03-30 13:55:39.055 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 293
+2015-03-30 13:55:39.093 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 294
+2015-03-30 13:55:39.138 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 295
+2015-03-30 13:55:39.174 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 296
+2015-03-30 13:55:39.215 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 297
+2015-03-30 13:55:39.260 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 298
+2015-03-30 13:55:39.306 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 299
+2015-03-30 13:55:39.360 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 300
+2015-03-30 13:55:39.431 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 301
+2015-03-30 13:55:39.555 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 302
+2015-03-30 13:55:39.650 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 303
+2015-03-30 13:55:39.703 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 304
+2015-03-30 13:55:39.748 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 305
+2015-03-30 13:55:39.783 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 306
+2015-03-30 13:55:39.842 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 307
+2015-03-30 13:55:39.889 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 308
+2015-03-30 13:55:40.014 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 309
+2015-03-30 13:55:40.028 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 310
+2015-03-30 13:55:40.048 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 311
+2015-03-30 13:55:40.067 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 312
+2015-03-30 13:55:40.086 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 313
+2015-03-30 13:55:40.100 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 314
+2015-03-30 13:55:40.121 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 315
+2015-03-30 13:55:40.143 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 316
+2015-03-30 13:55:40.163 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 317
+2015-03-30 13:55:40.185 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 318
+2015-03-30 13:55:40.208 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 319
+2015-03-30 13:55:40.257 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 320
+2015-03-30 13:55:40.281 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 321
+2015-03-30 13:55:40.320 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 322
+2015-03-30 13:55:40.342 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 323
+2015-03-30 13:55:40.398 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 324
+2015-03-30 13:55:41.426 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:41.426 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:41.426 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz, byte range: 340787200
+2015-03-30 13:55:41.428 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:42.430 29297 DEBUG fuel_agent.utils.utils [-] Got non-critical error when accessing to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 1 attempt: (<urllib3.connectionpool.HTTPConnectionPool object at 0x1cd1a10>, 'Connection to 10.20.0.2 timed out. (connect timeout=1.0)')
+2015-03-30 13:55:44.433 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:44.435 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:44.437 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64.img.gz HTTP/1.1" 206 220933369
+2015-03-30 13:55:44.438 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 2 retry
+2015-03-30 13:55:44.480 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 325
+2015-03-30 13:55:44.517 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 326
+2015-03-30 13:55:44.553 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 327
+2015-03-30 13:55:44.581 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 328
+2015-03-30 13:55:44.600 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 329
+2015-03-30 13:55:44.644 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 330
+2015-03-30 13:55:44.685 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 331
+2015-03-30 13:55:44.725 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 332
+2015-03-30 13:55:44.764 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 333
+2015-03-30 13:55:44.803 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 334
+2015-03-30 13:55:44.844 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 335
+2015-03-30 13:55:44.880 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 336
+2015-03-30 13:55:44.918 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 337
+2015-03-30 13:55:44.959 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 338
+2015-03-30 13:55:45.010 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 339
+2015-03-30 13:55:45.058 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 340
+2015-03-30 13:55:45.100 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 341
+2015-03-30 13:55:45.141 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 342
+2015-03-30 13:55:45.185 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 343
+2015-03-30 13:55:45.227 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 344
+2015-03-30 13:55:45.273 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 345
+2015-03-30 13:55:45.317 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 346
+2015-03-30 13:55:45.357 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 347
+2015-03-30 13:55:45.396 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 348
+2015-03-30 13:55:45.438 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 349
+2015-03-30 13:55:45.486 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 350
+2015-03-30 13:55:45.522 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 351
+2015-03-30 13:55:45.556 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 352
+2015-03-30 13:55:45.606 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 353
+2015-03-30 13:55:45.649 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 354
+2015-03-30 13:55:45.681 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 355
+2015-03-30 13:55:45.716 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 356
+2015-03-30 13:55:45.753 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 357
+2015-03-30 13:55:45.788 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 358
+2015-03-30 13:55:45.843 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 359
+2015-03-30 13:55:45.873 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 360
+2015-03-30 13:55:45.907 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 361
+2015-03-30 13:55:45.940 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 362
+2015-03-30 13:55:45.972 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 363
+2015-03-30 13:55:46.019 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 364
+2015-03-30 13:55:46.050 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 365
+2015-03-30 13:55:46.077 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 366
+2015-03-30 13:55:46.113 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 367
+2015-03-30 13:55:46.152 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 368
+2015-03-30 13:55:46.219 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 369
+2015-03-30 13:55:46.263 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 370
+2015-03-30 13:55:46.297 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 371
+2015-03-30 13:55:46.342 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 372
+2015-03-30 13:55:47.007 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 373
+2015-03-30 13:55:47.042 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 374
+2015-03-30 13:55:47.086 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 375
+2015-03-30 13:55:47.145 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 376
+2015-03-30 13:55:47.222 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 377
+2015-03-30 13:55:47.262 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 378
+2015-03-30 13:55:47.298 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 379
+2015-03-30 13:55:47.333 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 380
+2015-03-30 13:55:47.374 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 381
+2015-03-30 13:55:47.403 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 382
+2015-03-30 13:55:47.444 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 383
+2015-03-30 13:55:47.480 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 384
+2015-03-30 13:55:47.521 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 385
+2015-03-30 13:55:47.559 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 386
+2015-03-30 13:55:47.612 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 387
+2015-03-30 13:55:47.643 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 388
+2015-03-30 13:55:47.686 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 389
+2015-03-30 13:55:47.720 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 390
+2015-03-30 13:55:47.757 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 391
+2015-03-30 13:55:47.798 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 392
+2015-03-30 13:55:47.832 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 393
+2015-03-30 13:55:47.867 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 394
+2015-03-30 13:55:47.902 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 395
+2015-03-30 13:55:47.939 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 396
+2015-03-30 13:55:48.080 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 397
+2015-03-30 13:55:48.133 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 398
+2015-03-30 13:55:48.171 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 399
+2015-03-30 13:55:48.209 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 400
+2015-03-30 13:55:48.276 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 401
+2015-03-30 13:55:48.337 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 402
+2015-03-30 13:55:48.369 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 403
+2015-03-30 13:55:48.405 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 404
+2015-03-30 13:55:48.449 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 405
+2015-03-30 13:55:48.501 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 406
+2015-03-30 13:55:48.532 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 407
+2015-03-30 13:55:48.563 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 408
+2015-03-30 13:55:48.610 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 409
+2015-03-30 13:55:48.649 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 410
+2015-03-30 13:55:48.686 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 411
+2015-03-30 13:55:48.721 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 412
+2015-03-30 13:55:48.758 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 413
+2015-03-30 13:55:48.789 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 414
+2015-03-30 13:55:48.833 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 415
+2015-03-30 13:55:48.870 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 416
+2015-03-30 13:55:48.896 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 417
+2015-03-30 13:55:48.927 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 418
+2015-03-30 13:55:48.958 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 419
+2015-03-30 13:55:48.991 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 420
+2015-03-30 13:55:49.019 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 421
+2015-03-30 13:55:49.049 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 422
+2015-03-30 13:55:49.070 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 423
+2015-03-30 13:55:49.109 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 424
+2015-03-30 13:55:49.134 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 425
+2015-03-30 13:55:49.165 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 426
+2015-03-30 13:55:49.188 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 427
+2015-03-30 13:55:49.214 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 428
+2015-03-30 13:55:49.242 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 429
+2015-03-30 13:55:49.289 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 430
+2015-03-30 13:55:49.318 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 431
+2015-03-30 13:55:49.337 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 432
+2015-03-30 13:55:49.381 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 433
+2015-03-30 13:55:49.466 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 434
+2015-03-30 13:55:49.514 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 435
+2015-03-30 13:55:49.549 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 436
+2015-03-30 13:55:49.580 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 437
+2015-03-30 13:55:49.597 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 438
+2015-03-30 13:55:49.622 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 439
+2015-03-30 13:55:49.652 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 440
+2015-03-30 13:55:49.692 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 441
+2015-03-30 13:55:49.746 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 442
+2015-03-30 13:55:49.812 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 443
+2015-03-30 13:55:49.866 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 444
+2015-03-30 13:55:49.918 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 445
+2015-03-30 13:55:49.948 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 446
+2015-03-30 13:55:49.969 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 447
+2015-03-30 13:55:49.985 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 448
+2015-03-30 13:55:50.008 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 449
+2015-03-30 13:55:50.027 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 450
+2015-03-30 13:55:50.044 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 451
+2015-03-30 13:55:50.099 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 452
+2015-03-30 13:55:50.155 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 453
+2015-03-30 13:55:50.171 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 454
+2015-03-30 13:55:50.190 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 455
+2015-03-30 13:55:50.200 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 456
+2015-03-30 13:55:51.206 29297 ERROR fuel_agent.utils.artifact_utils [-] timed out
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils Traceback (most recent call last):
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/fuel_agent/utils/artifact_utils.py", line 101, in next
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils     data = self.response_obj.raw.read(CONF.data_chunk_size)
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib/python2.6/site-packages/urllib3/response.py", line 174, in read
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils     data = self._fp.read(amt)
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/httplib.py", line 542, in read
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils     s = self.fp.read(amt)
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils   File "/usr/lib64/python2.6/socket.py", line 383, in read
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils     data = self._sock.recv(left)
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils timeout: timed out
+2015-03-30 13:55:51.206 29297 TRACE fuel_agent.utils.artifact_utils
+2015-03-30 13:55:51.206 29297 DEBUG fuel_agent.utils.utils [-] Trying to initialize http request object http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz, byte range: 479199232
+2015-03-30 13:55:51.208 29297 INFO urllib3.connectionpool [-] Starting new HTTP connection (1): 10.20.0.2
+2015-03-30 13:55:51.614 29297 DEBUG urllib3.connectionpool [-] Setting read timeout to <object object at 0x7fe9580f80c0>
+2015-03-30 13:55:51.626 29297 DEBUG urllib3.connectionpool [-] "GET /targetimages/env_1_ubuntu_1404_amd64.img.gz HTTP/1.1" 206 82521337
+2015-03-30 13:55:51.626 29297 DEBUG fuel_agent.utils.utils [-] Successful http request to http://10.20.0.2:8080/targetimages/env_1_ubuntu_1404_amd64.img.gz on 1 retry
+2015-03-30 13:55:51.692 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 457
+2015-03-30 13:55:51.723 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 458
+2015-03-30 13:55:51.767 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 459
+2015-03-30 13:55:51.814 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 460
+2015-03-30 13:55:51.846 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 461
+2015-03-30 13:55:51.880 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 462
+2015-03-30 13:55:51.910 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 463
+2015-03-30 13:55:51.937 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 464
+2015-03-30 13:55:51.962 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 465
+2015-03-30 13:55:51.990 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 466
+2015-03-30 13:55:52.018 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 467
+2015-03-30 13:55:52.048 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 468
+2015-03-30 13:55:52.079 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 469
+2015-03-30 13:55:52.103 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 470
+2015-03-30 13:55:52.130 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 471
+2015-03-30 13:55:52.153 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 472
+2015-03-30 13:55:52.174 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 473
+2015-03-30 13:55:52.196 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 474
+2015-03-30 13:55:52.217 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 475
+2015-03-30 13:55:52.243 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 476
+2015-03-30 13:55:52.268 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 477
+2015-03-30 13:55:52.289 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 478
+2015-03-30 13:55:52.310 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 479
+2015-03-30 13:55:52.324 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 480
+2015-03-30 13:55:52.347 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 481
+2015-03-30 13:55:52.376 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 482
+2015-03-30 13:55:52.404 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 483
+2015-03-30 13:55:52.432 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 484
+2015-03-30 13:55:52.453 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 485
+2015-03-30 13:55:52.476 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 486
+2015-03-30 13:55:52.493 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 487
+2015-03-30 13:55:52.516 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 488
+2015-03-30 13:55:52.540 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 489
+2015-03-30 13:55:52.558 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 490
+2015-03-30 13:55:52.584 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 491
+2015-03-30 13:55:52.607 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 492
+2015-03-30 13:55:52.626 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 493
+2015-03-30 13:55:52.651 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 494
+2015-03-30 13:55:52.686 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 495
+2015-03-30 13:55:52.726 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 496
+2015-03-30 13:55:52.764 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 497
+2015-03-30 13:55:52.811 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 498
+2015-03-30 13:55:52.851 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 499
+2015-03-30 13:55:52.898 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 500
+2015-03-30 13:55:52.949 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 501
+2015-03-30 13:55:52.998 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 502
+2015-03-30 13:55:53.034 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 503
+2015-03-30 13:55:53.061 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 504
+2015-03-30 13:55:53.096 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 505
+2015-03-30 13:55:53.131 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 506
+2015-03-30 13:55:53.164 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 507
+2015-03-30 13:55:53.197 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 508
+2015-03-30 13:55:53.244 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 509
+2015-03-30 13:55:53.272 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 510
+2015-03-30 13:55:53.299 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 511
+2015-03-30 13:55:53.325 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 512
+2015-03-30 13:55:53.352 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 513
+2015-03-30 13:55:53.379 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 514
+2015-03-30 13:55:53.406 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 515
+2015-03-30 13:55:53.430 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 516
+2015-03-30 13:55:53.458 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 517
+2015-03-30 13:55:53.482 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 518
+2015-03-30 13:55:53.505 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 519
+2015-03-30 13:55:53.528 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 520
+2015-03-30 13:55:53.553 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 521
+2015-03-30 13:55:53.578 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 522
+2015-03-30 13:55:53.605 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 523
+2015-03-30 13:55:53.629 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 524
+2015-03-30 13:55:53.656 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 525
+2015-03-30 13:55:53.680 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 526
+2015-03-30 13:55:53.704 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 527
+2015-03-30 13:55:53.722 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 528
+2015-03-30 13:55:53.751 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 529
+2015-03-30 13:55:53.778 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 530
+2015-03-30 13:55:53.806 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 531
+2015-03-30 13:55:53.834 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 532
+2015-03-30 13:55:53.859 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 533
+2015-03-30 13:55:53.886 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 534
+2015-03-30 13:55:53.903 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 535
+2015-03-30 13:55:53.905 29297 DEBUG fuel_agent.utils.artifact_utils [-] Flushing file: /dev/mapper/os-root
+2015-03-30 13:56:05.644 29297 DEBUG fuel_agent.utils.artifact_utils [-] File is written: /dev/mapper/os-root
+2015-03-30 13:56:05.645 29297 DEBUG fuel_agent.manager [-] Trying to compare image checksum
+2015-03-30 13:56:13.453 29297 DEBUG fuel_agent.manager [-] Checksum matches successfully: md5=5c6c9b9a53301e61adfec6fa625a85e8
+2015-03-30 13:56:13.453 29297 DEBUG fuel_agent.manager [-] Extending image file systems
+2015-03-30 13:56:13.453 29297 DEBUG fuel_agent.manager [-] Extending ext4 /dev/mapper/os-root
+2015-03-30 13:56:13.453 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: e2fsck -yf /dev/mapper/os-root
+2015-03-30 13:56:13.739 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: resize2fs /dev/mapper/os-root
+2015-03-30 13:56:15.900 29297 DEBUG fuel_agent.manager [-] Processing image: file:///tmp/config-drive.img
+2015-03-30 13:56:15.901 29297 DEBUG fuel_agent.manager [-] Appending uri processor: file:///tmp/config-drive.img
+2015-03-30 13:56:15.901 29297 DEBUG fuel_agent.manager [-] Appending FILE processor
+2015-03-30 13:56:15.901 29297 DEBUG fuel_agent.manager [-] Appending TARGET processor: /dev/sda6
+2015-03-30 13:56:15.901 29297 DEBUG fuel_agent.manager [-] Launching image processing chain
+2015-03-30 13:56:15.901 29297 DEBUG fuel_agent.utils.artifact_utils [-] Processor target: /dev/sda6
+2015-03-30 13:56:15.901 29297 DEBUG fuel_agent.utils.artifact_utils [-] Opening file: /dev/sda6 for write
+2015-03-30 13:56:15.901 29297 DEBUG fuel_agent.utils.artifact_utils [-] Next chunk: 0
+2015-03-30 13:56:15.902 29297 DEBUG fuel_agent.utils.artifact_utils [-] Flushing file: /dev/sda6
+2015-03-30 13:56:15.906 29297 DEBUG fuel_agent.utils.artifact_utils [-] File is written: /dev/sda6
+2015-03-30 13:56:15.907 29297 DEBUG fuel_agent.manager [-] Trying to compare image checksum
+2015-03-30 13:56:15.917 29297 DEBUG fuel_agent.manager [-] Checksum matches successfully: md5=633c2964ce8fa18d4b3f84c7b79b931e
+2015-03-30 13:56:15.917 29297 DEBUG fuel_agent.manager [-] Extending image file systems
+2015-03-30 13:56:15.918 29297 DEBUG fuel_agent.manager [-] --- Installing bootloader (do_bootloader) ---
+2015-03-30 13:56:15.918 29297 DEBUG fuel_agent.manager [-] Mounting target file systems
+2015-03-30 13:56:15.918 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mount -t ext4 /dev/mapper/os-root /tmp/target/
+2015-03-30 13:56:15.937 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mount -t ext2 /dev/md0 /tmp/target/boot
+2015-03-30 13:56:15.969 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mount -t xfs /dev/mapper/vm-nova /tmp/target/var/lib/nova
+2015-03-30 13:56:16.020 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mount --bind /sys /tmp/target/sys
+2015-03-30 13:56:16.024 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mount --bind /dev /tmp/target/dev
+2015-03-30 13:56:16.027 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: mount --bind /proc /tmp/target/proc
+2015-03-30 13:56:16.029 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: chroot /tmp/target grep -v rootfs /proc/mounts
+2015-03-30 13:56:16.046 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blkid -o value -s UUID /dev/md0
+2015-03-30 13:56:16.057 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blkid -o value -s UUID /dev/mapper/os-root
+2015-03-30 13:56:16.059 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blkid -o value -s UUID /dev/mapper/os-swap
+2015-03-30 13:56:16.062 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: blkid -o value -s UUID /dev/mapper/vm-nova
+2015-03-30 13:56:16.065 29297 DEBUG fuel_agent.utils.grub_utils [-] Looking for grub-install: trying /sbin/grub-install
+2015-03-30 13:56:16.066 29297 DEBUG fuel_agent.utils.grub_utils [-] Looking for grub-install: trying /sbin/grub2-install
+2015-03-30 13:56:16.066 29297 DEBUG fuel_agent.utils.grub_utils [-] Looking for grub-install: trying /usr/sbin/grub-install
+2015-03-30 13:56:16.067 29297 DEBUG fuel_agent.utils.grub_utils [-] grub-install found: /usr/sbin/grub-install
+2015-03-30 13:56:16.067 29297 DEBUG fuel_agent.utils.grub_utils [-] Trying to run /usr/sbin/grub-install --version
+2015-03-30 13:56:16.067 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: chroot /tmp/target /usr/sbin/grub-install --version
+2015-03-30 13:56:16.083 29297 DEBUG fuel_agent.utils.grub_utils [-] Looks like grub version is 2
+2015-03-30 13:56:16.086 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: chroot /tmp/target /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
+2015-03-30 13:56:20.686 29297 DEBUG fuel_agent.utils.grub_utils [-] Looking for grub-install: trying /sbin/grub-install
+2015-03-30 13:56:20.686 29297 DEBUG fuel_agent.utils.grub_utils [-] Looking for grub-install: trying /sbin/grub2-install
+2015-03-30 13:56:20.686 29297 DEBUG fuel_agent.utils.grub_utils [-] Looking for grub-install: trying /usr/sbin/grub-install
+2015-03-30 13:56:20.686 29297 DEBUG fuel_agent.utils.grub_utils [-] grub-install found: /usr/sbin/grub-install
+2015-03-30 13:56:20.686 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: chroot /tmp/target /usr/sbin/grub-install /dev/sda
+2015-03-30 13:56:23.616 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: chroot /tmp/target /usr/sbin/grub-install /dev/sdb
+2015-03-30 13:56:28.372 29297 DEBUG fuel_agent.manager [-] Umounting target file systems
+2015-03-30 13:56:28.372 29297 DEBUG fuel_agent.utils.fs_utils [-] Trying to umount /tmp/target/proc
+2015-03-30 13:56:28.372 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: umount /tmp/target/proc
+2015-03-30 13:56:28.375 29297 DEBUG fuel_agent.utils.fs_utils [-] Trying to umount /tmp/target/dev
+2015-03-30 13:56:28.376 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: umount /tmp/target/dev
+2015-03-30 13:56:28.379 29297 DEBUG fuel_agent.utils.fs_utils [-] Trying to umount /tmp/target/sys
+2015-03-30 13:56:28.379 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: umount /tmp/target/sys
+2015-03-30 13:56:28.382 29297 DEBUG fuel_agent.utils.fs_utils [-] Trying to umount /dev/mapper/vm-nova
+2015-03-30 13:56:28.382 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: umount /dev/mapper/vm-nova
+2015-03-30 13:56:28.386 29297 DEBUG fuel_agent.utils.fs_utils [-] Trying to umount /dev/md0
+2015-03-30 13:56:28.386 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: umount /dev/md0
+2015-03-30 13:56:28.403 29297 DEBUG fuel_agent.utils.fs_utils [-] Trying to umount /dev/mapper/os-root
+2015-03-30 13:56:28.403 29297 DEBUG fuel_agent.utils.utils [-] Trying to execute command: umount /dev/mapper/os-root

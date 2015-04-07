@@ -239,6 +239,24 @@ module Astute
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
         },
 
+        'image-based-provisioning' =>
+          {'type' => 'pattern-list',
+          'chunk_size' => 10000,
+          'pattern_list' => [
+           {'pattern' => '--- Provisioning (do_provisioning) ---', 'progress' => 0.01},
+           {'pattern' => '--- Partitioning disks (do_partitioning) ---', 'progress' => 0.05},
+           {'pattern' => '--- Creating configdrive (do_configdrive) ---', 'progress' => 0.10},
+           {'pattern' => 'Next chunk',
+            'number' => 500,
+            'p_min' => 0.10,
+            'p_max' => 0.90, },
+           {'pattern' => '--- Installing bootloader (do_bootloader) ---', 'progress' => 0.90},
+           {'pattern' => 'Umounting target file systems', 'progress' => 0.95},
+          ],
+          'filename' => 'bootstrap/fuel-agent.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
+        },
+
         'ubuntu-provisioning' =>
           {'type' => 'supposed-time',
           'chunk_size' => 10000,

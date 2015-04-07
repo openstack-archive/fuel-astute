@@ -242,7 +242,10 @@ module Astute
         cobbler.netboot_nodes(nodes, false)
         # change node type to prevent unexpected erase
         change_nodes_type(reporter, task_id, nodes)
-        image_provision(reporter, task_id, nodes)
+        # Run parallel reporter
+        report_image_provision(reporter, task_id, nodes) do
+          image_provision(reporter, task_id, nodes)
+        end
       end
       # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
       reboot_events = cobbler.reboot_nodes(nodes)
@@ -465,6 +468,22 @@ module Astute
         end
       end
       false
+    end
+
+    def report_image_provision(reporter, task_id, nodes, &block)
+      end_watch = false
+      provision_log_parser = LogParser::ParseProvisionLogs.new
+
+      watch_and_report = Thread.new do
+        loop do
+          report_about_progress(reporter, provision_log_parser, [], nodes)
+          sleep 1
+        end
+      end
+
+      block.call
+
+      watch_and_report.exit
     end
 
   end
