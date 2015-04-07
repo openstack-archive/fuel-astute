@@ -64,9 +64,21 @@ module Astute
     end
 
     def provision(reporter, task_id, provisioning_info, provision_method)
+      provisioner = Provisioner.new(@log_parsing)
       if provisioning_info['pre_provision']
         ctx = Context.new(task_id, reporter)
-        Astute::NailgunHooks.new(provisioning_info['pre_provision'], ctx, 'provision').process
+        provisioner.report_image_provision(
+          reporter,
+          task_id,
+          provisioning_info['nodes'],
+          image_log_parser(provisioning_info)
+        ) do
+          Astute::NailgunHooks.new(
+            provisioning_info['pre_provision'],
+            ctx,
+            'provision'
+          ).process
+        end
       end
 
       # NOTE(kozhukalov): Some of our pre-provision tasks need cobbler to be synced
@@ -75,7 +87,6 @@ module Astute
       cobbler = CobblerManager.new(provisioning_info['engine'], reporter)
       cobbler.sync
 
-      provisioner = Provisioner.new(@log_parsing)
       provisioner.provision(reporter, task_id, provisioning_info, provision_method)
     end
 
@@ -91,8 +102,8 @@ module Astute
     end
 
     def stop_provision(reporter, task_id, engine_attrs, nodes)
-        provisioner = Provisioner.new(@log_parsing)
-        provisioner.stop_provision(reporter, task_id, engine_attrs, nodes)
+      provisioner = Provisioner.new(@log_parsing)
+      provisioner.stop_provision(reporter, task_id, engine_attrs, nodes)
     end
 
     def dump_environment(reporter, task_id, settings)
@@ -150,6 +161,19 @@ module Astute
         raise "Network verification not avaliable because nodes #{not_avaliable_nodes} " \
           "not avaliable via mcollective"
       end
+    end
+
+    def image_log_parser(provisioning_info)
+      log_parser = LogParser::ParseImageBuildLogs.new
+      log_parser.pattern_spec['cluster_id'] = calculate_cluster_id(provisioning_info)
+      log_parser
+    end
+
+    def calculate_cluster_id(provisioning_info)
+      return nil unless provisioning_info['pre_provision'].present?
+      cmd = provisioning_info['pre_provision'].first['cmd']
+      # find cluster id from cmd using pattern fuel-agent-env-<Integer>.log
+      cmd[/fuel-agent-env-(\d)/, 1]
     end
 
   end # class

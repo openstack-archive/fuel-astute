@@ -131,7 +131,7 @@ module Astute
     end
 
     class ParseNodeLogs
-      attr_reader :pattern_spec
+      attr_accessor :pattern_spec
 
       def initialize
         @pattern_spec = {}
