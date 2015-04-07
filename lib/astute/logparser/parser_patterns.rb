@@ -239,6 +239,41 @@ module Astute
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
         },
 
+        'provisioning-image-building' =>
+        {'type' => 'supposed-time',
+         'chunk_size' => 10000,
+         'date_format' => '%Y-%m-%d %H:%M:%S',
+         'date_regexp' => '^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}',
+         'pattern_list' => [
+           {'pattern' => '--- Building image (do_build_image) ---', 'supposed_time' => 25},
+           {'pattern' => '*** Shipping image content ***', 'supposed_time' => 25},
+           {'pattern' => 'Running deboostrap completed', 'supposed_time' => 540},
+           {'pattern' => 'Running apt-get install completed', 'supposed_time' => 960},
+           {'pattern' => '--- Building image END (do_build_image) ---', 'supposed_time' => 480},
+           {'pattern' => 'All necessary images are available.', 'supposed_time' => 20}
+         ].reverse,
+         'filename' => "fuel-agent-env",
+         'path_format' => "<%= @pattern_spec['path_prefix']%><%= @pattern_spec['filename']%>-<%= @pattern_spec['cluster_id']%>.log"
+        },
+
+        'image-based-provisioning' =>
+          {'type' => 'pattern-list',
+           'chunk_size' => 10000,
+           'pattern_list' => [
+             {'pattern' => '--- Provisioning (do_provisioning) ---', 'progress' => 0.81},
+             {'pattern' => '--- Partitioning disks (do_partitioning) ---', 'progress' => 0.82},
+             {'pattern' => '--- Creating configdrive (do_configdrive) ---', 'progress' => 0.92},
+             {'pattern' => 'Next chunk',
+              'number' => 600,
+              'p_min' => 0.92,
+              'p_max' => 0.98},
+             {'pattern' => '--- Installing bootloader (do_bootloader) ---', 'progress' => 0.99},
+             {'pattern' => '--- Provisioning END (do_provisioning) ---', 'progress' => 1}
+          ],
+          'filename' => 'bootstrap/fuel-agent.log',
+          'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['hostname'] %>/<%= @pattern_spec['filename'] %>",
+        },
+
         'ubuntu-provisioning' =>
           {'type' => 'supposed-time',
           'chunk_size' => 10000,
