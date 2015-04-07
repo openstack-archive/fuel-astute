@@ -108,7 +108,6 @@ module Astute
       raise "Nodes to provision are not provided!" if nodes_to_provision.empty?
 
       provision_log_parser = @log_parsing ? LogParser::ParseProvisionLogs.new : LogParser::NoParsing.new
-      proxy_reporter = ProxyReporter::DeploymentProxyReporter.new(reporter)
 
       prepare_logs_for_parsing(provision_log_parser, nodes_to_provision)
 
@@ -138,11 +137,11 @@ module Astute
               new_nodes.each {|n| nodes_timeout[n['uid']] = timeout_time}
             end
 
-            nodes_types = node_type(proxy_reporter, task_id, nodes.map {|n| n['uid']}, 5)
+            nodes_types = node_type(reporter, task_id, nodes.map {|n| n['uid']}, 5)
             target_uids, nodes_not_booted, reject_uids = analize_node_types(nodes_types, nodes_not_booted)
 
             if reject_uids.present?
-              ctx ||= Context.new(task_id, proxy_reporter)
+              ctx ||= Context.new(task_id, reporter)
               reject_nodes = reject_uids.map { |uid| {'uid' => uid } }
               NodesRemover.new(ctx, reject_nodes, reboot=true).remove
             end
@@ -168,7 +167,7 @@ module Astute
             end
 
             Astute.logger.debug("Still provisioning following nodes: #{nodes_not_booted}")
-            report_about_progress(proxy_reporter, provision_log_parser, target_uids, nodes)
+            report_about_progress(reporter, provision_log_parser, target_uids, nodes)
           end
         end
       end
@@ -224,7 +223,10 @@ module Astute
         cobbler.netboot_nodes(nodes, false)
         # change node type to prevent unexpected erase
         change_nodes_type(reporter, task_id, nodes)
-        failed_uids |= image_provision(reporter, task_id, nodes)
+        # Run parallel reporter
+        report_image_provision(reporter, task_id, nodes) do
+          failed_uids |= image_provision(reporter, task_id, nodes)
+        end
       end
       # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
       reboot_events = cobbler.reboot_nodes(nodes)
@@ -245,6 +247,22 @@ module Astute
         control_reboot_using_ssh(reporter, task_id, nodes)
       end
       return failed_uids
+    end
+
+    def report_image_provision(reporter, task_id, nodes,
+      provision_log_parser=LogParser::ParseProvisionLogs.new, &block)
+      prepare_logs_for_parsing(provision_log_parser, nodes)
+
+      watch_and_report = Thread.new do
+        loop do
+          report_about_progress(reporter, provision_log_parser, [], nodes)
+          sleep 1
+        end
+      end
+
+      block.call
+    ensure
+      watch_and_report.exit if defined? watch_and_report
     end
 
     private

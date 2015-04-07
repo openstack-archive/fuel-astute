@@ -223,5 +223,71 @@ module Astute
       end
 
     end # DeploymentProxyReporter
+
+    class ProvisiningProxyReporter < DeploymentProxyReporter
+
+      def initialize(up_reporter, deployment_info=[])
+        @up_reporter = up_reporter
+        @nodes = deployment_info.inject([]) do |nodes, di|
+          nodes << {'uid' => di['uid']}
+        end
+      end
+
+      def report(data)
+        Astute.logger.debug("Data received by ProvisiningProxyReporter to report it up: #{data.inspect}")
+        report_new_data(data)
+      end
+
+      private
+
+      def report_new_data(data)
+        if data['nodes']
+          nodes_to_report = get_nodes_to_report(data['nodes'])
+          return if nodes_to_report.empty? # Let's report only if nodes updated
+
+          # Update nodes attributes in @nodes.
+          update_saved_nodes(nodes_to_report)
+          data['nodes'] = nodes_to_report
+        end
+        Astute.logger.debug("Data send by DeploymentProxyReporter to report it up: #{data.inspect}")
+        @up_reporter.report(data)
+      end
+
+      def node_validate(node)
+        validates_basic_fields(node)
+        normalization_progress(node)
+        compare_with_previous_state(node)
+      end
+
+      # Comparison information about node with previous state.
+      def compare_with_previous_state(node)
+        saved_node = @nodes.find { |x| x['uid'] == node['uid'] }
+        if saved_node
+          saved_status = STATES[saved_node['status']].to_i
+          node_status = STATES[node['status']] || saved_status
+          saved_progress = saved_node['progress'].to_i
+          node_progress = node['progress'] || saved_progress
+
+          if node_status < saved_status
+            Astute.logger.warn("Attempt to assign lower status detected: "\
+                               "Status was: #{saved_node['status']}, attempted to "\
+                               "assign: #{node['status']}. Skipping this node (id=#{node['uid']})")
+            return
+          end
+          if node_progress < saved_progress && node_status == saved_status
+            Astute.logger.warn("Attempt to assign lesser progress detected: "\
+                               "Progress was: #{saved_node['status']}, attempted to "\
+                               "assign: #{node['progress']}. Skipping this node (id=#{node['uid']})")
+            return
+          end
+
+          # We need to update node here only if progress is greater, or status changed
+          return if node.select{|k, v| saved_node[k] != v }.empty?
+        end
+        node
+      end
+
+    end # ProvisiningProxyReporter
+
   end # ProxyReporter
 end # Astute
