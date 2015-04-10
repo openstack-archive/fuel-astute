@@ -65,6 +65,44 @@ module Astute
       answer
     end
 
+    def self.check_ceph_mons(ctx, nodes)
+      answer = {"status" => "ready"}
+      ceph_nodes = nodes.select { |n| n["roles"].include? "controller" }
+      ceph_mons = ceph_nodes.collect{ |n| n["slave_name"] }
+      #Get the list of mon nodes
+      shell = MClient.new(ctx, "execute_shell_command", [ceph_nodes[0]["id"]], timeout=120, retries=1)
+      result = shell.execute(:cmd => "ceph -f json mon dump").first.results
+      mon_dump = JSON.parse(result[:data][:stdout])
+      left_mons = mon_dump['mons'].select { | n | n if ! ceph_mons.include? n['name'] }
+      left_mon_names = left_mons.collect { |n| n['name'] }
+      left_mon_ips = left_mons.collect { |n| n['addr'].split(":")[0] }
+
+      ceph_nodes.each do | node |
+        Astute.logger.debug("Node B#{node}E")
+        #check whether node has ceph installed and is in ceph mon list
+        cmd = "ceph-conf --lookup mon_initial_members| grep -q -E \"(^|\s)#{node['slave_name']}(\s|$)\""
+        shell = MClient.new(ctx, "execute_shell_command", [node["id"]], timeout=120, retries=1)
+        result = shell.execute(:cmd => cmd).first.results
+        if result[:data][:exit_code].to_i != 0
+          Astute.logger.debug("Node #{node['slave_name']} does not have ceph installed or is not in ceph mons")
+          return answer
+        end
+        #remove node from ceph mon list
+        shell.execute(:cmd => "ceph mon remove #{node["slave_name"]}").first.results
+      end
+
+      #Fix the ceph.conf on the left mon nodes
+      left_mon_names.each do | node |
+        mon_initial_members_cmd = "sed -i \"s/mon_initial_members.*/mon_initial_members\ = #{left_mon_names.join(" ")}/g\" /etc/ceph/ceph.conf"
+        mon_host_cmd = "sed -i \"s/mon_host.*/mon_host\ = #{left_mon_ips.join(" ")}/g\" /etc/ceph/ceph.conf"
+        shell = MClient.new(ctx, "execute_shell_command", [node.split('-')[1]], timeout=120, retries=1)
+        shell.execute(:cmd => mon_initial_members_cmd).first.results
+        shell.execute(:cmd => mon_host_cmd).first.results
+      end
+
+      answer
+
+    end
   end
 end
 
