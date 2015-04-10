@@ -132,8 +132,12 @@ module Astute
       Network.multicast_verification(ctx, nodes)
     end
 
-    def check_ceph_osds(reporter, task_id, nodes)
+    def remove_ceph_osds(reporter, task_id, nodes)
       PreDelete.check_ceph_osds(Context.new(task_id, reporter), nodes)
+    end
+
+    def remove_ceph_mons(reporter, task_id, nodes)
+      PreDelete.check_ceph_mons(Context.new(task_id, reporter), nodes)
     end
 
     private
