@@ -65,6 +65,48 @@ module Astute
       answer
     end
 
+    def self.check_ceph_mons(ctx, nodes)
+      answer = {"status" => "ready"}
+      ceph_nodes = nodes.select { |n| n["roles"].include? "controller" }
+      ceph_mons = ceph_nodes.collect{ |n| n["slave_name"] }
+
+      #Determine whether cluster has enabled ceph
+      shell = MClient.new(ctx, "execute_shell_command", [ceph_nodes[0]["id"]], timeout=120, retries=1)
+      result = shell.execute(:cmd => "hiera storage").first.results
+      storage_hash = result[:data][:stdout]
+      if !( storage_hash['volumes_ceph'] or storage_hash['images_ceph'] or storage_hash['objects_ceph'] or storage_hash['ephemeral_ceph'])
+        Astute.logger.debug("This cluster does not use ceph")
+        return answer
+      end
+
+      #Get the list of mon nodes
+      result = shell.execute(:cmd => "ceph -f json mon dump").first.results
+      mon_dump = JSON.parse(result[:data][:stdout])
+      left_mons = mon_dump['mons'].select { | n | n if ! ceph_mons.include? n['name'] }
+      left_mon_names = left_mons.collect { |n| n['name'] }
+      left_mon_ips = left_mons.collect { |n| n['addr'].split(":")[0] }
+
+      #Remove nodes from ceph cluster
+      ceph_nodes.each do | node |
+        shell = MClient.new(ctx, "execute_shell_command", [node["id"]], timeout=120, retries=1)
+        #remove node from ceph mon list
+        shell.execute(:cmd => "ceph mon remove #{node["slave_name"]}").first.results
+      end
+
+      #Fix the ceph.conf on the left mon nodes
+      left_mon_names.each do | node |
+        mon_initial_members_cmd = "sed -i \"s/mon_initial_members.*/mon_initial_members\ = #{left_mon_names.join(" ")}/g\" /etc/ceph/ceph.conf"
+        mon_host_cmd = "sed -i \"s/mon_host.*/mon_host\ = #{left_mon_ips.join(" ")}/g\" /etc/ceph/ceph.conf"
+        shell = MClient.new(ctx, "execute_shell_command", [node.split('-')[1]], timeout=120, retries=1)
+        shell.execute(:cmd => mon_initial_members_cmd).first.results
+        shell.execute(:cmd => mon_host_cmd).first.results
+      end
+
+      answer
+
+    end
+
   end
+
 end
 
