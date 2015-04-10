@@ -65,6 +65,27 @@ module Astute
       answer
     end
 
+    def self.check_ceph_mons(ctx, nodes)
+      #answer = {"status" => "ready"}
+     
+      ceph_nodes = nodes.select { |n| n["roles"].include? "controller" }
+      #ceph_osds = ceph_nodes.collect{ |n| n["slave_name"] }
+      #return answer if ceph_osds.empty?
+
+      cmd = "ceph -f json mon dump"
+      shell = MClient.new(ctx, "execute_shell_command", [ceph_nodes[0]["id"]], timeout=60, retries=1)
+      result = shell.execute(:cmd => cmd).first.results
+      
+      msg = result
+      
+      Astute.logger.debug("RRRRRR")
+          
+      answer = {"status" => "error", "error" => msg}
+        
+      answer
+
+    end
+
   end
 end
 
