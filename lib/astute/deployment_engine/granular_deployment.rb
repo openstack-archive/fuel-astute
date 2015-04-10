@@ -29,7 +29,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
     @running_tasks = {}
     @nodes_roles = nodes.inject({}) { |h, n| h.merge({n['uid'] => n['role']}) }
     @nodes_by_uid = nodes.inject({}) { |h, n| h.merge({ n['uid'] => n }) }
-    @puppet_debug = nodes.first['puppet_debug']
+    @puppet_debug = nodes.first.fetch('puppet_debug', true)
 
     begin
       @task_manager = Astute::TaskManager.new(nodes)
