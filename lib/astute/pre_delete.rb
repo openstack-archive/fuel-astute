@@ -65,6 +65,33 @@ module Astute
       answer
     end
 
+    def self.check_ceph_mons(ctx, nodes)
+      answer = {"status" => "ready"}
+      ceph_nodes = nodes.select { |n| n["roles"].include? "controller" }
+      ceph_mons = ceph_nodes.collect{ |n| n["slave_name"] }
+      return answer if ceph_mons.empty?
+
+      cmd = "pgrep ceph-mon"
+      shell = MClient.new(ctx, "execute_shell_command", [ceph_nodes[0]["id"]], timeout=120, retries=1)
+      result = shell.execute(:cmd => cmd).first.results
+      if result[:data][:exit_code].to_i != 0
+        Astute.logger.debug("There is no any ceph-mon process")
+        return {"status" => "ready", }
+      end
+      
+      cmd = "ceph -f json mon dump"
+      result = shell.execute(:cmd => cmd).first.results
+      
+      mon_dump = JSON.parse(result[:data][:stdout])
+
+      mon_dump['mons'].each do | mon |
+        result = shell.execute(:cmd => "ceph mon remove #{mon['name']}").first.results if ceph_mons.include? mon["name"]  
+      end
+        
+      answer
+
+    end
+
   end
 end
 
