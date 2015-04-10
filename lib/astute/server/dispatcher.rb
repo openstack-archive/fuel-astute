@@ -178,11 +178,21 @@ module Astute
           return unless remove_nodes_ceph_check(data)
         end
 
-        result = if nodes.empty?
-          Astute.logger.debug("#{task_uuid} Node list is empty")
-          nil
+        # Only run the check for DeletionTask, not for ClusterDeletionTask
+        if  result['status'] == 'ready' && data['respond_to'] == 'remove_nodes_resp'
+          result = @orchestrator.remove_ceph_mons(reporter, task_uuid, nodes)
         else
-          @orchestrator.remove_nodes(reporter, task_uuid, engine, nodes)
+          result = {'status' => 'ready'}
+        end
+
+
+        if result["status"] == "ready"
+          if nodes.empty?
+            Astute.logger.debug("#{task_uuid} Node list is empty")
+            result = nil
+          else
+            result = @orchestrator.remove_nodes(reporter, task_uuid, engine, nodes)
+          end
         end
 
         report_result(result, reporter)
