@@ -44,21 +44,22 @@ describe Astute::Server::Dispatcher do
       }
     }
 
-    it 'should not call remove_nodes_ceph_check' do
+    it 'should not call remove_ceph_osds' do
       data['args']['check_ceph'] = false
       orchestrator.expects(:remove_nodes).once
-      dispatcher.expects(:remove_nodes_ceph_check).never
+      dispatcher.expects(:remove_ceph_osds).never
       dispatcher.remove_nodes(data)
     end
 
     it 'should not remove nodes when check fails' do
-      dispatcher.stubs(:remove_nodes_ceph_check).returns(false)
+      dispatcher.stubs(:remove_ceph_osds).returns({"status" => "error"})
       orchestrator.expects(:remove_nodes).never
       dispatcher.remove_nodes(data)
     end
 
     it 'should remove nodes when check passes' do
-      dispatcher.stubs(:remove_nodes_ceph_check).returns(true)
+      dispatcher.stubs(:remove_ceph_osds).returns({"status" => "ready"})
+      dispatcher.stubs(:remove_ceph_mons).returns({"status" => "ready"})
       orchestrator.expects(:remove_nodes).once
       dispatcher.remove_nodes(data)
     end
