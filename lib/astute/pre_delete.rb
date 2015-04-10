@@ -65,6 +65,27 @@ module Astute
       answer
     end
 
+    def self.check_ceph_mons(ctx, nodes)
+      answer = {"status" => "ready"}
+      ceph_nodes = nodes.select { |n| n["roles"].include? "controller" }
+
+      ceph_nodes.each do | node |
+        #check whether node has ceph installed and is in ceph mon list
+        cmd = "ceph-conf --lookup mon_initial_members| grep -q -E \"(^|\s)#{node['slave_name']}(\s|$)\""
+        shell = MClient.new(ctx, "execute_shell_command", [node["id"]], timeout=120, retries=1)
+        result = shell.execute(:cmd => cmd).first.results
+        if result[:data][:exit_code].to_i != 0
+          Astute.logger.debug("Node #{node['slave_name']} does not have ceph installed or is not in ceph mons")
+          return answer
+        end
+        #remove node from ceph mon list
+        shell.execute(:cmd => "ceph mon remove #{node["slave_name"]}").first.results
+      end
+
+      answer
+
+    end
+
   end
 end
 
