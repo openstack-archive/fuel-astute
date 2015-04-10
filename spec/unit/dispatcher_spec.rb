@@ -18,7 +18,7 @@ require File.join(File.dirname(__FILE__), '../spec_helper')
 describe Astute::Server::Dispatcher do
   include SpecHelpers
 
-  context "remove_nodes" do
+  describe "#remove_nodes" do
     let(:dispatcher) do
       dispatcher = Astute::Server::Dispatcher.new(mock)
       dispatcher.stubs(:report_result)
@@ -27,10 +27,7 @@ describe Astute::Server::Dispatcher do
     end
 
     let (:orchestrator) do
-      orchestrator = Astute::Orchestrator.any_instance
-      orchestrator.stubs(:remove_nodes)
-
-      orchestrator
+      Astute::Orchestrator.any_instance
     end
 
     let (:data) {
@@ -44,22 +41,23 @@ describe Astute::Server::Dispatcher do
       }
     }
 
-    it 'should not call remove_nodes_ceph_check' do
+    it 'should not call check_ceph_osds' do
       data['args']['check_ceph'] = false
-      orchestrator.expects(:remove_nodes).once
-      dispatcher.expects(:remove_nodes_ceph_check).never
+      Astute::Provisioner.any_instance.expects(:remove_nodes).once
+      orchestrator.expects(:check_ceph_osds).never
       dispatcher.remove_nodes(data)
     end
 
     it 'should not remove nodes when check fails' do
-      dispatcher.stubs(:remove_nodes_ceph_check).returns(false)
-      orchestrator.expects(:remove_nodes).never
+      Astute::Provisioner.any_instance.expects(:remove_nodes).never
+      orchestrator.stubs(:check_ceph_osds).returns({"status" => "error"})
       dispatcher.remove_nodes(data)
     end
 
     it 'should remove nodes when check passes' do
-      dispatcher.stubs(:remove_nodes_ceph_check).returns(true)
-      orchestrator.expects(:remove_nodes).once
+      orchestrator.stubs(:check_ceph_osds).returns({"status" => "ready"})
+      orchestrator.stubs(:remove_ceph_mons).returns({"status" => "ready"})
+      Astute::Provisioner.any_instance.expects(:remove_nodes).once
       dispatcher.remove_nodes(data)
     end
   end
