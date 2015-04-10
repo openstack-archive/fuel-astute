@@ -94,9 +94,22 @@ module Astute
       provisioner.provision(proxy_reporter, task_id, provisioning_info, provision_method)
     end
 
-    def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true, raise_if_error=false)
+    def remove_nodes(reporter, task_id, engine_attrs, nodes, options={})
+      options[:reboot] = true unless options.has_key?(:reboot)
+      options[:raise_if_error] = false unless options.has_key?(:raise_if_error)
+
+      result = perform_pre_deletion_tasks(reporter, task_id, nodes, options)
+      return result if result['status'] != 'ready'
+
       provisioner = Provisioner.new(@log_parsing)
-      provisioner.remove_nodes(reporter, task_id, engine_attrs, nodes, reboot, raise_if_error)
+      provisioner.remove_nodes(
+        reporter,
+        task_id,
+        engine_attrs,
+        nodes,
+        options[:reboot],
+        options[:raise_if_error]
+      )
     end
 
     def stop_puppet_deploy(reporter, task_id, nodes)
@@ -130,10 +143,6 @@ module Astute
       ctx = Context.new(task_id, reporter)
       validate_nodes_access(ctx, nodes)
       Network.multicast_verification(ctx, nodes)
-    end
-
-    def check_ceph_osds(reporter, task_id, nodes)
-      PreDelete.check_ceph_osds(Context.new(task_id, reporter), nodes)
     end
 
     private
@@ -181,6 +190,24 @@ module Astute
       cluster_id = cmd[/fuel-agent-env-(\d+)/, 1]
       Astute.logger.debug "Cluster id: #{cluster_id}"
       cluster_id
+    end
+
+    def check_ceph_osds(reporter, task_id, nodes)
+      PreDelete.check_ceph_osds(Context.new(task_id, reporter), nodes)
+    end
+
+    def remove_ceph_mons(reporter, task_id, nodes)
+      PreDelete.remove_ceph_mons(Context.new(task_id, reporter), nodes)
+    end
+
+    def perform_pre_deletion_tasks(reporter, task_id, nodes, options={})
+      result = {'status' => 'ready'}
+      if options[:check_ceph]
+        result = check_ceph_osds(reporter, task_id, nodes)
+        return result if result['status'] != 'ready'
+        result = remove_ceph_mons(reporter, task_id, nodes)
+      end
+      result
     end
 
   end # class
