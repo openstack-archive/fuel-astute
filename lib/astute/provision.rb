@@ -31,6 +31,47 @@ module Astute
       end
     end
 
+    def check_ubuntu_repo_connectivity(nodes, task_id, reporter)
+      ubuntu_nodes = nodes.select{|n| n['profile'].include? 'ubuntu'}
+      node_ids = ubuntu_nodes.map{|n| n['uid']}
+
+      wget_timeout = 5
+
+      shell = MClient.new(Context.new(task_id, reporter),
+                          'execute_shell_command',
+                          node_ids,
+                          check_result=false,
+                          timeout=wget_timeout*node_ids.length)
+
+      # we are using first ubuntu nodes repo setup, because all nodes get their
+      # repo config from fuel config for their cluster, so they all have same
+      # repositories in them
+      urls = ubuntu_nodes[0]['ks_meta']['repo_setup']['repos']
+        .select{|r| r['type'] == 'deb'}
+        .map{|n| [n['uri'], 'dists', n['suite'], 'Release'].map{|s| s.gsub(/^\/+|\/+$/, "")}.join('/')}
+
+      command = "for i in '#{urls.join("' '")}'; do wget --timeout=5 $i || exit 1; done"
+
+      mco_result = shell.execute(:cmd => command)
+
+      result = mco_result.map do |n|
+        {
+          'uid'       => n.results[:sender],
+          'exit code' => n.results[:data][:exit_code]
+        }
+      end
+
+
+      if result.any?{|n| n['exit code'] != 0}
+        failed_ids = result.select{|r| r['exit code'] != 0}.map{|r| r['uid']}
+        failed_nodes = ubuntu_nodes.select{|n| failed_ids.include?(n['uid'])}
+
+        error_message = "These nodes are unable to connect to Ubuntu repositories: #{failed_nodes.map{|n| n['slave_name']}.join(',')}"
+        Astute.logger.error(error_message)
+        raise error_message
+      end
+    end
+
     def provision(reporter, task_id, provisioning_info, provision_method)
       engine_attrs = provisioning_info['engine']
       nodes = provisioning_info['nodes']
@@ -42,6 +83,8 @@ module Astute
       cobbler = CobblerManager.new(engine_attrs, reporter)
       result_msg = {'nodes' => []}
       begin
+        self.check_ubuntu_repo_connectivity(nodes, task_id, reporter)
+
         remove_nodes(
           reporter,
           task_id,
