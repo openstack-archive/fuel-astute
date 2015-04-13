@@ -183,6 +183,35 @@ module Astute
         remove_nodes(data)
       end
 
+      def execute_shell(data, _)
+        Astute.logger.info("'execute_shell' method called with data: #{data.inspect}")
+
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+
+        begin
+          shell = MClient.new(Context.new(data['args']['task_uuid'], reporter),
+                              'execute_shell_command',
+                              data['args']['node_ids'],
+                              check_result=false,
+                              timeout=2)
+
+          mco_result = shell.execute(:cmd => data['args']['cmd'])
+
+          result = mco_result.map do |n|
+            {
+              'uid'       => n.results[:sender],
+              'exit code' => n.results[:data][:exit_code]
+            }
+          end
+
+          reporter.report('status' => 'ready', 'progress' => 100, 'result' => result)
+        rescue Timeout::Error
+          msg = "Timeout of deployment is exceeded."
+          Astute.logger.error msg
+          reporter.report('status' => 'error', 'error' => msg)
+        end
+      end
+
       def execute_tasks(data)
         task_uuid = data['args']['task_uuid']
         reporter = Astute::Server::Reporter.new(
