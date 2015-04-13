@@ -16,6 +16,7 @@
 
 require 'mcollective'
 require 'timeout'
+require 'pry'
 
 module Astute
 

@@ -6,14 +6,15 @@
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
+#    Unless required by applicable law or agreed to in wrxiting, software
+#    distributed under the License is distributed on an "AS IS" BASIS, withOUT
+#    WARRANTIES OR CONDxitIONS OF ANY KIND, exither express or implied. See the
+#    License for the specific language governing permissions and limxitations
 #    under the License.
 
 
 require File.join(File.dirname(__FILE__), '../spec_helper')
+require 'mcollective'
 
 describe Astute::Provisioner do
   include SpecHelpers
@@ -208,7 +209,7 @@ describe Astute::Provisioner do
   end
 
   describe '#provision' do
-
+		let(:ctx) { mock_ctx }
     context 'cobler cases' do
       it "raise error if cobler settings empty" do
         @provisioner.stubs(:provision_and_watch_progress).returns([[],[]])
@@ -335,6 +336,16 @@ describe Astute::Provisioner do
       end
 
       it 'success report if all nodes were provisioned' do
+        node_result = { :sender => 1, :data => {:exit_code => 0}}
+        shell_mock = mock()
+        node_result_mock = mock()
+        node_result_mock.stubs('results').returns(node_result)
+        shell_mock.stubs('execute').returns(
+          [node_result_mock]
+        ).at_least 0
+
+        Astute::MClient.stubs(:new).returns(shell_mock)
+
         Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
         @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
         success_msg = {
@@ -344,7 +355,6 @@ describe Astute::Provisioner do
             'uid' => '1',
             'status' => 'provisioned',
             'progress' => 100}]}
-
         @reporter.expects(:report).with(success_msg).once
         @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
       end
@@ -497,7 +507,69 @@ describe Astute::Provisioner do
                         'fault_tolerance' => []}
 
       @reporter.expects(:report).with(success_msg).once
+
+      node_result = { :sender => 1, :data => {:exit_code => 0}}
+      shell_mock = mock()
+      node_result_mock = mock()
+      node_result_mock.stubs('results').returns(node_result)
+      shell_mock.stubs('execute').returns(
+        [node_result_mock]
+      ).at_least 0
+
+      Astute::MClient.stubs(:new).returns(shell_mock)
       @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+    end
+
+    it 'fails to connect to repositories' do
+      Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
+      @provisioner.stubs(:remove_nodes).returns([])
+      Astute.config.provisioning_timeout = 5
+      nodes = [
+        { 'uid' => '1',
+          'profile' => 'ubuntu',
+          'slave_name' => 'slave1',
+          'ks_meta' => {
+            'repo_setup' => {
+              'repos' => [
+                {
+                  'type' => 'deb',
+                  'uri' => 'uri',
+                  'suite' => 'suite'
+                }
+              ]
+            }   
+          }
+        },
+      ]
+
+      error_msg = {
+        'status' => 'error',
+        'progress' => 100,
+        'error' => "These nodes are unable to connect to Ubuntu repositories: slave1"
+      }
+
+      provision_info = {'nodes' => nodes,
+                        'engine' => data['engine'],
+                        'fault_tolerance' => []}
+
+      @reporter.expects(:report).with(error_msg).once
+
+      node_result = { :sender => 1, :data => {:exit_code => 1}}
+      shell_mock = mock()
+      node_result_mock = mock()
+      node_result_mock.stubs('results').returns(node_result)
+      shell_mock.stubs('execute').returns(
+        [node_result_mock]
+      ).at_least 0
+
+      Astute::MClient.stubs(:new).returns(shell_mock)
+
+      exception_raised = false
+      begin
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+      rescue RuntimeError
+        exception_raised = true
+      end
     end
 
     it 'should provision nodes in chunks' do
@@ -860,4 +932,5 @@ describe Astute::Provisioner do
       result.should eql(['1'])
     end
   end
+
 end
