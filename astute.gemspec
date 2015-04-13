@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'mocha', '0.13.3'
   s.add_development_dependency 'simplecov', '~> 0.7.1'
   s.add_development_dependency 'simplecov-rcov', '~> 0.2.3'
+  s.add_development_dependency 'pry', '0.10.1'
 
   s.files   = Dir.glob("{bin,lib,spec,examples}/**/*")
   s.executables = ['astuted']
