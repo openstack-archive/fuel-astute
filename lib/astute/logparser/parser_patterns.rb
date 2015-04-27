@@ -27,7 +27,6 @@ module Astute
       end
 
       ha_controller_pattern = {'type' => 'components-list',
-          'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
@@ -261,7 +260,6 @@ module Astute
 
         'puppet-log-components-list-ha_compact-compute' =>
           {'type' => 'components-list',
-          'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
@@ -314,7 +312,6 @@ module Astute
 
         'puppet-log-components-list-singlenode-controller' =>
           {'type' => 'components-list',
-          'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
@@ -401,7 +398,6 @@ module Astute
 
         'puppet-log-components-list-multinode-controller' =>
           {'type' => 'components-list',
-          'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
@@ -488,7 +484,6 @@ module Astute
 
         'puppet-log-components-list-multinode-compute' =>
           {'type' => 'components-list',
-          'endlog_patterns' => [{'pattern' => /Finished catalog run in [0-9]+\.[0-9]* seconds\n/, 'progress' => 1.0}],
           'chunk_size' => 40000,
           'filename' => 'puppet-apply.log',
           'path_format' => "<%= @pattern_spec['path_prefix'] %><%= node['fqdn'] %>/<%= @pattern_spec['filename'] %>",
