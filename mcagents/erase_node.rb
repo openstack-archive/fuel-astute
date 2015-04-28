@@ -44,8 +44,6 @@ module MCollective
 
         prevent_discover unless dry_run
 
-        tempfile_storage='/mnt/tempfiles'
-
         begin
           reboot if !dry_run && request_reboot
           reply[:rebooted] = request_reboot
@@ -62,12 +60,17 @@ module MCollective
         end
       end
 
-      def get_boot_devices
+      def get_devices(type='all')
         raise "Path /sys/block does not exist" unless File.exists?("/sys/block")
         Dir["/sys/block/*"].inject([]) do |blocks, block_device_dir|
           basename_dir = File.basename(block_device_dir)
           dev_name = basename_dir.gsub(/!/, '/')
-          major = `udevadm info --query=property --name=#{dev_name} | grep MAJOR`.strip.split(/\=/)[-1]
+          dev_info = {}
+          # Query device info from udev
+          `udevadm info --query=property --name=#{dev_name}`.strip.split.each do |line|
+            key, value = line.chomp.split(/\=/)
+            dev_info[key.to_sym] = value
+          end
           if File.exists?("/sys/block/#{basename_dir}/removable")
             removable = File.open("/sys/block/#{basename_dir}/removable") { |f| f.read_nonblock(1024).strip }
           end
@@ -78,8 +81,25 @@ module MCollective
             debug_msg("Can not define device size. File /sys/block/#{basename_dir}/size not found.")
           end
 
-          if STORAGE_CODES.include?(major.to_i) && removable =~ /^0$/
-            blocks << {:name => dev_name, :size => size}
+          # Check device major number against our storage code list and exclude
+          # removable devices
+          if STORAGE_CODES.include?(dev_info[:MAJOR].to_i) && removable =~ /^0$/
+            device_root_count = `lsblk -n -r "#{dev_info[:DEVNAME]}" | grep -c '\ /$'`.to_i
+            # Disks with root parition
+            if type.eql? 'root' and device_root_count > 0
+              debug_msg("get_devices(type=root): adding #{dev_name}")
+              blocks << {:name => dev_name, :size => size}
+            end
+            # Disks that don't have root parition
+            if type.eql? 'data' and device_root_count == 0
+              debug_msg("get_devices(type=data): adding #{dev_name}")
+              blocks << {:name => dev_name, :size => size}
+            end
+            # All disks
+            if type.eql? 'all'
+              debug_msg("get_devices(type=all): adding #{dev_name}")
+              blocks << {:name => dev_name, :size => size}
+            end
           end
           blocks
         end
@@ -106,7 +126,9 @@ module MCollective
             end
 
             begin
-              get_boot_devices.each do |dev|
+              # Delete data disks first, then OS drive to address bug #1437511
+              (get_devices(type='data') + get_devices(type='root')).each do |dev|
+                debug_msg("erasing #{dev[:name]}")
                 erase_partitions(dev[:name])
                 erase_data(dev[:name])
                 erase_data(dev[:name], 1, dev[:size], '512')
@@ -121,6 +143,7 @@ module MCollective
               error_msg << msg
             end
 
+            # Reboot the system
             ['b'].each do |req|
               File.open('/proc/sysrq-trigger','w') do |file|
                 file.write("#{req}\n")
