@@ -194,5 +194,50 @@ describe "NailyFact DeploymentEngine" do
         end
       end
     end # 'ha deploy'
+
+    context 'puppet debug' do
+
+      let(:deploy_data) do
+        [{
+          'uid' => 1,
+          'role' => 'controller',
+          'deployment_mode' => 'unknown',
+          'deployment_id' => '123',
+          'puppet_debug' => true
+        }]
+      end
+
+      it 'should run puppet with puppet debug settings' do
+        deploy_data.first['puppet_debug'] = false
+        Astute::PuppetdDeployer.expects(:deploy).with(
+          ctx,
+          deploy_data,
+          instance_of(Fixnum),
+          nil,
+          nil,
+          nil,
+          false
+        ).once
+
+        deploy_engine.deploy(deploy_data)
+      end
+
+      it 'should run puppet with default puppet debug settings if missing' do
+        deploy_data.first.delete('puppet_debug')
+        Astute::PuppetdDeployer.expects(:deploy).with(
+          ctx,
+          deploy_data,
+          instance_of(Fixnum),
+          nil,
+          nil,
+          nil,
+          true
+        ).once
+
+        deploy_engine.deploy(deploy_data)
+      end
+
+    end # puppet debug
+
   end
 end
