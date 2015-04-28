@@ -21,10 +21,13 @@ module Astute
 
       def get_pattern_for_node(node)
         os = node['profile']
-        if ['centos-x86_64'].include?(os)
-          pattern_spec_name = 'centos-anaconda-log-supposed-time-kvm'
+
+        pattern_spec_name = if node.fetch('ks_meta', {}).key?('image_data')
+          'image-based-provisioning'
+        elsif ['centos-x86_64'].include?(os)
+          'centos-anaconda-log-supposed-time-kvm'
         elsif os == 'ubuntu_1404_x86_64'
-          pattern_spec_name = 'ubuntu-provisioning'
+          'ubuntu-provisioning'
         else
           raise Astute::ParseProvisionLogsError, "Cannot find profile for os with: #{os}"
         end
@@ -97,7 +100,7 @@ module Astute
         end
 
         def self.get_seconds_from_time(date)
-          hours, mins, secs, frac = Date::day_fraction_to_time(date)
+          hours, mins, secs, _frac = Date::day_fraction_to_time(date)
           return hours*60*60 + mins*60 + secs
         end
 
@@ -220,6 +223,40 @@ module Astute
         end
       end
 
-    end
+    end # ParseProvisionLogs
+
+    class ParseImageBuildLogs < ParseProvisionLogs
+
+      PATH_PREFIX = '/var/log/'
+      attr_accessor :cluster_id
+
+      def get_pattern_for_node(node)
+        os = node['profile']
+
+        pattern_spec_name = 'provisioning-image-building'
+
+        pattern_spec = deep_copy(Patterns::get_default_pattern(pattern_spec_name))
+        pattern_spec['path_prefix'] ||= PATH_PREFIX.to_s
+        pattern_spec['separator'] ||= SEPARATOR.to_s
+        pattern_spec['cluster_id'] = cluster_id
+
+        pattern_spec
+      end
+
+      def prepare(nodes)
+        # This is common file for all nodes
+        pattern_spec = get_pattern_for_node(nodes.first)
+        path = pattern_spec['path_format']
+        File.open(path, 'a') { |fo| fo.write pattern['separator'] } if File.writable?(path)
+      end
+
+      def progress_calculate(uids_to_calc, nodes)
+        result = super
+        # Limit progress for this part to 80% as max
+        result.map { |h| h['progress'] = (h['progress'] * 0.8).to_i }
+        result
+      end
+
+    end # ParseImageProvisionLogs
   end
 end
