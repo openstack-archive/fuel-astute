@@ -15,7 +15,7 @@ URL: http://fuel.mirantis.com
 Source0: %{rbname}-%{version}.tar.gz
 # Make sure the spec template is included in the SRPM
 BuildRoot: %{_tmppath}/%{rbname}-%{version}-root
-Requires: ruby >= 2.1
+Requires: ruby21 >= 2.1
 Requires: ruby21-rubygem-activesupport = 3.0.10
 Requires: ruby21-rubygem-mcollective-client = 2.4.1
 Requires: ruby21-rubygem-symboltable = 1.0.2
@@ -27,7 +27,7 @@ Requires: ruby21-rubygem-net-ssh = 2.8.0
 Requires: ruby21-rubygem-net-ssh-gateway = 1.2.0
 Requires: ruby21-rubygem-net-ssh-multi = 1.2.0
 Requires: openssh-clients
-BuildRequires: ruby >= 2.1
+BuildRequires: ruby21 >= 2.1
 BuildArch: noarch
 Provides: ruby21(Astute) = %{version}
 
