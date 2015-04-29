@@ -34,7 +34,7 @@ class Astute::DeploymentEngine::NailyFact < Astute::DeploymentEngine
       puppet_manifest=nil,
       puppet_modules=nil,
       cwd=nil,
-      puppet_debug=nodes.first['puppet_debug']
+      puppet_debug=nodes.first.fetch('puppet_debug', true)
     )
     nodes_roles = nodes.map { |n| {n['uid'] => n['role']} }
     Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes => roles: #{nodes_roles.inspect}"
