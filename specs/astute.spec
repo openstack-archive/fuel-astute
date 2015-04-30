@@ -1,6 +1,6 @@
 %define rbname astute
-%define version 6.1.0
-%define release 1
+%{!?version: %define version 6.1.0}
+%{!?release: %define release 1}
 %global gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
 %global geminstdir %{gemdir}/gems/%{gemname}-%{version}
 %define gembuilddir %{buildroot}%{gemdir}
