@@ -197,4 +197,40 @@ describe Astute::PreDelete do
 
   end # remove_ceph_mons
 
-end
+  context "verify that mcollective is running" do
+    let(:nodes) { [
+        {"id" => 1, "roles" => ["controller"]},
+        {"id" => 2, "roles" => ["compute"]}
+      ]
+    }
+    let(:error_result) do
+      msg = "MCollective is not running on nodes 2. " \
+            "MCollective must be running to properly delete a node."
+
+      {"status" => "error",
+       "error" => msg,
+       "error_nodes" => [{"uid" => 2}]
+      }
+    end
+
+    it "should prevent deletion of nodes when mcollective is not running" do
+      rs = mock()
+      rs.stubs(:map).returns([{:sender => "1"}])
+
+      mclient.expects(:get_version).returns(rs)
+      expect(Astute::PreDelete.check_for_offline_nodes(ctx, nodes)).to eq(error_result)
+    end
+
+    it "should allow deletion of nodes when mcollective is running" do
+      rs = mock()
+      rs.stubs(:map).returns( [
+        {:sender => "1"},
+        {:sender => "2"}
+      ])
+      mclient.expects(:get_version).returns(rs)
+
+      expect(Astute::PreDelete.check_for_offline_nodes(ctx, nodes)).to eq(success_result)
+    end
+  end
+
+end # describe
