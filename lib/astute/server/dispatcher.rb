@@ -167,6 +167,20 @@ module Astute
         return result['status'] == 'ready'
       end
 
+
+      def check_for_offline_nodes(data)
+        task_uuid = data['args']['task_uuid']
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
+        nodes = data['args']['nodes']
+
+        result = @orchestrator.check_for_offline_nodes(reporter, task_uuid, nodes)
+        if result['status'] != 'ready'
+          report_result(result, reporter)
+        end
+
+        return result['status'] == 'ready'
+      end
+
       def remove_nodes(data)
         task_uuid = data['args']['task_uuid']
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
@@ -175,6 +189,7 @@ module Astute
         check_ceph = data['args']['check_ceph']
 
         if check_ceph
+          return unless check_for_offline_nodes(data)
           return unless remove_nodes_ceph_check(data)
         end
 
