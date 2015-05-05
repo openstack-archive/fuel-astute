@@ -22,6 +22,7 @@ describe Astute::Server::Dispatcher do
     let(:dispatcher) do
       dispatcher = Astute::Server::Dispatcher.new(mock)
       dispatcher.stubs(:report_result)
+      dispatcher.stubs(:check_for_offline_nodes).returns(true)
 
       dispatcher
     end
