@@ -194,6 +194,10 @@ module Astute
       cluster_id
     end
 
+    def check_for_offline_nodes(reporter, task_id, nodes)
+      PreDelete.check_for_offline_nodes(Context.new(task_id, reporter), nodes)
+    end
+
     def check_ceph_osds(reporter, task_id, nodes)
       PreDelete.check_ceph_osds(Context.new(task_id, reporter), nodes)
     end
@@ -204,7 +208,11 @@ module Astute
 
     def perform_pre_deletion_tasks(reporter, task_id, nodes, options={})
       result = {'status' => 'ready'}
+      # This option is no longer Ceph-specific and should be renamed
+      # FIXME(rmoe): https://bugs.launchpad.net/fuel/+bug/1454377
       if options[:check_ceph]
+        result = check_for_offline_nodes(reporter, task_id, nodes)
+        return result if result['status'] != 'ready'
         result = check_ceph_osds(reporter, task_id, nodes)
         return result if result['status'] != 'ready'
         result = remove_ceph_mons(reporter, task_id, nodes)
