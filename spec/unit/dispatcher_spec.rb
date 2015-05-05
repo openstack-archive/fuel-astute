@@ -27,7 +27,10 @@ describe Astute::Server::Dispatcher do
     end
 
     let (:orchestrator) do
-      Astute::Orchestrator.any_instance
+      orchestrator = Astute::Orchestrator.any_instance
+      orchestrator.stubs(:check_for_offline_nodes).returns({"status"=>"ready"})
+
+      orchestrator
     end
 
     let (:data) {

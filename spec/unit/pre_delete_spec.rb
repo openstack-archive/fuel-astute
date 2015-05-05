@@ -15,7 +15,7 @@
 
 require File.join(File.dirname(__FILE__), '../spec_helper')
 
-describe '#check_ceph_osds' do
+describe '#pre_delete_checks' do
   include SpecHelpers
 
   let(:ctx) { mock_ctx }
@@ -90,6 +90,42 @@ describe '#check_ceph_osds' do
         .returns(build_mcresult(stdout="3\n4"))
 
       expect(Astute::PreDelete.check_ceph_osds(ctx, nodes)).to eq(success_result)
+    end
+  end
+
+  context "verify that mcollective is running" do
+    let(:nodes) { [
+        {"id" => 1, "roles" => ["controller"]},
+        {"id" => 2, "roles" => ["compute"]}
+      ]
+    }
+    let(:error_result) do
+      msg = "MCollective is not running on nodes 2. " \
+            "MCollective must be running to properly delete a node."
+
+      {"status" => "error",
+       "error" => msg,
+       "error_nodes" => [{"uid" => 2}]
+      }
+    end
+
+    it "should prevent deletion of nodes when mcollective is not running" do
+      rs = mock()
+      rs.stubs(:map).returns([{:sender => "1"}])
+
+      mclient.expects(:get_version).returns(rs)
+      expect(Astute::PreDelete.check_for_offline_nodes(ctx, nodes)).to eq(error_result)
+    end
+
+    it "should allow deletion of nodes when mcollective is running" do
+      rs = mock()
+      rs.stubs(:map).returns( [
+        {:sender => "1"},
+        {:sender => "2"}
+      ])
+      mclient.expects(:get_version).returns(rs)
+
+      expect(Astute::PreDelete.check_for_offline_nodes(ctx, nodes)).to eq(success_result)
     end
   end
 
