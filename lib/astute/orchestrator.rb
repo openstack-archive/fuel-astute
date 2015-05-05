@@ -136,6 +136,10 @@ module Astute
       PreDelete.check_ceph_osds(Context.new(task_id, reporter), nodes)
     end
 
+    def check_for_offline_nodes(reporter, task_id, nodes)
+      PreDelete.check_for_offline_nodes(Context.new(task_id, reporter), nodes)
+    end
+
     private
 
     def deploy_cluster(up_reporter, task_id, deployment_info, deploy_engine, pre_deployment, post_deployment)
