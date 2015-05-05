@@ -65,6 +65,31 @@ module Astute
       answer
     end
 
+    def self.check_for_offline_nodes(ctx, nodes)
+      answer = {"status" => "ready"}
+      nodes.collect! { |n| n['id'] }
+
+      client = MClient.new(ctx, "version", nodes, check_result=false)
+      responses = client.get_version
+      online_nodes = responses.map(&:results).collect { |r| r[:sender].to_i }
+      offline_nodes = (nodes.to_set - online_nodes.to_set).to_a
+
+      if not offline_nodes.empty?
+        offline_nodes.map! { |e| {'uid' => e} }
+        msg = "MCollective is not running on nodes " \
+              "#{offline_nodes.collect {|n| n['uid'] }.join(',')}. " \
+              "MCollective must be running to properly delete a node."
+
+        answer = {'status' => 'error',
+                  'error' => msg,
+                  'error_nodes' => offline_nodes}
+
+        report_result(result, reporter)
+      end
+
+      answer
+    end
+
   end
 end
 
