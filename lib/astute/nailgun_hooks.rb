@@ -26,7 +26,7 @@ module Astute
       @nailgun_hooks.sort_by { |f| f['priority'] }.each do |hook|
         Astute.logger.info "Run hook #{hook.to_yaml}"
 
-        success = case hook['type']
+        hook_return = case hook['type']
         when 'copy_files' then copy_files_hook(hook)
         when 'sync' then sync_hook(hook)
         when 'shell' then shell_hook(hook)
@@ -39,17 +39,21 @@ module Astute
         is_raise_on_error = hook.fetch('fail_on_error', true)
         hook_name = hook['id'] || hook['diagnostic_name']
 
-        if !success && is_raise_on_error
+        if !hook_return['success'] && is_raise_on_error
           nodes = hook['uids'].map do |uid|
             { 'uid' => uid,
               'status' => 'error',
               'error_type' => @type,
               'role' => 'hook',
-              'hook' => hook_name
+              'hook' => hook_name,
+              'error_msg' => hook_return['error']
             }
           end
-          @ctx.report_and_update_status('nodes' => nodes)
-          error_message = "Failed to execute hook #{hook_name}.\n\n#{hook.to_yaml}"
+          error_message = "Failed to execute hook #{hook_name}."
+          puts "ERROR MESSAGE #{error_message}"
+          puts "NODES #{nodes}"
+          @ctx.report_and_update_status('nodes' => nodes, 'error' => error_message)
+          error_message += "\n\n#{hook.to_yaml}"
 
           raise Astute::DeploymentEngineError, error_message
 
@@ -63,7 +67,7 @@ module Astute
       validate_presence(hook, 'uids')
       validate_presence(hook['parameters'], 'files')
 
-      is_success = true
+      ret = {'success' => true, 'error' => nil}
       hook['parameters']['files'].each do |file|
         if File.file?(file['src']) && File.readable?(file['src'])
           parameters = {
@@ -74,14 +78,18 @@ module Astute
           }
           perform_with_limit(hook['uids']) do |node_uids|
             status = upload_file(@ctx, node_uids, parameters)
-            is_success = false if !status
+            if !status
+              ret['success'] = false
+              ret['error'] = 'Upload not successful'
+            end
           end
         else
-          Astute.logger.warn("File does not exist or is not redable #{file['src']}")
-          is_success = false
+          ret['success'] = false
+          ret['error'] = "File does not exist or is not readable #{file['src']}"
+          Astute.logger.warn(ret['error'])
         end
       end
-      is_success
+      ret
     end #copy_file_hook
 
     def puppet_hook(hook)
@@ -92,7 +100,7 @@ module Astute
 
       timeout = hook['parameters']['timeout'] || 300
 
-      is_success = true
+      ret = {'success' => true, 'error' => nil}
       perform_with_limit(hook['uids']) do |node_uids|
         result = run_puppet(
           @ctx,
@@ -103,12 +111,13 @@ module Astute
           timeout
         )
         unless result
-          Astute.logger.warn("Puppet run failed. Check puppet logs for details")
-          is_success = false
+          ret['success'] = false
+          ret['error'] = "Puppet run failed. Check puppet logs for details"
+          Astute.logger.warn(ret['error'])
         end
       end
 
-      is_success
+      ret
     end #puppet_hook
 
     def upload_file_hook(hook)
@@ -118,13 +127,16 @@ module Astute
 
       hook['parameters']['content'] = hook['parameters']['data']
 
-      is_success = true
+      ret = {'success' => true, 'error' => nil}
       perform_with_limit(hook['uids']) do |node_uids|
         status = upload_file(@ctx, node_uids, hook['parameters'])
-        is_success = false if status == false
+        if status == false
+          ret['success'] = false
+          ret['error'] = 'File upload failed'
+        end
       end
 
-      is_success
+      ret
     end
 
     def shell_hook(hook)
@@ -138,7 +150,7 @@ module Astute
       interval = hook['parameters']['interval'] || Astute.config.mc_retry_interval
       shell_command = "cd #{cwd} && #{hook['parameters']['cmd']}"
 
-      is_success = false
+      ret = {'success' => false, 'error' => "Failed to run command #{shell_command}"}
 
       perform_with_limit(hook['uids']) do |node_uids|
         Timeout::timeout(timeout) do
@@ -151,7 +163,8 @@ module Astute
               cwd
             )
             if response[:data][:exit_code] == 0
-              is_success = true
+              ret['success'] = true
+              ret['error'] = nil
               break
             end
             Astute.logger.warn("Problem while performing cmd. Try to repeat: #{retry_number} attempt")
@@ -160,10 +173,13 @@ module Astute
         end
       end
 
-      is_success
+      ret
     rescue Astute::MClientTimeout, Astute::MClientError, Timeout::Error => e
-      Astute.logger.error("#{@ctx.task_id}: shell timeout error: #{e.message}")
-      false
+      ret['success'] = false
+      ret['error'] = "#{@ctx.task_id}: shell timeout error: #{e.message}"
+      Astute.logger.error(ret['error'])
+        
+      ret
     end # shell_hook
 
 
@@ -180,7 +196,7 @@ module Astute
       rsync_options = '-c -r --delete'
       rsync_cmd = "mkdir -p #{path} && rsync #{rsync_options} #{source} #{path}"
 
-      is_success = false
+      ret = {'success' => false, 'error' => "Failed to perform sync from #{source} to #{path}"}
 
       perform_with_limit(hook['uids']) do |node_uids|
         10.times do |sync_retries|
@@ -191,14 +207,15 @@ module Astute
             timeout
           )
           if response[:data][:exit_code] == 0
-            is_success = true
+              ret['success'] = true
+              ret['error'] = nil
             break
           end
           Astute.logger.warn("Rsync problem. Try to repeat: #{sync_retries} attempt")
         end
       end
 
-      is_success
+      ret
     end # sync_hook
 
     def reboot_hook(hook)
@@ -218,6 +235,8 @@ module Astute
 
       already_rebooted = Hash[hook['uids'].collect { |uid| [uid, false] }]
 
+      ret = {'success' => true, 'error' => nil}
+
       begin
         Timeout::timeout(hook_timeout) do
           while already_rebooted.values.include?(false)
@@ -236,12 +255,12 @@ module Astute
 
       if already_rebooted.values.include?(false)
         fail_nodes = already_rebooted.select {|k, v| !v }.keys
-        Astute.logger.warn("Reboot command failed for nodes #{fail_nodes}. " \
-          "Check debug output for details")
-        false
-      else
-        true
+        ret['success'] = false
+        ret['error'] = "Reboot command failed for nodes #{fail_nodes}. Check debug output for details"
+        Astute.logger.warn(ret['error'])
       end
+      
+      ret
     end # reboot_hook
 
     def validate_presence(data, key)
