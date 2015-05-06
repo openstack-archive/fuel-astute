@@ -144,12 +144,12 @@ describe Astute::NailgunHooks do
     it 'should process known hook type' do
       hooks = Astute::NailgunHooks.new(hooks_data, ctx)
 
-      hooks.expects(:upload_file_hook)
-      hooks.expects(:puppet_hook)
-      hooks.expects(:shell_hook)
-      hooks.expects(:sync_hook)
-      hooks.expects(:reboot_hook)
-      hooks.expects(:copy_files_hook)
+      hooks.expects(:upload_file_hook).returns({'success' => true, 'error' => nil})
+      hooks.expects(:puppet_hook).returns({'success' => true, 'error' => nil})
+      hooks.expects(:shell_hook).returns({'success' => true, 'error' => nil})
+      hooks.expects(:sync_hook).returns({'success' => true, 'error' => nil})
+      hooks.expects(:reboot_hook).returns({'success' => true, 'error' => nil})
+      hooks.expects(:copy_files_hook).returns({'success' => true, 'error' => nil})
 
       hooks.process
     end
@@ -175,12 +175,12 @@ describe Astute::NailgunHooks do
       hooks = Astute::NailgunHooks.new(hooks_data, ctx)
 
       hook_order = sequence('hook_order')
-      hooks.expects(:upload_file_hook).in_sequence(hook_order)
-      hooks.expects(:copy_files_hook).in_sequence(hook_order)
-      hooks.expects(:shell_hook).in_sequence(hook_order)
-      hooks.expects(:sync_hook).in_sequence(hook_order)
-      hooks.expects(:puppet_hook).in_sequence(hook_order)
-      hooks.expects(:reboot_hook).in_sequence(hook_order)
+      hooks.expects(:upload_file_hook).returns({'success' => true, 'error' => nil}).in_sequence(hook_order)
+      hooks.expects(:copy_files_hook).returns({'success' => true, 'error' => nil}).in_sequence(hook_order)
+      hooks.expects(:shell_hook).returns({'success' => true, 'error' => nil}).in_sequence(hook_order)
+      hooks.expects(:sync_hook).returns({'success' => true, 'error' => nil}).in_sequence(hook_order)
+      hooks.expects(:puppet_hook).returns({'success' => true, 'error' => nil}).in_sequence(hook_order)
+      hooks.expects(:reboot_hook).returns({'success' => true, 'error' => nil}).in_sequence(hook_order)
 
       hooks.process
     end
@@ -194,17 +194,17 @@ describe Astute::NailgunHooks do
 
       it 'should raise exception if critical hook failed' do
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
-        hooks.expects(:copy_files_hook).returns(true)
-        hooks.expects(:upload_file_hook).returns(true)
-        hooks.expects(:shell_hook).returns(false)
+        hooks.expects(:copy_files_hook).returns({'success' => 'true', 'error' => nil})
+        hooks.expects(:upload_file_hook).returns({'success' => 'true', 'error' => nil})
+        hooks.expects(:shell_hook).returns({'success' => false, 'error' => 'Shell error'})
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook shell-example-1.0/)
       end
 
       it 'should not process next hooks if critical hook failed' do
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
-        hooks.expects(:upload_file_hook).returns(true)
-        hooks.expects(:shell_hook).returns(false)
+        hooks.expects(:upload_file_hook).returns({'success' => true, 'error' => nil})
+        hooks.expects(:shell_hook).returns({'success' => false, 'error' => 'Shell error'})
         hooks.expects(:sync_hook).never
         hooks.expects(:puppet_hook).never
         hooks.expects(:reboot_hook).never
@@ -214,19 +214,19 @@ describe Astute::NailgunHooks do
 
       it 'should process next hooks if non critical hook failed' do
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
-        hooks.expects(:upload_file_hook).returns(false)
-        hooks.expects(:shell_hook).returns(true)
-        hooks.expects(:sync_hook).returns(false)
-        hooks.expects(:puppet_hook).returns(true)
-        hooks.expects(:reboot_hook).returns(true)
+        hooks.expects(:upload_file_hook).returns({'success' => false, 'error' => 'Upload error'})
+        hooks.expects(:shell_hook).returns({'success' => true, 'error' => nil})
+          hooks.expects(:sync_hook).returns({'success' => false, 'error' => 'Sync error'})
+        hooks.expects(:puppet_hook).returns({'success' => true, 'error' => nil})
+        hooks.expects(:reboot_hook).returns({'success' => true, 'error' => nil})
 
         hooks.process
       end
 
       it 'should report error node status if critical hook failed' do
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
-        hooks.expects(:upload_file_hook).returns(true)
-        hooks.expects(:shell_hook).returns(false)
+        hooks.expects(:upload_file_hook).returns({'success' => true, 'error' => nil})
+        hooks.expects(:shell_hook).returns({'success' => false, 'error' => 'Shell error'})
 
         ctx.expects(:report_and_update_status).with(
           {'nodes' =>
@@ -235,19 +235,22 @@ describe Astute::NailgunHooks do
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
-                'hook' => "shell-example-1.0"
+                'hook' => "shell-example-1.0",
+                'error' => 'Shell error'
               },
               { 'uid' => '2',
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
-                'hook' => "shell-example-1.0"
+                'hook' => "shell-example-1.0",
+                'error' => 'Shell error'
               },
               { 'uid' => '3',
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
-                'hook' => "shell-example-1.0"
+                'hook' => "shell-example-1.0",
+                'error' => 'Shell error'
               },
             ]
           }
@@ -258,11 +261,11 @@ describe Astute::NailgunHooks do
 
       it 'should not send report if non critical hook failed' do
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
-        hooks.expects(:upload_file_hook).returns(false)
-        hooks.expects(:shell_hook).returns(true)
-        hooks.expects(:sync_hook).returns(false)
-        hooks.expects(:puppet_hook).returns(true)
-        hooks.expects(:reboot_hook).returns(true)
+        hooks.expects(:upload_file_hook).returns({'success' => false, 'error' => 'Upload error'})
+        hooks.expects(:shell_hook).returns({'success' => true, 'error' => nil})
+        hooks.expects(:sync_hook).returns({'success' => false, 'error' => 'Sync error'})
+        hooks.expects(:puppet_hook).returns({'success' => true, 'error' => nil})
+        hooks.expects(:reboot_hook).returns({'success' => true, 'error' => nil})
 
         ctx.expects(:report_and_update_status).never
 
@@ -336,7 +339,7 @@ describe Astute::NailgunHooks do
     context 'process data from mcagent in case of critical hook' do
       before(:each) do
         copy_files_hook['fail_on_error'] = true
-        ctx.stubs(:report_and_update_status)
+        #ctx.stubs(:report_and_update_status)
       end
 
       it 'mcagent success' do
@@ -353,10 +356,32 @@ describe Astute::NailgunHooks do
         File.stubs(:file?).returns(true)
         File.stubs(:readable?).returns(true)
         File.stubs(:read).returns("")
+
         hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
         hooks.expects(:upload_file).returns(false).once
+        ctx.expects(:report_and_update_status).once.with(
+          {'nodes' =>
+            [
+              { 'uid' => '2',
+                'status' => 'error',
+                'error_type' => 'deploy',
+                'role' => 'hook',
+                'hook' => "copy-example-1.0",
+                'error' => 'Upload not successful'
+              },
+              { 'uid' => '3',
+                'status' => 'error',
+                'error_type' => 'deploy',
+                'role' => 'hook',
+                'hook' => "copy-example-1.0",
+                'error' => 'Upload not successful'
+              },
+            ]
+          }
+        )
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
+        
       end
     end #context
   end#copy_files_hook
@@ -806,6 +831,26 @@ describe Astute::NailgunHooks do
       it 'if mclient failed -> raise error' do
         hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
         PuppetdDeployer.expects(:deploy).once.raises(Astute::MClientError)
+        ctx.expects(:report_and_update_status).with(
+          {'nodes' =>
+            [
+              { 'uid' => '1',
+                'status' => 'error',
+                'error_type' => 'deploy',
+                'role' => 'hook',
+                'hook' => "puppet-example-1.0",
+                'error' => "Puppet run failed. Check puppet logs for details"
+              },
+              { 'uid' => '3',
+                'status' => 'error',
+                'error_type' => 'deploy',
+                'role' => 'hook',
+                'hook' => "puppet-example-1.0",
+                'error' => "Puppet run failed. Check puppet logs for details"
+              },
+            ]
+          }
+        )
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
