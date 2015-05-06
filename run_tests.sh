@@ -31,8 +31,8 @@ function ruby_checks() {
   bundle install
 
   # Run unit rspec tests
-  bundle exec rake spec:unit
+  bundle exec rake spec:unit S=$1
 }
 
 license_check
-ruby_checks
+ruby_checks $@
