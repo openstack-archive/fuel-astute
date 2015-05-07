@@ -49,7 +49,8 @@ module Astute
               'error_msg' => hook_return['error']
             }
           end
-          error_message = "Failed to execute hook '#{hook_name}'."
+          error_message = 'Failed to execute hook'
+          error_message += " '#{hook_name}'" if hook_name
           @ctx.report_and_update_status('nodes' => nodes, 'error' => error_message)
           error_message += "\n\n#{hook.to_yaml}"
 
