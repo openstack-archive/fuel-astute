@@ -103,6 +103,7 @@ describe Astute::Network do
       expected = {"nodes" => [{"uid"=>1, "networks" => [{"iface"=>"eth0", "vlans"=>[100, 101]}]}]}
       res.should eql(expected)
     end
+
   end
 
   describe '.check_dhcp' do
@@ -180,6 +181,50 @@ describe Astute::Network do
 
       res = Astute::Network.multicast_verification(Astute::Context.new('task_uuid', reporter), nodes)
       res['nodes'].should eql(expected_response)
+    end
+
+  end
+
+  describe "check_vlans_by_traffic" do
+
+    it "returns only tags from nodes in env" do
+      data = {
+              "eth0" => {
+                "100" => {"1" => ["eth0"], "2" => ["eth0"], "3" => ["eth0"]},
+                "101" => {"3" => ["eth0"]}
+              },
+            }
+      correct_res = [{"iface"=>"eth0", "vlans"=>[100]}]
+      uids = ["1", "2"]
+      res = Astute::Network.check_vlans_by_traffic("1", uids, data)
+      res.should eql(correct_res)
+    end
+
+    it "skips tags sent by node itself" do
+      data = {
+              "eth0" => {
+                "100" => {"1" => ["eth0"], "2" => ["eth0"]},
+                "101" => {"1" => ["eth0"]}
+              },
+            }
+      correct_res = [{"iface"=>"eth0", "vlans"=>[100]}]
+      uids = ["1", "2"]
+      res = Astute::Network.check_vlans_by_traffic("1", uids, data)
+      res.should eql(correct_res)
+
+    end
+
+    it "returns tags sent only by some nodes"do
+      data = {
+              "eth0" => {
+                "100" => {"1" => ["eth0"], "2" => ["eth0"]},
+                "101" => {"2" => ["eth0"]}
+              },
+            }
+      correct_res = [{"iface"=>"eth0", "vlans"=>[100, 101]}]
+      uids = ["1", "2"]
+      res = Astute::Network.check_vlans_by_traffic("1", uids, data)
+      res.should eql(correct_res)
     end
 
   end

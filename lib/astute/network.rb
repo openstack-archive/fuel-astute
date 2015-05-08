@@ -204,22 +204,35 @@ module Astute
         {
           'uid' => node.results[:sender],
           'networks' => check_vlans_by_traffic(
+            node.results[:sender],
             uids,
             node.results[:data][:neighbours])
         }
       end
     end
 
-    def self.check_vlans_by_traffic(uids, data)
+    def self.check_vlans_by_traffic(uid, uids, data)
       data.map do |iface, vlans|
         {
           'iface' => iface,
-          'vlans' => vlans.select { |k, v|
-            (uids - v.keys).empty?
-          }.keys.map(&:to_i)
+          'vlans' => remove_extra_data(uid, uids, vlans).select {|k,v|
+              v.keys.present?
+             }.keys.map(&:to_i)
         }
       end
     end
 
+    # Remove unnecessary data
+    def self.remove_extra_data(uid, uids, vlans)
+      vlans.each do |k, data|
+        # remove data sent by node itself
+        data.delete(uid)
+        # remove data sent by nodes from different envs
+        data.keep_if { |k, v| uids.include?(k) }
+      end
+      vlans
+    end
+
   end
 end
+
