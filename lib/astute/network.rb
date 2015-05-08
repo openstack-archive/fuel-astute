@@ -199,27 +199,36 @@ module Astute
     end
 
     def self.format_result(stats)
-      uids = stats.map{|node| node.results[:sender]}.sort
       stats.map do |node|
         {
           'uid' => node.results[:sender],
           'networks' => check_vlans_by_traffic(
-            uids,
+            node.results[:sender],
             node.results[:data][:neighbours])
         }
       end
     end
 
-    def self.check_vlans_by_traffic(uids, data)
+    def self.check_vlans_by_traffic(uid, data)
       data.map do |iface, vlans|
         {
           'iface' => iface,
-          'vlans' => vlans.select { |k, v|
-            (uids - v.keys).empty?
-          }.keys.map(&:to_i)
+          'vlans' => remove_self(uid, vlans).select {|k,v|
+             ! v.keys.empty?
+             }.keys.map(&:to_i)
         }
       end
     end
 
+    def self.remove_self(uid, vlans)
+      Astute.logger.debug("Before: #{vlans}")
+      vlans.each do |k, data|
+        data.delete(uid)
+      end
+      Astute.logger.debug("After: #{vlans}")
+      vlans
+    end
+
   end
 end
+
