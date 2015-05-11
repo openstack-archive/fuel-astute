@@ -32,7 +32,7 @@ module Astute
       end
 
       if result[:data][:exit_code] != 0
-        Astute.logger.debug "Ceph has been not found or has not been configured propertly." \
+        Astute.logger.debug "Ceph has not been found or has not been configured properly" \
           " Safely removing nodes..."
         return answer
       end
@@ -85,8 +85,21 @@ module Astute
       return answer if ceph_mon_nodes.empty?
 
       #Get the list of mon nodes
-      shell = MClient.new(ctx, "execute_shell_command", [ceph_mon_nodes[0]["id"]], timeout=120, retries=1)
-      result = shell.execute(:cmd => "ceph -f json mon dump").first.results
+      result = {}
+      shell = nil
+
+      ceph_mon_nodes.each do |ceph_mon_node|
+        shell = MClient.new(ctx, "execute_shell_command", [ceph_mon_node["id"]], timeout=120, retries=1)
+        result = shell.execute(:cmd => "ceph -f json mon dump").first.results
+        break if result[:data][:exit_code] == 0
+      end
+
+      if result[:data][:exit_code] != 0
+        Astute.logger.debug "Ceph mon has not been found or has not been configured properly" \
+          " Safely removing nodes..."
+        return answer
+      end
+
       mon_dump = JSON.parse(result[:data][:stdout])
       left_mons = mon_dump['mons'].select { | n | n if ! ceph_mons.include? n['name'] }
       left_mon_names = left_mons.collect { |n| n['name'] }
@@ -94,14 +107,14 @@ module Astute
 
       #Remove nodes from ceph cluster
       Astute.logger.info("Removing ceph mons #{ceph_mons} from cluster")
-      ceph_mon_nodes.each do | node |
+      ceph_mon_nodes.each do |node|
         shell = MClient.new(ctx, "execute_shell_command", [node["id"]], timeout=120, retries=1)
         #remove node from ceph mon list
         shell.execute(:cmd => "ceph mon remove #{node["slave_name"]}").first.results
       end
 
       #Fix the ceph.conf on the left mon nodes
-      left_mon_names.each do | node |
+      left_mon_names.each do |node|
         mon_initial_members_cmd = "sed -i \"s/mon_initial_members.*/mon_initial_members\ = #{left_mon_names.join(" ")}/g\" /etc/ceph/ceph.conf"
         mon_host_cmd = "sed -i \"s/mon_host.*/mon_host\ = #{left_mon_ips.join(" ")}/g\" /etc/ceph/ceph.conf"
         shell = MClient.new(ctx, "execute_shell_command", [node.split('-')[1]], timeout=120, retries=1)
