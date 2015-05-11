@@ -22,10 +22,23 @@ module Astute
       return answer if ceph_osds.empty?
 
       cmd = "ceph -f json osd tree"
-      shell = MClient.new(ctx, "execute_shell_command", [ceph_nodes[0]["id"]], timeout=60, retries=1)
-      result = shell.execute(:cmd => cmd).first.results
+      result = {}
+      shell = nil
+
+      ceph_nodes.each do |ceph_node|
+        shell = MClient.new(ctx, "execute_shell_command", [ceph_node["id"]], timeout=60, retries=1)
+        result = shell.execute(:cmd => cmd).first.results
+        break if result[:data][:exit_code] == 0
+      end
+
+      if result[:data][:exit_code] != 0
+        Astute.logger.debug "Ceph has been not found or has not been configured propertly." \
+          " Safely removing nodes..."
+        return answer
+      end
 
       osds = {}
+
       tree = JSON.parse(result[:data][:stdout])
 
       tree["nodes"].each do |osd|

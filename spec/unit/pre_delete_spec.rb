@@ -29,8 +29,8 @@ describe '#check_ceph_osds' do
     mclient
   end
 
-  def build_mcresult(stdout="", sender="1")
-    rs = {:sender => sender, :data => {:stdout => stdout}}
+  def build_mcresult(stdout="", sender="1", exit_code=0)
+    rs = {:sender => sender, :data => {:stdout => stdout, :exit_code => exit_code}}
     mcresult_mock = mock_mc_result(rs)
     mock_result = mock
     mock_result.stubs(:results).returns(rs)
@@ -80,6 +80,36 @@ describe '#check_ceph_osds' do
         .returns(build_mcresult(stdout="1\n2"))
 
       expect(Astute::PreDelete.check_ceph_osds(ctx, nodes)).to eq(error_result)
+    end
+
+    it 'should ignore nodes with unconfigured or failed ceph' do
+      mclient.expects(:execute).with({:cmd => osd_cmd}).twice
+        .returns(build_mcresult(stdout="","2", 42))
+        .then.returns(build_mcresult(stdout=json_resp,"3", 1))
+
+      mclient.expects(:execute).with({:cmd => pg_cmd}).never
+      all_nodes = nodes + [{
+        "id" => "3",
+        "roles" => ["compute", "ceph-osd"],
+        "slave_name" => "node-3"}
+      ]
+      expect(Astute::PreDelete.check_ceph_osds(ctx, all_nodes)).to eq(success_result)
+    end
+
+    it 'should find live ceph installation' do
+      mclient.expects(:execute).with({:cmd => osd_cmd}).twice
+        .returns(build_mcresult(stdout="","2", 42))
+        .then.returns(build_mcresult(stdout=json_resp,"3", 0))
+
+      mclient.expects(:execute).with({:cmd => pg_cmd})
+        .returns(build_mcresult(stdout="1\n2"))
+
+      all_nodes = nodes + [{
+        "id" => "3",
+        "roles" => ["compute", "ceph-osd"],
+        "slave_name" => "node-3"}
+      ]
+      expect(Astute::PreDelete.check_ceph_osds(ctx, all_nodes)).to eq(error_result)
     end
 
     it "should succeed with no pgs placed on node" do
