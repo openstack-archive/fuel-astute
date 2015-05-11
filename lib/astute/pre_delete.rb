@@ -32,7 +32,7 @@ module Astute
       end
 
       if result[:data][:exit_code] != 0
-        Astute.logger.debug "Ceph has been not found or has not been configured propertly." \
+        Astute.logger.debug "Ceph has not been found or has not been configured propertly." \
           " Safely removing nodes..."
         return answer
       end
@@ -84,8 +84,21 @@ module Astute
       ceph_mons = ceph_mon_nodes.collect{ |n| n["slave_name"] }
 
       #Get the list of mon nodes
-      shell = MClient.new(ctx, "execute_shell_command", [ceph_mon_nodes[0]["id"]], timeout=120, retries=1)
-      result = shell.execute(:cmd => "ceph -f json mon dump").first.results
+      result = {}
+      shell = nil
+
+      ceph_mon_nodes.each do |ceph_mon_node|
+        shell = MClient.new(ctx, "execute_shell_command", [ceph_mon_node["id"]], timeout=120, retries=1)
+        result = shell.execute(:cmd => "ceph -f json mon dump").first.results
+        break if result[:data][:exit_code] == 0
+      end
+
+      if result[:data][:exit_code] != 0
+        Astute.logger.debug "Ceph mon has not been found or has not been configured propertly." \
+          " Safely removing nodes..."
+        return answer
+      end
+
       mon_dump = JSON.parse(result[:data][:stdout])
       left_mons = mon_dump['mons'].select { | n | n if ! ceph_mons.include? n['name'] }
       left_mon_names = left_mons.collect { |n| n['name'] }
