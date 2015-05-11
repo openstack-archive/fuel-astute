@@ -4,7 +4,7 @@ metadata    :name        => "Network Probe Agent",
             :license     => "MIT",
             :version     => "6.1.0",
             :url         => "http://mirantis.com",
-            :timeout     => 240
+            :timeout     => 600
 
 action "start_frame_listeners", :description => "Starts catching packets on interfaces" do
     display :always
