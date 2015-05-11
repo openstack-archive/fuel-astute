@@ -69,6 +69,7 @@ module Astute
       answer = {"status" => "ready"}
       ceph_mon_nodes = nodes.select { |n| n["roles"].include? "controller" }
       ceph_mons = ceph_mon_nodes.collect{ |n| n["slave_name"] }
+      return answer if ceph_mon_nodes.empty?
 
       #Get the list of mon nodes
       shell = MClient.new(ctx, "execute_shell_command", [ceph_mon_nodes[0]["id"]], timeout=120, retries=1)
