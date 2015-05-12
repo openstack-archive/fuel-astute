@@ -70,6 +70,8 @@ module Astute
       )
       provisioner = Provisioner.new(@log_parsing)
       if provisioning_info['pre_provision']
+        Astute.logger.info "Please check image build log here:" \
+          " /var/log/docker-logs/fuel-agent-env-#{calculate_cluster_id(provisioning_info)}.log"
         ctx = Context.new(task_id, proxy_reporter)
         provisioner.report_image_provision(
           proxy_reporter,
@@ -77,8 +79,6 @@ module Astute
           provisioning_info['nodes'],
           image_log_parser(provisioning_info)
         ) do
-          Astute.logger.info "Please check image build log here:" \
-            " /var/log/docker-logs/fuel-agent-env-#{calculate_cluster_id(provisioning_info)}.log"
           Astute::NailgunHooks.new(
             provisioning_info['pre_provision'],
             ctx,
