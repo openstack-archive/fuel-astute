@@ -147,6 +147,12 @@ module Astute
       Network.multicast_verification(ctx, nodes)
     end
 
+    def check_repositories(reporter, task_id, nodes, urls)
+      ctx = Context.new(task_id, reporter)
+      validate_nodes_access(ctx, nodes)
+      Network.check_urls_access(ctx, nodes, urls)
+    end
+
     private
 
     def deploy_cluster(up_reporter, task_id, deployment_info, deploy_engine, pre_deployment, post_deployment)

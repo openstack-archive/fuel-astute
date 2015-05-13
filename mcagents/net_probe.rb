@@ -67,6 +67,13 @@ module MCollective
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
       end
 
+      action "check_url_retrieval" do
+        urls = request.data[:urls] || []
+
+        cmd = "urlaccesscheck check '#{urls.join("' '")}'"
+        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+      end
+
       private
 
       def get_uid
