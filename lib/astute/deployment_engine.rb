@@ -25,6 +25,10 @@ module Astute
     def deploy(deployment_info, pre_deployment=[], post_deployment=[])
       raise "Deployment info are not provided!" if deployment_info.blank?
 
+      deployment_info, pre_deployment, post_deployment = remove_failed_nodes(deployment_info,
+                                                                             pre_deployment,
+                                                                             post_deployment)
+
       @ctx.deploy_log_parser.deploy_type = deployment_info.first['deployment_mode']
       Astute.logger.info "Deployment mode #{@ctx.deploy_log_parser.deploy_type}"
 
@@ -141,6 +145,25 @@ module Astute
 
     def post_deployment_actions(deployment_info, post_deployment)
       raise "Should be implemented"
+    end
+
+    # Removes nodes which failed to provision
+    def remove_failed_nodes(deployment_info, pre_deployment, post_deployment)
+      uids = deployment_info.map { |node| node["uid"]}
+      systemtype = Astute::MClient.new(@ctx, "systemtype", uids, check_result=false, 10)
+      available_nodes = systemtype.get_type.select { |node| node.results[:data][:node_type] == "target"}
+      available_uids = available_nodes.map { |node| node.results[:sender]}
+
+      Astute.logger.info "Removing nodes which failed to provision: #{uids - available_uids}"
+
+      deployment_info = deployment_info.select { |node| available_uids.include? node['uid'] }
+      pre_deployment.each do |task|
+        task['uids'] = task['uids'].select { |uid| available_uids.include? uid}
+      end
+      post_deployment.each do |task|
+        task['uids'] = task['uids'].select { |uid| available_uids.include? uid}
+      end
+      [deployment_info, pre_deployment, post_deployment]
     end
 
   end
