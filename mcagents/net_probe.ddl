@@ -41,3 +41,7 @@ end
 action "multicast_info", :description => "Request received data from multicast frames" do
     display :always
 end
+
+action "check_url_retrieval", :description => "Check if urls are retrievable" do
+    display: always
+end

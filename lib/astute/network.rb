@@ -114,6 +114,16 @@ module Astute
       {'nodes' => response}
     end
 
+    def self.check_urls_access(ctx, nodes, urls)
+      uids = nodes.map { |node| node['uid'].to_s }
+      net_probe = MClient.new(ctx, "net_probe", uids)
+
+      result = net_probe.check_url_retrieval(:urls => urls)
+      Astute.logger.debug("check_url_retrieval: #{result.inspect}")
+
+      {'nodes' => result, 'status'=> 'ready'}
+    end
+
     private
     def self.start_frame_listeners(ctx, net_probe, nodes)
       data_to_send = {}
