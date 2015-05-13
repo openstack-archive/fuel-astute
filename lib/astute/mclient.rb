@@ -146,6 +146,7 @@ module Astute
       retries = 1
       begin
         @mc = rpcclient(@agent, :exit_on_failure => false)
+
         @mc.timeout = @timeout if @timeout
         @mc.progress = false
         if @nodes
