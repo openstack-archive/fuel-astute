@@ -77,6 +77,9 @@ describe "NailyFact DeploymentEngine" do
           nil,
           true
         ).once
+
+        deploy_engine.stubs(:remove_failed_nodes).returns([deploy_data, [], []])
+        
         expect {deploy_engine.deploy(deploy_data)}.to_not raise_exception
       end
     end
@@ -107,6 +110,8 @@ describe "NailyFact DeploymentEngine" do
           true
         ).once
 
+        deploy_engine.stubs(:remove_failed_nodes).returns([deploy_data, [], []])
+
         expect {deploy_engine.deploy(deploy_data)}.to_not raise_exception
       end
     end
@@ -126,6 +131,8 @@ describe "NailyFact DeploymentEngine" do
         ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
         ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
 
+        deploy_engine.stubs(:remove_failed_nodes).returns([deploy_data, [], []])
+
         Astute::PuppetdDeployer.expects(:deploy).times(2)
 
         deploy_engine.deploy(deploy_data)
@@ -134,6 +141,8 @@ describe "NailyFact DeploymentEngine" do
       it "should generate and publish facts for every deploy call because node may be deployed several times" do
         ctx.deploy_log_parser.expects(:prepare).with(compute_nodes).once
         ctx.deploy_log_parser.expects(:prepare).with(cinder_nodes).once
+
+        deploy_engine.stubs(:remove_failed_nodes).returns([deploy_data, [], []])
 
         Astute::PuppetdDeployer.expects(:deploy).times(2)
 
@@ -179,6 +188,8 @@ describe "NailyFact DeploymentEngine" do
           true
         ).once
 
+        deploy_engine.stubs(:remove_failed_nodes).returns([deploy_data, [], []])
+
         deploy_engine.deploy(deploy_data)
       end
 
@@ -189,6 +200,8 @@ describe "NailyFact DeploymentEngine" do
 
         it "ha deploy should not raise any exception if there are only one controller" do
           Astute::PuppetdDeployer.expects(:deploy).once
+
+          deploy_engine.stubs(:remove_failed_nodes).returns([deploy_data, [], []])
 
           deploy_engine.deploy(deploy_data)
         end
@@ -219,6 +232,8 @@ describe "NailyFact DeploymentEngine" do
           false
         ).once
 
+        deploy_engine.stubs(:remove_failed_nodes).returns([deploy_data, [], []])
+
         deploy_engine.deploy(deploy_data)
       end
 
@@ -233,6 +248,8 @@ describe "NailyFact DeploymentEngine" do
           nil,
           true
         ).once
+
+        deploy_engine.stubs(:remove_failed_nodes).returns([deploy_data, [], []])
 
         deploy_engine.deploy(deploy_data)
       end

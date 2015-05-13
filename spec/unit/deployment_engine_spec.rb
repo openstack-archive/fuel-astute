@@ -84,11 +84,15 @@ describe Astute::DeploymentEngine do
       it 'should run pre deployment hooks run once for all cluster' do
         deployer.expects(:pre_deployment_actions).with(nodes, []).once
 
+        deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
+
         deployer.deploy(nodes)
       end
 
       it 'should run post deployment hooks run once for all cluster' do
         deployer.expects(:post_deployment_actions).with(nodes, []).once
+
+        deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
         deployer.deploy(nodes)
       end
@@ -101,6 +105,8 @@ describe Astute::DeploymentEngine do
           deployer.expects(:deploy_piece).in_sequence(hook_order)
           deployer.expects(:post_deployment_actions).in_sequence(hook_order)
 
+          deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
+
           deployer.deploy(nodes, pre_deployment, post_deployment)
         end
 
@@ -108,6 +114,8 @@ describe Astute::DeploymentEngine do
           deployer.expects(:pre_deployment_actions).raises(Astute::DeploymentEngineError)
 
           ctx.expects(:report_and_update_status).never
+
+          deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
           expect {deployer.deploy(nodes, pre_deployment, post_deployment)}.to raise_error(Astute::DeploymentEngineError)
         end
@@ -117,6 +125,8 @@ describe Astute::DeploymentEngine do
 
     it 'deploy nodes by order' do
       nodes = [{'uid' => 1, 'priority' => 10}, {'uid' => 2, 'priority' => 0}, {'uid' => 1, 'priority' => 15}]
+
+      deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
       deploy_order = sequence('deploy_order')
       deployer.expects(:deploy_piece).with([{'uid' => 2, 'priority' => 0}]).in_sequence(deploy_order)
@@ -128,6 +138,8 @@ describe Astute::DeploymentEngine do
 
     it 'nodes with same priority should be deploy at parallel' do
       nodes = [{'uid' => 1, 'priority' => 10}, {'uid' => 2, 'priority' => 0}, {'uid' => 3, 'priority' => 10}]
+
+      deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
       deployer.expects(:deploy_piece).with([{'uid' => 2, 'priority' => 0}])
       deployer.expects(:deploy_piece).with([{"uid"=>1, "priority"=>10}, {"uid"=>3, "priority"=>10}])
@@ -141,6 +153,8 @@ describe Astute::DeploymentEngine do
         {'uid' => 2, 'priority' => 0, 'role' => 'primary-controller'},
         {'uid' => 1, 'priority' => 10, 'role' => 'cinder'}
       ]
+
+      deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
       deployer.expects(:deploy_piece).with([{'uid' => 2, 'priority' => 0, 'role' => 'primary-controller'}])
       deployer.expects(:deploy_piece).with([{'uid' => 1, 'priority' => 10, 'role' => 'compute'}])
@@ -156,6 +170,8 @@ describe Astute::DeploymentEngine do
         {'uid' => 2, 'priority' => 0, 'role' => 'primary-controller'},
         {'uid' => 1, 'priority' => 10, 'role' => 'cinder'}
       ]
+
+      deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
       deployer.expects(:deploy_piece).with([{'uid' => 2, 'priority' => 0, 'role' => 'primary-controller'}])
       deployer.expects(:deploy_piece).with([
@@ -196,6 +212,9 @@ describe Astute::DeploymentEngine do
         )
 
         ctx.stubs(:report_and_update_status)
+
+        deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
+
         expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
       end
 
@@ -229,6 +248,8 @@ describe Astute::DeploymentEngine do
            'fail_if_error' => false}]
         )
 
+        deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
+
         deployer.deploy(nodes)
       end
 
@@ -245,6 +266,9 @@ describe Astute::DeploymentEngine do
         deployer.stubs(:deploy_piece).twice
 
         ctx.expects(:report_and_update_status).never
+
+        deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
+
         expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
       end
 
@@ -261,6 +285,8 @@ describe Astute::DeploymentEngine do
         deployer.stubs(:deploy_piece).once
 
         ctx.expects(:report_and_update_status).never
+
+        deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
         expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
       end
@@ -285,6 +311,8 @@ describe Astute::DeploymentEngine do
           deployer.stubs(:deploy_piece).once
 
           ctx.expects(:report_and_update_status).never
+
+          deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
           expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
         end
@@ -312,6 +340,8 @@ describe Astute::DeploymentEngine do
         deployer.expects(:deploy_piece).with([{'uid' => 1, 'priority' => 10, 'role' => 'compute'}])
         deployer.expects(:deploy_piece).with([{'uid' => 3, 'priority' => 10, 'role' => 'compute'}])
         deployer.expects(:deploy_piece).with([{'uid' => 1, 'priority' => 10, 'role' => 'cinder'}])
+
+        deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
         deployer.deploy(nodes)
       end
