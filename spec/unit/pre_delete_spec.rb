@@ -204,7 +204,7 @@ describe Astute::PreDelete do
       ]
     }
     let(:error_result) do
-      msg = "MCollective is not running on nodes 2. " \
+      msg = "MCollective is not running on nodes: 2. " \
             "MCollective must be running to properly delete a node."
 
       {"status" => "error",

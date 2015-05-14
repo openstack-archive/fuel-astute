@@ -134,14 +134,14 @@ module Astute
       client = MClient.new(ctx, "version", mco_nodes, check_result=false)
       responses = client.get_version
       online_nodes = responses.map(&:results).collect { |r| r[:sender].to_i }
-      offline_nodes = (mco_nodes.to_set - online_nodes.to_set).to_a
+      offline_nodes = mco_nodes - online_nodes
 
       if offline_nodes.present?
         offline_nodes.map! { |e| {'uid' => e} }
-        msg = "MCollective is not running on nodes " \
+        msg = "MCollective is not running on nodes: " \
               "#{offline_nodes.collect {|n| n['uid'] }.join(',')}. " \
               "MCollective must be running to properly delete a node."
-
+        Astute.logger.warn msg
         answer = {'status' => 'error',
                   'error' => msg,
                   'error_nodes' => offline_nodes}
