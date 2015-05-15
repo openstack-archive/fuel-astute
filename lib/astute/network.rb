@@ -120,7 +120,21 @@ module Astute
 
       result = net_probe.check_url_retrieval(:urls => urls)
 
-      {'nodes' => result, 'status'=> 'ready'}
+      {'nodes' => flatten_response(result), 'status'=> 'ready'}
+    end
+
+    def self.check_repositories_with_setup(ctx, nodes)
+      uids = nodes.map { |node| node['uid'].to_s }
+      net_probe = MClient.new(ctx, "net_probe", uids)
+
+      data = {}
+      nodes.each do |node|
+        data[node['uid'].to_s] = node
+      end
+
+      result = net_probe.check_repositories_with_setup(:data => data)
+
+      {'nodes' => flatten_response(result), 'status'=> 'ready'}
     end
 
     private
@@ -217,6 +231,15 @@ module Astute
             uids,
             node.results[:data][:neighbours])
         }
+      end
+    end
+
+    def self.flatten_response(response)
+      response.map do |node|
+        {:out => node.results[:data][:out],
+         :err => node.results[:data][:err],
+         :status => node.results[:data][:status],
+         :uid => node.results[:sender]}
       end
     end
 
