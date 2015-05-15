@@ -123,6 +123,20 @@ module Astute
       {'nodes' => result, 'status'=> 'ready'}
     end
 
+    def self.check_repositories_with_setup(ctx, nodes)
+      uids = nodes.map { |node| node['uid'].to_s }
+      net_probe = MClient.new(ctx, "net_probe", uids)
+
+      data = {}
+      nodes.each do |node|
+        data[node['uid'].to_s] = node
+      end
+
+      result = net_probe.check_repositories_with_setup(:data => data)
+
+      {'nodes' => result, 'status'=> 'ready'}
+    end
+
     private
     def self.start_frame_listeners(ctx, net_probe, nodes)
       data_to_send = {}
