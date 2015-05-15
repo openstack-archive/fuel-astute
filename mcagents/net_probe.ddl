@@ -45,3 +45,7 @@ end
 action "check_url_retrieval", :description => "Check if urls are retrievable" do
     display :always
 end
+
+action "check_repositories_with_setup", :description => "Setup network and check urls" do
+    display :always
+end
