@@ -72,7 +72,23 @@ module MCollective
 
         cmd = "urlaccesscheck check '#{urls.join("' '")}'"
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+        reply[:stdout] = JSON.parse(reply[:stdout])
       end
+
+      action "check_repositories_with_setup" do
+        config = request.data[:data][get_uid]
+
+        cmd = "urlaccesscheck with setup \
+          -i #{config['iface']} \
+          -g #{config['gateway']} \
+          -a #{config['addr']} \
+          -v #{config['vlan']} \
+          '#{config['urls'].join("' '")}'"
+
+        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+        reply[:stdout] = JSON.parse(reply[:stdout])
+      end
+
 
       private
 
