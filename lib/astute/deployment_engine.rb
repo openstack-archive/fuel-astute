@@ -154,7 +154,9 @@ module Astute
       required_uids = required_nodes.map { |node| node["uid"]}
 
       systemtype = Astute::MClient.new(@ctx, "systemtype", uids, check_result=false, 10)
-      available_nodes = systemtype.get_type.select { |node| node.results[:data][:node_type] == "target"}
+      available_nodes = systemtype.get_type.select do |node|
+        node.results[:data][:node_type].chomp == "target"
+      end
       available_uids = available_nodes.map { |node| node.results[:sender]}
 
       if (uids - available_uids).present?
@@ -163,6 +165,8 @@ module Astute
           {'uid' => uid,
            'status' => 'error',
            'error_type' => 'provision',
+           # Avoid deployment reporter param validation
+           'role' => 'hook',
            'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
           }
         end

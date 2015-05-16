@@ -386,9 +386,9 @@ describe Astute::DeploymentEngine do
         {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
         {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
       ]
-      res1 = {:data => {:node_type => 'target'},
+      res1 = {:data => {:node_type => "target\n"},
              :sender=>"1"}
-      res2 = {:data => {:node_type => 'target'},
+      res2 = {:data => {:node_type => "target"},
              :sender=>"2"}
       mc_res1 = mock_mc_result(res1)
       mc_res2 = mock_mc_result(res2)
@@ -397,7 +397,16 @@ describe Astute::DeploymentEngine do
       rpcclient = mock_rpcclient(nodes, mc_timeout)
       rpcclient.expects(:get_type).once.returns([mc_res1, mc_res2])
 
-      ctx.expects(:report_and_update_status).with('nodes' => [{'uid' => '3', 'status' => 'error', 'error_type' => 'provision', 'error_msg' => 'Node is not ready for deployment: mcollective has not answered'}], 'error' => 'Node is not ready for deployment')
+      ctx.expects(:report_and_update_status).with(
+        'nodes' => [{
+          'uid' => '3',
+          'status' => 'error',
+          'error_type' => 'provision',
+          'role' => 'hook',
+          'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
+        }],
+        'error' => 'Node is not ready for deployment'
+      )
       deployer.expects(:deploy_piece).with(correct_nodes)
 
       deployer.deploy(nodes)
@@ -422,9 +431,9 @@ describe Astute::DeploymentEngine do
         {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
         {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
       ]
-      res1 = {:data => {:node_type => 'target'},
+      res1 = {:data => {:node_type => "target\n"},
              :sender=>"1"}
-      res2 = {:data => {:node_type => 'target'},
+      res2 = {:data => {:node_type => "target"},
              :sender=>"2"}
       mc_res1 = mock_mc_result(res1)
       mc_res2 = mock_mc_result(res2)
@@ -432,7 +441,16 @@ describe Astute::DeploymentEngine do
       rpcclient = mock_rpcclient(nodes, mc_timeout)
       rpcclient.expects(:get_type).once.returns([mc_res1, mc_res2])
 
-      ctx.expects(:report_and_update_status).with('nodes' => [{'uid' => '3', 'status' => 'error', 'error_type' => 'provision', 'error_msg' => 'Node is not ready for deployment: mcollective has not answered'}], 'error' => 'Node is not ready for deployment')
+      ctx.expects(:report_and_update_status).with(
+        'nodes' => [{
+          'uid' => '3',
+          'status' => 'error',
+          'error_type' => 'provision',
+          'role' => 'hook',
+          'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
+        }],
+        'error' => 'Node is not ready for deployment'
+      )
       deployer.expects(:pre_deployment_actions).with(correct_nodes, correct_tasks)
       deployer.expects(:deploy_piece).with(correct_nodes)
       deployer.expects(:post_deployment_actions).with(correct_nodes, correct_tasks)
@@ -447,7 +465,7 @@ describe Astute::DeploymentEngine do
         {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller', 'fail_if_error' => true}
       ]
 
-      res1 = {:data => {:node_type => 'target'},
+      res1 = {:data => {:node_type => "target\n"},
              :sender=>"1"}
       res2 = {:data => {:node_type => 'target'},
              :sender=>"3"}
@@ -458,7 +476,16 @@ describe Astute::DeploymentEngine do
       rpcclient = mock_rpcclient(nodes, mc_timeout)
       rpcclient.expects(:get_type).once.returns([mc_res1, mc_res2])
 
-      ctx.expects(:report_and_update_status).with('nodes' => [{'uid' => '2', 'status' => 'error', 'error_type' => 'provision', 'error_msg' => 'Node is not ready for deployment: mcollective has not answered'}], 'error' => 'Node is not ready for deployment')
+      ctx.expects(:report_and_update_status).with(
+        'nodes' => [{
+          'uid' => '2',
+          'status' => 'error',
+          'error_type' => 'provision',
+          'role' => 'hook',
+          'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
+        }],
+        'error' => 'Node is not ready for deployment'
+      )
 
       expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError)
     end
