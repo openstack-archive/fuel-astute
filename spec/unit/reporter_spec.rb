@@ -201,11 +201,42 @@ describe "ProxyReporter" do
       msgs.each {|msg| @reporter.report(msg)}
     end
 
+    it "should able to report provision data" do
+      msg = {
+        'nodes' => [{
+          'uid' => '1',
+          'status' => 'error',
+          'error_type' => 'provision',
+          'role' => 'hook',
+          'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
+        }],
+        'error' => 'Node is not ready for deployment'
+      }
+      @up_reporter.expects(:report).with(msg)
+      @reporter.report(msg)
+    end
+
     context 'multiroles' do
       let(:up_reporter) { mock('up_reporter') }
       let(:nodes) { [{'uid' => 1, 'role' => 'controller', 'fail_if_error' => true }, {'uid' => 1, 'role' => 'compute'}] }
       before(:each) do
         @reporter = ProxyReporter::DeploymentProxyReporter.new(up_reporter, nodes)
+      end
+
+      it "should able to report provision data" do
+        msg = {
+          'nodes' => [{
+            'uid' => '1',
+            'status' => 'error',
+            'error_type' => 'provision',
+            'role' => 'hook',
+            'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
+          }],
+          'error' => 'Node is not ready for deployment'
+        }
+        up_reporter.expects(:report).with(msg)
+
+        @reporter.report(msg)
       end
 
       it 'send final status only once for all node roles"' do

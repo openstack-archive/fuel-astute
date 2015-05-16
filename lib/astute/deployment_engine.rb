@@ -163,6 +163,8 @@ module Astute
           {'uid' => uid,
            'status' => 'error',
            'error_type' => 'provision',
+           # Avoid deployment reporter param validation
+           'role' => 'hook',
            'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
           }
         end
