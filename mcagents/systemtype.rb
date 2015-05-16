@@ -20,7 +20,7 @@ module MCollective
 
       action "get_type" do
         begin
-          reply[:node_type] = File.read(file)
+          reply[:node_type] = File.read(file).chomp
         rescue
           reply.fail! $!.to_s
         end
