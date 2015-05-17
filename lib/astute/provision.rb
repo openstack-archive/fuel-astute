@@ -219,17 +219,26 @@ module Astute
       # TODO(kozhukalov): do not forget about execute_shell_command timeout which is 3600
       # provision_and_watch_progress has provisioning_timeout + 3600 is much longer than provisioning_timeout
       if provision_method == 'image'
-        # disabling pxe boot
-        cobbler.netboot_nodes(nodes, false)
+        # IBP is implemented in terms of Fuel Agent installed into bootstrap ramdisk
+        # we don't want nodes to be rebooted into OS installer ramdisk
+        cobbler.edit_nodes(nodes, {'profile' => 'bootstrap'})
+
         # change node type to prevent unexpected erase
         change_nodes_type(reporter, task_id, nodes)
         # Run parallel reporter
         report_image_provision(reporter, task_id, nodes) do
           failed_uids |= image_provision(reporter, task_id, nodes)
         end
+        provisioned_nodes = nodes.reject {|n| failed_uids.include? n['uid']}
+
+        # disabling pxe boot (chain loader) for nodes which succeeded
+        cobbler.netboot_nodes(provisioned_nodes, false)
+
+        # in case of IBP we reboot only those nodes which we managed to provision
+        reboot_events = cobbler.reboot_nodes(provisioned_nodes)
+      else
+        reboot_events = cobbler.reboot_nodes(nodes)
       end
-      # TODO(vsharshov): maybe we should reboot nodes using mco or ssh instead of Cobbler
-      reboot_events = cobbler.reboot_nodes(nodes)
       not_rebooted = cobbler.check_reboot_nodes(reboot_events)
       not_rebooted = nodes.select { |n| not_rebooted.include?(n['slave_name'])}
       failed_uids |= not_rebooted.map { |n| n['uid']}

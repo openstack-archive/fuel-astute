@@ -122,6 +122,20 @@ describe Astute::CobblerManager do
 
   end #'add_nodes'
 
+  describe '#edit_nodes' do
+    before(:each) do
+      cobbler_manager.stubs(:sleep)
+    end
+
+    it 'should sync engine status after end' do
+      engine.stubs(:item_from_hash)
+      cobbler_manager.expects(:sync).once
+
+      cobbler_manager.edit_nodes(data['nodes'], {'profile' => 'bootstrap'})
+    end
+
+  end #'edit_nodes'
+
   describe '#reboot_nodes' do
     before(:each) do
       cobbler_manager.stubs(:sleep)
