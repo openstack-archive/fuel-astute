@@ -461,10 +461,14 @@ module Astute
 
       fault_tolerance.each do |group|
         failed_from_group = failed_uids.select { |uid| group['uids'].include? uid }
+        failed_uids -= failed_from_group
         max_to_fail = group['percentage'] / 100.0 * group['uids'].count
         if failed_from_group.count > max_to_fail
           return true
         end
+      end
+      if failed_uids.present?
+          return true
       end
       false
     end
