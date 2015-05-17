@@ -107,6 +107,21 @@ module Astute
       failed_nodes
     end
 
+    def edit_nodes(nodes, data)
+      nodes.each do |node|
+        cobbler_name = node['slave_name']
+        begin
+          Astute.logger.info("Changing cobbler system #{cobbler_name}")
+          @engine.item_from_hash('system', cobbler_name, data, :item_preremove => false)
+        rescue RuntimeError => e
+          Astute.logger.error("Error occured while changing cobbler system #{cobbler_name}")
+          raise e
+        end
+      end
+    ensure
+      sync
+    end
+
     def netboot_nodes(nodes, state)
       nodes.each do |node|
         cobbler_name = node['slave_name']
