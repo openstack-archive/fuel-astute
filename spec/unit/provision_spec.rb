@@ -248,10 +248,52 @@ describe Astute::Provisioner do
         end
         Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
         Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
+        Astute::CobblerManager.any_instance.stubs(:edit_nodes)
         @provisioner.stubs(:change_nodes_type)
         @provisioner.stubs(:image_provision).returns([])
 
         @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
+      end
+
+      it "does not reboot nodes which failed during provisioning" do
+        Astute::Provision::Cobbler.any_instance do
+          expects(:power_reboot).never
+        end
+        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
+        Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
+        Astute::CobblerManager.any_instance.stubs(:edit_nodes)
+        @provisioner.stubs(:change_nodes_type)
+        @provisioner.stubs(:image_provision).returns([1])
+
+        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
+      end
+
+      it "changes profile into bootstrap for all nodes in case of IBP" do
+        Astute::CobblerManager.any_instance do
+          expects(:edit_nodes).with(data['nodes'], {'profile' => 'bootstrap'})
+        end
+        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
+        Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
+        Astute::CobblerManager.any_instance.stubs(:edit_nodes)
+        @provisioner.stubs(:change_nodes_type)
+        @provisioner.stubs(:image_provision).returns([])
+
+        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
+
+      end
+
+      it "does not change netboot setting for failed nodes in case of IBP" do
+        Astute::CobblerManager.any_instance do
+          expects(:netboot_nodes).with([], false)
+        end
+        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
+        Astute::CobblerManager.any_instance.stubs(:edit_nodes)
+        Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
+        @provisioner.stubs(:change_nodes_type)
+        @provisioner.stubs(:image_provision).returns([1])
+
+        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
+
       end
 
       before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:power_reboot).returns(333) }
