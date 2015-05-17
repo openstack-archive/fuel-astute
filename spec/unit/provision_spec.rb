@@ -562,6 +562,99 @@ describe Astute::Provisioner do
       @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
     end
 
+    it 'should fail if node without fault tolerance rule fails' do
+      Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
+      @provisioner.stubs(:remove_nodes).returns([])
+      @provisioner.stubs(:unlock_nodes_discovery)
+      Astute.config.provisioning_timeout = 5
+      Astute.config.max_nodes_to_provision = 2
+      nodes = [
+        { 'uid' => '1'},
+        { 'uid' => '2'},
+        { 'uid' => '3'}
+      ]
+      @provisioner.stubs(:report_about_progress).returns()
+      @provisioner.stubs(:node_type)
+        .returns([{'uid' => '1', 'node_type' => 'target' }, {'uid' => '2', 'node_type' => 'target' }])
+        .then.returns([])
+
+      success_msg = {
+        'status' => 'error',
+        "error"=>"Too many nodes failed to provision",
+        'progress' => 100,
+        'nodes' => [
+          {
+            'uid' => '3',
+            'status' => 'error',
+            "error_msg"=>"Failed to provision",
+            'progress' => 100,
+            "error_type"=>"provision"},
+          {
+            'uid' => '1',
+            'status' => 'provisioned',
+            'progress' => 100},
+          {
+            'uid' => '2',
+            'status' => 'provisioned',
+            'progress' => 100}
+        ]}
+
+      @provisioner.stubs(:provision_piece).returns([]).then.returns(['3'])
+      provision_info = {'nodes' => nodes,
+                        'engine' => data['engine'],
+                        'fault_tolerance' => [{'uids'=> ['1', '2'], 'percentage' => 50}]}
+
+      @reporter.expects(:report).with(success_msg).once
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+    end
+
+    it 'should fail if node has two roles and fails for one' do
+      Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
+      @provisioner.stubs(:remove_nodes).returns([])
+      @provisioner.stubs(:unlock_nodes_discovery)
+      Astute.config.provisioning_timeout = 5
+      Astute.config.max_nodes_to_provision = 2
+      nodes = [
+        { 'uid' => '1'},
+        { 'uid' => '2'},
+        { 'uid' => '3'}
+      ]
+      @provisioner.stubs(:report_about_progress).returns()
+      @provisioner.stubs(:node_type)
+        .returns([{'uid' => '1', 'node_type' => 'target' }, {'uid' => '2', 'node_type' => 'target' }])
+        .then.returns([])
+
+      success_msg = {
+        'status' => 'error',
+        "error"=>"Too many nodes failed to provision",
+        'progress' => 100,
+        'nodes' => [
+          {
+            'uid' => '3',
+            'status' => 'error',
+            "error_msg"=>"Failed to provision",
+            'progress' => 100,
+            "error_type"=>"provision"},
+          {
+            'uid' => '1',
+            'status' => 'provisioned',
+            'progress' => 100},
+          {
+            'uid' => '2',
+            'status' => 'provisioned',
+            'progress' => 100}
+        ]}
+
+      @provisioner.stubs(:provision_piece).returns([]).then.returns(['3'])
+      provision_info = {'nodes' => nodes,
+                        'engine' => data['engine'],
+                        'fault_tolerance' => [{'uids'=> ['3'], 'percentage' => 100},
+                                              {'uids'=> ['3'], 'percentage' => 0}]}
+
+      @reporter.expects(:report).with(success_msg).once
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+    end
+
     it 'should fail if one node fails' do
       Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
       @provisioner.stubs(:remove_nodes).returns([])
