@@ -378,13 +378,46 @@ describe Astute::DeploymentEngine do
 
     it 'should skip failed nodes' do
       nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "3", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '3', 'role' => 'compute'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "3", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '3', 'role' => 'compute'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '3', 'role' => 'compute'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
       ]
       correct_nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
       ]
       res1 = {:data => {:node_type => "target\n"},
              :sender=>"1"}
@@ -414,22 +447,51 @@ describe Astute::DeploymentEngine do
 
     it 'should remove failed nodes from pre and post deployment tasks' do
       tasks = [
-                {"priority"=>200, "uids"=>["1", "2"]},
-                {"priority"=>300, "uids"=>["1", "2", "3"]}
+        {"priority"=>200, "uids"=>["1", "2"]},
+        {"priority"=>300, "uids"=>["1", "2", "3"]},
+        {"priority"=>300, "uids"=>["3"]}
       ]
       correct_tasks = [
-                {"priority"=>200, "uids"=>["1", "2"]},
-                {"priority"=>300, "uids"=>["1", "2"]}
+        {"priority"=>200, "uids"=>["1", "2"]},
+        {"priority"=>300, "uids"=>["1", "2"]}
       ]
 
       nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "3", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]},
+        {'uid' => "3", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]},
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
       ]
       correct_nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
       ]
       res1 = {:data => {:node_type => "target\n"},
              :sender=>"1"}
@@ -460,9 +522,26 @@ describe Astute::DeploymentEngine do
 
     it 'should raise error if critical node is missing' do
       nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "3", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller', 'fail_if_error' => true}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "3", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'fail_if_error' => true, 'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]}
       ]
 
       res1 = {:data => {:node_type => "target\n"},
@@ -488,6 +567,117 @@ describe Astute::DeploymentEngine do
       )
 
       expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError)
+    end
+
+    it 'should process info about nodes in pre/post tasks' do
+      data = <<-EOF
+        nodes:
+        - {fqdn: node-3.test.domain.local, name: node-3, role: compute, swift_zone: '3', uid: '3', user_node_name: slave-03_compute}
+        - {fqdn: node-1.test.domain.local, name: node-1, role: compute, swift_zone: '1', uid: '1', user_node_name: slave-01_compute}
+        - {fqdn: node-2.test.domain.local, name: node-2, role: primary-controller, swift_zone: '2', uid: '2', user_node_name: slave-02_primary_controller}
+      EOF
+
+      correct_data = <<-EOF
+        nodes:
+        - {fqdn: node-1.test.domain.local, name: node-1, role: compute, swift_zone: '1', uid: '1', user_node_name: slave-01_compute}
+        - {fqdn: node-2.test.domain.local, name: node-2, role: primary-controller, swift_zone: '2', uid: '2', user_node_name: slave-02_primary_controller}
+      EOF
+
+      correct_data = YAML.dump(YAML.load(correct_data))
+
+      non_host_nodes_data =  <<-EOF
+        nodes:
+        - { name: node-1, role: compute, uid: '1' }
+        - { name: node-2, role: primary-controller, uid: '2' }
+      EOF
+
+      tasks = [
+        {"priority"=>200, "uids"=>["1", "2"], 'type' => 'upload_file',
+          'parameters' => {
+            'path' => "/etc/hiera/nodes.yaml",
+            'data' => data
+          }
+        },
+        {"priority"=>300, "uids"=>["1", "2", "3"], 'type' => 'upload_file',
+          'parameters' => {
+            'path' => "/etc/hiera/nodes.yaml",
+            'data' => non_host_nodes_data
+          }
+        },
+        {"priority"=>300, "uids"=>["3"]}
+      ]
+
+      correct_tasks = [
+        {"priority"=>200, "uids"=>["1", "2"], 'type' => 'upload_file',
+          'parameters' => {
+            'path' => "/etc/hiera/nodes.yaml",
+            'data' => correct_data
+          }},
+        {"priority"=>300, "uids"=>["1", "2"], 'type' => 'upload_file',
+          'parameters' => {
+            'path' => "/etc/hiera/nodes.yaml",
+            'data' => non_host_nodes_data
+          }
+        }
+      ]
+
+
+      nodes = [
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]},
+        {'uid' => "3", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]},
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
+      ]
+
+      correct_nodes = [
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
+      ]
+
+      res1 = {:data => {:node_type => "target\n"},
+             :sender=>"1"}
+      res2 = {:data => {:node_type => "target"},
+             :sender=>"2"}
+      mc_res1 = mock_mc_result(res1)
+      mc_res2 = mock_mc_result(res2)
+      mc_timeout = 10
+      rpcclient = mock_rpcclient(nodes, mc_timeout)
+      rpcclient.expects(:get_type).once.returns([mc_res1, mc_res2])
+
+      ctx.stubs(:report_and_update_status)
+      deployer.stubs(:deploy_piece).with(correct_nodes)
+
+      deployer.expects(:pre_deployment_actions).with(correct_nodes, correct_tasks)
+      deployer.expects(:post_deployment_actions).with(correct_nodes, correct_tasks)
+
+      deployer.deploy(nodes, tasks, tasks)
     end
 
   end

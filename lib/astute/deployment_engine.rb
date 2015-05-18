@@ -158,8 +158,8 @@ module Astute
         node.results[:data][:node_type].chomp == "target"
       end
       available_uids = available_nodes.map { |node| node.results[:sender]}
-
-      if (uids - available_uids).present?
+      offline_uids = uids - available_uids
+      if offline_uids.present?
         # set status for all failed nodes to error
         nodes = (uids - available_uids).map do |uid|
           {'uid' => uid,
@@ -182,18 +182,88 @@ module Astute
         end
       end
 
-      #remove offline nodes from data
-      Astute.logger.info "Removing nodes which failed to provision: #{uids - available_uids}"
+      return remove_offline_nodes(
+        uids,
+        available_uids,
+        pre_deployment,
+        deployment_info,
+        post_deployment,
+        offline_uids)
+    end
 
+    def remove_offline_nodes(uids, available_uids, pre_deployment, deployment_info, post_deployment, offline_uids)
+      if offline_uids.blank?
+        return [deployment_info, pre_deployment, post_deployment]
+      end
+
+      Astute.logger.info "Removing nodes which failed to provision: #{offline_uids}"
+      deployment_info = cleanup_nodes_block(deployment_info, offline_uids)
       deployment_info = deployment_info.select { |node| available_uids.include? node['uid'] }
+
       available_uids += ["master"]
       pre_deployment.each do |task|
-        task['uids'] = task['uids'].select { |uid| available_uids.include? uid}
+        task['uids'] = task['uids'].select { |uid| available_uids.include? uid }
       end
       post_deployment.each do |task|
-        task['uids'] = task['uids'].select { |uid| available_uids.include? uid}
+        task['uids'] = task['uids'].select { |uid| available_uids.include? uid }
       end
+
+      # Remove irrelevant tasks if there is no node, where they should be run
+      [pre_deployment, post_deployment].each do |deployment_task|
+        deployment_task.select! { |task| task['uids'].present? }
+      end
+
+      pre_deployment = cleanup_nodes_task_block(pre_deployment, offline_uids)
+      post_deployment = cleanup_nodes_task_block(post_deployment, offline_uids)
+
       [deployment_info, pre_deployment, post_deployment]
+    end
+
+    def cleanup_nodes_block(deployment_info, offline_uids)
+      return deployment_info if offline_uids.blank?
+
+      nodes = deployment_info.first['nodes']
+
+      # In case of deploy in already existing cluster in nodes block
+      # we will have all cluster nodes. We should remove only missing
+      # nodes instead of stay only avaliable.
+      # Example: deploy 3 nodes, after it deploy 2 nodes.
+      # In 1 of 2 seconds nodes missing, in nodes block we should
+      # contain only 4 nodes.
+      nodes_wthout_missing = nodes.select { |node| !offline_uids.include?(node['uid']) }
+      deployment_info.each { |node| node['nodes'] = nodes_wthout_missing }
+      deployment_info
+    end
+
+    def cleanup_nodes_task_block(deployment_tasks, offline_uids)
+      return deployment_tasks if offline_uids.blank?
+
+      # We have hosts hook which contain info about
+      # all nodes including missing
+      deployment_tasks.each do |task|
+        if (task['type'] == 'upload_file') &&
+            is_host_nodes?(task.fetch('parameters', {})['data'])
+          data = YAML.load task['parameters']['data']
+          data['nodes'].select! { |node| !offline_uids.include? node['uid'] }
+          # FIXME(vsharshov): ruby add leading hyphens '---'
+          # It can potencially broken multiline YAML content
+          task['parameters']['data'] = YAML.dump data
+        end
+      end
+
+      deployment_tasks
+    end
+
+    def is_host_nodes?(text)
+      # Example:
+      # nodes:
+      # - {fqdn: node-6.test.domain.local, name: node-6, role: cinder, swift_zone '6, uid: '6', user_node_name: slave-06_cinder}
+      is_hosts = ['nodes', 'fqdn', 'name', 'role', 'uid', 'user_node_name'].all? { |key| text.include? key }
+      return false unless is_hosts
+      data = YAML.load text
+      data['nodes'].present?
+    rescue
+      false
     end
 
   end
