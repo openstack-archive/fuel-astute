@@ -176,12 +176,6 @@ describe Astute::CobblerManager do
       end
     end #'splay'
 
-    it 'should sync engine status after end' do
-      engine.stubs(:power_reboot)
-      cobbler_manager.expects(:sync).once
-
-      cobbler_manager.reboot_nodes(data['nodes'])
-    end
   end #'reboot_nodes'
 
 end
