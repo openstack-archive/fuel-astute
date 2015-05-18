@@ -75,8 +75,6 @@ module Astute
         sleep splay
         reboot_events.merge(cobbler_name => @engine.power_reboot(cobbler_name))
       end
-    ensure
-      sync
     end
 
     def check_reboot_nodes(reboot_events)
