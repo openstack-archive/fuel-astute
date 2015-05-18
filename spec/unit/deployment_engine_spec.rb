@@ -378,13 +378,46 @@ describe Astute::DeploymentEngine do
 
     it 'should skip failed nodes' do
       nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "3", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '3', 'role' => 'compute'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "3", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '3', 'role' => 'compute'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '3', 'role' => 'compute'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
       ]
       correct_nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
       ]
       res1 = {:data => {:node_type => "target\n"},
              :sender=>"1"}
@@ -414,22 +447,51 @@ describe Astute::DeploymentEngine do
 
     it 'should remove failed nodes from pre and post deployment tasks' do
       tasks = [
-                {"priority"=>200, "uids"=>["1", "2"]},
-                {"priority"=>300, "uids"=>["1", "2", "3"]}
+        {"priority"=>200, "uids"=>["1", "2"]},
+        {"priority"=>300, "uids"=>["1", "2", "3"]},
+        {"priority"=>300, "uids"=>["3"]}
       ]
       correct_tasks = [
-                {"priority"=>200, "uids"=>["1", "2"]},
-                {"priority"=>300, "uids"=>["1", "2"]}
+        {"priority"=>200, "uids"=>["1", "2"]},
+        {"priority"=>300, "uids"=>["1", "2"]}
       ]
 
       nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "3", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]},
+        {'uid' => "3", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]},
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
       ]
       correct_nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        }
       ]
       res1 = {:data => {:node_type => "target\n"},
              :sender=>"1"}
@@ -460,9 +522,26 @@ describe Astute::DeploymentEngine do
 
     it 'should raise error if critical node is missing' do
       nodes = [
-        {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "3", 'priority' => 10, 'role' => 'compute'},
-        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller', 'fail_if_error' => true}
+        {'uid' => "1", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "3", 'priority' => 10, 'role' => 'compute',
+          'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]
+        },
+        {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
+          'fail_if_error' => true, 'nodes' => [
+            {'uid' => '1', 'role' => 'compute'},
+            {'uid' => '2', 'role' => 'primary-controller'},
+            {'uid' => '4', 'role' => 'compute'}
+          ]}
       ]
 
       res1 = {:data => {:node_type => "target\n"},

@@ -158,8 +158,8 @@ module Astute
         node.results[:data][:node_type].chomp == "target"
       end
       available_uids = available_nodes.map { |node| node.results[:sender]}
-
-      if (uids - available_uids).present?
+      offline_uids = uids - available_uids
+      if offline_uids.present?
         # set status for all failed nodes to error
         nodes = (uids - available_uids).map do |uid|
           {'uid' => uid,
@@ -182,18 +182,61 @@ module Astute
         end
       end
 
-      #remove offline nodes from data
-      Astute.logger.info "Removing nodes which failed to provision: #{uids - available_uids}"
+      return remove_offline_nodes(
+        uids,
+        available_uids,
+        pre_deployment,
+        deployment_info,
+        post_deployment,
+        offline_uids)
+    end
 
+    def remove_offline_nodes(uids, available_uids, pre_deployment, deployment_info, post_deployment, offline_uids)
+      if offline_uids.blank?
+        return [deployment_info, pre_deployment, post_deployment]
+      end
+
+      Astute.logger.info "Removing nodes which failed to provision: #{offline_uids}"
+      deployment_info = cleanup_nodes_block(deployment_info, offline_uids)
       deployment_info = deployment_info.select { |node| available_uids.include? node['uid'] }
+
       available_uids += ["master"]
       pre_deployment.each do |task|
-        task['uids'] = task['uids'].select { |uid| available_uids.include? uid}
+        task['uids'] = task['uids'].select { |uid| available_uids.include? uid }
       end
       post_deployment.each do |task|
-        task['uids'] = task['uids'].select { |uid| available_uids.include? uid}
+        task['uids'] = task['uids'].select { |uid| available_uids.include? uid }
       end
+
+      [pre_deployment, post_deployment].each do |deployment_task|
+        deployment_task.select! do |task|
+          if task['uids'].present?
+            true
+          else
+            Astute.logger.info "Task(hook) was deleted because there is no " \
+              "node where it should be run \n#{task.to_yaml}"
+            false
+          end
+        end
+      end
+
       [deployment_info, pre_deployment, post_deployment]
+    end
+
+    def cleanup_nodes_block(deployment_info, offline_uids)
+      return deployment_info if offline_uids.blank?
+
+      nodes = deployment_info.first['nodes']
+
+      # In case of deploy in already existing cluster in nodes block
+      # we will have all cluster nodes. We should remove only missing
+      # nodes instead of stay only avaliable.
+      # Example: deploy 3 nodes, after it deploy 2 nodes.
+      # In 1 of 2 seconds nodes missing, in nodes block we should
+      # contain only 4 nodes.
+      nodes_wthout_missing = nodes.select { |node| !offline_uids.include?(node['uid']) }
+      deployment_info.each { |node| node['nodes'] = nodes_wthout_missing }
+      deployment_info
     end
 
   end
