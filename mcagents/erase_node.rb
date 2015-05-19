@@ -164,7 +164,7 @@ module MCollective
 
       # Prevent discover by agent while node rebooting
       def prevent_discover
-        lock_path = '/var/run/nodiscover'
+        lock_path = Astute.config.agent_nodiscover_file
         debug_msg("Create file for discovery preventing #{lock_path}")
         FileUtils.touch(lock_path)
       end
