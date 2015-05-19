@@ -93,6 +93,7 @@ module Astute
                                           # 0.1667 / 180 = 30 sec. Delay between reboot command for first
                                           # and last node in group should be 30 sec. Empirical observation.
                                           # Please increase if nodes could not provisioning
+    conf[:agent_nodiscover_file] = '/etc/nailgun-agent/nodiscover' # if this file in place, nailgun-agent will do nothing
 
     # Server settings
     conf[:broker_host] = 'localhost'

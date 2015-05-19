@@ -26,6 +26,8 @@ module MCollective
       # https://github.com/stackforge/fuel-web/blob/master/bin/agent#L43
       STORAGE_CODES = [3, 8, 65, 66, 67, 68, 69, 70, 71, 104, 105, 106, 107, 108, 109, 110, 111, 202, 252, 253, 259]
 
+      AGENT_NODISCOVER_FILE = '/etc/nailgun-agent/nodiscover'
+
       action "erase_node" do
         erase_node
       end
@@ -164,7 +166,7 @@ module MCollective
 
       # Prevent discover by agent while node rebooting
       def prevent_discover
-        lock_path = '/var/run/nodiscover'
+        lock_path = AGENT_NODISCOVER_FILE
         debug_msg("Create file for discovery preventing #{lock_path}")
         FileUtils.touch(lock_path)
       end

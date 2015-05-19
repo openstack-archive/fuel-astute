@@ -388,7 +388,7 @@ module Astute
                           nodes_uids,
                           check_result=false,
                           timeout=2)
-      mco_result = shell.execute(:cmd => 'rm -f /var/run/nodiscover')
+      mco_result = shell.execute(:cmd => "rm -f #{Astute.config.agent_nodiscover_file}")
       result = mco_result.map do |n|
         {
           'uid'       => n.results[:sender],
