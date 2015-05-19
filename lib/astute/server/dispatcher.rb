@@ -154,6 +154,12 @@ module Astute
         report_result(result, reporter)
       end
 
+      def check_repositories_with_setup(data)
+        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+        result = @orchestrator.check_repositories_with_setup(reporter, data['args']['task_uuid'], data['args']['nodes'])
+        report_result(result, reporter)
+      end
+
       def dump_environment(data)
         task_id = data['args']['task_uuid']
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_id)

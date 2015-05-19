@@ -153,6 +153,12 @@ module Astute
       Network.check_urls_access(ctx, nodes, urls)
     end
 
+    def check_repositories_with_setup(reporter, task_id, nodes)
+      ctx = Context.new(task_id, reporter)
+      validate_nodes_access(ctx, nodes)
+      Network.check_repositories_with_setup(ctx, nodes)
+    end
+
     private
 
     def deploy_cluster(up_reporter, task_id, deployment_info, deploy_engine, pre_deployment, post_deployment)
