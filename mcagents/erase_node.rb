@@ -16,6 +16,7 @@
 require "json"
 require "base64"
 require 'fileutils'
+require 'pathname'
 
 module MCollective
   module Agent
@@ -168,6 +169,7 @@ module MCollective
       def prevent_discover
         lock_path = AGENT_NODISCOVER_FILE
         debug_msg("Create file for discovery preventing #{lock_path}")
+        FileUtils.mkdir_p(Pathname.new(lock_path).dirname)
         FileUtils.touch(lock_path)
       end
 
