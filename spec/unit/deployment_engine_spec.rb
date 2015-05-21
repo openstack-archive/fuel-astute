@@ -215,7 +215,7 @@ describe Astute::DeploymentEngine do
 
         deployer.stubs(:remove_failed_nodes).returns([nodes, [], []])
 
-        expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError)
+        expect {deployer.deploy(nodes)}.to raise_error(Astute::DeploymentEngineError, "Deployment failed on nodes 2")
       end
 
       it 'should not stop deployment if fail non-critical node' do
@@ -566,7 +566,7 @@ describe Astute::DeploymentEngine do
         'error' => 'Node is not ready for deployment'
       )
 
-      expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError)
+      expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError, "Critical nodes are not available for deployment: [\"2\"]")
     end
 
   end
