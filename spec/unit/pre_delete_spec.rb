@@ -217,7 +217,7 @@ describe Astute::PreDelete do
       rs = mock()
       rs.stubs(:map).returns([{:sender => "1"}])
 
-      mclient.expects(:get_version).returns(rs)
+      mclient.expects(:get_type).returns(rs)
       expect(Astute::PreDelete.check_for_offline_nodes(ctx, nodes)).to eq(error_result)
     end
 
@@ -227,7 +227,7 @@ describe Astute::PreDelete do
         {:sender => "1"},
         {:sender => "2"}
       ])
-      mclient.expects(:get_version).returns(rs)
+      mclient.expects(:get_type).returns(rs)
 
       expect(Astute::PreDelete.check_for_offline_nodes(ctx, nodes)).to eq(success_result)
     end

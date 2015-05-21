@@ -131,8 +131,8 @@ module Astute
       answer = {"status" => "ready"}
       mco_nodes = nodes.collect { |n| n['id'] }
 
-      client = MClient.new(ctx, "version", mco_nodes, check_result=false)
-      responses = client.get_version
+      client = MClient.new(ctx, "systemtype", mco_nodes, check_result=false)
+      responses = client.get_type
       online_nodes = responses.map(&:results).collect { |r| r[:sender].to_i }
       offline_nodes = mco_nodes - online_nodes
 
