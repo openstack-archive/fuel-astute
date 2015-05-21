@@ -51,6 +51,7 @@ module Astute
           end
           error_message = 'Failed to execute hook'
           error_message += " '#{hook_name}'" if hook_name
+          error_message += " #{hook_return['error']}"
           @ctx.report_and_update_status('nodes' => nodes, 'error' => error_message)
           error_message += "\n\n#{hook.to_yaml}"
 
@@ -169,7 +170,10 @@ module Astute
 
       ret
     rescue Astute::MClientTimeout, Astute::MClientError, Timeout::Error => e
-      ret['error'] = "#{@ctx.task_id}: shell timeout error: #{e.message}"
+      ret['error'] += "\n\nTask: #{@ctx.task_id}: " \
+                      "shell timeout error: #{e.message}\n" \
+                      "Task timeout: #{timeout}, Retries: " \
+                      "Retries: #{hook['parameters']['retries']}"
       Astute.logger.error(ret['error'])
 
       ret
