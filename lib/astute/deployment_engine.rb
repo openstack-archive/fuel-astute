@@ -177,7 +177,7 @@ module Astute
         # if not, raise error
         missing_required = required_uids - available_uids
         if missing_required.present?
-          error_message = 'Critical nodes are not available for deployment: #{missing_required}'
+          error_message = "Critical nodes are not available for deployment: #{missing_required}"
           raise Astute::DeploymentEngineError, error_message
         end
       end
