@@ -227,6 +227,7 @@ describe Astute::NailgunHooks do
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
         hooks.expects(:upload_file_hook).returns({'error' => nil})
         hooks.expects(:shell_hook).returns({'error' => 'Shell error'})
+        error_msg = 'Shell error'
 
         ctx.expects(:report_and_update_status).with(
           {'nodes' =>
@@ -236,24 +237,24 @@ describe Astute::NailgunHooks do
                 'error_type' => 'deploy',
                 'role' => 'hook',
                 'hook' => "shell-example-1.0",
-                'error_msg' => 'Shell error'
+                'error_msg' => error_msg
               },
               { 'uid' => '2',
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
                 'hook' => "shell-example-1.0",
-                'error_msg' => 'Shell error'
+                'error_msg' => error_msg
               },
               { 'uid' => '3',
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
                 'hook' => "shell-example-1.0",
-                'error_msg' => 'Shell error'
+                'error_msg' => error_msg
               },
             ],
-            'error' => "Failed to execute hook 'shell-example-1.0'"
+            'error' => "Failed to execute hook 'shell-example-1.0' #{error_msg}"
           }
         )
 
@@ -360,6 +361,7 @@ describe Astute::NailgunHooks do
 
         hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
         hooks.expects(:upload_file).returns(false).once
+        error_msg = 'Upload not successful'
         ctx.expects(:report_and_update_status).once.with(
           {'nodes' =>
             [
@@ -368,17 +370,17 @@ describe Astute::NailgunHooks do
                 'error_type' => 'deploy',
                 'role' => 'hook',
                 'hook' => "copy-example-1.0",
-                'error_msg' => 'Upload not successful'
+                'error_msg' => error_msg
               },
               { 'uid' => '3',
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
                 'hook' => "copy-example-1.0",
-                'error_msg' => 'Upload not successful'
+                'error_msg' => error_msg
               },
             ],
-            'error' => "Failed to execute hook 'copy-example-1.0'"
+            'error' => "Failed to execute hook 'copy-example-1.0' #{error_msg}"
           }
         )
 
@@ -832,6 +834,7 @@ describe Astute::NailgunHooks do
 
       it 'if mclient failed -> raise error' do
         hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
+        error_msg = "Puppet run failed. Check puppet logs for details"
         PuppetdDeployer.expects(:deploy).once.raises(Astute::MClientError)
         ctx.expects(:report_and_update_status).with(
           {'nodes' =>
@@ -841,17 +844,17 @@ describe Astute::NailgunHooks do
                 'error_type' => 'deploy',
                 'role' => 'hook',
                 'hook' => "puppet-example-1.0",
-                'error_msg' => "Puppet run failed. Check puppet logs for details"
+                'error_msg' => error_msg
               },
               { 'uid' => '3',
                 'status' => 'error',
                 'error_type' => 'deploy',
                 'role' => 'hook',
                 'hook' => "puppet-example-1.0",
-                'error_msg' => "Puppet run failed. Check puppet logs for details"
+                'error_msg' => error_msg
               },
             ],
-            'error' => "Failed to execute hook 'puppet-example-1.0'"
+            'error' => "Failed to execute hook 'puppet-example-1.0' #{error_msg}"
           }
         )
 
