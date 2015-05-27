@@ -45,8 +45,9 @@ module Astute
       puppet_tasks = @nodes.map { |n| puppet_task(n) }
       puppet_tasks.each(&:run)
 
-      while puppet_tasks.any? { |t| t.status == 'deploying' }
+      loop do
         sleep Astute.config.puppet_deploy_interval
+        break if puppet_tasks.any? { |t| t.status == 'deploying' }
       end
     end
 
