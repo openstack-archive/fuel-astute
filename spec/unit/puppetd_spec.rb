@@ -82,7 +82,7 @@ describe "PuppetdDeployer" do
         .then.returns('ready')
         .then.returns('ready')
 
-      PuppetdDeployer.expects(:sleep).with(Astute.config.puppet_deploy_interval)
+      PuppetdDeployer.expects(:sleep).with(Astute.config.puppet_deploy_interval).twice
       PuppetdDeployer.deploy(ctx, nodes)
     end
   end
