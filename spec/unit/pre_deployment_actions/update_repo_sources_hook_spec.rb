@@ -48,7 +48,8 @@ describe Astute::UpdateRepoSources do
              "type" => "rpm",
              "name" => "Nailgun",
              "uri" => "http://10.20.0.2:8080/centos/fuelweb/x86_64/",
-             "priority" => 1
+             "priority" => 1,
+             "proxy" => "http://my.proxy:3128",
            }
          ]
        }
@@ -69,14 +70,38 @@ describe Astute::UpdateRepoSources do
       update_repo_sources.stubs(:regenerate_metadata)
     end
 
-    it 'should generate correct config for centos' do
-      content = ["[nailgun]",
-                 "name=Nailgun",
-                 "baseurl=http://10.20.0.2:8080/centos/fuelweb/x86_64/",
-                 "gpgcheck=0"].join("\n")
-
-      update_repo_sources.expects(:upload_repo_source).with(ctx, nodes, content)
+    it 'should upload repository config' do
+      update_repo_sources.expects(:upload_repo_source).with(ctx, nodes)
+      update_repo_sources.stubs(:upload_apt_proxy_conf)
       update_repo_sources.process(nodes, ctx)
+    end
+
+    it 'should upload apt config only for ubuntu' do
+      update_repo_sources.stubs(:upload_repo_source)
+      update_repo_sources.expects(:upload_apt_proxy_conf).times(0)
+      update_repo_sources.process(nodes, ctx)
+      nodes.first['cobbler']['profile'] = 'ubuntu_1404_x86_64'
+      update_repo_sources.expects(:upload_apt_proxy_conf).times(1)
+      update_repo_sources.process(nodes, ctx)
+    end
+
+    it 'should generate apt proxy config for ubuntu' do
+      content = <<-eos
+# Repository: 'Nailgun'
+Acquire::Http::Proxy::10.20.0.2 "http://my.proxy:3128/";
+      eos
+      expect(update_repo_sources.generate_apt_proxy_conf nodes).to eq content
+    end
+
+    it 'should generate correct config centos' do
+      content = <<-eos
+[nailgun]
+name=Nailgun
+baseurl='http://10.20.0.2:8080/centos/fuelweb/x86_64/'
+gpgcheck=0
+proxy='http://my.proxy:3128/'
+      eos
+      expect(update_repo_sources.generate_repo_source nodes).to eq content
     end
 
     it 'should generate correct config for ubuntu' do
@@ -86,16 +111,18 @@ describe Astute::UpdateRepoSources do
       nodes.first['repo_setup']['repos'][0]['suite'] = 'trusty'
       nodes.first['repo_setup']['repos'][0]['section'] = 'main'
 
-      content = "deb http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 trusty main"
+      content = <<-eos
+# Repository: 'Nailgun'
+deb http://10.20.0.2:8080/ubuntu/fuelweb/x86_64 trusty main
+      eos
 
-      update_repo_sources.expects(:upload_repo_source).with(ctx, nodes, content)
-      update_repo_sources.process(nodes, ctx)
+      expect(update_repo_sources.generate_repo_source nodes).to eq content
     end
 
     it 'should raise error if os not recognized' do
       nodes.first['cobbler']['profile'] = 'unknown'
 
-      expect {update_repo_sources.process(nodes, ctx)}.to raise_error(
+      expect { update_repo_sources.generate_repo_source nodes }.to raise_error(
         Astute::DeploymentEngineError, /Unknown system/)
     end
   end # source configuration generation
@@ -106,10 +133,12 @@ describe Astute::UpdateRepoSources do
 
     before(:each) do
       update_repo_sources.stubs(:generate_repo_source).returns(repo_content)
+      update_repo_sources.stubs(:generate_apt_proxy_conf).returns(repo_content)
       update_repo_sources.stubs(:regenerate_metadata)
     end
 
     it 'should upload config in correct place for centos' do
+      update_repo_sources.stubs(:upload_apt_proxy_conf)
       mclient.expects(:upload).with(:path => '/etc/yum.repos.d/nailgun.repo',
                             :content => repo_content,
                             :user_owner => 'root',
@@ -123,6 +152,7 @@ describe Astute::UpdateRepoSources do
     end
 
     it 'should upload config in correct place for ubuntu' do
+      update_repo_sources.stubs(:upload_apt_proxy_conf)
       nodes.first['cobbler']['profile'] = 'ubuntu_1404_x86_64'
 
       mclient.expects(:upload).with(:path => '/etc/apt/sources.list',
@@ -136,6 +166,22 @@ describe Astute::UpdateRepoSources do
                    )
       update_repo_sources.process(nodes, ctx)
     end
+
+    it 'should upload apt proxy config in correct place for ubuntu' do
+      update_repo_sources.stubs(:upload_repo_source)
+      nodes.first['cobbler']['profile'] = 'ubuntu_1404_x86_64'
+
+      mclient.expects(:upload).with(:path => '/etc/apt/apt.conf.d/90proxy',
+                                    :content => repo_content,
+                                    :user_owner => 'root',
+                                    :group_owner => 'root',
+                                    :permissions => '0644',
+                                    :dir_permissions => '0755',
+                                    :overwrite => true,
+                                    :parents => true
+      )
+      update_repo_sources.process(nodes, ctx)
+    end
   end #new source configuration uploading
 
   context 'metadata regeneration' do
@@ -144,6 +190,7 @@ describe Astute::UpdateRepoSources do
 
     before(:each) do
       update_repo_sources.stubs(:generate_repo_source)
+      update_repo_sources.stubs(:upload_apt_proxy_conf)
       update_repo_sources.stubs(:upload_repo_source)
     end
 

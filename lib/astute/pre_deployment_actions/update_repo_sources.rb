@@ -18,21 +18,36 @@ module Astute
     # Update packages source list
     def process(deployment_info, context)
       return unless deployment_info.first['repo_setup']['repos']
-      content = generate_repo_source(deployment_info)
       deployment_info = only_uniq_nodes(deployment_info)
 
       perform_with_limit(deployment_info) do |part|
-        upload_repo_source(context, part, content)
+        upload_repo_source(context, part)
         regenerate_metadata(context, part)
+        if target_os(deployment_info) == 'ubuntu'
+          upload_apt_proxy_conf(context, part)
+        end
       end
     end
 
-    private
-
     def generate_repo_source(deployment_info)
-      ubuntu_source = -> (repo) { "deb #{repo['uri']} #{repo['suite']} #{repo['section']}" }
+      ubuntu_source = -> (repo) do
+        out = ''
+        out += "# Repository: '#{repo['name']}'\n" if repo['name']
+        out += "deb #{repo['uri']} #{repo['suite']} #{repo['section']}\n"
+        out
+      end
+
       centos_source = -> (repo) do
-        ["[#{repo['name'].downcase}]", "name=#{repo['name']}", "baseurl=#{repo['uri']}", "gpgcheck=0"].join("\n")
+        out = ''
+        out += "[#{repo['name'].downcase}]\n"
+        out += "name=#{repo['name']}\n"
+        out += "baseurl='#{repo['uri']}'\n"
+        out += "gpgcheck=0\n"
+        if repo['proxy']
+          repo['proxy'] += '/' unless repo['proxy'].end_with? '/'
+          out += "proxy='#{repo['proxy']}'\n"
+        end
+        out
       end
 
       formatter = case target_os(deployment_info)
@@ -47,14 +62,14 @@ module Astute
       content.join("\n")
     end
 
-    def upload_repo_source(context, deployment_info, content)
+    def upload_repo_source(context, deployment_info)
       upload_mclient = MClient.new(context, "uploadfile", deployment_info.map{ |n| n['uid'] }.uniq)
       destination_path = case target_os(deployment_info)
                          when 'centos' then '/etc/yum.repos.d/nailgun.repo'
                          when 'ubuntu' then '/etc/apt/sources.list'
                          end
       upload_mclient.upload(:path => destination_path,
-                      :content => content,
+                      :content => generate_repo_source(deployment_info),
                       :user_owner => 'root',
                       :group_owner => 'root',
                       :permissions => '0644',
@@ -62,6 +77,35 @@ module Astute
                       :overwrite => true,
                       :parents => true
                      )
+    end
+
+    def generate_apt_proxy_conf(deployment_info)
+      apt_conf = ''
+      deployment_info.first['repo_setup']['repos'].each do |repo|
+        proxy = repo['proxy']
+        next unless proxy
+        proxy += '/' unless proxy.end_with? '/'
+        host = URI.parse(repo['uri']).host rescue nil
+        next unless host
+        apt_conf += "# Repository: '#{repo['name']}'\n" if repo['name']
+        apt_conf += "Acquire::Http::Proxy::#{host} \"#{proxy}\";\n"
+      end
+      apt_conf
+    end
+
+    def upload_apt_proxy_conf(context, deployment_info)
+      upload_mclient = MClient.new(context, "uploadfile", deployment_info.map{ |n| n['uid'] }.uniq)
+      destination_path = '/etc/apt/apt.conf.d/90proxy'
+      upload_mclient.upload(:path => destination_path,
+                            :content => generate_apt_proxy_conf(deployment_info),
+                            :user_owner => 'root',
+                            :group_owner => 'root',
+                            :permissions => '0644',
+                            :dir_permissions => '0755',
+                            :overwrite => true,
+                            :parents => true
+      )
+
     end
 
     def regenerate_metadata(context, deployment_info)
