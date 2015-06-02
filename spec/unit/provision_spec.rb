@@ -263,9 +263,9 @@ describe Astute::Provisioner do
         Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
         Astute::CobblerManager.any_instance.stubs(:edit_nodes)
         @provisioner.stubs(:change_nodes_type)
-        @provisioner.stubs(:image_provision).returns([1])
+        @provisioner.stubs(:image_provision).returns(['1'])
 
-        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
+        expect(@provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')).to eql(['1'])
       end
 
       it "changes profile into bootstrap for all nodes in case of IBP" do
@@ -811,12 +811,12 @@ describe Astute::Provisioner do
     it 'erase nodes using ssh' do
       Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
       @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
-      Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => 1}]}).once
+      Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => '1'}]}).once
 
       Astute::Ssh.expects(:execute).with(instance_of(Astute::Context),
                                         data['nodes'],
                                         Astute::SshEraseNodes.command)
-                                   .returns({'nodes' => [{'uid' => 1}]})
+                                   .returns({'nodes' => [{'uid' => '1'}]})
 
       expect(@provisioner.stop_provision(@reporter,
                                    data['task_uuid'],
@@ -825,12 +825,12 @@ describe Astute::Provisioner do
             .to eql({
                      "error_nodes" => [],
                      "inaccessible_nodes" => [],
-                     "nodes" => [{"uid"=>1}]
+                     "nodes" => [{"uid"=>'1'}]
                     })
     end
 
     it 'always remove nodes from Cobbler' do
-      Astute::Ssh.stubs(:execute).twice.returns({'inaccessible_nodes' => [{'uid' => 1}]})
+      Astute::Ssh.stubs(:execute).twice.returns({'inaccessible_nodes' => [{'uid' => '1'}]})
       @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
 
       Astute::CobblerManager.any_instance.expects(:remove_nodes)
@@ -846,14 +846,14 @@ describe Astute::Provisioner do
     it 'reboot nodes using using ssh' do
       Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
       @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
-      Astute::Ssh.stubs(:execute).returns({'nodes' => [{'uid' => 1}]}).once
+      Astute::Ssh.stubs(:execute).returns({'nodes' => [{'uid' => '1'}]}).once
 
       Astute::Ssh.expects(:execute).with(instance_of(Astute::Context),
                                        data['nodes'],
                                        Astute::SshHardReboot.command,
                                        timeout=5,
                                        retries=1)
-                                 .returns({'inaccessible_nodes' => [{'uid' => 1}]})
+                                 .returns({'inaccessible_nodes' => [{'uid' => '1'}]})
 
       expect(@provisioner.stop_provision(@reporter,
                                    data['task_uuid'],
@@ -862,7 +862,7 @@ describe Astute::Provisioner do
             .to eql({
                      "error_nodes" => [],
                      "inaccessible_nodes" => [],
-                     "nodes" => [{"uid"=>1}]
+                     "nodes" => [{"uid"=>'1'}]
                     })
     end
 
@@ -905,7 +905,7 @@ describe Astute::Provisioner do
     end
 
     it 'inform about inaccessible nodes' do
-      Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => 1}]}).twice
+      Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => '1'}]}).twice
       Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
       @provisioner.stubs(:node_type).returns([])
 
@@ -917,7 +917,7 @@ describe Astute::Provisioner do
                              data['nodes']))
             .to eql({
                      "error_nodes" => [],
-                     "inaccessible_nodes" => [{"uid"=>1}],
+                     "inaccessible_nodes" => [{"uid"=>'1'}],
                      "nodes" => []
                     })
     end
