@@ -26,7 +26,7 @@ module Astute
 
         results.each do |node|
           unless node.results[:data][:exit_code] == 0
-            failed = node.results[:sender].to_i
+            failed = node.results[:sender]
             Astute.logger.error("#{ctx.task_id}: Provision command returned non zero exit code on node: #{failed}")
             failed_uids << failed
           end

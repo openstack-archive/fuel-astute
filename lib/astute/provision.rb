@@ -96,7 +96,7 @@ module Astute
     end
 
     def image_provision(reporter, task_id, nodes)
-      failed_uids_provis = ImageProvision.provision(Context.new(task_id, reporter), nodes)
+      ImageProvision.provision(Context.new(task_id, reporter), nodes)
     end
 
     def provision_and_watch_progress(reporter,
@@ -229,7 +229,7 @@ module Astute
         report_image_provision(reporter, task_id, nodes) do
           failed_uids |= image_provision(reporter, task_id, nodes)
         end
-        provisioned_nodes = nodes.reject {|n| failed_uids.include? n['uid']}
+        provisioned_nodes = nodes.reject { |n| failed_uids.include? n['uid'] }
 
         # disabling pxe boot (chain loader) for nodes which succeeded
         cobbler.netboot_nodes(provisioned_nodes, false)
