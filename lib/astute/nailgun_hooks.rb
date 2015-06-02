@@ -28,6 +28,7 @@ module Astute
 
         hook_return = case hook['type']
         when 'copy_files' then copy_files_hook(hook)
+        when 'upload_files' then upload_files_hook(hook)
         when 'sync' then sync_hook(hook)
         when 'shell' then shell_hook(hook)
         when 'upload_file' then upload_file_hook(hook)
@@ -135,6 +136,27 @@ module Astute
       ret
     end
 
+    def upload_files_hook(hook)
+      validate_presence(hook['parameters'], 'nodes')
+      ret = {'error' => nil}
+      hook['parameters']['nodes'].each do |node|
+        node['files'].each do |file|
+          parameters = {
+                  'content' => file['data'],
+                  'path' => file['dst'],
+                  'permissions' => file['permissions'] || '0644',
+                  'dir_permissions' => file['dir_permissions'] || '0755',
+                }
+          status = upload_file(@ctx, node['uid'], parameters)
+          if !status
+            ret['error'] = 'File upload failed'
+          end
+        end
+      end
+      
+      ret
+    end
+    
     def shell_hook(hook)
       validate_presence(hook, 'uids')
       validate_presence(hook['parameters'], 'cmd')
