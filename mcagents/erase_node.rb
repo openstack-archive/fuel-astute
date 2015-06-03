@@ -100,43 +100,43 @@ module MCollective
       end
 
       def reboot
+        debug_msg("Run node rebooting command using 'SB' to sysrq-trigger")
+        File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
+        # turning panic on oops and setting panic timeout to 10
+        File.open('/proc/sys/kernel/panic_on_oops', 'w') {|file| file.write("1\n")}
+        File.open('/proc/sys/kernel/panic','w') {|file| file.write("10\n")}
+
+        #Setting RO for all file systems
+        ['s', 'u'].each do |req|
+          File.open('/proc/sysrq-trigger','w') do |file|
+            file.write("#{req}\n")
+          end
+        end
+
+        begin
+          # Delete data disks first, then OS drive to address bug #1437511
+          (get_devices(type='data') + get_devices(type='root')).each do |dev|
+            debug_msg("erasing #{dev[:name]}")
+            erase_partitions(dev[:name])
+            erase_data(dev[:name])
+            erase_data(dev[:name], 1, dev[:size], '512')
+          end
+
+          reply[:erased] = true
+        rescue Exception => e
+          reply[:erased] = false
+          reply[:status] += 1
+          msg = "MBR can't be erased. Reason: #{e.message};"
+          Log.error(msg)
+          error_msg << msg
+        end
+
+        # It should be noted that this is here so that astute will get a reply
+        # from the deletion task. If it does not get a reply, the deletion may
+        # fail. LP#1279720
         pid = fork do
-          debug_msg("Run node rebooting command using 'SB' to sysrq-trigger")
-          sleep 5
-          File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
-          # turning panic on oops and setting panic timeout to 10
-          File.open('/proc/sys/kernel/panic_on_oops', 'w') {|file| file.write("1\n")}
-          File.open('/proc/sys/kernel/panic','w') {|file| file.write("10\n")}
-
           trap('SIGTERM') do
-            #Giving 5 seconds for other process to die nicely
             sleep 5
-
-            #Setting RO for all file systems
-            ['s', 'u'].each do |req|
-              File.open('/proc/sysrq-trigger','w') do |file|
-                file.write("#{req}\n")
-              end
-            end
-
-            begin
-              # Delete data disks first, then OS drive to address bug #1437511
-              (get_devices(type='data') + get_devices(type='root')).each do |dev|
-                debug_msg("erasing #{dev[:name]}")
-                erase_partitions(dev[:name])
-                erase_data(dev[:name])
-                erase_data(dev[:name], 1, dev[:size], '512')
-              end
-
-              reply[:erased] = true
-            rescue Exception => e
-              reply[:erased] = false
-              reply[:status] += 1
-              msg = "MBR can't be erased. Reason: #{e.message};"
-              Log.error(msg)
-              error_msg << msg
-            end
-
             # Reboot the system
             ['b'].each do |req|
               File.open('/proc/sysrq-trigger','w') do |file|
