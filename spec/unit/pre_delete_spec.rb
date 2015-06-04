@@ -199,8 +199,8 @@ describe Astute::PreDelete do
 
   context "verify that mcollective is running" do
     let(:nodes) { [
-        {"id" => 1, "roles" => ["controller"]},
-        {"id" => 2, "roles" => ["compute"]}
+        {"uid" => 1, "roles" => ["controller"]},
+        {"uid" => 2, "roles" => ["compute"]}
       ]
     }
     let(:error_result) do
@@ -209,25 +209,32 @@ describe Astute::PreDelete do
 
       {"status" => "error",
        "error" => msg,
-       "error_nodes" => [{"uid" => 2}]
+       "error_nodes" => [{"uid" => '2'}]
       }
     end
 
     it "should prevent deletion of nodes when mcollective is not running" do
-      rs = mock()
-      rs.stubs(:map).returns([{:sender => "1"}])
+      mc_res1 = mock_mc_result({:sender => "1"})
 
-      mclient.expects(:get_type).returns(rs)
+      mclient.expects(:get_type).returns([mc_res1])
+        .then.returns([]).times(Astute.config[:mc_retries])
       expect(Astute::PreDelete.check_for_offline_nodes(ctx, nodes)).to eq(error_result)
     end
 
     it "should allow deletion of nodes when mcollective is running" do
-      rs = mock()
-      rs.stubs(:map).returns( [
-        {:sender => "1"},
-        {:sender => "2"}
-      ])
-      mclient.expects(:get_type).returns(rs)
+      mc_res1 = mock_mc_result({:sender => "1"})
+      mc_res2 = mock_mc_result({:sender => "2"})
+      mclient.expects(:get_type).returns([mc_res1, mc_res2])
+
+      expect(Astute::PreDelete.check_for_offline_nodes(ctx, nodes)).to eq(success_result)
+    end
+
+    it "should check availability several times" do
+      mc_res1 = mock_mc_result({:sender => "1"})
+      mc_res2 = mock_mc_result({:sender => "2"})
+      mclient.expects(:get_type).returns([mc_res1])
+        .then.returns([])
+        .then.returns([mc_res2]).times(3)
 
       expect(Astute::PreDelete.check_for_offline_nodes(ctx, nodes)).to eq(success_result)
     end

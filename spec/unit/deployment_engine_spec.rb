@@ -123,6 +123,14 @@ describe Astute::DeploymentEngine do
 
     end
 
+    let(:mclient) do
+      mclient = mock_rpcclient
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(mclient)
+      Astute::MClient.any_instance.stubs(:log_result).returns(mclient)
+      Astute::MClient.any_instance.stubs(:check_results_with_retries).returns(mclient)
+      mclient
+    end
+
     it 'deploy nodes by order' do
       nodes = [{'uid' => 1, 'priority' => 10}, {'uid' => 2, 'priority' => 0}, {'uid' => 1, 'priority' => 15}]
 
@@ -425,10 +433,8 @@ describe Astute::DeploymentEngine do
              :sender=>"2"}
       mc_res1 = mock_mc_result(res1)
       mc_res2 = mock_mc_result(res2)
-      mc_timeout = 10
 
-      rpcclient = mock_rpcclient(nodes, mc_timeout)
-      rpcclient.expects(:get_type).once.returns([mc_res1, mc_res2])
+      mclient.expects(:get_type).times(Astute.config[:mc_retries]).returns([mc_res1, mc_res2])
 
       ctx.expects(:report_and_update_status).with(
         'nodes' => [{
@@ -499,9 +505,8 @@ describe Astute::DeploymentEngine do
              :sender=>"2"}
       mc_res1 = mock_mc_result(res1)
       mc_res2 = mock_mc_result(res2)
-      mc_timeout = 10
-      rpcclient = mock_rpcclient(nodes, mc_timeout)
-      rpcclient.expects(:get_type).once.returns([mc_res1, mc_res2])
+
+      mclient.expects(:get_type).times(Astute.config[:mc_retries]).returns([mc_res1, mc_res2])
 
       ctx.expects(:report_and_update_status).with(
         'nodes' => [{
@@ -551,9 +556,7 @@ describe Astute::DeploymentEngine do
 
       mc_res1 = mock_mc_result(res1)
       mc_res2 = mock_mc_result(res2)
-      mc_timeout = 10
-      rpcclient = mock_rpcclient(nodes, mc_timeout)
-      rpcclient.expects(:get_type).once.returns([mc_res1, mc_res2])
+      mclient.expects(:get_type).times(Astute.config[:mc_retries]).returns([mc_res1, mc_res2])
 
       ctx.expects(:report_and_update_status).with(
         'nodes' => [{
@@ -567,6 +570,32 @@ describe Astute::DeploymentEngine do
       )
 
       expect { deployer.deploy(nodes) }.to raise_error(Astute::DeploymentEngineError, "Critical nodes are not available for deployment: [\"2\"]")
+    end
+
+    it 'should ask about type several times' do
+      nodes = [
+       {'uid' => "1", 'priority' => 10, 'role' => 'compute'},
+       {'uid' => "3", 'priority' => 10, 'role' => 'compute'},
+       {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller'}
+      ]
+
+      res1 = {:data => {:node_type => 'target'},
+            :sender=>"1"}
+      res2 = {:data => {:node_type => 'target'},
+            :sender=>"2"}
+      res3 = {:data => {:node_type => 'target'},
+            :sender=>"3"}
+      mc_res1 = mock_mc_result(res1)
+      mc_res2 = mock_mc_result(res2)
+      mc_res3 = mock_mc_result(res3)
+
+      mclient.expects(:get_type).times(3).returns([mc_res1])
+        .then.returns([mc_res2])
+        .then.returns([mc_res3])
+
+      deployer.expects(:deploy_piece).with(nodes)
+
+      deployer.deploy(nodes)
     end
 
   end
