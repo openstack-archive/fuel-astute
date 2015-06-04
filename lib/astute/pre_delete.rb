@@ -131,9 +131,8 @@ module Astute
       answer = {"status" => "ready"}
       mco_nodes = nodes.collect { |n| n['id'] }
 
-      client = MClient.new(ctx, "systemtype", mco_nodes, check_result=false)
-      responses = client.get_type
-      online_nodes = responses.map(&:results).collect { |r| r[:sender].to_i }
+
+      online_nodes = detect_available_nodes(ctx, mco_nodes)
       offline_nodes = mco_nodes - online_nodes
 
       if offline_nodes.present?
@@ -148,6 +147,28 @@ module Astute
       end
 
       answer
+    end
+
+    private
+
+    def self.detect_available_nodes(ctx, uids)
+      all_uids = uids.clone
+      available_uids = []
+
+      # In case of big amount of nodes we should do several calls to be sure
+      # about node status
+      Astute.config[:mc_retries].times.each do
+        systemtype = Astute::MClient.new(ctx, "systemtype", all_uids, check_result=false, 10)
+        available_nodes = systemtype.get_type
+
+        available_uids += available_nodes.map { |node| node.results[:sender] }
+        all_uids -= available_uids
+        break if all_uids.empty?
+
+        sleep Astute.config[:mc_retry_interval]
+      end
+
+      available_uids
     end
 
   end

@@ -153,11 +153,7 @@ module Astute
       required_nodes = deployment_info.select { |node| node["fail_if_error"] }
       required_uids = required_nodes.map { |node| node["uid"]}
 
-      systemtype = Astute::MClient.new(@ctx, "systemtype", uids, check_result=false, 10)
-      available_nodes = systemtype.get_type.select do |node|
-        node.results[:data][:node_type].chomp == "target"
-      end
-      available_uids = available_nodes.map { |node| node.results[:sender]}
+      available_uids = detect_available_nodes(uids)
       offline_uids = uids - available_uids
       if offline_uids.present?
         # set status for all failed nodes to error
@@ -237,6 +233,28 @@ module Astute
       nodes_wthout_missing = nodes.select { |node| !offline_uids.include?(node['uid']) }
       deployment_info.each { |node| node['nodes'] = nodes_wthout_missing }
       deployment_info
+    end
+
+    def detect_available_nodes(uids)
+      all_uids = uids.clone
+      available_uids = []
+
+      # In case of big amount of nodes we should do several calls to be sure
+      # about node status
+      Astute.config[:mc_retries].times.each do
+        systemtype = Astute::MClient.new(@ctx, "systemtype", all_uids, check_result=false, 10)
+        available_nodes = systemtype.get_type.select do |node|
+          node.results[:data][:node_type].chomp == "target"
+        end
+
+        available_uids += available_nodes.map { |node| node.results[:sender] }
+        all_uids -= available_uids
+        break if all_uids.empty?
+
+        sleep Astute.config[:mc_retry_interval]
+      end
+
+      available_uids
     end
 
   end
