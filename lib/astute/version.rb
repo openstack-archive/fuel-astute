@@ -14,7 +14,7 @@
 
 
 module Astute
-  VERSION = '6.1.0'
+  VERSION = '7.0.0'
   class Versioning
     def initialize(context)
       @ctx = context
