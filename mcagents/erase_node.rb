@@ -90,7 +90,7 @@ module MCollective
             device_root_count = `lsblk -n -r "#{dev_info[:DEVNAME]}" | grep -c '\ /$'`.to_i
             # determine if the block device should be returned basked on the
             # requested type
-            if (type.eql? 'all') or (type.eql? 'root' and device_root_count > 0) or (type.eql? 'data' and device_root_count == 0)
+            if (type.eql? 'all') || (type.eql? 'root' && device_root_count > 0) || (type.eql? 'data' && device_root_count == 0)
               debug_msg("get_devices(type=#{type}): adding #{dev_name}")
               blocks << {:name => dev_name, :size => size}
             end
@@ -117,6 +117,7 @@ module MCollective
           # Delete data disks first, then OS drive to address bug #1437511
           (get_devices(type='data') + get_devices(type='root')).each do |dev|
             debug_msg("erasing #{dev[:name]}")
+            suppress_fs_panic(dev[:name])
             erase_partitions(dev[:name])
             erase_data(dev[:name])
             erase_data(dev[:name], 1, dev[:size], '512')
@@ -136,7 +137,6 @@ module MCollective
         # fail. LP#1279720
         pid = fork do
           trap('SIGTERM') do
-            sleep 5
             # Reboot the system
             ['b'].each do |req|
               File.open('/proc/sysrq-trigger','w') do |file|
@@ -144,11 +144,23 @@ module MCollective
               end
             end
           end
+          # sleep to let parent send response back to server
+          sleep 5
 
           # Sending SIGTERM to all processes
           File.open('/proc/sysrq-trigger','w') { |file| file.write("e\n")}
         end
         Process.detach(pid)
+      end
+
+      def suppress_fs_panic(dev)
+        Dir["/dev/#{dev}{p,}[0-9]*"].each do |part|
+          # if the partition has ext2/3/4, make sure error action is set to
+          # continue and not panic so that we can erase it correctly.
+          if system("blkid -p -n ext2,ext3,ext4 #{part}") == true && system("findmnt -ln -S #{part}") == true
+            system("mount -o remount,ro,errors=continue #{part}")
+          end
+        end
       end
 
       def erase_partitions(dev)
