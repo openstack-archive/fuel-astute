@@ -100,24 +100,24 @@ module MCollective
       end
 
       def reboot
-        debug_msg("Run node rebooting command using 'SB' to sysrq-trigger")
+        debug_msg("Beginning drive erase process")
         File.open('/proc/sys/kernel/sysrq','w') { |file| file.write("1\n") }
         # turning panic on oops and setting panic timeout to 10
         File.open('/proc/sys/kernel/panic_on_oops', 'w') {|file| file.write("1\n")}
         File.open('/proc/sys/kernel/panic','w') {|file| file.write("10\n")}
 
-        #Setting RO for all file systems
-        ['s', 'u'].each do |req|
-          File.open('/proc/sysrq-trigger','w') do |file|
-            file.write("#{req}\n")
-          end
-        end
-
         begin
           # Delete data disks first, then OS drive to address bug #1437511
           (get_devices(type='data') + get_devices(type='root')).each do |dev|
             debug_msg("erasing #{dev[:name]}")
+            # try an make sure any ext2/3/4 paritions won't cause a panic
+            # when the file system gets erased
+            suppress_fs_panic(dev[:name])
+            # clear out the partitions of the device
             erase_partitions(dev[:name])
+            # attempt to clear our the file system data on the device partitions
+            # to ensure that we aren't left with extra filesystem data when we
+            # reparition the devices next time.
             erase_data(dev[:name])
             erase_data(dev[:name], 1, dev[:size], '512')
           end
@@ -131,24 +131,27 @@ module MCollective
           error_msg << msg
         end
 
+        debug_msg("Drives erased, rebooting in 5 seconds.")
         # It should be noted that this is here so that astute will get a reply
         # from the deletion task. If it does not get a reply, the deletion may
         # fail. LP#1279720
         pid = fork do
-          trap('SIGTERM') do
-            sleep 5
-            # Reboot the system
-            ['b'].each do |req|
-              File.open('/proc/sysrq-trigger','w') do |file|
-                file.write("#{req}\n")
-              end
-            end
-          end
-
-          # Sending SIGTERM to all processes
-          File.open('/proc/sysrq-trigger','w') { |file| file.write("e\n")}
+          # sleep to let parent send response back to server
+          sleep 5
+          # Reboot the system
+          File.open('/proc/sysrq-trigger','w') { |file| file.write("b\n")}
         end
         Process.detach(pid)
+      end
+
+      def suppress_fs_panic(dev)
+        Dir["/dev/#{dev}{p,}[0-9]*"].each do |part|
+          # if the partition has ext2/3/4, make sure error action is set to
+          # continue and not panic so that we can erase it correctly.
+          if system("blkid -p -n ext2,ext3,ext4 #{part}") == true && system("findmnt -ln -S #{part}") == true
+            system("mount -o remount,ro,errors=continue #{part}")
+          end
+        end
       end
 
       def erase_partitions(dev)
