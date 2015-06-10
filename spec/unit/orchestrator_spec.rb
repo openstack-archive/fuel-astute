@@ -152,4 +152,110 @@ describe Astute::Orchestrator do
     end
 
   end #execute_tasks
+
+  context 'stop deployment' do
+    let(:data) do
+      {
+        "engine"=>{
+          "url"=>"http://10.109.0.2:80/cobbler_api",
+          "username"=>"cobbler",
+          "password"=>"JTcu4VoM",
+          "master_ip"=>"10.109.0.2"
+        },
+        "nodes"=>[],
+        "stop_task_uuid"=>"26a5cfb5-797d-4385-9262-da88ae7a0e14",
+        "task_uuid"=>"3958fe00-5969-44e2-bb21-413993cfbd6b"
+      }
+    end
+
+    let(:nodes) { [{'uid' => '1'}, {'uid' => '2'}] }
+
+    let(:mclient) do
+      mclient = mock_rpcclient(nodes)
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(mclient)
+      Astute::MClient.any_instance.stubs(:log_result).returns(mclient)
+      Astute::MClient.any_instance.stubs(:check_results_with_retries).returns(mclient)
+      mclient
+    end
+
+    describe '#stop_puppet_deploy' do
+
+      it 'should do nothing if nodes list is empty' do
+        result = @orchestrator.stop_puppet_deploy(@reporter, 'task_id', data['nodes'])
+        expect(result).to eql(nil)
+      end
+
+      it 'should stop puppet' do
+        mclient.expects(:stop_and_disable)
+        @orchestrator.stop_puppet_deploy(@reporter, 'task_id', nodes)
+      end
+    end #stop_puppet_deploy
+
+    describe '#remove_nodes' do
+
+      it 'should do nothing if nodes list is empty' do
+        expect(@orchestrator.remove_nodes(
+          @reporter,
+          'task_id',
+          data['engine'],
+          data['nodes'],
+          options={}
+        )).to eql(nil)
+      end
+
+      it 'should remove nodes' do
+        Astute::Provisioner.any_instance.expects(:remove_nodes).once
+        @orchestrator.expects(:perform_pre_deletion_tasks)
+          .returns('status' => 'ready')
+
+        @orchestrator.remove_nodes(
+          @reporter,
+          'task_id',
+          data['engine'],
+          nodes,
+          options={}
+        )
+      end
+
+      it 'should run pre deletion tasks' do
+        Astute::Provisioner.any_instance.stubs(:remove_nodes)
+        @orchestrator.expects(:perform_pre_deletion_tasks).with(
+          @reporter,
+          'task_id',
+          nodes,
+          {:reboot => true, :raise_if_error => false}
+        ).returns('status' => 'ready')
+
+        @orchestrator.remove_nodes(
+          @reporter,
+          'task_id',
+          data['engine'],
+          nodes,
+          options={}
+        )
+      end
+
+      it 'should deletion if run pre deletion tasks fail' do
+        @orchestrator.expects(:perform_pre_deletion_tasks).with(
+          @reporter,
+          'task_id',
+          nodes,
+          {:reboot => true, :raise_if_error => false}
+        ).returns('status' => 'error')
+
+        Astute::Provisioner.any_instance.expects(:remove_nodes).never
+
+        @orchestrator.remove_nodes(
+          @reporter,
+          'task_id',
+          data['engine'],
+          nodes,
+          options={}
+        )
+      end
+    end
+
+  end #stop deployment
+
+
 end
