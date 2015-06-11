@@ -97,6 +97,10 @@ module Astute
     end
 
     def remove_nodes(reporter, task_id, engine_attrs, nodes, options={})
+      # FIXME(vsharshov): bug/1463881: In case of post deployment we mark all nodes
+      # as ready. In this case we will get empty nodes.
+      return if nodes.empty?
+
       options[:reboot] = true unless options.has_key?(:reboot)
       options[:raise_if_error] = false unless options.has_key?(:raise_if_error)
 
@@ -115,6 +119,10 @@ module Astute
     end
 
     def stop_puppet_deploy(reporter, task_id, nodes)
+      # FIXME(vsharshov): bug/1463881: In case of post deployment we mark all nodes
+      # as ready. If we run stop deployment we will get empty nodes.
+      return if nodes.empty?
+
       nodes_uids = nodes.map { |n| n['uid'] }.uniq
       puppetd = MClient.new(Context.new(task_id, reporter), "puppetd", nodes_uids, check_result=false)
       puppetd.stop_and_disable
