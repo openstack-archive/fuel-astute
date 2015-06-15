@@ -218,10 +218,10 @@ module Astute
       validate_presence(hook, 'uids')
       hook_timeout = hook['parameters']['timeout'] || 300
 
-      control_time = {}
+      control_uptime = {}
 
       perform_with_limit(hook['uids']) do |node_uids|
-        control_time.merge!(boot_time(node_uids))
+        control_uptime.merge!(uptime(node_uids))
       end
 
       #TODO(vsharshov): will be enough for safe reboot without exceptions?
@@ -238,10 +238,10 @@ module Astute
           while already_rebooted.values.include?(false)
             sleep hook_timeout/10
 
-            results = boot_time(already_rebooted.select { |k, v| !v }.keys)
-            results.each do |node_id, time|
+            results = uptime(already_rebooted.select { |k, v| !v }.keys)
+            results.each do |node_id, node_uptime|
               next if already_rebooted[node_id]
-              already_rebooted[node_id] = (time.to_i > control_time[node_id].to_i)
+              already_rebooted[node_id] = (node_uptime.to_i < control_uptime[node_id].to_i)
             end
           end
         end
@@ -360,11 +360,11 @@ module Astute
       end
     end
 
-    def boot_time(uids)
+    def uptime(uids)
       run_shell_without_check(
         @ctx,
         uids,
-        "stat --printf='%Y' /proc/1",
+        "cat /proc/uptime|awk '{print $1}'",
         timeout=10
       )
     end

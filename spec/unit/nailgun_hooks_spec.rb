@@ -875,15 +875,14 @@ describe Astute::NailgunHooks do
     it 'should run reboot command with timeout - 10 sec' do
       hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
 
-      time = Time.now.to_i
       hooks.stubs(:run_shell_without_check).twice.with(
         ctx,
         ['2','3'],
-        regexp_matches(/stat/),
+        regexp_matches(/uptime/),
         10,
       )
-      .returns('2' => (time - 5).to_s, '3' => (time - 5).to_s).then
-      .returns('2' => time.to_s, '3' => time.to_s)
+      .returns('2' => '5' , '3' => '5').then
+      .returns('2' => '3', '3' => '3')
 
       hooks.expects(:run_shell_without_check).once.with(
         ctx,
@@ -901,15 +900,14 @@ describe Astute::NailgunHooks do
     it 'should run reboot validation command with timeout - 10 sec' do
       hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
 
-      time = Time.now.to_i
       hooks.stubs(:run_shell_without_check).twice.with(
         ctx,
         ['2','3'],
-        regexp_matches(/stat/),
+        regexp_matches(/uptime/),
         10,
       )
-      .returns('2' => (time - 5).to_s, '3' => (time - 5).to_s).then
-      .returns('2' => time.to_s, '3' => time.to_s)
+      .returns('2' => '5', '3' => '5'.to_s).then
+      .returns('2' => '3', '3' => '3')
 
       hooks.stubs(:run_shell_without_check).once.with(
         ctx,
@@ -927,15 +925,14 @@ describe Astute::NailgunHooks do
     it 'should sleep between checks for one-tenth of timeout' do
       hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
 
-      time = Time.now.to_i
       hooks.stubs(:run_shell_without_check).twice.with(
         ctx,
         ['2','3'],
-        regexp_matches(/stat/),
+        regexp_matches(/uptime/),
         10,
       )
-      .returns('2' => (time - 5).to_s, '3' => (time - 5).to_s).then
-      .returns('2' => time.to_s, '3' => time.to_s)
+      .returns('2' => '5', '3' => '5'.to_s).then
+      .returns('2' => '3', '3' => '3')
 
       hooks.stubs(:run_shell_without_check).once.with(
         ctx,
@@ -954,15 +951,14 @@ describe Astute::NailgunHooks do
       reboot_hook['parameters'].delete('timeout')
       hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
 
-      time = Time.now.to_i
       hooks.stubs(:run_shell_without_check).twice.with(
         ctx,
         ['2','3'],
-        regexp_matches(/stat/),
+        regexp_matches(/uptime/),
         10,
       )
-      .returns('2' => (time - 5).to_s, '3' => (time - 5).to_s).then
-      .returns('2' => time.to_s, '3' => time.to_s)
+      .returns('2' => '5', '3' => '5'.to_s).then
+      .returns('2' => '3', '3' => '3')
 
       hooks.stubs(:run_shell_without_check).once.with(
         ctx,
@@ -982,22 +978,21 @@ describe Astute::NailgunHooks do
 
       hooks = Astute::NailgunHooks.new([reboot_hook], ctx)
 
-      time = Time.now.to_i
       hooks.stubs(:run_shell_without_check).once.with(
         ctx,
         ['2'],
-        regexp_matches(/stat/),
+        regexp_matches(/uptime/),
         10,
       )
-      .returns('2' => time.to_s)
+      .returns('2' => '5')
 
       hooks.stubs(:run_shell_without_check).once.with(
         ctx,
         ['3'],
-        regexp_matches(/stat/),
+        regexp_matches(/uptime/),
         10,
       )
-      .returns('3' => time.to_s)
+      .returns('3' => 5)
 
       hooks.expects(:run_shell_without_check).once.with(
         ctx,
@@ -1021,10 +1016,10 @@ describe Astute::NailgunHooks do
       hooks.stubs(:run_shell_without_check).once.with(
         ctx,
         ['2','3'],
-        "stat --printf='%Y' /proc/1",
+        "cat /proc/uptime|awk '{print $1}'",
         10,
       )
-      .returns('2' => time.to_s, '3' => time.to_s)
+      .returns('2' => '3', '3' => '3')
 
       hooks.process
     end
@@ -1055,36 +1050,33 @@ describe Astute::NailgunHooks do
       end
 
       it 'if reboot succeed -> do not raise error' do
-        time = Time.now.to_i
         hooks.stubs(:run_shell_without_check).twice.with(
           ctx,
           ['2','3'],
-          regexp_matches(/stat/),
+          regexp_matches(/uptime/),
           10,
         )
-        .returns('2' => (time - 5).to_s, '3' => (time - 5).to_s).then
-        .returns('2' => time.to_s, '3' => time.to_s)
+        .returns('2' => '5', '3' => '5'.to_s).then
+        .returns('2' => '3', '3' => '3')
         expect {hooks.process}.to_not raise_error
       end
 
       it 'if reboot failed -> raise error' do
-        time = Time.now.to_i
         hooks.stubs(:run_shell_without_check).with(
           ctx,
           ['2','3'],
-          regexp_matches(/stat/),
+          regexp_matches(/uptime/),
           10,
         )
-        .returns('2' => time.to_s, '3' => (time - 5).to_s).then
-        .returns('2' => (time - 5).to_s, '3' => time.to_s)
+        .returns('2' => '5', '3' => '5'.to_s)
 
         hooks.stubs(:run_shell_without_check).with(
           ctx,
           ['2'],
-          regexp_matches(/stat/),
+          regexp_matches(/uptime/),
           10,
         )
-        .returns('2' => (time - 5).to_s, '3' => time.to_s)
+        .returns('2' => '3', '3' => '5')
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
@@ -1094,16 +1086,16 @@ describe Astute::NailgunHooks do
         hooks.stubs(:run_shell_without_check).with(
           ctx,
           ['2','3'],
-          regexp_matches(/stat/),
+          regexp_matches(/uptime/),
           10,
         )
-        .returns('2' => time.to_s, '3' => (time - 5).to_s).then
-        .returns('3' => time.to_s)
+        .returns('2' => '5', '3' => '5').then
+        .returns('3' => '5')
 
         hooks.stubs(:run_shell_without_check).with(
           ctx,
           ['2'],
-          regexp_matches(/stat/),
+          regexp_matches(/uptime/),
           10,
         ).returns({})
 
