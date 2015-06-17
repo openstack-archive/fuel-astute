@@ -42,7 +42,7 @@ module MCollective
       end
 
       action "start_frame_listeners" do
-        cleanup_netprobe
+        kill_frame_listeners
         start_frame_listeners
       end
 
@@ -55,7 +55,7 @@ module MCollective
       end
 
       action "stop_frame_listeners" do
-        stop_frame_listeners
+        interrupt_frame_listeners
       end
 
       action "dhcp_discover" do
@@ -99,11 +99,6 @@ module MCollective
         end
       end
 
-      def cleanup_netprobe
-        status = run("pkill net_probe.py && sleep 2 && pgrep net_probe.py")
-        reply.fail! "Cant stop net_probe.py execution." unless status == 1
-      end
-
       def start_frame_listeners
         validate :interfaces, String
         config = {
@@ -117,9 +112,6 @@ module MCollective
         if request.data.key?('config')
           config.merge!(JSON.parse(request[:config]))
         end
-
-        # we want to be sure that there is no frame listeners running
-        stop_frame_listeners
 
         # wipe out old stuff before start
         Dir.glob(@pattern).each do |file|
@@ -155,7 +147,7 @@ module MCollective
               reply.fail! "Wrong listener status: '#{status}'" unless status =~ /READY/
             end
           rescue Timeout::Error
-            stop_frame_listeners
+            interrupt_frame_listeners
             reply.fail! "Listener did not reported status"
           end
         ensure
@@ -185,7 +177,7 @@ module MCollective
       end
 
       def get_probing_info
-        stop_frame_listeners
+        interrupt_frame_listeners
         neighbours = Hash.new
         Dir.glob(@pattern).each do |file|
           p = JSON.load(File.read(file))
@@ -202,13 +194,21 @@ module MCollective
         f
       end
 
-      def stop_frame_listeners
+      def kill_frame_listeners
+        stop_frame_listeners('KILL')
+      end
+
+      def interrupt_frame_listeners
+        stop_frame_listeners('INT')
+      end
+
+      def stop_frame_listeners(signal)
         piddir = "/var/run/net_probe"
         pidfiles = Dir.glob(File.join(piddir, '*'))
         # Send SIGINT to all PIDs in piddir.
         pidfiles.each do |f|
           begin
-            Process.kill("INT", File.basename(f).to_i)
+            Process.kill(signal, File.basename(f).to_i)
           rescue Errno::ESRCH
             # Unlink pidfile if no such process.
             File.unlink(f)
