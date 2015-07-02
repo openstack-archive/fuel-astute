@@ -263,7 +263,7 @@ module Astute
             results = boot_time(already_rebooted.select { |k, v| !v }.keys)
             results.each do |node_id, time|
               next if already_rebooted[node_id]
-              already_rebooted[node_id] = (time.to_i > control_time[node_id].to_i)
+              already_rebooted[node_id] = (time.to_i != control_time[node_id].to_i)
             end
           end
         end

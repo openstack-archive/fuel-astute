@@ -1151,7 +1151,7 @@ describe Astute::NailgunHooks do
           10,
         )
         .returns('2' => time.to_s, '3' => (time - 5).to_s).then
-        .returns('2' => (time - 5).to_s, '3' => time.to_s)
+        .returns('2' => time.to_s, '3' => (time - 5).to_s)
 
         hooks.stubs(:run_shell_without_check).with(
           ctx,
@@ -1162,6 +1162,19 @@ describe Astute::NailgunHooks do
         .returns('2' => (time - 5).to_s, '3' => time.to_s)
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
+      end
+
+      it 'should successed if creation time is smaller' do
+        time = Time.now.to_i
+        hooks.stubs(:run_shell_without_check).twice.with(
+          ctx,
+          ['2','3'],
+          regexp_matches(/stat/),
+          10,
+        )
+        .returns('2' => time.to_s, '3' => time.to_s).then
+        .returns('2' => (time - 1).to_s, '3' => (time - 2).to_s)
+        expect {hooks.process}.to_not raise_error
       end
 
       it 'if reboot validate info not presence -> raise error' do
