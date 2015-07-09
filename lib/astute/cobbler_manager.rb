@@ -135,6 +135,18 @@ module Astute
       sync
     end
 
+    def get_existent_nodes(nodes)
+      existent_nodes = []
+      nodes.each do |node|
+        cobbler_name = node['slave_name']
+        if @engine.system_exists?(cobbler_name)
+          Astute.logger.info("Update #{cobbler_name}, node already exists in cobbler")
+          existent_nodes << node
+        end
+      end
+      existent_nodes
+    end
+
     def sync
       Astute.logger.debug("Cobbler syncing")
       @engine.sync

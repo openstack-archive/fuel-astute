@@ -42,6 +42,7 @@ module Astute
       cobbler = CobblerManager.new(engine_attrs, reporter)
       result_msg = {'nodes' => []}
       begin
+        existent_nodes = cobbler.get_existent_nodes(nodes)
         remove_nodes(
           reporter,
           task_id,
@@ -51,12 +52,18 @@ module Astute
           raise_if_error=true
         )
         cobbler.add_nodes(nodes)
+
+        # Reboot and bootstrap for re-provisioned nodes
+        reboot_events = cobbler.reboot_nodes(existent_nodes)
+        failed_existent_uids = cobbler.check_reboot_nodes(reboot_events).map { |n| n['uid']}
+
         failed_uids, timeouted_uids = provision_and_watch_progress(reporter,
                                                                     task_id,
                                                                     Array.new(nodes),
                                                                     engine_attrs,
                                                                     provision_method,
                                                                     fault_tolerance)
+        failed_uids += failed_existent_uids
 
       rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
