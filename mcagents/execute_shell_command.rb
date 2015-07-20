@@ -20,6 +20,7 @@ module MCollective
     class Execute_shell_command < RPC::Agent
 
       action 'execute' do
+        Log.debug("about to execute: #{request[:cmd]}")
         reply[:exit_code] = run(
           request[:cmd],
           :stdout => :stdout,
