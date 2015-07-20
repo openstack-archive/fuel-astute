@@ -41,17 +41,6 @@ module Astute
        )
     end
 
-    def task_deployment(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
-      deploy_cluster(
-        up_reporter,
-        task_id,
-        deployment_info,
-        Astute::DeploymentEngine::Tasklib,
-        pre_deployment,
-        post_deployment
-      )
-    end
-
     def granular_deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
       deploy_cluster(
         up_reporter,

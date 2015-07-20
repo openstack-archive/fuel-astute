@@ -83,26 +83,6 @@ module Astute
         end
       end
 
-      def task_deployment(data)
-        Astute.logger.info("'task_deployment' method called with data: #{data.inspect}")
-
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
-        begin
-          @orchestrator.task_deployment(
-            reporter,
-            data['args']['task_uuid'],
-            data['args']['deployment_info'],
-            data['args']['pre_deployment'] || [],
-            data['args']['post_deployment'] || []
-          )
-          reporter.report('status' => 'ready', 'progress' => 100)
-        rescue Timeout::Error
-          msg = "Timeout of deployment is exceeded."
-          Astute.logger.error msg
-          reporter.report('status' => 'error', 'error' => msg)
-        end
-      end
-
       def granular_deploy(data)
         Astute.logger.info("'granular_deploy' method called with data: #{data.inspect}")
 
