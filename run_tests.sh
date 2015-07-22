@@ -5,14 +5,24 @@
 set -e
 
 function cd_workspace() {
-  cd $(dirname $(readlink -f $0)) > /dev/null
+  cd "$( cd "$( dirname "$( dirname "$0" )" )" && pwd )" > /dev/null
+}
+
+function make_tmpfile() {
+  if [[ "$OSTYPE" == *darwin* ]]
+  then
+    echo `mktemp -t fuel-astute`
+  else
+    echo `mktemp`
+  fi
 }
 
 function license_check() {
   # License information must be in every source file
   cd_workspace
 
-  tmpfile=`mktemp`
+
+  tmpfile=$(make_tmpfile)
   find * -not -path "docs/*" -regex ".*\.\(rb\)" -type f -print0 | xargs -0 grep -Li License
   files_with_no_license=`wc -l $tmpfile | awk '{print $1}'`
   if [ $files_with_no_license -gt 0 ]; then
