@@ -211,7 +211,6 @@ describe Astute::Network do
       uids = ["1", "2"]
       res = Astute::Network.check_vlans_by_traffic("1", uids, data)
       res.should eql(correct_res)
-
     end
 
     it "returns tags sent only by some nodes"do
@@ -225,6 +224,87 @@ describe Astute::Network do
       uids = ["1", "2"]
       res = Astute::Network.check_vlans_by_traffic("1", uids, data)
       res.should eql(correct_res)
+    end
+
+  end
+
+  describe ".check_repositories_with_setup" do
+    let(:nodes) do
+        [
+          {
+            "iface"=>"eth1",
+            "uid"=>"1",
+            "vlan"=>0,
+            "gateway"=>"10.109.1.1",
+            "addr"=>"10.109.1.4/24",
+            "urls"=>[
+              "http://10.109.0.2:8080/2014.2.2-7.0/centos/auxiliary",
+              "http://10.109.0.2:8080/2014.2.2-7.0/centos/x86_64"]
+          },
+          {
+            "iface"=>"eth1",
+            "uid"=>"4",
+            "vlan"=>0,
+            "gateway"=>"10.109.1.1",
+            "addr"=>"10.109.1.4/24",
+            "urls"=>[
+              "http://10.109.0.2:8080/2014.2.2-7.0/centos/auxiliary",
+              "http://10.109.0.2:8080/2014.2.2-7.0/centos/x86_64"]
+          }
+      ]
+    end
+
+    let(:mclient) do
+      mclient = mock_rpcclient
+      Astute::MClient.any_instance.stubs(:rpcclient).returns(mclient)
+      Astute::MClient.any_instance.stubs(:log_result).returns(mclient)
+      Astute::MClient.any_instance.stubs(:check_results_with_retries).returns(mclient)
+      mclient
+    end
+
+    def build_mcresult(status=0, out="", err="", sender="1")
+      rs = {:sender => sender, :data => {
+        :status => status,
+        :out => out,
+        :err => err
+      }}
+      mcresult_mock = mock_mc_result(rs)
+      mock_result = mock
+      mock_result.stubs(:results).returns(rs)
+      mock_result.stubs(:each).returns(mcresult_mock)
+      mock_result
+    end
+
+    it "should check repositories with setup" do
+      mclient.expects(:check_repositories_with_setup)
+        .with({:data => {"1" => nodes.first, "4" => nodes.last}})
+        .returns([
+          build_mcresult(status=0),
+          build_mcresult(status=0, out="", err="", sender="4")]
+      )
+
+      res = Astute::Network.check_repositories_with_setup(
+        Astute::Context.new('task_uuid', reporter),
+        nodes)
+
+      res.should eql({
+        "status"=>"ready",
+        "nodes"=>[
+          {:out=>"", :err=>"", :status=>0, :uid=>"1"},
+          {:out=>"", :err=>"", :status=>0, :uid=>"4"}]
+      })
+    end
+
+    it "should show error if repositories with setup do not return answer" do
+      mclient.expects(:check_repositories_with_setup)
+        .with({:data => {"1" => nodes.first, "4" => nodes.last}})
+        .returns([
+          build_mcresult(status=0)]
+      )
+
+      expect{Astute::Network.check_repositories_with_setup(
+        Astute::Context.new('task_uuid', reporter),
+        nodes)}.to raise_error(Astute::MClientTimeout, /urlaccesscheck/)
     end
 
   end
