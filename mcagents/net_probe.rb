@@ -84,6 +84,7 @@ module MCollective
           -a #{config['addr']} \
           --vlan #{config['vlan']} \
           '#{config['urls'].join("' '")}'"
+        Log.debug("about to execute: #{cmd}")
 
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
         reply[:out] = reply[:out] && reply[:out].length >= 2 ? JSON.parse(reply[:out]) : ""
