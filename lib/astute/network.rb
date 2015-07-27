@@ -125,14 +125,22 @@ module Astute
 
     def self.check_repositories_with_setup(ctx, nodes)
       uids = nodes.map { |node| node['uid'].to_s }
-      net_probe = MClient.new(ctx, "net_probe", uids)
+      net_probe = MClient.new(ctx, "net_probe", uids, check_result=false)
 
-      data = {}
-      nodes.each do |node|
-        data[node['uid'].to_s] = node
-      end
+      data = nodes.inject({}) { |h, node| h.merge({node['uid'].to_s => node}) }
 
       result = net_probe.check_repositories_with_setup(:data => data)
+      bad_nodes = nodes.map { |n| n['uid'] } - result.map { |n| n.results[:sender] }
+
+      if bad_nodes.present?
+        error_msg = "Astute could not get result from nodes #{bad_nodes}. " \
+                    "Please check mcollective log on problem nodes " \
+                    "for more details. Hint: try to execute check manually " \
+                    "using command from mcollective log on nodes, also " \
+                    "check nodes availability using command `mco ping` " \
+                    "on master node."
+        raise MClientTimeout, error_msg
+      end
 
       {'nodes' => flatten_response(result), 'status'=> 'ready'}
     end
