@@ -125,14 +125,26 @@ module Astute
 
     def self.check_repositories_with_setup(ctx, nodes)
       uids = nodes.map { |node| node['uid'].to_s }
-      net_probe = MClient.new(ctx, "net_probe", uids)
+      net_probe = MClient.new(ctx, "net_probe", uids, check_result=false)
 
-      data = {}
-      nodes.each do |node|
-        data[node['uid'].to_s] = node
-      end
+      data = nodes.inject({}) { |h, node| h.merge({node['uid'].to_s => node}) }
 
       result = net_probe.check_repositories_with_setup(:data => data)
+      bad_nodes = nodes.map { |n| n['uid'] } - result.map { |n| n.results[:sender] }
+
+      if bad_nodes.present?
+        error_msg = "Astute could not get result from nodes #{bad_nodes} " \
+                    "in time (600 sec). Please check it manually:\n"
+        error_msg += bad_nodes.inject("") do |cmd_list, uid|
+          cmd_list << "Node #{uid}: urlaccesscheck with setup " \
+            "-i #{data[uid]['iface']} " \
+            "-g #{data[uid]['gateway']} " \
+            " -a #{data[uid]['addr']} " \
+            " --vlan #{data[uid]['vlan']} " \
+            "'#{data[uid]['urls'].join("' '")}'\n"
+        end
+        raise MClientTimeout, ERB.new(error_msg).result
+      end
 
       {'nodes' => flatten_response(result), 'status'=> 'ready'}
     end
