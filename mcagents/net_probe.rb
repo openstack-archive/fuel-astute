@@ -78,6 +78,9 @@ module MCollective
       action "check_repositories_with_setup" do
         config = request.data[:data][get_uid]
 
+        # Warning: please update
+        # lib/astute/network.rb#check_repositories_with_setup
+        # if you change this command
         cmd = "urlaccesscheck with setup \
           -i #{config['iface']} \
           -g #{config['gateway']} \
