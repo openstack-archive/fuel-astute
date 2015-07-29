@@ -257,5 +257,149 @@ describe Astute::Orchestrator do
 
   end #stop deployment
 
+  describe '#provision' do
+
+    let(:provisioning_info) do
+      {
+        "engine"=>{
+          "url"=>"http://localhost/cobbler_api",
+          "username"=>"cobbler",
+          "password"=>"cobbler",
+          "master_ip"=>"127.0.0.1"
+        },
+        "pre_provision"=> [
+          {
+            "priority"=> 100,
+            "type"=> "shell",
+            "uids"=> ["master"],
+            "parameters"=> {
+              "retries"=> 1,
+              "cmd"=> "fa_build_image--log-file/var/log/fuel-agent-env-1.log" \
+                "--data_drivernailgun_build_image--input_data'",
+              "cwd"=> "/",
+              "timeout"=> 3600,
+              "interval"=> 1
+            }
+            }
+        ],
+        "nodes" => [
+          {
+            'uid' => '1',
+            'profile' => 'centos-x86_64',
+            "slave_name"=>"controller-1",
+            "admin_ip" =>'1.2.3.5',
+            'power_type' => 'ssh',
+            'power_user' => 'root',
+            'power_pass' => '/root/.ssh/bootstrap.rsa',
+            'power-address' => '1.2.3.5',
+            'hostname' => 'name.domain.tld',
+            'name_servers' => '1.2.3.4 1.2.3.100',
+            'name_servers_search' => 'some.domain.tld domain.tld',
+            'netboot_enabled' => '1',
+            'ks_meta' => {
+              'gw' => '10.20.0.2',
+              'mco_enable' => 1,
+              'mco_vhost' => 'mcollective'
+            },
+            'interfaces' => {
+              'eth0' => {
+                'mac_address' => '00:00:00:00:00:00',
+                'static' => '1',
+                'netmask' => '255.255.255.0',
+                'ip_address' => '1.2.3.5',
+                'dns_name' => 'node.mirantis.net',
+              },
+              'eth1' => {
+                'mac_address' => '00:00:00:00:00:01',
+                'static' => '0',
+                'netmask' => '255.255.255.0',
+                'ip_address' => '1.2.3.6',
+              }
+            },
+            'interfaces_extra' => {
+              'eth0' => {
+                'peerdns' => 'no',
+                'onboot' => 'yes',
+              },
+              'eth1' => {
+                'peerdns' => 'no',
+                'onboot' => 'yes',
+              }
+            }
+          }
+        ]
+      }
+    end
+
+    it 'should run provision' do
+      Astute::CobblerManager.any_instance.stubs(:sleep)
+      Astute::Provisioner.any_instance.stubs(:sleep)
+      Astute::NailgunHooks.any_instance.stubs(:process)
+
+      Astute::CobblerManager.any_instance.expects(:sync)
+      Astute::Provisioner.any_instance.expects(:provision).with(
+        instance_of(Astute::ProxyReporter::ProvisiningProxyReporter),
+        'task_id',
+        provisioning_info,
+        'image'
+      )
+
+      @orchestrator.provision(
+        @reporter,
+        'task_id',
+        provisioning_info,
+        'image')
+    end
+
+    it 'should pre provision if pre provision tasks present' do
+      Astute::CobblerManager.any_instance.stubs(:sleep)
+      Astute::Provisioner.any_instance.stubs(:sleep)
+      Astute::CobblerManager.any_instance.stubs(:sync)
+      Astute::Provisioner.any_instance.stubs(:provision)
+
+      Astute::NailgunHooks.any_instance.expects(:process)
+
+      @orchestrator.provision(
+        @reporter,
+        'task_id',
+        provisioning_info,
+        'image')
+    end
+
+    it 'should not pre provision if no pre provision tasks present' do
+      Astute::CobblerManager.any_instance.stubs(:sleep)
+      Astute::Provisioner.any_instance.stubs(:sleep)
+      Astute::CobblerManager.any_instance.stubs(:sync)
+      Astute::Provisioner.any_instance.stubs(:provision)
+
+      Astute::NailgunHooks.any_instance.expects(:process).never
+
+      provisioning_info.delete('pre_provision')
+      @orchestrator.provision(
+        @reporter,
+        'task_id',
+        provisioning_info,
+        'image')
+    end
+
+    it 'should raise informative error if pre provision tasks failed' do
+      Astute::CobblerManager.any_instance.stubs(:sleep)
+      Astute::Provisioner.any_instance.stubs(:sleep)
+      Astute::CobblerManager.any_instance.stubs(:sync)
+      Astute::Provisioner.any_instance.stubs(:provision)
+
+      Astute::NailgunHooks.any_instance.expects(:process)
+        .raises(Astute::DeploymentEngineError , "Failed to execute hook")
+
+      expect{@orchestrator.provision(
+        @reporter,
+        'task_id',
+        provisioning_info,
+        'image')}.to raise_error(Astute::DeploymentEngineError,
+          /Image build task failed/)
+    end
+
+  end #provision
+
 
 end
