@@ -59,8 +59,10 @@ module Astute
       )
       provisioner = Provisioner.new(@log_parsing)
       if provisioning_info['pre_provision']
-        Astute.logger.info "Please check image build log here:" \
-          " /var/log/docker-logs/fuel-agent-env-#{calculate_cluster_id(provisioning_info)}.log"
+        image_build_log = "/var/log/docker-logs/fuel-agent-env" \
+          "-#{calculate_cluster_id(provisioning_info)}.log"
+        Astute.logger.info "Please check image build log here: " \
+          "#{image_build_log}"
         ctx = Context.new(task_id, proxy_reporter)
         provisioner.report_image_provision(
           proxy_reporter,
@@ -68,11 +70,18 @@ module Astute
           provisioning_info['nodes'],
           image_log_parser(provisioning_info)
         ) do
-          Astute::NailgunHooks.new(
-            provisioning_info['pre_provision'],
-            ctx,
-            'provision'
-          ).process
+          begin
+            Astute::NailgunHooks.new(
+              provisioning_info['pre_provision'],
+              ctx,
+              'provision'
+            ).process
+          rescue Astute::DeploymentEngineError => e
+            raise e, "Image build is taking too long. Please check " \
+              "build log here for details: #{image_build_log}. " \
+              "Hint: restart deployment can help if no error in build " \
+              "log was found"
+          end
         end
       end
 

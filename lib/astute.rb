@@ -77,6 +77,7 @@ module Astute
   autoload 'Rsyslogd', 'astute/rsyslogd'
   LogParser.autoload :ParseDeployLogs, 'astute/logparser/deployment'
   LogParser.autoload :ParseProvisionLogs, 'astute/logparser/provision'
+  LogParser.autoload :ParseImageBuildLogs, 'astute/logparser/provision'
   LogParser.autoload :Patterns, 'astute/logparser/parser_patterns'
 
   LOG_PATH = '/var/log/astute.log'
