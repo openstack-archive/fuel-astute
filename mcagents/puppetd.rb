@@ -192,7 +192,9 @@ module MCollective
         cmd = cmd.join(" ")
 
         output = reply[:output] || ''
-        run(cmd, :stdout => :output, :chomp => true, :cwd => cwd, :environment => { 'LC_ALL' => 'en_US.UTF-8' })
+        run(cmd, :stdout => :output, :chomp => true, :cwd => cwd,
+          :environment => { 'LC_ALL' => 'en_US.UTF-8',
+                            'HOME'   => '/root' })
         reply[:output] = "Called #{cmd}, " + output + (reply[:output] || '')
       end
 
