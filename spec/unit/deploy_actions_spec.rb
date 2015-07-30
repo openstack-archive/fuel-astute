@@ -63,6 +63,8 @@ describe Astute::PreDeploymentActions do
                                   .with(deploy_data, ctx)
     Astute::UploadFacts.any_instance.expects(:process)
                                   .with(deploy_data, ctx)
+    Astute::InitialConnectFacts.any_instance.expects(:process)
+                                  .with(deploy_data, ctx)
 
     pre_deployment_actions.process
   end

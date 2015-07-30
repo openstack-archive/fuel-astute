@@ -118,7 +118,8 @@ module Astute
         SyncPuppetStuff.new,
         SyncTasks.new,
         EnablePuppetDeploy.new,
-        UploadFacts.new
+        UploadFacts.new,
+        InitialConnectFacts.new
       ]
     end
 
