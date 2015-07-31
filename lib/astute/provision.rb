@@ -101,6 +101,12 @@ module Astute
       reporter.report(result_msg)
 
       result_msg
+    rescue => e
+      Rsyslogd.send_sighup(
+        Context.new(task_id, reporter),
+        engine_attrs["master_ip"]
+      )
+      raise e
     end
 
     def image_provision(reporter, task_id, nodes)
@@ -213,6 +219,12 @@ module Astute
 
       result = merge_rm_nodes_result(ssh_result, mco_result)
       result['status'] = 'error' if result['error_nodes'].present?
+
+      Rsyslogd.send_sighup(
+        Context.new(task_id, reporter),
+        engine_attrs["master_ip"]
+      )
+
       result
     end
 
