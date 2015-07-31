@@ -94,6 +94,7 @@ module Astute
                                           # and last node in group should be 30 sec. Empirical observation.
                                           # Please increase if nodes could not provisioning
     conf[:agent_nodiscover_file] = '/etc/nailgun-agent/nodiscover' # if this file in place, nailgun-agent will do nothing
+    conf[:bootstrap_profile] = 'bootstrap' # use the CentOS based bootstrap by default
 
     # Server settings
     conf[:broker_host] = 'localhost'
