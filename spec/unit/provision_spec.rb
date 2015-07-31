@@ -213,6 +213,15 @@ describe Astute::Provisioner do
       it "raise error if cobler settings empty" do
         @provisioner.stubs(:provision_and_watch_progress).returns([[],[]])
         data['engine'] = {}
+        Astute::Rsyslogd.stubs(:send_sighup).once
+        expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'image')}.
+                              to raise_error(/Settings for Cobbler must be set/)
+      end
+
+      it "raise error and send sighup for Rsyslogd" do
+        @provisioner.stubs(:provision_and_watch_progress).returns([[],[]])
+        data['engine'] = {}
+        Astute::Rsyslogd.expects(:send_sighup).once
         expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'image')}.
                               to raise_error(/Settings for Cobbler must be set/)
       end
@@ -237,6 +246,14 @@ describe Astute::Provisioner do
       end
 
       it "raises error if nodes list is empty" do
+        Astute::Rsyslogd.stubs(:send_sighup).once
+        data['nodes'] = []
+        expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'image')}.
+                              to raise_error(/Nodes to provision are not provided!/)
+      end
+
+      it "raises error if nodes list is empty and send sighup for Rsyslogd" do
+        Astute::Rsyslogd.expects(:send_sighup).once
         data['nodes'] = []
         expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'image')}.
                               to raise_error(/Nodes to provision are not provided!/)
@@ -356,6 +373,7 @@ describe Astute::Provisioner do
                                     .returns([Time.now.to_f, 'controller-1', 'failed'])
           @provisioner.stubs(:unlock_nodes_discovery)
         end
+
         it "should sync engine state" do
           Astute::Provision::Cobbler.any_instance do
             expects(:sync).once
@@ -810,6 +828,7 @@ describe Astute::Provisioner do
 
     it 'erase nodes using ssh' do
       Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
+      Astute::Rsyslogd.stubs(:send_sighup).once
       @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
       Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => '1'}]}).once
 
@@ -830,6 +849,7 @@ describe Astute::Provisioner do
     end
 
     it 'always remove nodes from Cobbler' do
+      Astute::Rsyslogd.stubs(:send_sighup).once
       Astute::Ssh.stubs(:execute).twice.returns({'inaccessible_nodes' => [{'uid' => '1'}]})
       @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
 
@@ -845,6 +865,7 @@ describe Astute::Provisioner do
 
     it 'reboot nodes using using ssh' do
       Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
+      Astute::Rsyslogd.stubs(:send_sighup).once
       @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
       Astute::Ssh.stubs(:execute).returns({'nodes' => [{'uid' => '1'}]}).once
 
@@ -867,6 +888,7 @@ describe Astute::Provisioner do
     end
 
     it 'stop provision if provision operation stop immediately' do
+      Astute::Rsyslogd.stubs(:send_sighup).once
       @provisioner.stubs(:stop_provision_via_ssh)
                    .returns({'inaccessible_nodes' => [{'uid' => '1'}]})
       @provisioner.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'bootstrap'}])
@@ -886,6 +908,7 @@ describe Astute::Provisioner do
     end
 
     it 'stop provision if provision operation stop in the end' do
+      Astute::Rsyslogd.stubs(:send_sighup).once
       @provisioner.stubs(:stop_provision_via_ssh)
              .returns({'nodes' => [{'uid' => "1"}]})
       @provisioner.stubs(:node_type).returns([{'uid' => "1", 'node_type' => 'target'}])
@@ -905,6 +928,7 @@ describe Astute::Provisioner do
     end
 
     it 'inform about inaccessible nodes' do
+      Astute::Rsyslogd.stubs(:send_sighup).once
       Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => '1'}]}).twice
       Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
       @provisioner.stubs(:node_type).returns([])
@@ -923,6 +947,7 @@ describe Astute::Provisioner do
     end
 
     it 'sleep between attempts to find and erase nodes using mcollective' do
+      Astute::Rsyslogd.stubs(:send_sighup).once
       @provisioner.stubs(:stop_provision_via_ssh)
                    .returns({'inaccessible_nodes' => [{'uid' => '1'}]})
       @provisioner.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'bootstrap'}])
@@ -938,6 +963,7 @@ describe Astute::Provisioner do
     end
 
     it 'perform several attempts to find and erase nodes using mcollective' do
+      Astute::Rsyslogd.stubs(:send_sighup).once
       Astute.config.mc_retries = 2
       Astute.config.nodes_remove_interval = 0
 
@@ -970,6 +996,22 @@ describe Astute::Provisioner do
                      "nodes" => [{"uid"=>"1"}],
                      "status" => "error"
                     })
+    end
+
+    it 'should send sighup for Rsyslogd' do
+      Astute::Rsyslogd.expects(:send_sighup).once
+
+      Astute::Ssh.stubs(:execute).twice.returns({'inaccessible_nodes' => [{'uid' => '1'}]})
+      @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
+
+      Astute::CobblerManager.any_instance.stubs(:remove_nodes)
+                                         .with(data['nodes'])
+                                         .returns([])
+
+      @provisioner.stop_provision(@reporter,
+                                   data['task_uuid'],
+                                   data['engine'],
+                                   data['nodes'])
     end
 
   end # stop_provision
