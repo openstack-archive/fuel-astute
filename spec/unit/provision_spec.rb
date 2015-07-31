@@ -20,6 +20,7 @@ describe Astute::Provisioner do
 
   before(:each) do
     @provisioner = Astute::Provisioner.new
+    @provisioner.stubs(:sleep)
     @reporter = mock('reporter')
     @reporter.stub_everything
   end
@@ -270,7 +271,10 @@ describe Astute::Provisioner do
 
       it "changes profile into bootstrap for all nodes in case of IBP" do
         Astute::CobblerManager.any_instance do
-          expects(:edit_nodes).with(data['nodes'], {'profile' => 'bootstrap'})
+          expects(:edit_nodes).with(
+            data['nodes'],
+            {'profile' => Astute.config.bootstrap_profile}
+          )
         end
         Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
         Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
@@ -279,7 +283,6 @@ describe Astute::Provisioner do
         @provisioner.stubs(:image_provision).returns([])
 
         @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
-
       end
 
       it "does not change netboot setting for failed nodes in case of IBP" do
@@ -299,26 +302,14 @@ describe Astute::Provisioner do
       before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:power_reboot).returns(333) }
 
       context 'node reboot success' do
-        before(:each) { Astute::Provision::Cobbler.any_instance.stubs(:event_status).
-                                                   returns([Time.now.to_f, 'controller-1', 'complete'])}
 
         it "does not find failed nodes" do
-          Astute::Provision::Cobbler.any_instance.stubs(:event_status).
-                                                  returns([Time.now.to_f, 'controller-1', 'complete'])
+          Astute::Provision::Cobbler.any_instance.stubs(:event_status)
+            .returns([Time.now.to_f, 'controller-1', 'complete'])
           Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
           @provisioner.stubs(:change_nodes_type)
           @provisioner.stubs(:image_provision).returns([])
 
-          @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
-        end
-
-        it "sync engine state" do
-          Astute::Provision::Cobbler.any_instance do
-            expects(:sync).once
-          end
-          Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
-          @provisioner.stubs(:change_nodes_type)
-          @provisioner.stubs(:image_provision).returns([])
           @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
         end
 
@@ -344,8 +335,17 @@ describe Astute::Provisioner do
         end
 
         it 'should try to reboot nodes using ssh(insurance for cobbler)' do
-          @provisioner.expects(:control_reboot_using_ssh).with(@reporter, data['task_uuid'], data['nodes']).once
-          @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'native')
+          Astute::Provision::Cobbler.any_instance.stubs(:event_status)
+            .returns([Time.now.to_f, 'controller-1', 'complete'])
+          @provisioner.expects(:control_reboot_using_ssh)
+            .with(@reporter, data['task_uuid'], data['nodes']).once
+          @provisioner.provision_piece(
+            @reporter,
+            data['task_uuid'],
+            data['engine'],
+            data['nodes'],
+            'native'
+          )
         end
       end
 
@@ -355,16 +355,6 @@ describe Astute::Provisioner do
                                     .stubs(:event_status)
                                     .returns([Time.now.to_f, 'controller-1', 'failed'])
           @provisioner.stubs(:unlock_nodes_discovery)
-        end
-        it "should sync engine state" do
-          Astute::Provision::Cobbler.any_instance do
-            expects(:sync).once
-          end
-          begin
-            @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
-            @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
-          rescue
-          end
         end
 
         it 'should not try to reboot nodes using ssh(insurance for cobbler)' do
@@ -428,6 +418,46 @@ describe Astute::Provisioner do
         @reporter.expects(:report).with(success_msg).once
         @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
       end
+    end
+
+    context 're-provisioned nodes' do
+
+      it 'should reboot and bootstrap re-provisioned nodes' do
+        Astute::CobblerManager.any_instance.expects(:get_existent_nodes)
+          .with(data['nodes'])
+          .returns(data['nodes'])
+        Astute::CobblerManager.any_instance.expects(:add_nodes)
+          .with(data['nodes'])
+        @provisioner.stubs(:remove_nodes)
+        Astute::CobblerManager.any_instance.expects(:edit_nodes)
+          .with(data['nodes'], {'profile' => Astute.config.bootstrap_profile})
+        Astute::CobblerManager.any_instance.expects(:reboot_nodes)
+          .with(data['nodes'])
+        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes)
+          .returns([])
+        @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
+
+        @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
+      end
+
+      it 'should not reboot and boostrap new nodes' do
+        Astute::CobblerManager.any_instance.expects(:get_existent_nodes)
+          .with(data['nodes'])
+          .returns([])
+        Astute::CobblerManager.any_instance.expects(:add_nodes)
+          .with(data['nodes'])
+        @provisioner.stubs(:remove_nodes)
+        Astute::CobblerManager.any_instance.expects(:edit_nodes)
+          .with([], {'profile' => Astute.config.bootstrap_profile})
+        Astute::CobblerManager.any_instance.expects(:reboot_nodes)
+          .with([])
+        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes)
+          .returns([])
+        @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
+
+        @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
+      end
+
     end
   end
 
