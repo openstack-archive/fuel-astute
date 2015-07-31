@@ -54,7 +54,7 @@ module Astute
         cobbler.add_nodes(nodes)
 
         # Reboot and bootstrap for re-provisioned nodes
-        cobbler.edit_nodes(existent_nodes, {'profile' => 'bootstrap'})
+        cobbler.edit_nodes(existent_nodes, {'profile' => Astute.config.bootstrap_profile})
         reboot_events = cobbler.reboot_nodes(existent_nodes)
         failed_existent_uids = cobbler.check_reboot_nodes(reboot_events).map { |n| n['uid']}
 
@@ -229,7 +229,7 @@ module Astute
       if provision_method == 'image'
         # IBP is implemented in terms of Fuel Agent installed into bootstrap ramdisk
         # we don't want nodes to be rebooted into OS installer ramdisk
-        cobbler.edit_nodes(nodes, {'profile' => 'bootstrap'})
+        cobbler.edit_nodes(nodes, {'profile' => Astute.config.bootstrap_profile})
 
         # change node type to prevent unexpected erase
         change_nodes_type(reporter, task_id, nodes)
