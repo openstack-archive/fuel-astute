@@ -35,16 +35,14 @@ module Astute
         Astute.logger.debug("Try to execute command: #{dump_cmd}")
         result = shell.execute(:cmd => dump_cmd).first.results
 
-        Astute.logger.debug("#{ctx.task_id}: \
-stdout: #{result[:data][:stdout]} stderr: #{result[:data][:stderr]} \
-exit code: #{result[:data][:exit_code]}")
+        Astute.logger.debug("#{ctx.task_id}: exit code: #{result[:data][:exit_code]}")
 
         if result[:data][:exit_code] == 0
-          Astute.logger.info("#{ctx.task_id}: Snapshot is done. Result: #{result[:data][:stdout]}")
+          Astute.logger.info("#{ctx.task_id}: Snapshot is done.")
           report_success(ctx, result[:data][:stdout].rstrip)
         else
-          Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code")
-          report_error(ctx, "exit code: #{result[:data][:exit_code]} stderr: #{result[:data][:stderr]}")
+          Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code. For details see /var/log/shotgun.log")
+          report_error(ctx, "exit code: #{result[:data][:exit_code]}")
         end
       rescue Timeout::Error
         msg = "Dump is timed out"
