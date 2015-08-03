@@ -127,11 +127,38 @@ describe Astute::CobblerManager do
       cobbler_manager.stubs(:sleep)
     end
 
-    it 'should sync engine status after end' do
-      engine.stubs(:item_from_hash)
-      cobbler_manager.expects(:sync).once
+    it 'should edit nodes' do
+      cobbler_manager.stubs(:sync)
+      engine.expects(:item_from_hash).with(
+        'system',
+        'controller-1',
+        {'profile' => Astute.config.bootstrap_profile},
+        :item_preremove => false)
 
-      cobbler_manager.edit_nodes(data['nodes'], {'profile' => 'bootstrap'})
+      cobbler_manager.edit_nodes(
+        data['nodes'],
+        {'profile' => Astute.config.bootstrap_profile}
+      )
+    end
+
+    it 'should sync at the end of the call' do
+      engine.stubs(:item_from_hash)
+      cobbler_manager.expects(:sync)
+
+      cobbler_manager.edit_nodes(
+        data['nodes'],
+        {'profile' => Astute.config.bootstrap_profile}
+      )
+    end
+
+    it 'should sync after an error' do
+      engine.stubs(:item_from_hash).raises(RuntimeError)
+      cobbler_manager.expects(:sync)
+
+      expect{ cobbler_manager.edit_nodes(
+        data['nodes'],
+        {'profile' => Astute.config.bootstrap_profile}
+      )}.to raise_error(RuntimeError)
     end
 
   end #'edit_nodes'
@@ -177,5 +204,45 @@ describe Astute::CobblerManager do
     end #'splay'
 
   end #'reboot_nodes'
+
+  describe '#netboot_nodes' do
+    it 'should netboot nodes' do
+      cobbler_manager.stubs(:sync)
+      engine.expects(:netboot).with('controller-1', false)
+
+      cobbler_manager.netboot_nodes(data['nodes'], false)
+    end
+
+    it 'should sync at the end of the call' do
+      engine.stubs(:netboot)
+      cobbler_manager.expects(:sync)
+
+      cobbler_manager.netboot_nodes(data['nodes'], false)
+    end
+
+    it 'should sync after an error' do
+      engine.stubs(:netboot).raises(RuntimeError)
+      cobbler_manager.expects(:sync)
+
+      expect{cobbler_manager.netboot_nodes(data['nodes'], false)}
+        .to raise_error(RuntimeError)
+    end
+  end #'edit_nodes'
+
+  describe '#get_existent_nodes' do
+    it 'should return existent nodes' do
+      engine.expects(:system_exists?).with('controller-1').returns(true)
+
+      expect(cobbler_manager.get_existent_nodes(data['nodes']))
+        .to eql(data['nodes'])
+    end
+
+    it 'should not return non existent nodes' do
+      engine.expects(:system_exists?).with('controller-1').returns(false)
+
+      expect(cobbler_manager.get_existent_nodes(data['nodes']))
+        .to eql([])
+    end
+  end #'get_existent_nodes'
 
 end
