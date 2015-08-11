@@ -168,31 +168,28 @@ module Astute
       interval = hook['parameters']['interval'] || Astute.config.mc_retry_interval
       shell_command = "cd #{cwd} && #{hook['parameters']['cmd']}"
 
-      ret = {'error' => "Failed to run command #{shell_command}"}
+      ret = {'error' => nil}
 
       perform_with_limit(hook['uids']) do |node_uids|
         Timeout::timeout(timeout) do
-          retries.times do |retry_number|
-            response = run_shell_command(
-              @ctx,
-              node_uids,
-              shell_command,
-              timeout,
-              cwd
-            )
-            if response[:data][:exit_code] == 0
-              ret['error'] = nil
-              break
-            end
-            Astute.logger.warn("Problem while performing cmd. Try to repeat: #{retry_number} attempt")
-            sleep interval
-          end
+          succeed = run_shell_command(
+            @ctx,
+            node_uids,
+            shell_command,
+            retries,
+            interval,
+            timeout,
+            cwd
+          )
+
+          ret['error'] = "Failed to run command #{shell_command}" unless succeed
         end
       end
 
       ret
     rescue Astute::MClientTimeout, Astute::MClientError, Timeout::Error => e
-      ret['error'] += "\n\nTask: #{@ctx.task_id}: " \
+      ret['error']  = "command: #{shell_command}" \
+                      "\n\nTask: #{@ctx.task_id}: " \
                       "shell timeout error: #{e.message}\n" \
                       "Task timeout: #{timeout}, " \
                       "Retries: #{hook['parameters']['retries']}"
@@ -215,22 +212,19 @@ module Astute
       rsync_options = '-c -r --delete'
       rsync_cmd = "mkdir -p #{path} && rsync #{rsync_options} #{source} #{path}"
 
-      ret = {'error' => "Failed to perform sync from #{source} to #{path}"}
+      ret = {'error' => nil}
 
       perform_with_limit(hook['uids']) do |node_uids|
-        10.times do |sync_retries|
-          response = run_shell_command(
-            @ctx,
-            node_uids,
-            rsync_cmd,
-            timeout
-          )
-          if response[:data][:exit_code] == 0
-              ret['error'] = nil
-            break
-          end
-          Astute.logger.warn("Rsync problem. Try to repeat: #{sync_retries} attempt")
-        end
+        succeed = run_shell_command(
+          @ctx,
+          node_uids,
+          rsync_cmd,
+          10,
+          Astute.config.mc_retry_interval,
+          timeout
+        )
+
+        ret = {'error' => "Failed to perform sync from #{source} to #{path}"} unless succeed
       end
 
       ret
@@ -306,28 +300,40 @@ module Astute
       false
     end
 
-    def run_shell_command(context, node_uids, cmd, timeout=60, cwd="/tmp")
-      shell = MClient.new(context,
-                          'execute_shell_command',
-                          node_uids,
-                          check_result=true,
-                          timeout=timeout,
-                          retries=1)
+    def run_shell_command(context, node_uids, cmd, retries, interval, timeout=60, cwd="/tmp")
+      (retries + 1).times.each do |retry_number|
+        shell = MClient.new(context,
+                            'execute_shell_command',
+                            node_uids,
+                            check_result=true,
+                            timeout=timeout,
+                            retries=1)
 
-      #TODO: return result for all nodes not only for first
-      response = shell.execute(:cmd => cmd, :cwd => cwd).first
-      Astute.logger.debug(
-        "#{context.task_id}: cmd: #{cmd}\n" \
-        "cwd: #{cwd}\n" \
-        "stdout: #{response[:data][:stdout]}\n" \
-        "stderr: #{response[:data][:stderr]}\n" \
-        "exit code: #{response[:data][:exit_code]}")
-      response
-    rescue MClientTimeout, MClientError => e
-      Astute.logger.error(
-        "#{context.task_id}: cmd: #{cmd} \n" \
-        "mcollective error: #{e.message}")
-      {:data => {}}
+        begin
+          responses = shell.execute(:cmd => cmd, :cwd => cwd)
+        rescue MClientTimeout, MClientError => e
+          Astute.logger.error "#{context.task_id}: cmd: #{cmd} \n" \
+            "mcollective error: #{e.message}"
+          next
+        end
+        responses.each do |response|
+          Astute.logger.debug(
+            "#{context.task_id}: cmd: #{cmd}\n" \
+            "cwd: #{cwd}\n" \
+            "stdout: #{response[:data][:stdout]}\n" \
+            "stderr: #{response[:data][:stderr]}\n" \
+            "exit code: #{response[:data][:exit_code]}")
+        end
+
+        node_uids -= responses.select { |response| response[:data][:exit_code] == 0 }
+                              .map { |response| response[:sender] }
+        return true if node_uids.empty?
+        Astute.logger.warn "Problem while performing cmd on nodes: #{node_uids}. " \
+          "Retrying... Attempt #{retry_number} of #{retries}"
+        sleep interval
+      end
+
+      false
     end
 
     def upload_file(context, node_uids, mco_params={})
