@@ -23,9 +23,11 @@ describe Astute::NailgunHooks do
   let(:ctx) { mock_ctx }
 
   around(:each) do |example|
-    old_value = Astute.config.max_nodes_per_call
+    max_nodes_old_value = Astute.config.max_nodes_per_call
+    mc_retries_old_value = Astute.config.mc_retries
     example.run
-    Astute.config.max_nodes_per_call = old_value
+    Astute.config.max_nodes_per_call = max_nodes_old_value
+    Astute.config.mc_retries = mc_retries_old_value
   end
 
   let(:upload_file_hook) do
@@ -487,6 +489,8 @@ describe Astute::NailgunHooks do
         ctx,
         ['1','2','3'],
         regexp_matches(/deploy/),
+        Astute.config.mc_retries,
+        Astute.config.mc_retry_interval,
         shell_hook['parameters']['timeout'],
         shell_hook['parameters']['cwd']
       )
@@ -501,6 +505,8 @@ describe Astute::NailgunHooks do
         ctx,
         ['1','2','3'],
         regexp_matches(/deploy/),
+        Astute.config.mc_retries,
+        Astute.config.mc_retry_interval,
         shell_hook['parameters']['timeout'],
         shell_hook['parameters']['cwd']
       )
@@ -516,6 +522,8 @@ describe Astute::NailgunHooks do
         ctx,
         ['1','2','3'],
         regexp_matches(/deploy/),
+        Astute.config.mc_retries,
+        Astute.config.mc_retry_interval,
         300,
         shell_hook['parameters']['cwd']
       )
@@ -532,6 +540,8 @@ describe Astute::NailgunHooks do
         ctx,
         ['1', '2'],
         regexp_matches(/deploy/),
+        Astute.config.mc_retries,
+        Astute.config.mc_retry_interval,
         shell_hook['parameters']['timeout'],
         shell_hook['parameters']['cwd']
       )
@@ -541,6 +551,8 @@ describe Astute::NailgunHooks do
         ctx,
         ['3'],
         regexp_matches(/deploy/),
+        Astute.config.mc_retries,
+        Astute.config.mc_retry_interval,
         shell_hook['parameters']['timeout'],
         shell_hook['parameters']['cwd']
       )
@@ -557,21 +569,21 @@ describe Astute::NailgunHooks do
 
       it 'if exit code eql 0 -> do not raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 0}}).once
+        hooks.expects(:run_shell_command).returns(true).once
 
         expect {hooks.process}.to_not raise_error
       end
 
       it 'if exit code not eql 0 -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).times(Astute.config.mc_retries)
+        hooks.expects(:run_shell_command).returns(false).once
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
 
       it 'if exit code not presence -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {}}).times(Astute.config.mc_retries)
+        hooks.expects(:run_shell_command).returns(false).once
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
@@ -583,6 +595,63 @@ describe Astute::NailgunHooks do
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
     end #context
+
+    context "#run_shell_command" do
+
+      let(:hooks) { Astute::NailgunHooks.new([shell_hook], ctx) }
+
+      let(:mclient) do
+        mclient = mock_rpcclient
+        Astute::MClient.any_instance.stubs(:rpcclient).returns(mclient)
+        Astute::MClient.any_instance.stubs(:log_result).returns(mclient)
+        Astute::MClient.any_instance.stubs(:check_results_with_retries).returns(mclient)
+        mclient
+      end
+
+      def mc_result(sender, succeed=true)
+        {
+          :sender => sender,
+          :data => { :exit_code => succeed ? 0 : 1}
+        }
+      end
+
+      before(:each) do
+        ctx.stubs(:report_and_update_status)
+        shell_hook['fail_on_error'] = true
+      end
+
+      it 'should use retries' do
+        mclient.expects(:execute).times(2).returns([
+          mc_result('1', true),
+          mc_result('2', false),
+          mc_result('3', true)
+        ]).then.returns([mc_result('2', true)])
+
+        hooks.process
+      end
+
+      it 'should fail if retries end' do
+        Astute.config.mc_retries = 2
+
+        mclient.expects(:execute).times(2).returns([
+          mc_result('1', true),
+          mc_result('2', false),
+          mc_result('3', true)
+        ]).then.returns([mc_result('2', false)])
+
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError)
+      end
+
+      it 'should fail if retries end and some nodes never answered' do
+        Astute.config.mc_retries = 2
+
+        mclient.expects(:execute).times(2)
+          .returns([mc_result('1', true)])
+          .then.returns([mc_result('2', true)])
+
+        expect {hooks.process}.to raise_error(Astute::DeploymentEngineError)
+      end
+    end
 
   end #shell_hook
 
@@ -700,6 +769,8 @@ describe Astute::NailgunHooks do
         ctx,
         ['1','2'],
         regexp_matches(/deploy/),
+        10,
+        Astute.config.mc_retry_interval,
         sync_hook['parameters']['timeout']
       )
       .returns(:data => {:exit_code => 0})
@@ -714,6 +785,8 @@ describe Astute::NailgunHooks do
         ctx,
         ['1','2'],
         regexp_matches(/rsync/),
+        10,
+        Astute.config.mc_retry_interval,
         300
       )
       .returns(:data => {:exit_code => 0})
@@ -729,6 +802,8 @@ describe Astute::NailgunHooks do
         ctx,
         ['1'],
         regexp_matches(/rsync/),
+        10,
+        Astute.config.mc_retry_interval,
         is_a(Integer)
       )
       .returns(:data => {:exit_code => 0})
@@ -737,6 +812,8 @@ describe Astute::NailgunHooks do
         ctx,
         ['2'],
         regexp_matches(/rsync/),
+        10,
+        Astute.config.mc_retry_interval,
         is_a(Integer)
       )
       .returns(:data => {:exit_code => 0})
@@ -752,21 +829,21 @@ describe Astute::NailgunHooks do
 
       it 'if exit code eql 0 -> do not raise error' do
         hooks = Astute::NailgunHooks.new([sync_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 0}}).once
+        hooks.expects(:run_shell_command).returns(true).once
 
         expect {hooks.process}.to_not raise_error
       end
 
       it 'if exit code not eql 0 -> raise error' do
         hooks = Astute::NailgunHooks.new([sync_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {:exit_code => 1}}).times(10)
+        hooks.expects(:run_shell_command).returns(false).once
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
 
       it 'if exit code not presence -> raise error' do
         hooks = Astute::NailgunHooks.new([sync_hook], ctx)
-        hooks.expects(:run_shell_command).returns({:data => {}}).times(10)
+        hooks.expects(:run_shell_command).returns(false).once
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
