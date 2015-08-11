@@ -42,7 +42,7 @@ module MCollective
       end
 
       action "start_frame_listeners" do
-        cleanup_netprobe
+        terminate_frame_listeners
         start_frame_listeners
       end
 
@@ -100,11 +100,6 @@ module MCollective
         end
       end
 
-      def cleanup_netprobe
-        status = run("pkill net_probe.py && sleep 2 && pgrep net_probe.py")
-        reply.fail! "Cant stop net_probe.py execution." unless status == 1
-      end
-
       def start_frame_listeners
         validate :interfaces, String
         config = {
@@ -113,14 +108,12 @@ module MCollective
           "dump_file" => "/var/tmp/net-probe-dump",
           "ready_address" => "127.0.0.1",
           "ready_port" => 31338,
+          "collect_timeout" => 500, # collect timeout should be smaller than net_probe.rb agent timeout
         }
 
         if request.data.key?('config')
           config.merge!(JSON.parse(request[:config]))
         end
-
-        # we want to be sure that there is no frame listeners running
-        stop_frame_listeners
 
         # wipe out old stuff before start
         Dir.glob(@pattern).each do |file|
@@ -201,6 +194,18 @@ module MCollective
         f.write config.to_json
         f.close
         f
+      end
+
+      def terminate_frame_listeners
+        interval = 2
+        5.times do |_|
+            status = run("pkill -TERM -f net_probe.py")
+            if status == 1: return
+            sleep interval
+            status = run("pgrep -f net_probe.py")
+            if status == 1: return
+        end
+        reply.fail! "Cant stop net_probe.py execution."
       end
 
       def stop_frame_listeners
