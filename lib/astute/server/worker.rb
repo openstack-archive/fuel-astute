@@ -115,6 +115,7 @@ module Astute
           :port => Astute.config.broker_port,
           :username => Astute.config.broker_username,
           :password => Astute.config.broker_password,
+          :heartbeat => Astute.config.heartbeat,
         }.reject{|k, v| v.nil? }
       end
 

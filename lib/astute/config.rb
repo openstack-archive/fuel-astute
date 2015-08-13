@@ -107,6 +107,8 @@ module Astute
     conf[:broker_queue] = 'naily'
     conf[:broker_publisher_queue] = 'nailgun'
     conf[:broker_exchange] = 'nailgun'
+    # Should be specified in seconds
+    conf[:heartbeat] = 2
 
     conf
   end
