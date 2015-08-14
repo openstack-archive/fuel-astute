@@ -42,21 +42,7 @@ module Astute
       cobbler = CobblerManager.new(engine_attrs, reporter)
       result_msg = {'nodes' => []}
       begin
-        existent_nodes = cobbler.get_existent_nodes(nodes)
-        remove_nodes(
-          reporter,
-          task_id,
-          engine_attrs,
-          nodes,
-          reboot=false,
-          raise_if_error=true
-        )
-        cobbler.add_nodes(nodes)
-
-        # Reboot and bootstrap for re-provisioned nodes
-        cobbler.edit_nodes(existent_nodes, {'profile' => Astute.config.bootstrap_profile})
-        reboot_events = cobbler.reboot_nodes(existent_nodes)
-        failed_existent_uids = cobbler.check_reboot_nodes(reboot_events).map { |n| n['uid']}
+        prepare_nodes(reporter, task_id, engine_attrs, nodes, cobbler)
 
         failed_uids, timeouted_uids = provision_and_watch_progress(reporter,
                                                                     task_id,
@@ -64,8 +50,6 @@ module Astute
                                                                     engine_attrs,
                                                                     provision_method,
                                                                     fault_tolerance)
-        failed_uids += failed_existent_uids
-
       rescue => e
         Astute.logger.error("Error occured while provisioning: #{e.inspect}")
         reporter.report({
@@ -188,13 +172,25 @@ module Astute
       return failed_uids, timeouted_uids
     end
 
-    def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true, raise_if_error=false)
-      cobbler = CobblerManager.new(engine_attrs, reporter)
-      cobbler.remove_nodes(nodes)
-      ctx = Context.new(task_id, reporter)
-      result = NodesRemover.new(ctx, nodes, reboot).remove
+    def remove_nodes(reporter, task_id, engine_attrs, nodes, options)
+      options.reverse_merge!({
+        :reboot => true,
+        :raise_if_error => false,
+        :reset => false
+      })
 
-      if (result['error_nodes'] || result['inaccessible_nodes']) && raise_if_error
+      cobbler = CobblerManager.new(engine_attrs, reporter)
+      if options[:reset]
+        cobbler.edit_nodes(nodes, {'profile' => Astute.config.bootstrap_profile})
+        cobbler.netboot_nodes(nodes, true)
+      else
+        cobbler.remove_nodes(nodes)
+      end
+
+      ctx = Context.new(task_id, reporter)
+      result = NodesRemover.new(ctx, nodes, options[:reboot]).remove
+
+      if (result['error_nodes'] || result['inaccessible_nodes']) && options[:raise_if_error]
         bad_node_ids = result.fetch('error_nodes', []) +
           result.fetch('inaccessible_nodes', [])
         raise "Mcollective problem with nodes #{bad_node_ids}, please check log for details"
@@ -436,21 +432,21 @@ module Astute
       end
     end
 
-    def change_nodes_type(reporter, task_id="", nodes)
+    def change_nodes_type(reporter, task_id, nodes, type="image")
       nodes_uids = nodes.map{ |n| n['uid'] }
       shell = MClient.new(Context.new(task_id, reporter),
                           'execute_shell_command',
                           nodes_uids,
                           check_result=false,
                           timeout=5)
-      mco_result = shell.execute(:cmd => "echo 'image' > /etc/nailgun_systemtype")
+      mco_result = shell.execute(:cmd => "echo '#{type}' > /etc/nailgun_systemtype")
       result = mco_result.map do |n|
         {
           'uid'       => n.results[:sender],
           'exit code' => n.results[:data][:exit_code]
         }
       end
-      Astute.logger.debug "Change node type to image. Result: #{result}"
+      Astute.logger.debug "Change node type to #{type}. Result: #{result}"
     end
 
     def handle_failed_nodes(failed_uids, result_msg)
@@ -502,6 +498,52 @@ module Astute
           return true
       end
       false
+    end
+
+    def prepare_nodes(reporter, task_id, engine_attrs, nodes, cobbler)
+      # 1. Erase all nodes
+      # 2. Return already provisioned node to bootstrap state
+      # 3. Re-add it to Cobbler
+
+      Astute.logger.info "Preparing nodes for installation"
+      existent_nodes = cobbler.get_existent_nodes(nodes)
+
+      # Change node type to prevent wrong node detection as provisioned
+      # Also this type if node will not rebooted, allow Astute to try
+      # to reboot it again
+      if existent_nodes.present?
+        change_nodes_type(reporter, task_id, existent_nodes, 'reprovisioned')
+      end
+
+      remove_nodes(
+        reporter,
+        task_id,
+        engine_attrs,
+        nodes,
+        {:reboot => false,
+         :raise_if_error => true,
+         :reset => true}
+      )
+
+      if existent_nodes.present?
+        Astute::NailgunHooks.new(
+          [{
+            "priority" =>  100,
+            "type" =>  "reboot",
+            "fail_on_error" => false,
+            "diagnostic_name" => "reboot_reprovisioned_nodes",
+            "uids" =>  existent_nodes.map { |n| n['uid'] },
+            "parameters" =>  {
+              "timeout" =>  Astute.config.reboot_timeout
+            }
+          }],
+          Context.new(task_id, reporter),
+          'provision'
+        ).process
+      end
+
+      cobbler.remove_nodes(nodes)
+      cobbler.add_nodes(nodes)
     end
 
   end

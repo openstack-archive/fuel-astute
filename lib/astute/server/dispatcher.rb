@@ -146,7 +146,7 @@ module Astute
         @orchestrator.dump_environment(reporter, task_id, data['args']['settings'])
       end
 
-      def remove_nodes(data)
+      def remove_nodes(data, reset=false)
         task_uuid = data['args']['task_uuid']
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
         nodes = data['args']['nodes']
@@ -162,7 +162,11 @@ module Astute
             task_uuid,
             engine,
             nodes,
-            {:check_ceph=>check_ceph}
+            {
+              :reboot => true,
+              :check_ceph => check_ceph,
+              :reset => reset
+            }
           )
         end
 
@@ -170,7 +174,7 @@ module Astute
       end
 
       def reset_environment(data)
-        remove_nodes(data)
+        remove_nodes(data, reset=true)
       end
 
       def execute_tasks(data)
