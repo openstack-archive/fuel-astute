@@ -67,7 +67,13 @@ describe Astute::Provisioner do
     it 'should use NodeRemover to remove nodes' do
       Astute::NodesRemover.any_instance.expects(:remove).once.returns({})
       Astute::Rsyslogd.expects(:send_sighup).once
-      @provisioner.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+      @provisioner.remove_nodes(
+        @reporter,
+        task_id="task_id",
+        engine_attrs,
+        nodes,
+        {:reboot => true}
+      )
     end
 
     it 'should return list of nodes which removed' do
@@ -78,7 +84,7 @@ describe Astute::Provisioner do
         task_id="task_id",
         engine_attrs,
         nodes,
-        reboot=true
+        {:reboot => true}
       )).to eql({"nodes"=>[{"uid"=>"1"}]})
     end
 
@@ -94,8 +100,10 @@ describe Astute::Provisioner do
           task_id="task_id",
           engine_attrs,
           nodes,
-          reboot=true,
-          raise_if_error=true
+          {
+            :reboot => true,
+            :raise_if_error => true
+          }
         )}.to raise_error(/Mcollective problem with nodes/)
       end
 
@@ -109,8 +117,10 @@ describe Astute::Provisioner do
           task_id="task_id",
           engine_attrs,
           nodes,
-          reboot=true,
-          raise_if_error=true
+          {
+            :reboot => true,
+            :raise_if_error => true
+          }
         )}.to raise_error(/Mcollective problem with nodes/)
       end
     end  #exception
@@ -123,7 +133,13 @@ describe Astute::Provisioner do
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
 
-        @provisioner.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+        @provisioner.remove_nodes(
+          @reporter,
+          task_id="task_id",
+          engine_attrs,
+          nodes,
+          {:reboot => true}
+        )
       end
 
       it 'should not try to remove nodes from cobbler if node do not exist' do
@@ -133,7 +149,13 @@ describe Astute::Provisioner do
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name']).never
 
-        @provisioner.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+        @provisioner.remove_nodes(
+          @reporter,
+          task_id="task_id",
+          engine_attrs,
+          nodes,
+          {:reboot => true}
+        )
       end
 
       it 'should inform about nodes if remove operation fail' do
@@ -145,7 +167,13 @@ describe Astute::Provisioner do
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
 
-        @provisioner.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+        @provisioner.remove_nodes(
+          @reporter,
+          task_id="task_id",
+          engine_attrs,
+          nodes,
+          {:reboot => true}
+        )
       end
     end #cobbler
   end #remove_nodes
@@ -237,11 +265,11 @@ describe Astute::Provisioner do
         XMLRPC::Client = mock() do
           stubs(:new).returns(remote)
         end
-        @provisioner.stubs(:remove_nodes).returns([])
         Astute::CobblerManager.any_instance.stubs(:sleep)
       end
 
       before(:each) do
+        @provisioner.stubs(:remove_nodes).returns([])
         @provisioner.stubs(:provision_and_watch_progress).returns([])
         @provisioner.stubs(:control_reboot_using_ssh).returns(nil)
       end
@@ -338,8 +366,11 @@ describe Astute::Provisioner do
             data['task_uuid'],
             data['engine'],
             data['nodes'],
-            reboot=false,
-            fail_if_error=true
+            {
+              :reboot => false,
+              :raise_if_error => true,
+              :reset => false
+            }
           ).returns([])
           @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
         end

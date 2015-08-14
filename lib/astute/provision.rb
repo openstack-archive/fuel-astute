@@ -48,8 +48,9 @@ module Astute
           task_id,
           engine_attrs,
           nodes,
-          reboot=false,
-          raise_if_error=true
+          {:reboot => false,
+           :raise_if_error => true,
+           :reset => false}
         )
         cobbler.add_nodes(nodes)
 
@@ -188,13 +189,23 @@ module Astute
       return failed_uids, timeouted_uids
     end
 
-    def remove_nodes(reporter, task_id, engine_attrs, nodes, reboot=true, raise_if_error=false)
-      cobbler = CobblerManager.new(engine_attrs, reporter)
-      cobbler.remove_nodes(nodes)
-      ctx = Context.new(task_id, reporter)
-      result = NodesRemover.new(ctx, nodes, reboot).remove
+    def remove_nodes(reporter, task_id, engine_attrs, nodes, options)
+      options[:reboot] = true unless options.has_key?(:reboot)
+      options[:raise_if_error] = false unless options.has_key?(:raise_if_error)
+      options[:reset] = false unless options.has_key?(:reset)
 
-      if (result['error_nodes'] || result['inaccessible_nodes']) && raise_if_error
+      cobbler = CobblerManager.new(engine_attrs, reporter)
+      if options[:reset]
+        cobbler.edit_nodes(nodes, {'profile' => Astute.config.bootstrap_profile})
+        cobbler.netboot_nodes(nodes, true)
+      else
+        cobbler.remove_nodes(nodes)
+      end
+
+      ctx = Context.new(task_id, reporter)
+      result = NodesRemover.new(ctx, nodes, options[:reboot]).remove
+
+      if (result['error_nodes'] || result['inaccessible_nodes']) && options[:raise_if_error]
         bad_node_ids = result.fetch('error_nodes', []) +
           result.fetch('inaccessible_nodes', [])
         raise "Mcollective problem with nodes #{bad_node_ids}, please check log for details"

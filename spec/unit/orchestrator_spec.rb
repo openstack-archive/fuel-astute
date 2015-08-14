@@ -223,7 +223,7 @@ describe Astute::Orchestrator do
           @reporter,
           'task_id',
           nodes,
-          {:reboot => true, :raise_if_error => false}
+          {:reboot => true, :raise_if_error => false, :reset => false}
         ).returns('status' => 'ready')
 
         @orchestrator.remove_nodes(
@@ -240,7 +240,7 @@ describe Astute::Orchestrator do
           @reporter,
           'task_id',
           nodes,
-          {:reboot => true, :raise_if_error => false}
+          {:reboot => true, :raise_if_error => false, :reset => true}
         ).returns('status' => 'error')
 
         Astute::Provisioner.any_instance.expects(:remove_nodes).never
@@ -250,7 +250,7 @@ describe Astute::Orchestrator do
           'task_id',
           data['engine'],
           nodes,
-          options={}
+          {:reboot => true, :raise_if_error => false, :reset => true}
         )
       end
     end

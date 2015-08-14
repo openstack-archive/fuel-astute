@@ -101,6 +101,7 @@ module Astute
 
       options[:reboot] = true unless options.has_key?(:reboot)
       options[:raise_if_error] = false unless options.has_key?(:raise_if_error)
+      options[:reset] = false unless options.has_key?(:reset)
 
       result = perform_pre_deletion_tasks(reporter, task_id, nodes, options)
       return result if result['status'] != 'ready'
@@ -111,8 +112,7 @@ module Astute
         task_id,
         engine_attrs,
         nodes,
-        options[:reboot],
-        options[:raise_if_error]
+        options
       )
     end
 
