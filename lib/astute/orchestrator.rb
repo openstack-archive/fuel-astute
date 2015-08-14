@@ -99,8 +99,11 @@ module Astute
       # as ready. In this case we will get empty nodes.
       return if nodes.empty?
 
-      options[:reboot] = true unless options.has_key?(:reboot)
-      options[:raise_if_error] = false unless options.has_key?(:raise_if_error)
+      options.reverse_merge!({
+        :reboot => true,
+        :raise_if_error => false,
+        :reset => false
+      })
 
       result = perform_pre_deletion_tasks(reporter, task_id, nodes, options)
       return result if result['status'] != 'ready'
@@ -111,8 +114,7 @@ module Astute
         task_id,
         engine_attrs,
         nodes,
-        options[:reboot],
-        options[:raise_if_error]
+        options
       )
     end
 
