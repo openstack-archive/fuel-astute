@@ -67,25 +67,34 @@ module Astute
     def copy_files_hook(hook)
       validate_presence(hook, 'uids')
       validate_presence(hook['parameters'], 'files')
-
       ret = {'error' => nil}
       hook['parameters']['files'].each do |file|
-        if File.file?(file['src']) && File.readable?(file['src'])
-          parameters = {
-            'content' => File.read(file['src']),
-            'path' => file['dst'],
-            'permissions' => file['permissions'] || hook['parameters']['permissions'],
-            'dir_permissions' => file['dir_permissions'] || hook['parameters']['dir_permissions'],
-          }
-          perform_with_limit(hook['uids']) do |node_uids|
-            status = upload_file(@ctx, node_uids, parameters)
-            if !status
-              ret['error'] = 'Upload not successful'
+        #Expand dir glob to be able to use wildcards
+        Dir.glob("#{file['src']}").each do |filesrc|
+          if File.file?(filesrc) && File.readable?(filesrc)
+            #If file dst path is a directory, just append
+            #file name to it
+            if filedst =~ /^(\/\w+)*\/$/
+              filedst="#{file['dst']}/#{file['src']}"
+            else
+              filedst=file['dst']
             end
+            parameters = {
+              'content' => File.read(filesrc),
+              'path' => filedst,
+              'permissions' => file['permissions'] || hook['parameters']['permissions'],
+              'dir_permissions' => file['dir_permissions'] || hook['parameters']['dir_permissions'],
+            }
+            perform_with_limit(hook['uids']) do |node_uids|
+              status = upload_file(@ctx, node_uids, parameters)
+              if !status
+                ret['error'] = "Upload of file #{filesrc} to #{file['dst']} was not successful"
+              end
+            end
+          else
+            ret['error'] = "File does not exist or is not readable #{filesrc}"
+            Astute.logger.warn(ret['error'])
           end
-        else
-          ret['error'] = "File does not exist or is not readable #{file['src']}"
-          Astute.logger.warn(ret['error'])
         end
       end
       ret
