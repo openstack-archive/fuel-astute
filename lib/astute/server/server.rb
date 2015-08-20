@@ -13,6 +13,7 @@
 #    under the License.
 
 require 'json'
+require 'securerandom'
 require 'astute/server/task_queue'
 
 module Astute
@@ -26,11 +27,14 @@ module Astute
         @producer = producer
         @service_channel = service_channel
         @service_exchange = service_exchange
+        # NOTE(eli): Generate unique name for service queue
+        # See bug: https://bugs.launchpad.net/fuel/+bug/1485895
+        @service_queue_name = "naily_service_#{SecureRandom.uuid}"
       end
 
       def run
         @queue = @channel.queue(Astute.config.broker_queue, :durable => true).bind(@exchange)
-        @service_queue = @service_channel.queue("", :exclusive => true, :auto_delete => true).bind(@service_exchange)
+        @service_queue = @service_channel.queue(@service_queue_name, :exclusive => true, :auto_delete => true).bind(@service_exchange)
 
         @main_work_thread = nil
         @tasks_queue = TaskQueue.new
