@@ -67,7 +67,13 @@ describe Astute::Provisioner do
     it 'should use NodeRemover to remove nodes' do
       Astute::NodesRemover.any_instance.expects(:remove).once.returns({})
       Astute::Rsyslogd.expects(:send_sighup).once
-      @provisioner.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+      @provisioner.remove_nodes(
+        @reporter,
+        task_id="task_id",
+        engine_attrs,
+        nodes,
+        {:reboot => true}
+      )
     end
 
     it 'should return list of nodes which removed' do
@@ -78,7 +84,7 @@ describe Astute::Provisioner do
         task_id="task_id",
         engine_attrs,
         nodes,
-        reboot=true
+        {:reboot => true}
       )).to eql({"nodes"=>[{"uid"=>"1"}]})
     end
 
@@ -94,8 +100,10 @@ describe Astute::Provisioner do
           task_id="task_id",
           engine_attrs,
           nodes,
-          reboot=true,
-          raise_if_error=true
+          {
+            :reboot => true,
+            :raise_if_error => true
+          }
         )}.to raise_error(/Mcollective problem with nodes/)
       end
 
@@ -109,8 +117,10 @@ describe Astute::Provisioner do
           task_id="task_id",
           engine_attrs,
           nodes,
-          reboot=true,
-          raise_if_error=true
+          {
+            :reboot => true,
+            :raise_if_error => true
+          }
         )}.to raise_error(/Mcollective problem with nodes/)
       end
     end  #exception
@@ -123,7 +133,13 @@ describe Astute::Provisioner do
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
 
-        @provisioner.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+        @provisioner.remove_nodes(
+          @reporter,
+          task_id="task_id",
+          engine_attrs,
+          nodes,
+          {:reboot => true}
+        )
       end
 
       it 'should not try to remove nodes from cobbler if node do not exist' do
@@ -133,7 +149,13 @@ describe Astute::Provisioner do
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name']).never
 
-        @provisioner.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+        @provisioner.remove_nodes(
+          @reporter,
+          task_id="task_id",
+          engine_attrs,
+          nodes,
+          {:reboot => true}
+        )
       end
 
       it 'should inform about nodes if remove operation fail' do
@@ -145,7 +167,13 @@ describe Astute::Provisioner do
 
         Astute::Provision::Cobbler.any_instance.expects(:remove_system).with(nodes.first['slave_name'])
 
-        @provisioner.remove_nodes(@reporter, task_id="task_id", engine_attrs, nodes, reboot=true)
+        @provisioner.remove_nodes(
+          @reporter,
+          task_id="task_id",
+          engine_attrs,
+          nodes,
+          {:reboot => true}
+        )
       end
     end #cobbler
   end #remove_nodes
@@ -237,11 +265,11 @@ describe Astute::Provisioner do
         XMLRPC::Client = mock() do
           stubs(:new).returns(remote)
         end
-        @provisioner.stubs(:remove_nodes).returns([])
         Astute::CobblerManager.any_instance.stubs(:sleep)
       end
 
       before(:each) do
+        @provisioner.stubs(:remove_nodes).returns([])
         @provisioner.stubs(:provision_and_watch_progress).returns([])
         @provisioner.stubs(:control_reboot_using_ssh).returns(nil)
       end
@@ -332,20 +360,30 @@ describe Astute::Provisioner do
 
         it "should erase mbr for nodes" do
           Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
+          Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
           @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
+
+          Astute::CobblerManager.any_instance.stubs(:get_existent_nodes).returns([])
+          @provisioner.stubs(:change_node_type).never
+          Astute::NailgunHooks.any_instance.stubs(:process).never
+
           @provisioner.expects(:remove_nodes).with(
             @reporter,
             data['task_uuid'],
             data['engine'],
             data['nodes'],
-            reboot=false,
-            fail_if_error=true
+            {
+              :reboot => false,
+              :raise_if_error => true,
+              :reset => true
+            }
           ).returns([])
+
           @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
         end
 
         it 'should not try to unlock node discovery' do
-          Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
+          @provisioner.stubs(:prepare_nodes)
           @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
           @provisioner.expects(:unlock_nodes_discovery).never
           @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
@@ -385,6 +423,7 @@ describe Astute::Provisioner do
 
       it 'success report if all nodes were provisioned' do
         Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
+        @provisioner.stubs(:prepare_nodes)
         @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
         success_msg = {
           'status' => 'ready',
@@ -399,6 +438,7 @@ describe Astute::Provisioner do
       end
 
       it "fail if timeout of provisioning is exceeded" do
+        @provisioner.stubs(:prepare_nodes)
         @provisioner.stubs(:provision_and_watch_progress).returns([[],['1']])
 
         msg = 'Too many nodes failed to provision'
@@ -422,6 +462,7 @@ describe Astute::Provisioner do
       end
 
       it 'success report if all nodes report about success at least once' do
+        @provisioner.stubs(:prepare_nodes)
         @provisioner.stubs(:provision_and_watch_progress).returns([[],[]])
 
         success_msg = {
@@ -445,32 +486,36 @@ describe Astute::Provisioner do
           .returns(data['nodes'])
         Astute::CobblerManager.any_instance.expects(:add_nodes)
           .with(data['nodes'])
-        @provisioner.stubs(:remove_nodes)
-        Astute::CobblerManager.any_instance.expects(:edit_nodes)
-          .with(data['nodes'], {'profile' => Astute.config.bootstrap_profile})
-        Astute::CobblerManager.any_instance.expects(:reboot_nodes)
+        Astute::CobblerManager.any_instance.expects(:remove_nodes)
           .with(data['nodes'])
-        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes)
-          .returns([])
+        @provisioner.stubs(:remove_nodes)
+
+        Astute::NailgunHooks.any_instance.expects(:process)
+        @provisioner.expects(:change_nodes_type).with(
+          @reporter,
+          data['task_uuid'],
+          data['nodes'],
+          'reprovisioned'
+        )
         @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
 
         @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
       end
 
       it 'should not reboot and boostrap new nodes' do
+        @provisioner.stubs(:remove_nodes)
+        @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
+
         Astute::CobblerManager.any_instance.expects(:get_existent_nodes)
           .with(data['nodes'])
           .returns([])
+        Astute::CobblerManager.any_instance.expects(:remove_nodes)
+          .with(data['nodes'])
         Astute::CobblerManager.any_instance.expects(:add_nodes)
           .with(data['nodes'])
-        @provisioner.stubs(:remove_nodes)
-        Astute::CobblerManager.any_instance.expects(:edit_nodes)
-          .with([], {'profile' => Astute.config.bootstrap_profile})
-        Astute::CobblerManager.any_instance.expects(:reboot_nodes)
-          .with([])
-        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes)
-          .returns([])
-        @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
+
+        @provisioner.expects(:change_nodes_type).never
+        Astute::NailgunHooks.any_instance.expects(:process).never
 
         @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
       end
