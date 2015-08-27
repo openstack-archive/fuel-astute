@@ -65,6 +65,7 @@ require 'astute/server/server'
 require 'astute/server/producer'
 require 'astute/server/dispatcher'
 require 'astute/server/reporter'
+require 'astute/server/async_logger'
 
 module Astute
   # Library
