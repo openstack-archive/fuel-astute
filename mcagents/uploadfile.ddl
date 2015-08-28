@@ -2,7 +2,7 @@ metadata  :name           => "uploadfile",
 		      :description    => "Text file upload agent",
 		      :author         => "Mirantis Inc",
 		      :license        => "Apache License 2.0",
-		      :version        => "7.0.0",
+		      :version        => "8.0.0",
 		      :url            => "http://mirantis.com",
 		      :timeout        => 60
 
@@ -24,7 +24,7 @@ action "upload",	:description => "upload file" do
         :validation  => '^.+$',
         :optional    => false,
         :maxlength   => 0
-  
+
   input :user_owner,
         :prompt      => "User owner of file",
         :description => "Who should be owner of the file?",
@@ -42,7 +42,7 @@ action "upload",	:description => "upload file" do
         :optional    => false,
         :default     => 'root',
         :maxlength   => 0
-  
+
   input :permissions,
         :prompt      => "File permissions",
         :description => "What permissions should be set to the file?",
@@ -51,7 +51,7 @@ action "upload",	:description => "upload file" do
         :default     => '0644',
         :optional    => false,
         :maxlength   => 4
-  
+
   input :dir_permissions,
         :prompt      => "Directory permissions",
         :description => "What permissions should be set for folder where file will be place?",
