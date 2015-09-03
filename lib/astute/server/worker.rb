@@ -26,7 +26,6 @@ module Astute
       def start
         super
         start_heartbeat
-        Astute::Server::AsyncLogger.start_up(Astute.logger)
       end
 
       def stop
@@ -35,7 +34,6 @@ module Astute
           @connection.close{ stop_event_machine } if @connection
         ensure
           stop_event_machine
-          Astute::Server::AsyncLogger.shutdown
         end
       end
 
@@ -89,7 +87,7 @@ module Astute
 
       def configure_connection(connection)
         connection.on_tcp_connection_loss do |conn, settings|
-          Astute::Server::AsyncLogger.warn "Trying to reconnect to message broker. Retry #{DELAY_SEC} sec later..."
+          Astute.logger.warn "Trying to reconnect to message broker. Retry #{DELAY_SEC} sec later..."
           EM.add_timer(DELAY_SEC) { conn.reconnect }
         end
         connection
@@ -103,7 +101,7 @@ module Astute
           if error.reply_code == 406 #PRECONDITION_FAILED
             cleanup_rabbitmq_stuff
           else
-            Astute::Server::AsyncLogger.fatal "Channel error #{error.inspect}"
+            Astute.logger.fatal "Channel error #{error.inspect}"
           end
           sleep DELAY_SEC # avoid race condition
           stop
