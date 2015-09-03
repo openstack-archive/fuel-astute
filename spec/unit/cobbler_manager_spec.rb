@@ -163,6 +163,53 @@ describe Astute::CobblerManager do
 
   end #'edit_nodes'
 
+  describe '#remove_nodes' do
+    before(:each) do
+      cobbler_manager.stubs(:sleep)
+    end
+
+    it 'should try to remove nodes using cobbler engine' do
+      engine.stubs(:system_exists?).returns(true).then.returns(false)
+      cobbler_manager.expects(:find_system_names_by_node_macs)
+      .with(data['nodes'])
+      .returns(data['nodes'].map{|n| n['slave_name']})
+      engine.expects(:remove_system).once
+      engine.expects(:sync).once
+      cobbler_manager.remove_nodes(data['nodes'])
+    end
+    it 'should try to remove nodes three times before giving up' do
+      engine.stubs(:system_exists?).returns(true)
+      cobbler_manager.expects(:find_system_names_by_node_macs)
+      .with(data['nodes'])
+      .returns(data['nodes'].map{|n| n['slave_name']})
+      engine.expects(:remove_system).times(3)
+      engine.expects(:sync).once
+      cobbler_manager.remove_nodes(data['nodes'])
+    end
+    it 'should not try to remove nodes if they do not exist' do
+      engine.stubs(:system_exists?).returns(false)
+      cobbler_manager.expects(:find_system_names_by_node_macs)
+      .with(data['nodes'])
+      .returns(data['nodes'].map{|n| n['slave_name']})
+      engine.expects(:remove_system).never
+      engine.expects(:sync).once
+      cobbler_manager.remove_nodes(data['nodes'])
+    end
+    it 'should try to remove also nodes found by macs' do
+      engine.stubs(:system_exists?).with(data['nodes'][0]['slave_name'])
+      .returns(true).then.returns(false)
+      engine.stubs(:system_exists?).with('node-XXX')
+      .returns(true).then.returns(false)
+      cobbler_manager.expects(:find_system_names_by_node_macs)
+      .with(data['nodes'])
+      .returns(data['nodes'].map{|n| n['slave_name']} + ['node-XXX'])
+      engine.expects(:remove_system).twice
+      engine.expects(:sync).once
+      cobbler_manager.remove_nodes(data['nodes'])
+    end
+
+  end
+
   describe '#reboot_nodes' do
     before(:each) do
       cobbler_manager.stubs(:sleep)
@@ -241,6 +288,32 @@ describe Astute::CobblerManager do
       engine.expects(:system_exists?).with('controller-1').returns(false)
 
       expect(cobbler_manager.get_existent_nodes(data['nodes']))
+        .to eql([])
+    end
+  end #'get_existent_nodes'
+
+  describe '#find_system_names_by_node_macs' do
+    it 'should return cobbler names of those systems that have at least one matching mac address' do
+      engine.expects(:system_by_mac).with('00:00:00:00:00:00').returns({'name' => 'node-XXX'})
+      engine.expects(:system_by_mac).with('00:00:00:00:00:01').returns(nil)
+
+      expect(cobbler_manager.find_system_names_by_node_macs(data['nodes']))
+        .to eql(['node-XXX'])
+    end
+
+    it 'should return uniq list of cobbler names of those systems that have matching mac addresses' do
+      engine.expects(:system_by_mac).with('00:00:00:00:00:00').returns({'name' => 'node-XXX'})
+      engine.expects(:system_by_mac).with('00:00:00:00:00:01').returns({'name' => 'node-XXX'})
+
+      expect(cobbler_manager.find_system_names_by_node_macs(data['nodes']))
+        .to eql(['node-XXX'])
+    end
+
+    it 'should not return nodes that have not matching mac addresses' do
+      engine.expects(:system_by_mac).with('00:00:00:00:00:00').returns(nil)
+      engine.expects(:system_by_mac).with('00:00:00:00:00:01').returns(nil)
+
+      expect(cobbler_manager.find_system_names_by_node_macs(data['nodes']))
         .to eql([])
     end
   end #'get_existent_nodes'

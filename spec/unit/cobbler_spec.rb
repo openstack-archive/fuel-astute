@@ -184,6 +184,20 @@ describe Cobbler do
       cobbler.sync
     end
 
+    it 'items_by_criteria should return list of nodes that match passed criteria' do
+      cobbler = Astute::Provision::Cobbler.new
+      cobbler.remote.expects(:call).with('find_items', 'system', {'mac_address' => '00:00:00:00:00:00'})
+      .returns([{'name' => 'node-XXX'}])
+      expect(cobbler.items_by_criteria('system', {'mac_address' => '00:00:00:00:00:00'})).to eql([{'name' => 'node-XXX'}])
+    end
+
+    it 'system_by_mac should return node that match passed mac address' do
+      cobbler = Astute::Provision::Cobbler.new
+      cobbler.stubs(:items_by_criteria).with('system', {'mac_address' => '00:00:00:00:00:00'})
+      .returns([{'name' => 'node-XXX'}])
+      expect(cobbler.system_by_mac('00:00:00:00:00:00')).to eql({'name' => 'node-XXX'})
+    end
+
     it 'should try sync several time before raise a exception (Net)' do
       remote = mock() do
         stubs(:call).with('sync', 'remotetoken')
