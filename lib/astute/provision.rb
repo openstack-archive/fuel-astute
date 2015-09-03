@@ -43,7 +43,6 @@ module Astute
       result_msg = {'nodes' => []}
       begin
         prepare_nodes(reporter, task_id, engine_attrs, nodes, cobbler)
-
         failed_uids, timeouted_uids = provision_and_watch_progress(reporter,
                                                                     task_id,
                                                                     Array.new(nodes),
