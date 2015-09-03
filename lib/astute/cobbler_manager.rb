@@ -46,22 +46,29 @@ module Astute
       sync
     end
 
-    def remove_nodes(nodes)
-      nodes.each do |node|
-        cobbler_name = node['slave_name']
-        if @engine.system_exists?(cobbler_name)
-          Astute.logger.info("Removing system from cobbler: #{cobbler_name}")
-          @engine.remove_system(cobbler_name)
-          if !@engine.system_exists?(cobbler_name)
-            Astute.logger.info("System has been successfully removed from cobbler: #{cobbler_name}")
-          else
-            Astute.logger.error("Cannot remove node from cobbler: #{cobbler_name}")
-          end
-        else
-          Astute.logger.info("System is not in cobbler: #{cobbler_name}")
+    def remove_nodes(nodes, retries=3, interval=2)
+      nodes_to_remove = nodes.map {|node| node['slave_name']}.uniq
+      error_nodes = nodes_to_remove
+      retries.times do
+        nodes_to_remove.each do |name|
+            if @engine.system_exists?(name)
+              Astute.logger.info("Trying to remove system from cobbler: #{name}")
+              @engine.remove_system(name)
+              error_nodes.delete(name) unless @engine.system_exists?(name)
+            else
+              Astute.logger.info("System is not in cobbler: #{name}")
+              error_nodes.delete(name)
+            end
         end
+        return if error_nodes.empty?
+        sleep(interval) if interval > 0
       end
     ensure
+      if error_nodes.empty?
+        Astute.logger.info("Systems have been successfully removed from cobbler: #{nodes_to_remove}")
+      else
+        Astute.logger.error("Cannot remove nodes from cobbler: #{error_nodes}")
+      end
       sync
     end
 
@@ -145,6 +152,19 @@ module Astute
         end
       end
       existent_nodes
+    end
+
+    def get_mac_duplicate_names(nodes)
+      mac_duplicate_names = []
+      nodes.each do |node|
+        node['interfaces'].each do |iname, ihash|
+            if ihash['mac_address']
+                found_node = @engine.system_by_mac(ihash['mac_address'])
+                mac_duplicate_names << found_node['name'] if found_node
+            end
+        end
+      end
+      mac_duplicate_names.uniq
     end
 
     def sync

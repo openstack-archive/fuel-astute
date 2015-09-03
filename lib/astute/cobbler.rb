@@ -89,6 +89,14 @@ module Astute
         remote.call('has_item', what, name)
       end
 
+      def items_by_criteria(what, criteria)
+        remote.call('find_items', what, criteria)
+      end
+
+      def system_by_mac(mac)
+        items_by_criteria('system', {"mac_address" => mac})[0]
+      end
+
       def system_exists?(name)
         item_exists('system', name)
       end
