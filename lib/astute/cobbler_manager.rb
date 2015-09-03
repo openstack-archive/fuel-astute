@@ -47,18 +47,8 @@ module Astute
     end
 
     def remove_nodes(nodes, retries=3, interval=2)
-      nodes_to_remove = nodes.map {|node| node['slave_name']}
-      Astute.logger.info("List of cobbler systems to remove by their 'slave_name': #{nodes_to_remove}")
-      # NOTE(kozhukalov): We try to find out if there are systems
-      # in the Cobbler with the same MAC addresses. We need to remove
-      # them, otherwise Cobbler is going to throw MAC address duplication
-      # error while trying to add a new node with MAC address which is
-      # already in use.
-      nodes_to_remove_by_mac = find_system_names_by_node_macs(nodes)
-      Astute.logger.info("List of cobbler systems to remove by thier MAC addresses: #{nodes_to_remove_by_mac}")
-      nodes_to_remove += nodes_to_remove_by_mac
-      nodes_to_remove.uniq!
-      Astute.logger.info("Total list of cobbler systems to remove: #{nodes_to_remove}")
+      nodes_to_remove = nodes.map {|node| node['slave_name']}.uniq
+      Astute.logger.info("Total list of nodes to remove: #{nodes_to_remove.pretty_inspect}")
       error_nodes = nodes_to_remove
       retries.times do
         nodes_to_remove.each do |name|
@@ -76,9 +66,9 @@ module Astute
       end
     ensure
       if error_nodes.empty?
-        Astute.logger.info("Systems have been successfully removed from cobbler: #{nodes_to_remove}")
+        Astute.logger.info("Systems have been successfully removed from cobbler: #{nodes_to_remove.pretty_inspect}")
       else
-        Astute.logger.error("Cannot remove nodes from cobbler: #{error_nodes}")
+        Astute.logger.error("Cannot remove nodes from cobbler: #{error_nodes.pretty_inspect}")
       end
       sync
     end
@@ -165,14 +155,21 @@ module Astute
       existent_nodes
     end
 
-    def find_system_names_by_node_macs(nodes)
-      found_systems = []
+    def get_mac_duplicate_names(nodes)
+      mac_duplicate_names = []
       nodes.each do |node|
-        node['interfaces'].each do |iname, ihash|
-          found_systems << @engine.system_by_mac(ihash['mac_address']) if ihash['mac_address']
+        Astute.logger.info("Trying to find MAC duplicates for node #{node['slave_name']}")
+        if node['interfaces']
+          node['interfaces'].each do |iname, ihash|
+            if ihash['mac_address']
+              Astute.logger.info("Trying to find system with MAC: #{ihash['mac_address']}")
+              found_node = @engine.system_by_mac(ihash['mac_address'])
+              mac_duplicate_names << found_node['name'] if found_node
+            end
+          end
         end
       end
-      found_systems.compact.map{|s| s['name']}.uniq
+      mac_duplicate_names.uniq
     end
 
     def sync
