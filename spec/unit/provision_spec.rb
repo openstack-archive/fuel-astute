@@ -364,6 +364,7 @@ describe Astute::Provisioner do
           @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
 
           Astute::CobblerManager.any_instance.stubs(:get_existent_nodes).returns([])
+          Astute::CobblerManager.any_instance.stubs(:get_mac_duplicate_names).returns([])
           @provisioner.stubs(:change_node_type).never
           Astute::NailgunHooks.any_instance.stubs(:process).never
 
@@ -484,6 +485,9 @@ describe Astute::Provisioner do
         Astute::CobblerManager.any_instance.expects(:get_existent_nodes)
           .with(data['nodes'])
           .returns(data['nodes'])
+        Astute::CobblerManager.any_instance.expects(:get_mac_duplicate_names)
+          .with(data['nodes'])
+          .returns([])
         Astute::CobblerManager.any_instance.expects(:add_nodes)
           .with(data['nodes'])
         Astute::CobblerManager.any_instance.expects(:remove_nodes)
@@ -507,6 +511,9 @@ describe Astute::Provisioner do
         @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
 
         Astute::CobblerManager.any_instance.expects(:get_existent_nodes)
+          .with(data['nodes'])
+          .returns([])
+        Astute::CobblerManager.any_instance.expects(:get_mac_duplicate_names)
           .with(data['nodes'])
           .returns([])
         Astute::CobblerManager.any_instance.expects(:remove_nodes)
@@ -555,6 +562,7 @@ describe Astute::Provisioner do
       @provisioner.expects(:unlock_nodes_discovery)
       begin
         @provisioner.stubs(:remove_nodes).returns([])
+        @provisioner.stubs(:prepare_nodes).returns([])
         Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
         @provisioner.stubs(:node_type).returns([])
         @provisioner.stubs(:provision_piece).returns([{'uid' => '1'}])
@@ -596,6 +604,7 @@ describe Astute::Provisioner do
 
     it "unexpecting bootstrap nodes should be ereased and rebooted" do
       Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
+      @provisioner.stubs(:prepare_nodes).returns([])
       @provisioner.stubs(:remove_nodes).returns([])
       Astute.config.provisioning_timeout = 5
       nodes = [
@@ -654,6 +663,7 @@ describe Astute::Provisioner do
     it 'should success if only one node fails' do
       Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
       @provisioner.stubs(:remove_nodes).returns([])
+      @provisioner.stubs(:prepare_nodes).returns([])
       @provisioner.stubs(:unlock_nodes_discovery)
       Astute.config.provisioning_timeout = 5
       Astute.config.max_nodes_to_provision = 2
@@ -699,6 +709,7 @@ describe Astute::Provisioner do
     it 'should fail if node without fault tolerance rule fails' do
       Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
       @provisioner.stubs(:remove_nodes).returns([])
+      @provisioner.stubs(:prepare_nodes).returns([])
       @provisioner.stubs(:unlock_nodes_discovery)
       Astute.config.provisioning_timeout = 5
       Astute.config.max_nodes_to_provision = 2
@@ -745,6 +756,7 @@ describe Astute::Provisioner do
     it 'should fail if node has two roles and fails for one' do
       Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
       @provisioner.stubs(:remove_nodes).returns([])
+      @provisioner.stubs(:prepare_nodes).returns([])
       @provisioner.stubs(:unlock_nodes_discovery)
       Astute.config.provisioning_timeout = 5
       Astute.config.max_nodes_to_provision = 2
@@ -792,6 +804,7 @@ describe Astute::Provisioner do
     it 'should fail if one node fails' do
       Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
       @provisioner.stubs(:remove_nodes).returns([])
+      @provisioner.stubs(:prepare_nodes).returns([])
       Astute.config.provisioning_timeout = 1
       Astute.config.max_nodes_to_provision = 2
       nodes = [
@@ -838,6 +851,7 @@ describe Astute::Provisioner do
     it 'fail on any node if no faul_tolerance rules are provided' do
       Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
       @provisioner.stubs(:remove_nodes).returns([])
+      @provisioner.stubs(:prepare_nodes).returns([])
       Astute.config.provisioning_timeout = 5
       Astute.config.max_nodes_to_provision = 2
       nodes = [

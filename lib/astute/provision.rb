@@ -43,7 +43,6 @@ module Astute
       result_msg = {'nodes' => []}
       begin
         prepare_nodes(reporter, task_id, engine_attrs, nodes, cobbler)
-
         failed_uids, timeouted_uids = provision_and_watch_progress(reporter,
                                                                     task_id,
                                                                     Array.new(nodes),
@@ -543,6 +542,16 @@ module Astute
       end
 
       cobbler.remove_nodes(nodes)
+
+      # NOTE(kozhukalov): We try to find out if there are systems
+      # in the Cobbler with the same MAC addresses. If so, Cobbler is going
+      # to throw MAC address duplication error. We need to remove these
+      # nodes.
+      mac_duplicate_names = cobbler.get_mac_duplicate_names(nodes)
+      if mac_duplicate_names.present?
+        cobbler.remove_nodes(mac_duplicate_names.map {|n| {'slave_name' => n}})
+      end
+
       cobbler.add_nodes(nodes)
     end
 
