@@ -147,6 +147,19 @@ module Astute
       existent_nodes
     end
 
+    def get_mac_duplicate_names(nodes)
+      mac_duplicate_names = []
+      nodes.each do |node|
+        node['interfaces'].each do |iname, ihash|
+            if ihash['mac_address']
+                found_node = @engine.system_by_mac(ihash['mac_address'])
+                mac_duplicate_names << found_node['name'] if found_node
+            end
+        end
+      end
+      mac_duplicate_names.uniq
+    end
+
     def sync
       Astute.logger.debug("Cobbler syncing")
       @engine.sync

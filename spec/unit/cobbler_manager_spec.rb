@@ -245,4 +245,30 @@ describe Astute::CobblerManager do
     end
   end #'get_existent_nodes'
 
+  describe '#get_mac_duplicate_names' do
+    it 'should return cobbler names of those systems that have at least one matching mac address' do
+      engine.expects(:system_by_mac).with('00:00:00:00:00:00').returns({'name' => 'node-XXX'})
+      engine.expects(:system_by_mac).with('00:00:00:00:00:01').returns(nil)
+
+      expect(cobbler_manager.get_mac_duplicate_names(data['nodes']))
+        .to eql(['node-XXX'])
+    end
+
+    it 'should return uniq list of cobbler names of those systems that have matching mac addresses' do
+      engine.expects(:system_by_mac).with('00:00:00:00:00:00').returns({'name' => 'node-XXX'})
+      engine.expects(:system_by_mac).with('00:00:00:00:00:01').returns({'name' => 'node-XXX'})
+
+      expect(cobbler_manager.get_mac_duplicate_names(data['nodes']))
+        .to eql(['node-XXX'])
+    end
+
+    it 'should not return nodes that have not matching mac addresses' do
+      engine.expects(:system_by_mac).with('00:00:00:00:00:00').returns(nil)
+      engine.expects(:system_by_mac).with('00:00:00:00:00:01').returns(nil)
+
+      expect(cobbler_manager.get_mac_duplicate_names(data['nodes']))
+        .to eql([])
+    end
+  end #'get_existent_nodes'
+
 end

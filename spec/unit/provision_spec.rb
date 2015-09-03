@@ -364,6 +364,7 @@ describe Astute::Provisioner do
           @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
 
           Astute::CobblerManager.any_instance.stubs(:get_existent_nodes).returns([])
+          Astute::CobblerManager.any_instance.stubs(:get_mac_duplicate_names).returns([])
           @provisioner.stubs(:change_node_type).never
           Astute::NailgunHooks.any_instance.stubs(:process).never
 
@@ -484,6 +485,9 @@ describe Astute::Provisioner do
         Astute::CobblerManager.any_instance.expects(:get_existent_nodes)
           .with(data['nodes'])
           .returns(data['nodes'])
+        Astute::CobblerManager.any_instance.expects(:get_mac_duplicate_names)
+          .with(data['nodes'])
+          .returns([])
         Astute::CobblerManager.any_instance.expects(:add_nodes)
           .with(data['nodes'])
         Astute::CobblerManager.any_instance.expects(:remove_nodes)
@@ -507,6 +511,9 @@ describe Astute::Provisioner do
         @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
 
         Astute::CobblerManager.any_instance.expects(:get_existent_nodes)
+          .with(data['nodes'])
+          .returns([])
+        Astute::CobblerManager.any_instance.expects(:get_mac_duplicate_names)
           .with(data['nodes'])
           .returns([])
         Astute::CobblerManager.any_instance.expects(:remove_nodes)
