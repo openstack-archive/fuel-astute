@@ -70,27 +70,27 @@ module Astute
       def run_server
         AMQP.logging = true
         AMQP.connect(connection_options) do |connection|
-          @connection = configure_connection(connection)
+          connection.on_error(&method(:on_connection_error))
+          connection.on_tcp_connection_loss(&method(:on_tcp_connection_loss))
+          connection.on_connection_interruption(&method(:on_connection_interruption))
+          log_connection_success(connection)
 
+          @connection = connection
           @channel = create_channel(@connection)
           @exchange = @channel.topic(Astute.config.broker_exchange, :durable => true)
+
+          @exchange.on_connection_interruption do |ex|
+            Astute.logger.warn "Exchange #{ex.name} detected connection interruption"
+          end
+
           @service_channel = create_channel(@connection, prefetch=false)
           @service_exchange = @service_channel.fanout(Astute.config.broker_service_exchange, :auto_delete => true)
-
           @producer = Astute::Server::Producer.new(@exchange)
           @delegate = Astute.config.delegate || Astute::Server::Dispatcher.new(@producer)
           @server = Astute::Server::Server.new(@channel, @exchange, @delegate, @producer, @service_channel, @service_exchange)
 
           @server.run
         end
-      end
-
-      def configure_connection(connection)
-        connection.on_tcp_connection_loss do |conn, settings|
-          Astute.logger.warn "Trying to reconnect to message broker. Retry #{DELAY_SEC} sec later..."
-          EM.add_timer(DELAY_SEC) { conn.reconnect }
-        end
-        connection
       end
 
       def create_channel(connection, prefetch=true)
@@ -106,6 +106,11 @@ module Astute
           sleep DELAY_SEC # avoid race condition
           stop
         end
+
+        channel.on_connection_interruption do |ch|
+          Astute.logger.warn "Channel #{ch.id} detected connection interruption"
+        end
+
         channel
       end
 
@@ -150,6 +155,54 @@ module Astute
                                "http code: #{response.code}, message: #{response.message},"\
                                "body #{response.body}"
         end
+      end
+
+      def on_connection_error(connection, connection_close)
+        # Connection-level exceptions are rare and may indicate a serious issue
+        # with a client library or in-flight data corruption. The AMQP 0.9.1
+        # specification mandates that a connection that has errored cannot be
+        # used any more and must be closed. In any case, your application should
+        # be prepared to handle this kind of error.
+        Astute.logger.error "Connection error. Reply code = #{connection_close.reply_code}, reply text = #{connection_close.reply_text}"
+        if connection_close.reply_code == 320
+          Astute.logger.info "Detected server shutdown. Setting up a periodic reconnection timer..."
+          connection.periodically_reconnect(30)   # every 30 seconds
+        else
+          Astute.logger.fatal "Connection error. Bailing out!"
+          raise connection_close.reply_text
+        end
+      end
+
+      def on_tcp_connection_loss(connection, settings)
+        # A callback that will be executed once when TCP connection fails.
+        # It is possible that reconnection attempts will not succeed immediately,
+        # so there will be subsequent failures. To react to those see
+        # #on_connection_interruption
+        Astute.logger.warn "TCP connection loss. Reconnecting..."
+        connection.periodically_reconnect(DELAY_SEC)
+      end
+
+      def on_connection_interruption(connection)
+        # Note that AMQP::Session#on_connection_interruption callback is called
+        # before this event is propagated to channels, queues and so on.
+        Astute.logger.warn "Connection detected connection interruption. Reconnecting..."
+        connection.periodically_reconnect(DELAY_SEC)
+      end
+
+      def log_connection_success(connection)
+        Astute.logger.info "Connected to #{connection.hostname}:#{connection.port}/#{connection.vhost}"
+        Astute.logger.debug "Client properties:"
+        Astute.logger.debug connection.client_properties.inspect
+        Astute.logger.debug "Server properties:"
+        Astute.logger.debug connection.server_properties.inspect
+        Astute.logger.debug "Server capabilities:"
+        Astute.logger.debug connection.server_capabilities.inspect
+        Astute.logger.debug "Broker product: #{connection.broker.product}, version: #{connection.broker.version}"
+        Astute.logger.debug "Connected to RabbitMQ? #{connection.broker.rabbitmq?}"
+        Astute.logger.debug "Broker supports publisher confirms? #{connection.broker.supports_publisher_confirmations?}"
+        Astute.logger.debug "Broker supports basic.nack? #{connection.broker.supports_basic_nack?}"
+        Astute.logger.debug "Broker supports consumer cancel notifications? #{connection.broker.supports_consumer_cancel_notifications?}"
+        Astute.logger.debug "Broker supports exchange-to-exchange bindings? #{connection.broker.supports_exchange_to_exchange_bindings?}"
       end
 
     end
