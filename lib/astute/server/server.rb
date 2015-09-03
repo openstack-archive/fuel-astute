@@ -53,7 +53,7 @@ module Astute
       def main_worker
         @consumer = AMQP::Consumer.new(@channel, @queue, consumer_tag=nil, exclusive=false)
         @consumer.on_cancel do |basic_cancel|
-          Astute::Server::AsyncLogger.debug("Received cancel notification from in main worker.")
+          Astute.logger.debug("Received cancel notification from in main worker.")
           @exchange.auto_recover
           @service_exchange.auto_recover
           @queue.auto_recover
@@ -61,11 +61,11 @@ module Astute
         end
         @consumer.on_delivery do |metadata, payload|
           if @main_work_thread.nil? || !@main_work_thread.alive?
-            Astute::Server::AsyncLogger.debug "Process message from worker queue: #{payload.inspect}"
+            Astute.logger.debug "Process message from worker queue: #{payload.inspect}"
             metadata.ack
             perform_main_job(metadata, payload)
           else
-            Astute::Server::AsyncLogger.debug "Requeue message because worker is busy: #{payload.inspect}"
+            Astute.logger.debug "Requeue message because worker is busy: #{payload.inspect}"
             # Avoid throttle by consume/reject cycle if only one worker is running
             EM.add_timer(2) { metadata.reject(:requeue => true) }
           end
@@ -75,7 +75,7 @@ module Astute
 
       def service_worker
         @service_queue.subscribe do |_, payload|
-          Astute::Server::AsyncLogger.debug "Process message from service queue: #{payload.inspect}"
+          Astute.logger.debug "Process message from service queue: #{payload.inspect}"
           perform_service_job(nil, payload)
         end
       end
