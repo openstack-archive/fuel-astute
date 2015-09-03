@@ -47,29 +47,18 @@ module Astute
     end
 
     def remove_nodes(nodes, retries=3, interval=2)
-      nodes_to_remove = nodes.map {|node| node['slave_name']}
-      Astute.logger.info("List of cobbler systems to remove by their 'slave_name': #{nodes_to_remove}")
-      # NOTE(kozhukalov): We try to find out if there are systems
-      # in the Cobbler with the same MAC addresses. We need to remove
-      # them, otherwise Cobbler is going to throw MAC address duplication
-      # error while trying to add a new node with MAC address which is
-      # already in use.
-      nodes_to_remove_by_mac = find_system_names_by_node_macs(nodes)
-      Astute.logger.info("List of cobbler systems to remove by thier MAC addresses: #{nodes_to_remove_by_mac}")
-      nodes_to_remove += nodes_to_remove_by_mac
-      nodes_to_remove.uniq!
-      Astute.logger.info("Total list of cobbler systems to remove: #{nodes_to_remove}")
+      nodes_to_remove = nodes.map {|node| node['slave_name']}.uniq
       error_nodes = nodes_to_remove
       retries.times do
         nodes_to_remove.each do |name|
-          if @engine.system_exists?(name)
-            Astute.logger.info("Trying to remove system from cobbler: #{name}")
-            @engine.remove_system(name)
-            error_nodes.delete(name) unless @engine.system_exists?(name)
-          else
-            Astute.logger.info("System is not in cobbler: #{name}")
-            error_nodes.delete(name)
-          end
+            if @engine.system_exists?(name)
+              Astute.logger.info("Trying to remove system from cobbler: #{name}")
+              @engine.remove_system(name)
+              error_nodes.delete(name) unless @engine.system_exists?(name)
+            else
+              Astute.logger.info("System is not in cobbler: #{name}")
+              error_nodes.delete(name)
+            end
         end
         return if error_nodes.empty?
         sleep(interval) if interval > 0
@@ -165,14 +154,17 @@ module Astute
       existent_nodes
     end
 
-    def find_system_names_by_node_macs(nodes)
-      found_systems = []
+    def get_mac_duplicate_names(nodes)
+      mac_duplicate_names = []
       nodes.each do |node|
         node['interfaces'].each do |iname, ihash|
-          found_systems << @engine.system_by_mac(ihash['mac_address']) if ihash['mac_address']
+            if ihash['mac_address']
+                found_node = @engine.system_by_mac(ihash['mac_address'])
+                mac_duplicate_names << found_node['name'] if found_node
+            end
         end
       end
-      found_systems.compact.map{|s| s['name']}.uniq
+      mac_duplicate_names.uniq
     end
 
     def sync
