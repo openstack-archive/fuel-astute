@@ -76,7 +76,7 @@ module Astute
         end
         number = pattern_spec['expected_line_number']
         unless number
-          Astute.logger.warn("Wrong pattern #{pattern_spec.inspect} defined for calculating progress via log.")
+          Astute.logger.warn("Wrong pattern\n#{pattern_spec.pretty_inspect} defined for calculating progress via log.")
           return 0
         end
         progress = counter.to_f / number
@@ -103,7 +103,7 @@ module Astute
         separator = pattern_spec['separator']
         components_list = pattern_spec['components_list']
         unless components_list
-          Astute.logger.warn("Wrong pattern #{pattern_spec.inspect} defined for calculating progress via logs.")
+          Astute.logger.warn("Wrong pattern\n#{pattern_spec.pretty_inspect} defined for calculating progress via logs.")
           return 0
         end
 

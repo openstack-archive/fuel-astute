@@ -101,7 +101,7 @@ module Astute
           if error.reply_code == 406 #PRECONDITION_FAILED
             cleanup_rabbitmq_stuff
           else
-            Astute.logger.fatal "Channel error #{error.inspect}"
+            Astute.logger.fatal "Channel error\n#{error.pretty_inspect}"
           end
           sleep DELAY_SEC # avoid race condition
           stop

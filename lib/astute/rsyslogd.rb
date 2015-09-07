@@ -32,7 +32,7 @@ module Astute
             Astute.logger.error("#{ctx.task_id}: #{msg}")
         rescue => e
             msg = "Exception occured during sending SIGHUP to rsyslogd, message: #{e.message} \
-    trace: #{e.backtrace.inspect}"
+    trace:\n#{e.backtrace.pretty_inspect}"
             Astute.logger.error("#{ctx.task_id}: #{msg}")
         end
     end

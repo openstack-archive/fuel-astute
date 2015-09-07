@@ -220,7 +220,7 @@ module Astute
           node_pattern_spec['file_pos'] = fo.pos
         end
         unless progress
-          Astute.logger.warn("Wrong pattern #{node_pattern_spec.inspect} defined for calculating progress via logs.")
+          Astute.logger.warn("Wrong pattern\n#{node_pattern_spec.pretty_inspect}\ndefined for calculating progress via logs.")
           return 0
         end
         progress

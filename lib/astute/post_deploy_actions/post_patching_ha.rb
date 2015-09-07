@@ -23,7 +23,7 @@ module Astute
       return if controller_nodes.empty?
 
       Astute.logger.info "Starting unmigration of pacemaker services from " \
-        "nodes #{controller_nodes.inspect}"
+        "nodes\n#{controller_nodes.pretty_inspect}"
 
       Astute::Pacemaker.commands(action='start', deployment_info).each do |pcmk_unban_cmd|
         response = run_shell_command(context, controller_nodes, pcmk_unban_cmd)

@@ -56,7 +56,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
     end
 
     Astute.logger.info "#{@ctx.task_id}: Finished deployment of nodes" \
-      " => roles: #{@nodes_roles.inspect}"
+      " => roles: #{@nodes_roles.pretty_inspect}"
   end
 
   def puppet_task(node_id, task)
