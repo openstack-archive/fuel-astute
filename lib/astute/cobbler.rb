@@ -23,7 +23,7 @@ module Astute
       attr_reader :remote
 
       def initialize(o={})
-        Astute.logger.debug("Cobbler options: #{o.inspect}")
+        Astute.logger.debug("Cobbler options:\n#{o.pretty_inspect}")
 
         if (match = /^http:\/\/([^:]+?):?(\d+)?(\/.+)/.match(o['url']))
           host = match[1]
@@ -53,7 +53,7 @@ module Astute
         cobsh = Cobsh.new(data.merge({'what' => what, 'name' => name}))
         cobblerized = cobsh.cobblerized
 
-        Astute.logger.debug("Creating/editing item from hash: #{cobsh.inspect}")
+        Astute.logger.debug("Creating/editing item from hash:\n#{cobsh.pretty_inspect}")
         remove_item(what, name) if options[:item_preremove]
         # get existent item id or create new one
         item_id = get_item_id(what, name)
@@ -214,7 +214,7 @@ module Astute
       }
 
       def initialize(h)
-        Astute.logger.debug("Cobsh is initialized with: #{h.inspect}")
+        Astute.logger.debug("Cobsh is initialized with:\n#{h.pretty_inspect}")
         raise CobblerError, "Cobbler hash must have 'name' key" unless h.has_key? 'name'
         raise CobblerError, "Cobbler hash must have 'what' key" unless h.has_key? 'what'
         raise CobblerError, "Unsupported 'what' value" unless FIELDS.has_key? h['what']

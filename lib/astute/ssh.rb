@@ -49,17 +49,17 @@ module Astute
       answer = {'nodes' => to_report_format(ready_nodes, nodes)}
       if inaccessible_nodes.present?
         answer.merge!({'inaccessible_nodes' => to_report_format(inaccessible_nodes, nodes)})
-        Astute.logger.warn "#{ctx.task_id}: Running shell command on nodes #{nodes_uids.inspect} finished " \
-                           "with errors. Nodes #{answer['inaccessible_nodes'].inspect} are inaccessible"
+        Astute.logger.warn "#{ctx.task_id}: Running shell command on nodes\n#{nodes_uids.pretty_inspect}\nfinished " \
+                           "with errors. Nodes\n#{answer['inaccessible_nodes'].pretty_inspect}\nare inaccessible"
       end
 
       if error_nodes.present?
         answer.merge!({'status' => 'error', 'error_nodes' => to_report_format(error_nodes, nodes)})
 
-        Astute.logger.error "#{ctx.task_id}: Running shell command on nodes #{nodes_uids.inspect} finished " \
-                            "with errors: #{answer['error_nodes'].inspect}"
+        Astute.logger.error "#{ctx.task_id}: Running shell command on nodes\n#{nodes_uids.pretty_inspect}\nfinished " \
+                            "with errors:\n#{answer['error_nodes'].pretty_inspect}"
       end
-      Astute.logger.info "#{ctx.task_id}: Finished running shell command: #{nodes_uids.inspect}"
+      Astute.logger.info "#{ctx.task_id}: Finished running shell command:\n#{nodes_uids.pretty_inspect}"
 
       answer
     end

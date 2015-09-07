@@ -194,7 +194,7 @@ module Astute
         # Pass nodes because logs calculation needs IP address of node, not just uid
         nodes_progress = @ctx.deploy_log_parser.progress_calculate([@node['uid']], [@node])
         if nodes_progress.present?
-          Astute.logger.debug "Got progress for nodes: #{nodes_progress.inspect}"
+          Astute.logger.debug "Got progress for nodes:\n#{nodes_progress.pretty_inspect}"
 
           # Nodes with progress are running, so they are not included in nodes_to_report yet
           nodes_progress.map! { |x| x.merge!('status' => 'deploying', 'role' => @node['role']) }

@@ -40,7 +40,7 @@ module Astute
       end
 
       def report(data)
-        Astute.logger.debug("Data received by DeploymentProxyReporter to report it up: #{data.inspect}")
+        Astute.logger.debug("Data received by DeploymentProxyReporter to report it up:\n#{data.pretty_inspect}")
         report_new_data(data)
       end
 
@@ -56,7 +56,7 @@ module Astute
           data['nodes'] = nodes_to_report
         end
         data.merge!(get_overall_status(data))
-        Astute.logger.debug("Data send by DeploymentProxyReporter to report it up: #{data.inspect}")
+        Astute.logger.debug("Data send by DeploymentProxyReporter to report it up:\n#{data.pretty_inspect}")
         @up_reporter.report(data)
       end
 
@@ -67,7 +67,7 @@ module Astute
 
         if status == 'ready' && error_nodes.any?
           status = 'error'
-          msg = "Some error occured on nodes #{error_nodes.inspect}"
+          msg = "Some error occured on nodes\n#{error_nodes.pretty_inspect}"
         end
         progress = data['progress']
 
@@ -115,7 +115,7 @@ module Astute
         err << "Node uid is not provided" unless node['uid']
 
         if err.any?
-          msg = "Validation of node: #{node.inspect} for report failed: #{err.join('; ')}."
+          msg = "Validation of node:\n#{node.pretty_inspect} for report failed: #{err.join('; ')}."
           Astute.logger.error(msg)
           raise msg
         end
@@ -179,17 +179,17 @@ module Astute
         if node['progress']
           if node['progress'] > 100
             Astute.logger.warn("Passed report for node with progress > 100: "\
-                              "#{node.inspect}. Adjusting progress to 100.")
+                              "#{node.pretty_inspect}. Adjusting progress to 100.")
             node['progress'] = 100
           elsif node['progress'] < 0
             Astute.logger.warn("Passed report for node with progress < 0: "\
-                              "#{node.inspect}. Adjusting progress to 0.")
+                              "#{node.pretty_inspect}. Adjusting progress to 0.")
             node['progress'] = 0
           end
         end
         if node['status'] && ['provisioned', 'ready'].include?(node['status']) && node['progress'] != 100
           Astute.logger.warn("In #{node['status']} state node should have progress 100, "\
-                              "but node passed: #{node.inspect}. Setting it to 100")
+                              "but node passed:\n#{node.pretty_inspect}. Setting it to 100")
           node['progress'] = 100
         end
       end
@@ -234,7 +234,7 @@ module Astute
       end
 
       def report(data)
-        Astute.logger.debug("Data received by ProvisiningProxyReporter to report it up: #{data.inspect}")
+        Astute.logger.debug("Data received by ProvisiningProxyReporter to report it up:\n#{data.pretty_inspect}")
         report_new_data(data)
       end
 
@@ -249,7 +249,7 @@ module Astute
           update_saved_nodes(nodes_to_report)
           data['nodes'] = nodes_to_report
         end
-        Astute.logger.debug("Data send by DeploymentProxyReporter to report it up: #{data.inspect}")
+        Astute.logger.debug("Data send by DeploymentProxyReporter to report it up:\n#{data.pretty_inspect}")
         @up_reporter.report(data)
       end
 
