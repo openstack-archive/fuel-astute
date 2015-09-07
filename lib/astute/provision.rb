@@ -51,7 +51,7 @@ module Astute
                                                                     provision_method,
                                                                     fault_tolerance)
       rescue => e
-        Astute.logger.error("Error occured while provisioning: #{e.inspect}")
+        Astute.logger.error("Error occured while provisioning:\n#{e.pretty_inspect}")
         reporter.report({
             'status' => 'error',
             'error' => e.message,

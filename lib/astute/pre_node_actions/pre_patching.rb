@@ -27,7 +27,7 @@ module Astute
 
       Astute.logger.info "Starting removal of error-prone packages"
       Astute.logger.info "Executing command #{remove_cmd}"
-      Astute.logger.info "On nodes #{nodes.inspect}"
+      Astute.logger.info "On nodes\n#{nodes.pretty_inspect}"
 
       response = run_shell_command(context, nodes, remove_cmd, 600)
 

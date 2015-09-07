@@ -33,7 +33,7 @@ module Astute
       controller_nodes = c_deployment_info.map{ |n| n['uid'] }
 
       Astute.logger.info "Starting migration of pacemaker services from " \
-        "nodes #{controller_nodes.inspect}"
+        "nodes\n#{controller_nodes.pretty_inspect}"
 
       Astute::Pacemaker.commands(action='stop', c_deployment_info).each do |pcmk_ban_cmd|
         response = run_shell_command(context, controller_nodes, pcmk_ban_cmd)

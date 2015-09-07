@@ -61,11 +61,11 @@ module Astute
         end
         @consumer.on_delivery do |metadata, payload|
           if @main_work_thread.nil? || !@main_work_thread.alive?
-            Astute.logger.debug "Process message from worker queue: #{payload.inspect}"
+            Astute.logger.debug "Process message from worker queue:\n#{payload.pretty_inspect}"
             metadata.ack
             perform_main_job(metadata, payload)
           else
-            Astute.logger.debug "Requeue message because worker is busy: #{payload.inspect}"
+            Astute.logger.debug "Requeue message because worker is busy:\n#{payload.pretty_inspect}"
             # Avoid throttle by consume/reject cycle if only one worker is running
             EM.add_timer(2) { metadata.reject(:requeue => true) }
           end
@@ -75,7 +75,7 @@ module Astute
 
       def service_worker
         @service_queue.subscribe do |_, payload|
-          Astute.logger.debug "Process message from service queue: #{payload.inspect}"
+          Astute.logger.debug "Process message from service queue:\n#{payload.pretty_inspect}"
           perform_service_job(nil, payload)
         end
       end
@@ -123,7 +123,7 @@ module Astute
       end
 
       def dispatch_message(data, service_data=nil)
-        Astute.logger.debug "Dispatching message: #{data.inspect}"
+        Astute.logger.debug "Dispatching message:\n#{data.pretty_inspect}"
 
         if Astute.config.fake_dispatch
           Astute.logger.debug "Fake dispatch"
@@ -157,12 +157,12 @@ module Astute
       end
 
       def parse_data(data)
-        Astute.logger.debug "Got message with payload #{data.inspect}"
+        Astute.logger.debug "Got message with payload\n#{data.pretty_inspect}"
         messages = nil
         begin
           messages = JSON.load(data)
         rescue => e
-          Astute.logger.error "Error deserializing payload: #{e.message}, trace: #{e.backtrace.inspect}"
+          Astute.logger.error "Error deserializing payload: #{e.message}, trace:\n#{e.backtrace.pretty_inspect}"
         end
         messages.is_a?(Array) ? messages : [messages]
       end
@@ -188,7 +188,7 @@ module Astute
 
             return_results(message, err_msg)
           rescue => ex
-            Astute.logger.debug "Failed to abort '#{message['method']}': #{ex.inspect}"
+            Astute.logger.debug "Failed to abort '#{message['method']}':\n#{ex.pretty_inspect}"
           end
         end
       end
