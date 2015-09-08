@@ -1,3 +1,9 @@
+astute (8.0.0-1) trusty; urgency=low
+
+  * Update version to 8.0.0
+
+ -- Vladimir Sharshov <vsharshov@mirantis.com>  Fri, 28 Aug 2015 13:30:00 +0300
+
 astute (7.0.0-1) trusty; urgency=low
 
   * Update version to 7.0.0
@@ -26,4 +32,4 @@ astute (0.0.1) unstable; urgency=low
 
   * Initial release.
 
- -- Mirantis Product <product@mirantis.com>  Tue, 20 Aug 2013 22:20:46 +0400 
+ -- Mirantis Product <product@mirantis.com>  Tue, 20 Aug 2013 22:20:46 +0400
