@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Code-Review+1: Vladimir Kozhukalov <vkozhukalov@mirantis.com>
+Code-Review+1: Evgeniy L <eli@mirantis.com>
+Code-Review+2: Dmitry Pyzhov <dpyzhov+gerrit@mirantis.com>
+Workflow+1: Dmitry Pyzhov <dpyzhov+gerrit@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+1: Aleksandra Fedorova <afedorova@mirantis.com>
+Code-Review+1: Sergey Kulanov <skulanov@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 08 Sep 2015 15:14:53 +0000
+Reviewed-on: https://review.openstack.org/218270
+Project: stackforge/fuel-astute
+Branch: refs/heads/master
