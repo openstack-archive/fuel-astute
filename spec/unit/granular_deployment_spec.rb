@@ -88,7 +88,8 @@ describe "Granular deployment engine" do
         "puppet_manifest" =>  "cinder_glusterfs.pp",
         "puppet_modules" =>  "modules",
         "cwd" => "/etc/fuel/plugins/plugin_name-1.0",
-        "timeout" =>  42
+        "timeout" =>  42,
+        "retries" => 123
       }
     }
   end
@@ -377,5 +378,20 @@ describe "Granular deployment engine" do
     end
 
   end #deploy_nodes
+
+  describe '#puppet_hook' do
+    it 'should use retries from task parameters' do
+      deploy_engine.instance_variable_set(:@nodes_by_uid, {})
+      task = deploy_engine.puppet_task(1, puppet_hook)
+      expect(task.instance_variable_get(:@retries)).to eql(puppet_hook['parameters']['retries'])
+    end
+
+    it 'should use default retries if not provided' do
+      puppet_hook['parameters'].delete('retries')
+      deploy_engine.instance_variable_set(:@nodes_by_uid, {})
+      task = deploy_engine.puppet_task(1, puppet_hook)
+      expect(task.instance_variable_get(:@retries)).to eql(Astute.config.puppet_retries)
+    end
+  end
 
 end # 'describe'
