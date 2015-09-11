@@ -164,27 +164,40 @@ describe Astute::CobblerManager do
   end #'edit_nodes'
 
   describe '#remove_nodes' do
+    nodes = [
+             {"slave_name" => "node-1"},
+             {"slave_name" => "node-2"},
+             {"slave_name" => "node-3"},
+            ]
+    system_exists_return_seq = [true, false, true, false, true, false]
+    system_remove_with_seq = ["node-1", "node-2", "node-3"]
     before(:each) do
       cobbler_manager.stubs(:sleep)
     end
-
     it 'should try to remove nodes using cobbler engine' do
-      engine.stubs(:system_exists?).returns(true).then.returns(false)
-      engine.expects(:remove_system).once
+      engine.stubs(:system_exists?).returns(*system_exists_return_seq)
+      engine.expects(:remove_system).times(3)
       engine.expects(:sync).once
-      cobbler_manager.remove_nodes(data['nodes'])
+      cobbler_manager.remove_nodes(nodes)
     end
     it 'should try to remove nodes three times before giving up' do
       engine.stubs(:system_exists?).returns(true)
-      engine.expects(:remove_system).times(3)
+      engine.expects(:remove_system).times(9)
       engine.expects(:sync).once
-      cobbler_manager.remove_nodes(data['nodes'])
+      cobbler_manager.remove_nodes(nodes)
     end
     it 'should not try to remove nodes if they do not exist' do
       engine.stubs(:system_exists?).returns(false)
       engine.expects(:remove_system).never
       engine.expects(:sync).once
-      cobbler_manager.remove_nodes(data['nodes'])
+      cobbler_manager.remove_nodes(nodes)
+    end
+    it 'should try to remove uniq list of nodes' do
+      nodes << {"slave_name" => "node-1"}
+      engine.stubs(:system_exists?).returns(system_exists_return_seq)
+      engine.expects(:remove_system).times(9)
+      engine.expects(:sync).once
+      cobbler_manager.remove_nodes(nodes)
     end
   end
 
