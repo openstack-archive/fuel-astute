@@ -49,27 +49,22 @@ module Astute
     def remove_nodes(nodes, retries=3, interval=2)
       nodes_to_remove = nodes.map {|node| node['slave_name']}.uniq
       Astute.logger.info("Total list of nodes to remove: #{nodes_to_remove.pretty_inspect}")
-      error_nodes = nodes_to_remove
       retries.times do
-        nodes_to_remove.each do |name|
-          if @engine.system_exists?(name)
+        nodes_to_remove.select! do |name|
+          unless @engine.system_exists?(name)
+            Astute.logger.info("System is not in cobbler: #{name}")
+            next
+          else
             Astute.logger.info("Trying to remove system from cobbler: #{name}")
             @engine.remove_system(name)
-            error_nodes.delete(name) unless @engine.system_exists?(name)
-          else
-            Astute.logger.info("System is not in cobbler: #{name}")
-            error_nodes.delete(name)
           end
+          @engine.system_exists?(name)
         end
-        return if error_nodes.empty?
+        return if nodes_to_remove.empty?
         sleep(interval) if interval > 0
       end
     ensure
-      if error_nodes.empty?
-        Astute.logger.info("Systems have been successfully removed from cobbler: #{nodes_to_remove.pretty_inspect}")
-      else
-        Astute.logger.error("Cannot remove nodes from cobbler: #{error_nodes.pretty_inspect}")
-      end
+      Astute.logger.error("Cannot remove nodes from cobbler: #{nodes_to_remove.pretty_inspect}") if nodes_to_remove.present?
       sync
     end
 
