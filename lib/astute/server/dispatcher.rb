@@ -43,7 +43,7 @@ module Astute
 
       def provision(data, provision_method)
 
-        Astute.logger.info("'provision' method called with data: #{data.inspect}")
+        Astute.logger.info("'provision' method called with data:\n#{data.pretty_inspect}")
 
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         begin
@@ -63,7 +63,7 @@ module Astute
       end
 
       def deploy(data)
-        Astute.logger.info("'deploy' method called with data: #{data.inspect}")
+        Astute.logger.info("'deploy' method called with data:\n#{data.pretty_inspect}")
 
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
 
@@ -84,7 +84,7 @@ module Astute
       end
 
       def granular_deploy(data)
-        Astute.logger.info("'granular_deploy' method called with data: #{data.inspect}")
+        Astute.logger.info("'granular_deploy' method called with data:\n#{data.pretty_inspect}")
 
         reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
         begin
@@ -197,7 +197,7 @@ module Astute
       #
 
       def stop_deploy_task(data, service_data)
-        Astute.logger.debug("'stop_deploy_task' service method called with data: #{data.inspect}")
+        Astute.logger.debug("'stop_deploy_task' service method called with data:\n#{data.pretty_inspect}")
         target_task_uuid = data['args']['stop_task_uuid']
         task_uuid = data['args']['task_uuid']
 
@@ -224,7 +224,7 @@ module Astute
         task_uuid = data['args']['task_uuid']
 
         new_task_data = data_for_rm_nodes(data)
-        Astute.logger.info("Replace running task #{target_task_uuid} to new #{task_uuid} with data: #{new_task_data.inspect}")
+        Astute.logger.info("Replace running task #{target_task_uuid} to new #{task_uuid} with data:\n#{new_task_data.pretty_inspect}")
         service_data[:tasks_queue].replace_task(target_task_uuid, new_task_data)
       end
 

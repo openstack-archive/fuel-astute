@@ -101,13 +101,13 @@ describe Astute::NodesRemover do
       ]
     end
 
-    it 'should infrom about error' do
+    it 'should inform about error' do
       expect(Astute::NodesRemover.new(ctx, nodes).remove).to eq(
         { "nodes"=>[],
           "status" => "error",
           "error_nodes" => [
-          {"uid"=>"1", "error"=>"RPC agent 'erase_node' failed. Result: {:sender=>\"1\", :statuscode=>1, :data=>{:rebooted=>false}}"},
-          {"uid"=>"2", "error"=>"RPC agent 'erase_node' failed. Result: {:sender=>\"2\", :statuscode=>1, :data=>{:rebooted=>false}}"}
+          {"uid"=>"1", "error"=>"RPC agent 'erase_node' failed. Result:\n{:sender=>\"1\", :statuscode=>1, :data=>{:rebooted=>false}}\n"},
+          {"uid"=>"2", "error"=>"RPC agent 'erase_node' failed. Result:\n{:sender=>\"2\", :statuscode=>1, :data=>{:rebooted=>false}}\n"}
           ]
         }
       )
@@ -154,7 +154,7 @@ describe Astute::NodesRemover do
       ]
     end
 
-    it 'should infrom about error' do
+    it 'should inform about error' do
       expect(Astute::NodesRemover.new(ctx, nodes, reboot=true).remove).to eq(
         { "nodes"=>[],
           "status" => "error",

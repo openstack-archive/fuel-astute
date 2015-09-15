@@ -65,7 +65,7 @@ module Astute
       net_probe.discover(:nodes => uids)
       stats = net_probe.get_probing_info
       result = format_result(stats)
-      Astute.logger.debug "#{ctx.task_id}: Network checking is done. Results: #{result.inspect}"
+      Astute.logger.debug "#{ctx.task_id}: Network checking is done. Results:\n#{result.pretty_inspect}"
 
       {'nodes' => result}
     end
@@ -96,15 +96,15 @@ module Astute
       end
 
       listen_resp = net_probe.multicast_listen(:nodes => data_to_send.to_json)
-      Astute.logger.debug("Mutlicast verification listen: #{listen_resp.inspect}")
+      Astute.logger.debug("Mutlicast verification listen:\n#{listen_resp.pretty_inspect}")
       ctx.reporter.report({'progress' => 30})
 
       send_resp = net_probe.multicast_send()
-      Astute.logger.debug("Mutlicast verification send: #{send_resp.inspect}")
+      Astute.logger.debug("Mutlicast verification send:\n#{send_resp.pretty_inspect}")
       ctx.reporter.report({'progress' => 60})
 
       results = net_probe.multicast_info()
-      Astute.logger.debug("Mutlicast verification info: #{results.inspect}")
+      Astute.logger.debug("Mutlicast verification info:\n#{results.pretty_inspect}")
       response = {}
       results.each do |node|
         if node.results[:data][:out].present?
@@ -155,7 +155,7 @@ module Astute
       uids = nodes.map { |node| node['uid'].to_s }
 
       Astute.logger.debug(
-        "#{ctx.task_id}: Network checker listen: nodes: #{uids} data: #{data_to_send.inspect}")
+        "#{ctx.task_id}: Network checker listen: nodes: #{uids} data:\n#{data_to_send.pretty_inspect}")
 
       net_probe.discover(:nodes => uids)
       net_probe.start_frame_listeners(:interfaces => data_to_send.to_json)
@@ -171,7 +171,7 @@ module Astute
         uids = nodes_part.map { |node| node['uid'].to_s }
 
         Astute.logger.debug(
-          "#{ctx.task_id}: Network checker send: nodes: #{uids} data: #{data_to_send.inspect}")
+          "#{ctx.task_id}: Network checker send: nodes: #{uids} data:\n#{data_to_send.pretty_inspect}")
 
         net_probe.discover(:nodes => uids)
         net_probe.send_probing_frames(:interfaces => data_to_send.to_json)
@@ -183,7 +183,7 @@ module Astute
         data_to_send = make_interfaces_to_send(node['networks'])
 
         Astute.logger.debug(
-          "#{ctx.task_id}: Network checker listen: node: #{node['uid']} data: #{data_to_send.inspect}")
+          "#{ctx.task_id}: Network checker listen: node: #{node['uid']} data:\n#{data_to_send.pretty_inspect}")
 
         net_probe.discover(:nodes => [node['uid'].to_s])
         net_probe.start_frame_listeners(:interfaces => data_to_send.to_json)
@@ -195,7 +195,7 @@ module Astute
         data_to_send = make_interfaces_to_send(node['networks'])
 
         Astute.logger.debug(
-          "#{ctx.task_id}: Network checker send: node: #{node['uid']} data: #{data_to_send.inspect}")
+          "#{ctx.task_id}: Network checker send: node: #{node['uid']} data:\n#{data_to_send.pretty_inspect}")
 
         net_probe.discover(:nodes => [node['uid'].to_s])
         net_probe.send_probing_frames(:interfaces => data_to_send.to_json)
@@ -219,10 +219,10 @@ module Astute
       node_result = {:uid => response.results[:sender],
                      :status=>'ready'}
       if response.results[:data][:out].present?
-        Astute.logger.debug("DHCP checker received: #{response.inspect}")
+        Astute.logger.debug("DHCP checker received:\n#{response.pretty_inspect}")
         node_result[:data] = JSON.parse(response.results[:data][:out])
       elsif response.results[:data][:error].present?
-        Astute.logger.debug("DHCP checker errred with: #{response.inspect}")
+        Astute.logger.debug("DHCP checker errred with:\n#{response.pretty_inspect}")
         node_result[:status] = 'error'
         node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
       end
