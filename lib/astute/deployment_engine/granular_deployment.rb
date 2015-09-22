@@ -64,7 +64,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
     Astute::PuppetTask.new(
       @hook_context,
       @nodes_by_uid[node_id], # Use single node uid instead of task['uids']
-      retries=2,
+      retries=task['parameters']['retries'] || Astute.config.puppet_retries,
       task['parameters']['puppet_manifest'],
       task['parameters']['puppet_modules'],
       task['parameters']['cwd'],

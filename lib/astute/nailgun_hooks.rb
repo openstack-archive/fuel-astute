@@ -98,6 +98,7 @@ module Astute
       validate_presence(hook['parameters'], 'cwd')
 
       timeout = hook['parameters']['timeout'] || 300
+      retries = hook['parameters']['retries'] || Astute.config.puppet_retries
 
       ret = {'error' => nil}
       perform_with_limit(hook['uids']) do |node_uids|
@@ -107,7 +108,8 @@ module Astute
           hook['parameters']['puppet_manifest'],
           hook['parameters']['puppet_modules'],
           hook['parameters']['cwd'],
-          timeout
+          timeout,
+          retries
         )
         unless result
           ret['error'] = "Puppet run failed. Check puppet logs for details"
@@ -278,7 +280,7 @@ module Astute
       raise "Missing a required parameter #{key}" unless data[key].present?
     end
 
-    def run_puppet(context, node_uids, puppet_manifest, puppet_modules, cwd, timeout)
+    def run_puppet(context, node_uids, puppet_manifest, puppet_modules, cwd, timeout, retries)
       # Prevent send report status to Nailgun
       hook_context = Context.new(context.task_id, HookReporter.new, LogParser::NoParsing.new)
       nodes = node_uids.map { |node_id| {'uid' => node_id.to_s, 'role' => 'hook'} }
@@ -287,7 +289,7 @@ module Astute
         PuppetdDeployer.deploy(
           hook_context,
           nodes,
-          retries=2,
+          retries=retries,
           puppet_manifest,
           puppet_modules,
           cwd

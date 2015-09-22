@@ -84,7 +84,8 @@ describe Astute::NailgunHooks do
         "puppet_manifest" =>  "cinder_glusterfs.pp",
         "puppet_modules" =>  "modules",
         "cwd" => "/etc/fuel/plugins/plugin_name-1.0",
-        "timeout" =>  42
+        "timeout" =>  42,
+        "retries" => 21
       }
     }
   end
@@ -911,7 +912,7 @@ describe Astute::NailgunHooks do
           {'uid' => '1', 'role' => 'hook'},
           {'uid' => '3', 'role' => 'hook'}
         ],
-        retries=2,
+        retries=puppet_hook['parameters']['retries'],
         puppet_hook['parameters']['puppet_manifest'],
         puppet_hook['parameters']['puppet_modules'],
         puppet_hook['parameters']['cwd']
@@ -929,7 +930,8 @@ describe Astute::NailgunHooks do
         puppet_hook['parameters']['puppet_manifest'],
         puppet_hook['parameters']['puppet_modules'],
         puppet_hook['parameters']['cwd'],
-        puppet_hook['parameters']['timeout']
+        puppet_hook['parameters']['timeout'],
+        puppet_hook['parameters']['retries']
       ).returns(true)
       Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
 
@@ -945,7 +947,25 @@ describe Astute::NailgunHooks do
         puppet_hook['parameters']['puppet_manifest'],
         puppet_hook['parameters']['puppet_modules'],
         puppet_hook['parameters']['cwd'],
-        300
+        300,
+        puppet_hook['parameters']['retries']
+      ).returns(true)
+      Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
+
+      hooks.process
+    end
+
+    it 'should use default retries if it does not set' do
+      puppet_hook['parameters'].delete('retries')
+      hooks = Astute::NailgunHooks.new([puppet_hook], ctx)
+      hooks.expects(:run_puppet).once.with(
+        ctx,
+        ['1','3'],
+        puppet_hook['parameters']['puppet_manifest'],
+        puppet_hook['parameters']['puppet_modules'],
+        puppet_hook['parameters']['cwd'],
+        puppet_hook['parameters']['timeout'],
+        Astute.config.puppet_retries,
       ).returns(true)
       Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
 
@@ -962,7 +982,8 @@ describe Astute::NailgunHooks do
         puppet_hook['parameters']['puppet_manifest'],
         puppet_hook['parameters']['puppet_modules'],
         puppet_hook['parameters']['cwd'],
-        puppet_hook['parameters']['timeout']
+        puppet_hook['parameters']['timeout'],
+        puppet_hook['parameters']['retries']
       ).returns(true)
 
       hooks.expects(:run_puppet).once.with(
@@ -971,7 +992,8 @@ describe Astute::NailgunHooks do
         puppet_hook['parameters']['puppet_manifest'],
         puppet_hook['parameters']['puppet_modules'],
         puppet_hook['parameters']['cwd'],
-        puppet_hook['parameters']['timeout']
+        puppet_hook['parameters']['timeout'],
+        puppet_hook['parameters']['retries']
       ).returns(true)
 
       Astute::Context.any_instance.stubs(:status).returns({'1' => 'success', '3' => 'success'})
