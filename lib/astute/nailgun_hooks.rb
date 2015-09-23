@@ -34,6 +34,7 @@ module Astute
         when 'upload_file' then upload_file_hook(hook)
         when 'puppet' then puppet_hook(hook)
         when 'reboot' then reboot_hook(hook)
+        when 'cobbler_sync' then cobbler_sync_hook(hook)
         else raise "Unknown hook type #{hook['type']}"
         end
 
@@ -200,6 +201,16 @@ module Astute
       ret
     end # shell_hook
 
+    def cobbler_sync_hook(hook)
+      validate_presence(hook['parameters'], 'provisioning_info')
+
+      ret = {'error' => nil}
+      provisioning_info = hook['parameters']['provisioning_info']
+      cobbler = CobblerManager.new(provisioning_info['engine'], Astute::HookReporter.new())
+      cobbler.sync
+
+      ret
+    end # cobbler_sync_hook
 
     def sync_hook(hook)
       validate_presence(hook, 'uids')

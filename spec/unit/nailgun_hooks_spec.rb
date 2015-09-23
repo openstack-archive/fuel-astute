@@ -121,24 +121,44 @@ describe Astute::NailgunHooks do
   end
 
   let(:upload_files_hook) do
-      {
-        "priority" =>  100,
-        "type" =>  "upload_files",
-        "fail_on_error" => false,
-        "diagnostic_name" => "copy-example-1.0",
-        "uids" =>  ['1'],
-        "parameters" =>  {
-          "nodes" =>[
-            "uid" => '1',
-            "files" => [{
-              "dst" => "/etc/fuel/nova.key",
-              "data" => "",
-              "permissions" => "0600",
-              "dir_permissions" => "0700"}],
-          ]
+    {
+      "priority" =>  100,
+      "type" =>  "upload_files",
+      "fail_on_error" => false,
+      "diagnostic_name" => "copy-example-1.0",
+      "uids" =>  ['1'],
+      "parameters" =>  {
+        "nodes" =>[
+          "uid" => '1',
+          "files" => [{
+            "dst" => "/etc/fuel/nova.key",
+            "data" => "",
+            "permissions" => "0600",
+            "dir_permissions" => "0700"}],
+        ]
+      }
+    }
+  end
+
+  let (:cobbler_sync_hook) do
+    {
+      "priority" => 800,
+      "type" => "cobbler_sync",
+      "fail_on_error" => false,
+      "diagnostic_name" => "copy-example-1.0",
+      "uids" => ['master'],
+      "parameters" => {
+        "provisioning_info" => {
+          "engine" => {
+            "url" => "http://10.108.0.2:80/cobbler_api",
+            "username" => "cobbler",
+            "password" => "Jrb0uj99",
+            "master_ip" => "10.108.0.2"
+          }
         }
       }
-    end
+    }
+  end
 
   let(:hooks_data) do
     [
@@ -148,7 +168,8 @@ describe Astute::NailgunHooks do
       puppet_hook,
       copy_files_hook,
       upload_files_hook,
-      reboot_hook
+      reboot_hook,
+      cobbler_sync_hook
     ]
   end
 
@@ -175,6 +196,7 @@ describe Astute::NailgunHooks do
       hooks.expects(:reboot_hook).returns({'error' => nil})
       hooks.expects(:copy_files_hook).returns({'error' => nil})
       hooks.expects(:upload_files_hook).returns({'error' => nil})
+      hooks.expects(:cobbler_sync_hook).returns({'error' => nil})
 
       hooks.process
     end
@@ -207,6 +229,7 @@ describe Astute::NailgunHooks do
       hooks.expects(:sync_hook).returns({'error' => nil}).in_sequence(hook_order)
       hooks.expects(:puppet_hook).returns({'error' => nil}).in_sequence(hook_order)
       hooks.expects(:reboot_hook).returns({'error' => nil}).in_sequence(hook_order)
+      hooks.expects(:cobbler_sync_hook).returns({'error' => nil}).in_sequence(hook_order)
 
       hooks.process
     end
@@ -223,6 +246,7 @@ describe Astute::NailgunHooks do
         hooks.expects(:copy_files_hook).returns({'error' => nil})
         hooks.expects(:upload_file_hook).returns({'error' => nil})
         hooks.expects(:upload_files_hook).returns({'error' => nil})
+        hooks.expects(:cobbler_sync_hook).returns({'error' => nil})
         hooks.expects(:shell_hook).returns({'error' => 'Shell error'})
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook 'shell-example-1.0'/)
@@ -236,6 +260,7 @@ describe Astute::NailgunHooks do
         hooks.expects(:sync_hook).never
         hooks.expects(:puppet_hook).never
         hooks.expects(:reboot_hook).never
+        hooks.expects(:cobbler_sync_hook).never
 
         hooks.process rescue nil
       end
@@ -248,6 +273,7 @@ describe Astute::NailgunHooks do
         hooks.expects(:sync_hook).returns({'error' => 'Sync error'})
         hooks.expects(:puppet_hook).returns({'error' => nil})
         hooks.expects(:reboot_hook).returns({'error' => nil})
+        hooks.expects(:cobbler_sync_hook).returns({'error' => nil})
 
         hooks.process
       end
@@ -1322,5 +1348,14 @@ describe Astute::NailgunHooks do
     end #context
 
   end #reboot_hook
+
+  context '#cobbler_sync_hook' do
+    it 'should validate presence of provisioning_info' do
+      cobbler_sync_hook['parameters']['provisioning_info'] = {}
+      hooks = Astute::NailgunHooks.new([cobbler_sync_hook], ctx)
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+  end #cobbler_sync_hook
 
 end # 'describe'
