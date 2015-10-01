@@ -8,7 +8,7 @@
 Summary: Orchestrator for OpenStack deployment
 Name: ruby21-rubygem-astute
 Version: %{version}
-Release: %{release}
+Release: %{release}%{?dist}
 Group: Development/Ruby
 License: Distributable
 URL: http://fuel.mirantis.com
