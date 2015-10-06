@@ -6,15 +6,22 @@
 %define gembuilddir %{buildroot}%{gemdir}
 
 Summary: Orchestrator for OpenStack deployment
+%if 0%{?rhel} == 6
 Name: ruby21-rubygem-astute
-Version: %{version}
 Release: %{release}
+%else
+Name: rubygem-astute
+Release: %{release}~mos8.0.1
+%endif
+
+Version: %{version}
 Group: Development/Ruby
 License: Distributable
 URL: http://fuel.mirantis.com
 Source0: %{rbname}-%{version}.tar.gz
 # Make sure the spec template is included in the SRPM
 BuildRoot: %{_tmppath}/%{rbname}-%{version}-root
+%if 0%{?rhel} == 6
 Requires: ruby21 >= 2.1
 Requires: ruby21-rubygem-activesupport = 3.0.10
 Requires: ruby21-rubygem-mcollective-client = 2.4.1
@@ -28,9 +35,23 @@ Requires: ruby21-rubygem-net-ssh-gateway = 1.2.0
 Requires: ruby21-rubygem-net-ssh-multi = 1.2.0
 Requires: openssh-clients
 BuildRequires: ruby21 >= 2.1
+%else
+Requires: ruby
+Requires: rubygem-activesupport
+Requires: rubygem-mcollective-client
+Requires: rubygem-symboltable
+Requires: rubygem-rest-client
+Requires: rubygem-popen4
+Requires: rubygem-amqp
+Requires: rubygem-raemon
+Requires: rubygem-net-ssh
+Requires: rubygem-net-ssh-gateway
+Requires: rubygem-net-ssh-multi
+Requires: openssh-clients
+BuildRequires: ruby
 BuildArch: noarch
-Provides: ruby21(Astute) = %{version}
-
+Provides: ruby(Astute) = %{version}
+%endif
 
 %description
 Deployment Orchestrator of Puppet via MCollective. Works as a library or from
