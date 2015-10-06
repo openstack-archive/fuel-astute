@@ -6,30 +6,30 @@
 %define gembuilddir %{buildroot}%{gemdir}
 
 Summary: Orchestrator for OpenStack deployment
-Name: ruby21-rubygem-astute
+Name: rubygem-astute
 Version: %{version}
-Release: %{release}
+Release: %{release}~mos8.0.1
 Group: Development/Ruby
 License: Distributable
 URL: http://fuel.mirantis.com
 Source0: %{rbname}-%{version}.tar.gz
 # Make sure the spec template is included in the SRPM
 BuildRoot: %{_tmppath}/%{rbname}-%{version}-root
-Requires: ruby21 >= 2.1
-Requires: ruby21-rubygem-activesupport = 3.0.10
-Requires: ruby21-rubygem-mcollective-client = 2.4.1
-Requires: ruby21-rubygem-symboltable = 1.0.2
-Requires: ruby21-rubygem-rest-client = 1.6.7
-Requires: ruby21-rubygem-popen4 = 0.1.2
-Requires: ruby21-rubygem-amqp = 1.4.1
-Requires: ruby21-rubygem-raemon = 0.3.0
-Requires: ruby21-rubygem-net-ssh = 2.8.0
-Requires: ruby21-rubygem-net-ssh-gateway = 1.2.0
-Requires: ruby21-rubygem-net-ssh-multi = 1.2.0
+Requires: ruby
+Requires: rubygem-activesupport
+Requires: rubygem-mcollective-client
+Requires: rubygem-symboltable
+Requires: rubygem-rest-client
+Requires: rubygem-popen4
+Requires: rubygem-amqp
+Requires: rubygem-raemon
+Requires: rubygem-net-ssh
+Requires: rubygem-net-ssh-gateway
+Requires: rubygem-net-ssh-multi
 Requires: openssh-clients
-BuildRequires: ruby21 >= 2.1
+BuildRequires: ruby
 BuildArch: noarch
-Provides: ruby21(Astute) = %{version}
+Provides: ruby(Astute) = %{version}
 
 
 %description
