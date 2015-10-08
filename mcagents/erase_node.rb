@@ -45,7 +45,12 @@ module MCollective
         error_msg = []
         reply[:status] = 0  # Shell exitcode behaviour
 
-        prevent_discover unless dry_run
+        begin
+          prevent_discover unless dry_run
+        rescue => e
+          msg = "Can't prevent discover. Reason: #{e.message}"
+          Log.warn(msg)
+        end
 
         begin
           reboot if !dry_run && request_reboot
