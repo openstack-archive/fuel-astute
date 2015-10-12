@@ -25,7 +25,7 @@ module Astute
       end
 
       def echo(args)
-        Astute.logger.info 'Running echo command'
+        Astute.logger.info('Running echo command')
         args
       end
 
@@ -43,9 +43,10 @@ module Astute
 
       def provision(data, provision_method)
 
-        Astute.logger.info("'provision' method called with data:\n#{data.pretty_inspect}")
+        Astute.logger.info("'provision' method called with data:\n"\
+                           "#{data.pretty_inspect}")
 
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+        reporter = create_reporter(data)
         begin
           result = @orchestrator.provision(
             reporter,
@@ -53,20 +54,19 @@ module Astute
             data['args']['provisioning_info'],
             provision_method
           )
-
-        #TODO(vsharshov): Refactoring the deployment aborting messages (StopIteration)
         rescue => e
-          Astute.logger.error "Error running provisioning: #{e.message}, trace: #{e.format_backtrace}"
+          Astute.logger.error("Error running provisioning: #{e.message}, "\
+                              "trace: #{e.format_backtrace}")
           raise StopIteration
         end
         raise StopIteration if result && result['status'] == 'error'
       end
 
       def deploy(data)
-        Astute.logger.info("'deploy' method called with data:\n#{data.pretty_inspect}")
+        Astute.logger.info("'deploy' method called with data:\n"\
+                           "#{data.pretty_inspect}")
 
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
-
+        reporter = create_reporter(data)
         begin
           @orchestrator.deploy(
             reporter,
@@ -78,15 +78,16 @@ module Astute
           reporter.report('status' => 'ready', 'progress' => 100)
         rescue Timeout::Error
           msg = "Timeout of deployment is exceeded."
-          Astute.logger.error msg
+          Astute.logger.error(msg)
           reporter.report('status' => 'error', 'error' => msg)
         end
       end
 
       def granular_deploy(data)
-        Astute.logger.info("'granular_deploy' method called with data:\n#{data.pretty_inspect}")
+        Astute.logger.info("'granular_deploy' method called with data:\n"\
+                           "#{data.pretty_inspect}")
 
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
+        reporter = create_reporter(data)
         begin
           @orchestrator.granular_deploy(
             reporter,
@@ -98,7 +99,7 @@ module Astute
           reporter.report('status' => 'ready', 'progress' => 100)
         rescue Timeout::Error
           msg = "Timeout of deployment is exceeded."
-          Astute.logger.error msg
+          Astute.logger.error(msg)
           reporter.report('status' => 'error', 'error' => msg)
         end
       end
@@ -111,60 +112,80 @@ module Astute
             Astute.logger.warn("No method for #{subtask}")
           end
         end
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
-        result = @orchestrator.verify_networks(reporter, data['args']['task_uuid'], data['args']['nodes'])
+        reporter = create_reporter(data)
+        result = @orchestrator.verify_networks(
+          reporter,
+          data['args']['task_uuid'],
+          data['args']['nodes']
+        )
         report_result(result, reporter)
       end
 
       def check_dhcp(data)
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
-        result = @orchestrator.check_dhcp(reporter, data['args']['task_uuid'], data['args']['nodes'])
+        reporter = create_reporter(data)
+        result = @orchestrator.check_dhcp(
+          reporter,
+          data['args']['task_uuid'],
+          data['args']['nodes']
+        )
         report_result(result, reporter)
       end
 
       def multicast_verification(data)
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
-        result = @orchestrator.multicast_verification(reporter, data['args']['task_uuid'], data['args']['nodes'])
+        reporter = create_reporter(data)
+        result = @orchestrator.multicast_verification(
+          reporter,
+          data['args']['task_uuid'],
+          data['args']['nodes']
+        )
         report_result(result, reporter)
       end
 
       def check_repositories(data)
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
-        result = @orchestrator.check_repositories(reporter, data['args']['task_uuid'], data['args']['nodes'], data['args']['urls'])
+        reporter = create_reporter(data)
+        result = @orchestrator.check_repositories(
+          reporter,
+          data['args']['task_uuid'],
+          data['args']['nodes'],
+          data['args']['urls']
+        )
         report_result(result, reporter)
       end
 
       def check_repositories_with_setup(data)
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], data['args']['task_uuid'])
-        result = @orchestrator.check_repositories_with_setup(reporter, data['args']['task_uuid'], data['args']['nodes'])
+        reporter = create_reporter(data)
+        result = @orchestrator.check_repositories_with_setup(
+          reporter,
+          data['args']['task_uuid'],
+          data['args']['nodes']
+        )
         report_result(result, reporter)
       end
 
       def dump_environment(data)
-        task_id = data['args']['task_uuid']
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_id)
-        @orchestrator.dump_environment(reporter, task_id, data['args']['settings'])
+        @orchestrator.dump_environment(
+          create_reporter(data),
+          data['args']['task_uuid'],
+          data['args']['settings']
+        )
       end
 
       def remove_nodes(data, reset=false)
         task_uuid = data['args']['task_uuid']
-        reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
-        nodes = data['args']['nodes']
-        engine = data['args']['engine']
-        check_ceph = data['args']['check_ceph']
+        reporter = create_reporter(data)
 
-        result = if nodes.empty?
+        result = if data['args']['nodes'].empty?
           Astute.logger.debug("#{task_uuid} Node list is empty")
           nil
         else
           @orchestrator.remove_nodes(
             reporter,
             task_uuid,
-            engine,
-            nodes,
+            data['args']['engine'],
+            data['args']['nodes'],
             {
               :reboot => true,
-              :check_ceph => check_ceph,
+              :check_ceph => data['args']['check_ceph'],
               :reset => reset
             }
           )
@@ -178,16 +199,9 @@ module Astute
       end
 
       def execute_tasks(data)
-        task_uuid = data['args']['task_uuid']
-        reporter = Astute::Server::Reporter.new(
-          @producer,
-          data['respond_to'],
-          task_uuid
-        )
-
         @orchestrator.execute_tasks(
-          reporter,
-          task_uuid,
+          create_reporter(data),
+          data['args']['task_uuid'],
           data['args']['tasks']
         )
       end
@@ -197,15 +211,17 @@ module Astute
       #
 
       def stop_deploy_task(data, service_data)
-        Astute.logger.debug("'stop_deploy_task' service method called with data:\n#{data.pretty_inspect}")
+        Astute.logger.debug("'stop_deploy_task' service method called with"\
+                            "data:\n#{data.pretty_inspect}")
         target_task_uuid = data['args']['stop_task_uuid']
         task_uuid = data['args']['task_uuid']
 
-        return unless task_in_queue?(target_task_uuid, service_data[:tasks_queue])
+        return unless task_in_queue?(target_task_uuid,
+                                     service_data[:tasks_queue])
 
         Astute.logger.debug("Cancel task #{target_task_uuid}. Start")
         if target_task_uuid == service_data[:tasks_queue].current_task_id
-          reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
+          reporter = create_reporter(data)
           result = stop_current_task(data, service_data, reporter)
           report_result(result, reporter)
         else
@@ -214,6 +230,14 @@ module Astute
       end
 
       private
+
+      def create_reporter(data)
+        Astute::Server::Reporter.new(
+          @producer,
+          data['respond_to'],
+          data['args']['task_uuid']
+        )
+      end
 
       def task_in_queue?(task_uuid, tasks_queue)
         tasks_queue.task_in_queue?(task_uuid)
@@ -224,8 +248,13 @@ module Astute
         task_uuid = data['args']['task_uuid']
 
         new_task_data = data_for_rm_nodes(data)
-        Astute.logger.info("Replace running task #{target_task_uuid} to new #{task_uuid} with data:\n#{new_task_data.pretty_inspect}")
-        service_data[:tasks_queue].replace_task(target_task_uuid, new_task_data)
+        Astute.logger.info("Replace running task #{target_task_uuid} to "\
+                           "new #{task_uuid} with data:\n"\
+                           "#{new_task_data.pretty_inspect}")
+        service_data[:tasks_queue].replace_task(
+          target_task_uuid,
+          new_task_data
+        )
       end
 
       def stop_current_task(data, service_data, reporter)
@@ -233,15 +262,25 @@ module Astute
         task_uuid = data['args']['task_uuid']
         nodes = data['args']['nodes']
 
-        Astute.logger.info "Try to kill running task #{target_task_uuid}"
+        Astute.logger.info("Try to kill running task #{target_task_uuid}")
         service_data[:main_work_thread].kill
 
         result = if ['deploy', 'task_deployment', 'granular_deploy'].include? (
             service_data[:tasks_queue].current_task_method)
           @orchestrator.stop_puppet_deploy(reporter, task_uuid, nodes)
-          @orchestrator.remove_nodes(reporter, task_uuid, data['args']['engine'], nodes)
+          @orchestrator.remove_nodes(
+            reporter,
+            task_uuid,
+            data['args']['engine'],
+            nodes
+          )
         else
-          @orchestrator.stop_provision(reporter, task_uuid, data['args']['engine'], nodes)
+          @orchestrator.stop_provision(
+            reporter,
+            task_uuid,
+            data['args']['engine'],
+            nodes
+          )
         end
       end
 

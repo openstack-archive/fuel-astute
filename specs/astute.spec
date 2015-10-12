@@ -20,7 +20,7 @@ Requires: ruby21-rubygem-activesupport = 3.0.10
 Requires: ruby21-rubygem-mcollective-client = 2.4.1
 Requires: ruby21-rubygem-symboltable = 1.0.2
 Requires: ruby21-rubygem-rest-client = 1.6.7
-Requires: ruby21-rubygem-amqp = 1.4.1
+Requires: ruby21-rubygem-bunny
 Requires: ruby21-rubygem-raemon = 0.3.0
 Requires: ruby21-rubygem-net-ssh = 2.8.0
 Requires: ruby21-rubygem-net-ssh-gateway = 1.2.0

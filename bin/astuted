@@ -19,7 +19,6 @@ require 'logger'
 require 'ostruct'
 require 'optparse'
 require 'yaml'
-require 'amqp'
 require 'raemon'
 
 options = OpenStruct.new
