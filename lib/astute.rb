@@ -20,6 +20,7 @@ require 'logger'
 require 'shellwords'
 require 'active_support/all'
 require 'pp'
+require 'bunny'
 
 require 'astute/ext/exception'
 require 'astute/ext/deep_copy'
