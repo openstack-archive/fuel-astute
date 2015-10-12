@@ -14,6 +14,7 @@
 
 require 'raemon'
 require 'net/http'
+require 'bunny'
 
 module Astute
   module Server
@@ -26,39 +27,42 @@ module Astute
       def start
         super
         start_heartbeat
+        Astute::Server::AsyncLogger.start_up(Astute.logger)
+        Astute.logger = Astute::Server::AsyncLogger
       end
 
       def stop
         super
-        begin
-          @connection.close{ stop_event_machine } if @connection
-        ensure
-          stop_event_machine
-        end
+        @connection.stop if defined?(@connection) && @connection.present?
+        @producer.stop if defined?(@producer) && @producer.present?
+        @server.stop if defined?(@server) && @server.present?
+        Astute::Server::AsyncLogger.shutdown
       end
 
       def run
         Astute.logger.info "Worker initialization"
-        EM.run do
-          run_server
-        end
-      rescue AMQP::TCPConnectionFailed => e
-        Astute.logger.warn "TCP connection to AMQP failed: #{e.message}. Retry #{DELAY_SEC} sec later..."
+        run_server
+      rescue Bunny::TCPConnectionFailed => e
+        Astute.logger.warn "TCP connection to AMQP failed: #{e.message}. "\
+                           "Retry #{DELAY_SEC} sec later..."
         sleep DELAY_SEC
         retry
-      rescue AMQP::PossibleAuthenticationFailureError => e
-        Astute.logger.warn "If problem repeated more than 5 minutes, please check " \
-                           "authentication parameters. #{e.message}. Retry #{DELAY_SEC} sec later..."
+      rescue Bunny::PossibleAuthenticationFailureError => e
+        Astute.logger.warn "If problem repeated more than 5 minutes, "\
+                           "please check "\
+                           "authentication parameters. #{e.message}. "\
+                           "Retry #{DELAY_SEC} sec later..."
         sleep DELAY_SEC
         retry
       rescue => e
-        Astute.logger.error "Exception during worker initialization: #{e.message}, trace: #{e.format_backtrace}"
+        Astute.logger.error "Exception during worker initialization:"\
+                            " #{e.message}, trace: #{e.format_backtrace}"
         Astute.logger.warn "Retry #{DELAY_SEC} sec later..."
         sleep DELAY_SEC
         retry
       end
 
-    private
+      private
 
       def start_heartbeat
         @heartbeat ||= Thread.new do
@@ -68,76 +72,97 @@ module Astute
       end
 
       def run_server
-        AMQP.logging = true
-        AMQP.connect(connection_options) do |connection|
-          @connection = configure_connection(connection)
+        @connection = Bunny.new(connection_options)
+        @connection.start
+        channels_and_exchanges = declare_channels_and_exchanges(@connection)
 
-          @channel = create_channel(@connection)
-          @exchange = @channel.topic(Astute.config.broker_exchange, :durable => true)
-          @service_channel = create_channel(@connection, prefetch=false)
-          @service_exchange = @service_channel.fanout(Astute.config.broker_service_exchange, :auto_delete => true)
+        @producer = Astute::Server::Producer.new(
+          channels_and_exchanges[:report_exchange]
+        )
+        delegate = Astute::Server::Dispatcher.new(@producer)
+        @server = Astute::Server::Server.new(
+          channels_and_exchanges,
+          delegate,
+          @producer
+        )
 
-          @producer = Astute::Server::Producer.new(@exchange)
-          @delegate = Astute.config.delegate || Astute::Server::Dispatcher.new(@producer)
-          @server = Astute::Server::Server.new(@channel, @exchange, @delegate, @producer, @service_channel, @service_exchange)
-
-          @server.run
-        end
+        @server.run
       end
 
-      def configure_connection(connection)
-        connection.on_tcp_connection_loss do |conn, settings|
-          Astute.logger.warn "Trying to reconnect to message broker. Retry #{DELAY_SEC} sec later..."
-          EM.add_timer(DELAY_SEC) { conn.reconnect }
-        end
-        connection
-      end
+      def declare_channels_and_exchanges(connection)
+        # WARN: Bunny::Channel are designed to assume they are
+        # not shared between threads.
+        channel = @connection.create_channel
+        exchange = channel.topic(
+          Astute.config.broker_exchange,
+          :durable => true
+        )
 
-      def create_channel(connection, prefetch=true)
-        prefetch_opts = ( prefetch ? {:prefetch => 1} : {} )
-        channel = AMQP::Channel.new(connection, connection.next_channel_id, prefetch_opts)
-        channel.auto_recovery = true
-        channel.on_error do |ch, error|
-          if error.reply_code == 406 #PRECONDITION_FAILED
-            cleanup_rabbitmq_stuff
-          else
-            Astute.logger.fatal "Channel error\n#{error.pretty_inspect}"
-          end
-          sleep DELAY_SEC # avoid race condition
-          stop
+        report_channel = @connection.create_channel
+        report_exchange = report_channel.topic(
+          Astute.config.broker_exchange,
+          :durable => true
+        )
+
+        service_channel = @connection.create_channel
+        service_channel.prefetch(0)
+
+        service_exchange = service_channel.fanout(
+          Astute.config.broker_service_exchange,
+          :auto_delete => true
+        )
+
+        return {
+          :exchange => exchange,
+          :service_exchange => service_exchange,
+          :channel => channel,
+          :service_channel => service_channel,
+          :report_channel => report_channel,
+          :report_exchange => report_exchange
+        }
+      rescue Bunny::PreconditionFailed => e
+        Astute.logger.warn "Try to remove problem exchanges and queues"
+        if connection.queue_exists? Astute.config.broker_queue
+          channel.queue_delete Astute.config.broker_queue
         end
-        channel
+        if connection.queue_exists? Astute.config.broker_publisher_queue
+          channel.queue_delete Astute.config.broker_publisher_queue
+        end
+
+        cleanup_rabbitmq_stuff
+        raise e
       end
 
       def connection_options
         {
           :host => Astute.config.broker_host,
           :port => Astute.config.broker_port,
-          :username => Astute.config.broker_username,
-          :password => Astute.config.broker_password,
+          :user => Astute.config.broker_username,
+          :pass => Astute.config.broker_password,
+          :heartbeat => :server
         }.reject{|k, v| v.nil? }
-      end
-
-      def stop_event_machine
-        EM.stop_event_loop if EM.reactor_running?
       end
 
       def cleanup_rabbitmq_stuff
         Astute.logger.warn "Try to remove problem exchanges and queues"
 
-        [Astute.config.broker_exchange, Astute.config.broker_service_exchange].each do |exchange|
-          rest_delete("/api/exchanges/%2F/#{exchange}")
-        end
 
-        [Astute.config.broker_queue, Astute.config.broker_publisher_queue].each do |queue|
-          rest_delete("/api/queues/%2F/#{queue}")
+        [Astute.config.broker_exchange,
+         Astute.config.broker_service_exchange].each do |exchange|
+          rest_delete("/api/exchanges/%2F/#{exchange}")
         end
       end
 
       def rest_delete(url)
-        http = Net::HTTP.new(Astute.config.broker_host, Astute.config.broker_rest_api_port)
+        http = Net::HTTP.new(
+          Astute.config.broker_host,
+          Astute.config.broker_rest_api_port
+        )
         request = Net::HTTP::Delete.new(url)
-        request.basic_auth(Astute.config.broker_username, Astute.config.broker_password)
+        request.basic_auth(
+          Astute.config.broker_username,
+          Astute.config.broker_password
+        )
 
         response = http.request(request)
 
@@ -145,13 +170,13 @@ module Astute
         when 204 then Astute.logger.debug "Successfully delete object at #{url}"
         when 404 then
         else
-           Astute.logger.error "Failed to perform delete request. Debug information: "\
-                               "http code: #{response.code}, message: #{response.message},"\
-                               "body #{response.body}"
+           Astute.logger.error "Failed to perform delete request. Debug"\
+                               " information: http code: #{response.code},"\
+                               " message: #{response.message},"\
+                               " body #{response.body}"
         end
       end
 
-    end
-
+    end # Worker
   end #Server
 end #Astute
