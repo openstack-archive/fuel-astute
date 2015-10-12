@@ -14,27 +14,39 @@
 
 module Astute
   module Server
-
     class Producer
       def initialize(exchange)
         @exchange = exchange
+        @publish_queue = Queue.new
+        @publish_consumer = Thread.new do
+          while true do
+            msg = @publish_queue.pop
+            publish_from_queue msg
+          end
+        end
+      end
+
+      def publish_from_queue(message)
+        Astute.logger.info "Casting message to Nailgun:\n"\
+                          "#{message[:message].pretty_inspect}"
+        @exchange.publish(message[:message].to_json, message[:options])
+      rescue => e
+        Astute.logger.error "Error publishing message: #{e.message}"
       end
 
       def publish(message, options={})
-        default_options = {:routing_key => Astute.config.broker_publisher_queue,
-                           :content_type => 'application/json'}
-        options = default_options.merge(options)
-
-        EM.next_tick {
-          begin
-            Astute.logger.info "Casting message to Nailgun:\n#{message.pretty_inspect}"
-            @exchange.publish(message.to_json, options)
-          rescue
-            Astute.logger.error "Error publishing message: #{$!}"
-          end
+        default_options = {
+          :routing_key => Astute.config.broker_publisher_queue,
+          :content_type => 'application/json'
         }
+        options = default_options.merge(options)
+        @publish_queue << {:message => message, :options => options}
       end
-    end
 
+      def stop
+        @publish_consumer.kill
+      end
+
+    end # Producer
   end #Server
 end #Astute
