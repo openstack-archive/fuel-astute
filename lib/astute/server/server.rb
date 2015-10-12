@@ -20,30 +20,54 @@ module Astute
   module Server
 
     class Server
-      def initialize(channel, exchange, delegate, producer, service_channel, service_exchange)
-        @channel  = channel
-        @exchange = exchange
+      def initialize(channels_and_exchanges, delegate, producer)
+        @channel  = channels_and_exchanges[:channel]
+        @exchange = channels_and_exchanges[:exchange]
         @delegate = delegate
         @producer = producer
-        @service_channel = service_channel
-        @service_exchange = service_exchange
+        @service_channel = channels_and_exchanges[:service_channel]
+        @service_exchange = channels_and_exchanges[:service_exchange]
         # NOTE(eli): Generate unique name for service queue
         # See bug: https://bugs.launchpad.net/fuel/+bug/1485895
         @service_queue_name = "naily_service_#{SecureRandom.uuid}"
+        @watch_thread = nil
       end
 
       def run
-        @queue = @channel.queue(Astute.config.broker_queue, :durable => true).bind(@exchange)
-        @service_queue = @service_channel.queue(@service_queue_name, :exclusive => true, :auto_delete => true).bind(@service_exchange)
+        @queue = @channel.queue(
+          Astute.config.broker_queue,
+          :durable => true
+        )
+        @queue.bind(@exchange)
+
+        @service_queue = @service_channel.queue(
+          @service_queue_name,
+          :exclusive => true,
+          :auto_delete => true
+        )
+        @service_queue.bind(@service_exchange)
 
         @main_work_thread = nil
         @tasks_queue = TaskQueue.new
 
-        Thread.new(&method(:register_callbacks))
-        self
+        register_callbacks
+
+        run_infinite_loop
+        @watch_thread.join
+      end
+
+      def stop
+        @watch_thread.wakeup
       end
 
     private
+
+      def run_infinite_loop
+        @watch_thread = Thread.new do
+          Thread.stop
+          Astute.logger.debug "Stop main thread"
+        end
+      end
 
       def register_callbacks
         main_worker
@@ -51,32 +75,27 @@ module Astute
       end
 
       def main_worker
-        @consumer = AMQP::Consumer.new(@channel, @queue, consumer_tag=nil, exclusive=false)
-        @consumer.on_cancel do |basic_cancel|
-          Astute.logger.debug("Received cancel notification from in main worker.")
-          @exchange.auto_recover
-          @service_exchange.auto_recover
-          @queue.auto_recover
-          @service_queue.auto_recover
-        end
-        @consumer.on_delivery do |metadata, payload|
+        @queue.subscribe(:manual_ack => true) do |delivery_info, _, payload|
           if @main_work_thread.nil? || !@main_work_thread.alive?
-            Astute.logger.debug "Process message from worker queue:\n#{payload.pretty_inspect}"
-            metadata.ack
-            perform_main_job(metadata, payload)
+            Astute.logger.debug "Process message from worker queue:\n"\
+                                "#{payload.pretty_inspect}"
+            @channel.acknowledge(delivery_info.delivery_tag, false)
+            perform_main_job(payload)
           else
-            Astute.logger.debug "Requeue message because worker is busy:\n#{payload.pretty_inspect}"
-            # Avoid throttle by consume/reject cycle if only one worker is running
-            EM.add_timer(2) { metadata.reject(:requeue => true) }
+            Astute.logger.debug "Requeue message because worker is busy:"\
+                                "\n#{payload.pretty_inspect}"
+            # Avoid throttle by consume/reject cycle
+            # if only one worker is running
+            @channel.reject(delivery_info.delivery_tag, true)
           end
         end
-        @consumer.consume
       end
 
       def service_worker
-        @service_queue.subscribe do |_, payload|
-          Astute.logger.debug "Process message from service queue:\n#{payload.pretty_inspect}"
-          perform_service_job(nil, payload)
+        @service_queue.subscribe do |_delivery_info, _properties, payload|
+          Astute.logger.debug "Process message from service queue:\n"\
+                              "#{payload.pretty_inspect}"
+          perform_service_job(payload)
         end
       end
 
@@ -94,7 +113,7 @@ module Astute
         end
       end
 
-      def perform_main_job(metadata, payload)
+      def perform_main_job(payload)
         @main_work_thread = Thread.new do
           data = parse_data(payload)
           @tasks_queue = Astute::Server::TaskQueue.new
@@ -109,12 +128,15 @@ module Astute
         end
       end
 
-      def perform_service_job(metadata, payload)
+      def perform_service_job(payload)
         Thread.new do
-          service_data = {:main_work_thread => @main_work_thread, :tasks_queue => @tasks_queue}
+          service_data = {
+            :main_work_thread => @main_work_thread,
+            :tasks_queue => @tasks_queue
+          }
           data = parse_data(payload)
           send_message_task_in_orchestrator(data)
-          dispatch(data, service_data)
+          dispatch(parse_data(data), service_data)
         end
       end
 
@@ -127,8 +149,9 @@ module Astute
             abort_messages data[(i + 1)..-1]
             break
           rescue => ex
-            Astute.logger.error "Error running RPC method #{message['method']}: #{ex.message}, " \
-              "trace: #{ex.format_backtrace}"
+            Astute.logger.error "Error running RPC method "\
+                                "#{message['method']}: #{ex.message}, "\
+                                "trace: #{ex.format_backtrace}"
             return_results message, {
               'status' => 'error',
               'error'  => "Method #{message['method']}. #{ex.message}.\n" \
@@ -156,7 +179,10 @@ module Astute
           return
         end
 
-        Astute.logger.debug "Main worker task id is #{@tasks_queue.current_task_id}" if service_data.nil?
+        if service_data.nil?
+          Astute.logger.debug "Main worker task id is "\
+                              "#{@tasks_queue.current_task_id}"
+        end
 
         Astute.logger.info "Processing RPC call '#{data['method']}'"
         if !service_data
@@ -168,7 +194,11 @@ module Astute
 
       def return_results(message, results={})
         if results.is_a?(Hash) && message['respond_to']
-          reporter = Astute::Server::Reporter.new(@producer, message['respond_to'], message['args']['task_uuid'])
+          reporter = Astute::Server::Reporter.new(
+            @producer,
+            message['respond_to'],
+            message['args']['task_uuid']
+          )
           reporter.report results
         end
       end
@@ -179,7 +209,8 @@ module Astute
         begin
           messages = JSON.load(data)
         rescue => e
-          Astute.logger.error "Error deserializing payload: #{e.message}, trace:\n#{e.backtrace.pretty_inspect}"
+          Astute.logger.error "Error deserializing payload: #{e.message},"\
+                              " trace:\n#{e.backtrace.pretty_inspect}"
         end
         messages.is_a?(Array) ? messages : [messages]
       end
@@ -197,7 +228,12 @@ module Astute
 
             if message['args']['nodes'].instance_of?(Array)
               err_nodes = message['args']['nodes'].map do |node|
-                {'uid' => node['uid'], 'status' => 'error', 'error_type' => 'provision', 'progress' => 0}
+                {
+                  'uid' => node['uid'],
+                  'status' => 'error',
+                  'error_type' => 'provision',
+                  'progress' => 0
+                }
               end
 
               err_msg.merge!('nodes' => err_nodes)
@@ -205,7 +241,8 @@ module Astute
 
             return_results(message, err_msg)
           rescue => ex
-            Astute.logger.debug "Failed to abort '#{message['method']}':\n#{ex.pretty_inspect}"
+            Astute.logger.debug "Failed to abort '#{message['method']}':\n"\
+                                "#{ex.pretty_inspect}"
           end
         end
       end
