@@ -20,6 +20,7 @@ require 'logger'
 require 'shellwords'
 require 'active_support/all'
 require 'pp'
+require 'bunny'
 
 require 'astute/ext/exception'
 require 'astute/ext/deep_copy'
@@ -43,6 +44,8 @@ require 'astute/puppet_task'
 require 'astute/task_manager'
 require 'astute/pre_delete'
 require 'astute/version'
+require 'astute/server/async_logger'
+
 
 ['/astute/pre_deployment_actions/*.rb',
  '/astute/pre_deploy_actions/*.rb',
