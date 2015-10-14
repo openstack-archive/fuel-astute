@@ -416,14 +416,12 @@ describe Astute::DeploymentEngine do
           'nodes' => [
             {'uid' => '1', 'role' => 'compute'},
             {'uid' => '2', 'role' => 'primary-controller'},
-            {'uid' => '4', 'role' => 'compute'}
           ]
         },
         {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
           'nodes' => [
             {'uid' => '1', 'role' => 'compute'},
             {'uid' => '2', 'role' => 'primary-controller'},
-            {'uid' => '4', 'role' => 'compute'}
           ]
         }
       ]
@@ -439,6 +437,12 @@ describe Astute::DeploymentEngine do
       ctx.expects(:report_and_update_status).with(
         'nodes' => [{
           'uid' => '3',
+          'status' => 'error',
+          'error_type' => 'provision',
+          'role' => 'hook',
+          'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
+        },{
+          'uid' => '4',
           'status' => 'error',
           'error_type' => 'provision',
           'role' => 'hook',
@@ -488,14 +492,12 @@ describe Astute::DeploymentEngine do
           'nodes' => [
             {'uid' => '1', 'role' => 'compute'},
             {'uid' => '2', 'role' => 'primary-controller'},
-            {'uid' => '4', 'role' => 'compute'}
           ]
         },
         {'uid' => "2", 'priority' => 10, 'role' => 'primary-controller',
           'nodes' => [
             {'uid' => '1', 'role' => 'compute'},
             {'uid' => '2', 'role' => 'primary-controller'},
-            {'uid' => '4', 'role' => 'compute'}
           ]
         }
       ]
@@ -511,6 +513,12 @@ describe Astute::DeploymentEngine do
       ctx.expects(:report_and_update_status).with(
         'nodes' => [{
           'uid' => '3',
+          'status' => 'error',
+          'error_type' => 'provision',
+          'role' => 'hook',
+          'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
+        }, {
+          'uid' => '4',
           'status' => 'error',
           'error_type' => 'provision',
           'role' => 'hook',
@@ -546,7 +554,7 @@ describe Astute::DeploymentEngine do
             {'uid' => '1', 'role' => 'compute'},
             {'uid' => '2', 'role' => 'primary-controller'},
             {'uid' => '4', 'role' => 'compute'}
-          ]}
+        ]}
       ]
 
       res1 = {:data => {:node_type => "target\n"},
@@ -561,6 +569,12 @@ describe Astute::DeploymentEngine do
       ctx.expects(:report_and_update_status).with(
         'nodes' => [{
           'uid' => '2',
+          'status' => 'error',
+          'error_type' => 'provision',
+          'role' => 'hook',
+          'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
+        },{
+          'uid' => '4',
           'status' => 'error',
           'error_type' => 'provision',
           'role' => 'hook',
