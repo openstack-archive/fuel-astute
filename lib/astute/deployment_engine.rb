@@ -149,7 +149,7 @@ module Astute
 
     # Removes nodes which failed to provision
     def remove_failed_nodes(deployment_info, pre_deployment, post_deployment)
-      uids = deployment_info.map { |node| node["uid"]}
+      uids = deployment_info[0]["nodes"].map { |node| node["uid"]}
       required_nodes = deployment_info.select { |node| node["fail_if_error"] }
       required_uids = required_nodes.map { |node| node["uid"]}
 
