@@ -375,7 +375,7 @@ describe Astute::NailgunHooks do
     it 'should upload file' do
       File.stubs(:file?).returns(true)
       File.stubs(:readable?).returns(true)
-      File.stubs(:read).returns("")
+      File.stubs(:binread).returns("")
       hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
 
       hooks.expects(:upload_file).once.with(
@@ -394,7 +394,7 @@ describe Astute::NailgunHooks do
       Astute.config.max_nodes_per_call = 1
       File.stubs(:file?).returns(true)
       File.stubs(:readable?).returns(true)
-      File.stubs(:read).returns("")
+      File.stubs(:binread).returns("")
       hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
 
       hooks.expects(:upload_file).once.with(
@@ -425,7 +425,7 @@ describe Astute::NailgunHooks do
       it 'mcagent success' do
         File.stubs(:file?).returns(true)
         File.stubs(:readable?).returns(true)
-        File.stubs(:read).returns("")
+        File.stubs(:binread).returns("")
         hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
         hooks.expects(:upload_file).returns(true).once
 
@@ -435,7 +435,7 @@ describe Astute::NailgunHooks do
       it 'mcagent fail' do
         File.stubs(:file?).returns(true)
         File.stubs(:readable?).returns(true)
-        File.stubs(:read).returns("")
+        File.stubs(:binread).returns("")
 
         hooks = Astute::NailgunHooks.new([copy_files_hook], ctx)
         hooks.expects(:upload_file).returns(false).once

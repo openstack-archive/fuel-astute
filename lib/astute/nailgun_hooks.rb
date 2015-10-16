@@ -72,7 +72,7 @@ module Astute
       hook['parameters']['files'].each do |file|
         if File.file?(file['src']) && File.readable?(file['src'])
           parameters = {
-            'content' => File.read(file['src']),
+            'content' => File.binread(file['src']),
             'path' => file['dst'],
             'permissions' => file['permissions'] || hook['parameters']['permissions'],
             'dir_permissions' => file['dir_permissions'] || hook['parameters']['dir_permissions'],
