@@ -51,7 +51,7 @@ Example of using Astute as library: lib/astute/server/dispatcher.rb
 Using as CLI
 -----
 
-CLI interface in Astute no longer supported. Please use new Fuel-CLI. More details you can get by link: https://github.com/stackforge/fuel-docs/blob/master/pages/user-guide/cli.rst
+CLI interface in Astute no longer supported. Please use new Fuel-CLI. More details you can get by link: https://github.com/openstack/fuel-docs/blob/master/pages/user-guide/cli.rst
 
 -----
 
