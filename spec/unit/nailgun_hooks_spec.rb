@@ -15,12 +15,26 @@
 
 require File.join(File.dirname(__FILE__), '../spec_helper')
 
+require 'webmock/rspec'
+WebMock.disable_net_connect!(allow_localhost: true)
+
 include Astute
 
 describe Astute::NailgunHooks do
   include SpecHelpers
 
   let(:ctx) { mock_ctx }
+
+  before(:each) do
+    # stub cobbler token request
+    stub_request(:post, "http://10.20.0.2/cobbler_api").
+      with(:body => "<?xml version=\"1.0\" ?><methodCall><methodName>login</methodName><params><param><value><string>cobbler</string></value></param><param><value><string>cobblerpassword</string></value></param></params></methodCall>\n").
+      to_return(:status => 200, :body => "<?xml version='1.0'?><methodResponse><params><param><value><string>GWcH4+I2GtIPG072nVvgSFy6bGGX4w50rw==</string></value></param></params></methodResponse>", :headers => {})
+    # stub cobbler sync request
+    stub_request(:post, "http://10.20.0.2/cobbler_api").
+    with(:body => "<?xml version=\"1.0\" ?><methodCall><methodName>sync</methodName><params><param><value><string>GWcH4+I2GtIPG072nVvgSFy6bGGX4w50rw==</string></value></param></params></methodCall>\n").
+    to_return(:status => 200, :body => "<?xml version='1.0'?><methodResponse><params><param><value><boolean>1</boolean></value></param></params></methodResponse>", :headers => {})
+  end
 
   around(:each) do |example|
     max_nodes_old_value = Astute.config.max_nodes_per_call
@@ -121,24 +135,44 @@ describe Astute::NailgunHooks do
   end
 
   let(:upload_files_hook) do
-      {
-        "priority" =>  100,
-        "type" =>  "upload_files",
-        "fail_on_error" => false,
-        "diagnostic_name" => "copy-example-1.0",
-        "uids" =>  ['1'],
-        "parameters" =>  {
-          "nodes" =>[
-            "uid" => '1',
-            "files" => [{
-              "dst" => "/etc/fuel/nova.key",
-              "data" => "",
-              "permissions" => "0600",
-              "dir_permissions" => "0700"}],
-          ]
+    {
+      "priority" =>  100,
+      "type" =>  "upload_files",
+      "fail_on_error" => false,
+      "diagnostic_name" => "copy-example-1.0",
+      "uids" =>  ['1'],
+      "parameters" =>  {
+        "nodes" =>[
+          "uid" => '1',
+          "files" => [{
+            "dst" => "/etc/fuel/nova.key",
+            "data" => "",
+            "permissions" => "0600",
+            "dir_permissions" => "0700"}],
+        ]
+      }
+    }
+  end
+
+  let (:cobbler_sync_hook) do
+    {
+      "priority" => 800,
+      "type" => "cobbler_sync",
+      "fail_on_error" => false,
+      "diagnostic_name" => "copy-example-1.0",
+      "uids" => ['master'],
+      "parameters" => {
+        "provisioning_info" => {
+          "engine" => {
+            "url" => "http://10.20.0.2:80/cobbler_api",
+            "username" => "cobbler",
+            "password" => "cobblerpassword",
+            "master_ip" => "10.20.0.2"
+          }
         }
       }
-    end
+    }
+  end
 
   let(:hooks_data) do
     [
@@ -1322,5 +1356,22 @@ describe Astute::NailgunHooks do
     end #context
 
   end #reboot_hook
+
+  context '#cobbler_sync_hook' do
+
+    it 'should validate presence of provisioning_info' do
+      cobbler_sync_hook['parameters']['provisioning_info'] = {}
+      hooks = Astute::NailgunHooks.new([cobbler_sync_hook], ctx)
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+
+    it 'should authenticate in cobbler API and send sync request' do
+      hooks = Astute::NailgunHooks.new([cobbler_sync_hook], ctx)
+
+      hooks.process
+    end
+
+  end #cobbler_sync_hook
 
 end # 'describe'
