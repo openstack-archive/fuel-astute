@@ -121,24 +121,44 @@ describe Astute::NailgunHooks do
   end
 
   let(:upload_files_hook) do
-      {
-        "priority" =>  100,
-        "type" =>  "upload_files",
-        "fail_on_error" => false,
-        "diagnostic_name" => "copy-example-1.0",
-        "uids" =>  ['1'],
-        "parameters" =>  {
-          "nodes" =>[
-            "uid" => '1',
-            "files" => [{
-              "dst" => "/etc/fuel/nova.key",
-              "data" => "",
-              "permissions" => "0600",
-              "dir_permissions" => "0700"}],
-          ]
+    {
+      "priority" =>  100,
+      "type" =>  "upload_files",
+      "fail_on_error" => false,
+      "diagnostic_name" => "copy-example-1.0",
+      "uids" =>  ['1'],
+      "parameters" =>  {
+        "nodes" =>[
+          "uid" => '1',
+          "files" => [{
+            "dst" => "/etc/fuel/nova.key",
+            "data" => "",
+            "permissions" => "0600",
+            "dir_permissions" => "0700"}],
+        ]
+      }
+    }
+  end
+
+  let (:cobbler_sync_hook) do
+    {
+      "priority" => 800,
+      "type" => "cobbler_sync",
+      "fail_on_error" => false,
+      "diagnostic_name" => "copy-example-1.0",
+      "uids" => ['master'],
+      "parameters" => {
+        "provisioning_info" => {
+          "engine" => {
+            "url" => "http://10.20.0.2:80/cobbler_api",
+            "username" => "cobbler",
+            "password" => "cobblerpassword",
+            "master_ip" => "10.20.0.2"
+          }
         }
       }
-    end
+    }
+  end
 
   let(:hooks_data) do
     [
@@ -1322,5 +1342,23 @@ describe Astute::NailgunHooks do
     end #context
 
   end #reboot_hook
+
+  context '#cobbler_sync_hook' do
+
+    it 'should validate presence of provisioning_info' do
+      cobbler_sync_hook['parameters']['provisioning_info'] = {}
+      hooks = Astute::NailgunHooks.new([cobbler_sync_hook], ctx)
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+
+    it 'should authenticate in cobbler API and send sync request' do
+      hooks = Astute::NailgunHooks.new([cobbler_sync_hook], ctx)
+      Astute::CobblerManager.any_instance.expects(:sync).once
+
+      hooks.process
+    end
+
+  end #cobbler_sync_hook
 
 end # 'describe'
