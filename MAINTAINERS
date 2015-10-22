@@ -17,7 +17,7 @@ description:
   Exceptions are when maintainers are actually cores, or when maintainers
   are not available for some reason (e.g. on vacation).
 
-  [1] https://review.openstack.org/#/c/225376/ (to be replaced by html link once merged)
+  [1] http://specs.fuel-infra.org/fuel-specs-master/policy/team-structure.html
   [2] https://review.openstack.org/#/admin/groups/655,members
   [3] http://lists.openstack.org/pipermail/openstack-dev/2015-August/072406.html
 
@@ -26,22 +26,23 @@ description:
 
 maintainers:
 
-- name:   Vladimir Sharshov
-  email:  vsharshov@mirantis.com
-  IRC:    warpc
+- ./:
+  - name:   Vladimir Sharshov
+    email:  vsharshov@mirantis.com
+    IRC:    warpc
 
-- name:   Evgeny Li
-  email:  eli@mirantis.com
-  IRC:    evgenyl
+  - name:   Evgeny Li
+    email:  eli@mirantis.com
+    IRC:    evgenyl
 
-- name:   Dmytro Shuliak
-  email:  dshulyak@mirantis.com
-  IRC:    dshulyak
+  - name:   Dmytro Shuliak
+    email:  dshulyak@mirantis.com
+    IRC:    dshulyak
 
-- name:   Vladimir Kozhukalov
-  email:  vkozhukalov@mirantis.com
-  IRC:    kozhukalov
+  - name:   Vladimir Kozhukalov
+    email:  vkozhukalov@mirantis.com
+    IRC:    kozhukalov
 
-- name:   Lukasz Oles
-  email:  loles@mirantis.com
-  IRC:    salmon_
+  - name:   Lukasz Oles
+    email:  loles@mirantis.com
+    IRC:    salmon_
