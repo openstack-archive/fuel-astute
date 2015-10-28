@@ -29,9 +29,10 @@ module Astute
 
       # This is synchronious RPC call, so we are sure that data were sent and processed remotely
       upload_mclient = Astute::MClient.new(context, "uploadfile", [node['uid']])
+      # TODO: replace regexp with 'syck' yaml engine
       upload_mclient.upload(
         :path => "/etc/#{node['role']}.yaml",
-        :content => node.to_yaml,
+        :content => node.to_yaml.gsub(/([(root|wsrep|user|db|admin|rabbit|mongo)_]*passw[or]*d:\ )(.*)$/, '\1\'\2\''),
         :overwrite => true,
         :parents => true,
         :permissions => '0600'
