@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+require 'psych'
+
 module Astute
   class UploadFacts < PreDeploymentAction
 
@@ -22,6 +24,17 @@ module Astute
 
     private
 
+    # This is simple version of 'YAML::dump' with force quoting of strings started with prefixed numeral values
+    def safe_yaml_dump(obj)
+      visitor = Psych::Visitors::YAMLTree.new({})
+      visitor << obj
+      visitor.tree.grep(Psych::Nodes::Scalar).each do |node|
+        node.style = Psych::Nodes::Scalar::DOUBLE_QUOTED if
+          node.value =~ /^0[xbod]+/i && node.plain && node.quoted
+      end
+      visitor.tree.yaml(nil, {})
+    end
+
     def upload_facts(context, node)
       Astute.logger.info  "#{context.task_id}: storing metadata for node uid=#{node['uid']} "\
         "role=#{node['role']}"
@@ -31,7 +44,7 @@ module Astute
       upload_mclient = Astute::MClient.new(context, "uploadfile", [node['uid']])
       upload_mclient.upload(
         :path => "/etc/#{node['role']}.yaml",
-        :content => node.to_yaml,
+        :content => safe_yaml_dump(node),
         :overwrite => true,
         :parents => true,
         :permissions => '0600'
