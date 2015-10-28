@@ -31,7 +31,16 @@ describe Astute::UploadFacts do
                          'openstack_version_prev' => 'old_version',
                          'cobbler' => {
                             'profile' => 'centos-x86_64'
-                          }
+                          },
+                          'password_1' => '0xABC123',
+                          'password_2' => '0XABC123',
+                          'password_3' => '0b101010',
+                          'password_4' => '0B101010',
+                          'password_5' => '0o123456',
+                          'password_6' => '0O123456',
+                          'password_7' => '0d123456',
+                          'password_8' => '0D123456',
+                          'mac_address' => '00:12:34:ab:cd:ef'
                         }
                       ]
                     }
@@ -49,7 +58,24 @@ describe Astute::UploadFacts do
   it 'should upload facts using YAML format to nodes in <role>.yaml file' do
     mclient.expects(:upload).with(
       :path =>'/etc/controller.yaml',
-      :content => deploy_data.first.to_yaml,
+      :content => upload_facts.send(:safe_yaml_dump, deploy_data.first),
+      :overwrite => true,
+      :parents => true,
+      :permissions => '0600'
+    )
+
+    upload_facts.process(deploy_data, ctx)
+  end
+
+  it 'should upload valid YAML format to nodes in <role>.yaml file' do
+    valid_yaml_data = "---\nuid: '1'\nrole: controller\nopenstack_version_prev: old_version\ncobbler:\n  profile: centos-x86_64\n"\
+                      "password_1: \"0xABC123\"\npassword_2: \"0XABC123\"\npassword_3: \"0b101010\"\npassword_4: \"0B101010\"\n"\
+                      "password_5: \"0o123456\"\npassword_6: \"0O123456\"\npassword_7: \"0d123456\"\npassword_8: \"0D123456\"\n"\
+                      "mac_address: \"00:12:34:ab:cd:ef\"\n"
+
+    mclient.expects(:upload).with(
+      :path =>'/etc/controller.yaml',
+      :content => valid_yaml_data,
       :overwrite => true,
       :parents => true,
       :permissions => '0600'
