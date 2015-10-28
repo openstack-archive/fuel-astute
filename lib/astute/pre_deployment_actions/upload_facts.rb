@@ -31,7 +31,7 @@ module Astute
       upload_mclient = Astute::MClient.new(context, "uploadfile", [node['uid']])
       upload_mclient.upload(
         :path => "/etc/#{node['role']}.yaml",
-        :content => node.to_yaml,
+        :content => node.to_yaml.gsub(/([(root|wsrep|user|db|admin|rabbit|mongo)_]*passw[or]*d:\ )(.*)$/, '\1\'\2\''),
         :overwrite => true,
         :parents => true,
         :permissions => '0600'
