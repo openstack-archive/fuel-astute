@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+require 'psych'
+
 module Astute
   class UploadFacts < PreDeploymentAction
 
@@ -22,16 +24,32 @@ module Astute
 
     private
 
+    # This is simple version of 'YAML::dump' with force quoting of strings started with prefixed numeral values
+    def safe_yaml_dump(obj)
+      visitor = Psych::Visitors::YAMLTree.new({})
+      visitor << obj
+      visitor.tree.grep(Psych::Nodes::Scalar).each do |node|
+        node.style = Psych::Nodes::Scalar::DOUBLE_QUOTED if
+          node.value =~ /^0[xbod0]+/i && node.plain && node.quoted
+      end
+      visitor.tree.yaml(nil, {})
+    end
+
     def upload_facts(context, node)
+
+      # TODO: Should be changed to the default 'to_yaml' method only after upgrading
+      #       to Ruby 2.1 everywhere on client nodes which used this YAML.
+      yaml_data = safe_yaml_dump(node)
+
       Astute.logger.info  "#{context.task_id}: storing metadata for node uid=#{node['uid']} "\
         "role=#{node['role']}"
-      Astute.logger.debug "#{context.task_id}: stores metadata: #{node.to_yaml}"
+      Astute.logger.debug "#{context.task_id}: stores metadata: #{yaml_data}"
 
       # This is synchronious RPC call, so we are sure that data were sent and processed remotely
       upload_mclient = Astute::MClient.new(context, "uploadfile", [node['uid']])
       upload_mclient.upload(
         :path => "/etc/#{node['role']}.yaml",
-        :content => node.to_yaml,
+        :content => yaml_data,
         :overwrite => true,
         :parents => true,
         :permissions => '0600'
