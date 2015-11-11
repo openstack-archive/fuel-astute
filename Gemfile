@@ -1,3 +1,15 @@
 source 'https://rubygems.org'
-
-gemspec
+gem 'raemon', :git => 'https://github.com/pressly/raemon', :branch => 'v0.3.0'
+gem 'rake', '10.0.4'
+gem 'rspec', '2.13.0'
+gem 'activesupport', '3.0.10'
+gem 'mcollective-client', '~> 2.4.1'
+gem 'symboltable', '1.0.2'
+gem 'rest-client', '~> 1.6.7'
+gem 'popen4', '~> 0.1.2'
+gem 'net-ssh-multi', '~> 1.1'
+gem 'amqp', '1.4.1'
+gem 'facter'
+gem 'mocha', '0.13.3'
+gem 'simplecov', '~> 0.7.1'
+gem 'simplecov-rcov', '~> 0.2.3'

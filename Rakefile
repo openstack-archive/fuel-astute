@@ -1,5 +1,8 @@
 require 'rspec/core/rake_task'
 
+task :spec => 'spec:unit' do
+end
+
 namespace :spec do
   def test_pattern(test_type)
     specfile = ENV['S'].to_s.strip.length > 0 ? "*#{ENV['S']}*" : '*'
