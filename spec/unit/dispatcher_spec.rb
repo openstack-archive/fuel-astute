@@ -44,6 +44,22 @@ describe Astute::Server::Dispatcher do
       }
     }
 
+    let (:reset_data) {
+      {"pre_reset_tasks"=>[
+        {
+          "parameters"=>{
+            "cmd"=>"rm -rf /var/lib/fuel/keys/1",
+            "cwd"=>"/",
+            "interval"=>1,
+            "retries"=>3,
+            "timeout"=>30
+          },
+        "type"=>"shell",
+        "uids"=>["master"]
+        }
+      ]}
+    }
+
     it 'should not call check_ceph_osds' do
       data['args']['check_ceph'] = false
       Astute::Provisioner.any_instance.expects(:remove_nodes).once
@@ -62,6 +78,12 @@ describe Astute::Server::Dispatcher do
       orchestrator.stubs(:remove_ceph_mons).returns({"status" => "ready"}).once
       Astute::Provisioner.any_instance.expects(:remove_nodes).once
       dispatcher.remove_nodes(data)
+    end
+
+    it 'should call pre_reset_tasks before restarting nodes' do
+      dispatcher.expects(:pre_reset_tasks).once
+      dispatcher.stubs(:remove_nodes)
+      dispatcher.reset_environment(reset_data)
     end
   end
 
