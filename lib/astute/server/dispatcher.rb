@@ -175,6 +175,24 @@ module Astute
 
       def reset_environment(data)
         remove_nodes(data, reset=true)
+        post_reset_tasks(data)
+      end
+
+      def post_reset_tasks(data)
+        if data['args']['post_reset_tasks']
+          Astute.logger.info("Running post reset puppet tasks: #{data['args']['post_reset_tasks']}")
+          task_uuid = data['args']['task_uuid']
+          reporter = Astute::Server::Reporter.new(@producer, data['respond_to'], task_uuid)
+          ctx = Context.new(task_uuid, reporter)
+          Astute::NailgunHooks.new(
+            data['args']['post_reset_tasks'],
+            ctx,
+            'puppet'
+          ).process
+        end
+      rescue => e
+        Astute.logger.error(e.message)
+        raise e, "Post reset tasks encountered an error"
       end
 
       def execute_tasks(data)
