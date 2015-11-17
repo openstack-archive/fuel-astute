@@ -90,8 +90,8 @@ module Astute
           'DEBUG' => 'debug',
           'INFO' => 'info',
           'WARN' => 'warning',
-          'ERROR' => 'err',
-          'FATAL' => 'crit'
+          'ERROR' => 'error',
+          'FATAL' => 'critical'
         }
 
         "#{datetime.strftime("%Y-%m-%dT%H:%M:%S")} #{severity_map[severity]}: [#{Process.pid}] #{msg}\n"

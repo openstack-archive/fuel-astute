@@ -75,7 +75,7 @@ Astute.config.update(YAML.load(File.read(options.config_path))) if File.exists?(
 Astute.logger = options.log_path ? Logger.new(options.log_path) : Logger.new(STDOUT)
 Astute.logger.level = Logger.const_get(options.log_level.upcase)
 Astute.logger.formatter = proc do |severity, datetime, progname, msg|
-  severity_map = {'DEBUG' => 'debug', 'INFO' => 'info', 'WARN' => 'warning', 'ERROR' => 'err', 'FATAL' => 'crit'}
+  severity_map = {'DEBUG' => 'debug', 'INFO' => 'info', 'WARN' => 'warning', 'ERROR' => 'error', 'FATAL' => 'critical'}
   "#{datetime.strftime("%Y-%m-%dT%H:%M:%S")} #{severity_map[severity]}: [#{Process.pid}] #{msg}\n"
 end
 
