@@ -10,22 +10,22 @@ Gem::Specification.new do |s|
   s.authors = ['Mike Scherbakov']
   s.email   = ['mscherbakov@mirantis.com']
 
-  s.add_dependency 'activesupport', '3.0.10'
-  s.add_dependency 'mcollective-client', '~> 2.4.1'
-  s.add_dependency 'symboltable', '1.0.2'
-  s.add_dependency 'rest-client', '~> 1.6.7'
-  s.add_dependency 'net-ssh-multi', '~> 1.1'
+  s.add_dependency 'activesupport'
+  s.add_dependency 'mcollective-client'
+  s.add_dependency 'symboltable'
+  s.add_dependency 'rest-client'
+  s.add_dependency 'net-ssh-multi'
 
   # Astute as service
-  s.add_dependency 'amqp', '1.4.1'
-  s.add_dependency 'raemon', '0.3.0'
+  s.add_dependency 'amqp'
+  s.add_dependency 'raemon'
 
   s.add_development_dependency 'facter'
-  s.add_development_dependency 'rake', '10.0.4'
-  s.add_development_dependency 'rspec', '2.13.0'
-  s.add_development_dependency 'mocha', '0.13.3'
-  s.add_development_dependency 'simplecov', '~> 0.7.1'
-  s.add_development_dependency 'simplecov-rcov', '~> 0.2.3'
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'mocha'
+  s.add_development_dependency 'simplecov'
+  s.add_development_dependency 'simplecov-rcov'
 
   s.files   = Dir.glob("{bin,lib,spec,examples}/**/*")
   s.executables = ['astuted']
