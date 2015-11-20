@@ -1,0 +1,10 @@
+[Unit]
+Name=Astute daemon
+ConditionFileExecutable=/usr/bin/astuted
+
+[Service]
+EnvironmentFile=-/etc/sysconfig/astute
+ExecStart=/usr/bin/astuted $OPTIONS
+
+[Install]
+WantedBy=multi-user.target
