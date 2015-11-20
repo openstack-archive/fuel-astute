@@ -6,15 +6,26 @@
 %define gembuilddir %{buildroot}%{gemdir}
 
 Summary: Orchestrator for OpenStack deployment
-Name: ruby21-rubygem-astute
 Version: %{version}
+
+%if 0%{?rhel} == 6
+Name: ruby21-rubygem-astute
 Release: %{release}
+Provides: ruby21(Astute) = %{version}
+%else
+Name: rubygem-astute
+Release: %{release}~mos8.0.1
+Provides: ruby(Astute) = %{version}
+%endif
+
 Group: Development/Ruby
 License: Distributable
 URL: http://fuel.mirantis.com
 Source0: %{rbname}-%{version}.tar.gz
+
 # Make sure the spec template is included in the SRPM
 BuildRoot: %{_tmppath}/%{rbname}-%{version}-root
+%if 0%{?rhel} == 6
 Requires: ruby21 >= 2.1
 Requires: ruby21-rubygem-activesupport = 3.0.10
 Requires: ruby21-rubygem-mcollective-client = 2.4.1
@@ -25,11 +36,29 @@ Requires: ruby21-rubygem-raemon = 0.3.0
 Requires: ruby21-rubygem-net-ssh = 2.8.0
 Requires: ruby21-rubygem-net-ssh-gateway = 1.2.0
 Requires: ruby21-rubygem-net-ssh-multi = 1.2.0
-Requires: openssh-clients
 BuildRequires: ruby21 >= 2.1
+%else
+Requires: ruby
+Requires: rubygem-activesupport
+Requires: rubygem-mcollective-client
+Requires: rubygem-symboltable
+Requires: rubygem-rest-client
+Requires: rubygem-amqp
+Requires: rubygem-raemon
+Requires: rubygem-net-ssh
+Requires: rubygem-net-ssh-gateway
+Requires: rubygem-net-ssh-multi
+BuildRequires: ruby
+%endif
 BuildArch: noarch
-Provides: ruby21(Astute) = %{version}
+Requires: openssh-clients
 
+%if 0%{?fedora} > 16 || 0%{?rhel} > 6
+Requires(post): systemd-units
+Requires(preun): systemd-units
+Requires(postun): systemd-units
+BuildRequires: systemd-units
+%endif
 
 %description
 Deployment Orchestrator of Puppet via MCollective. Works as a library or from
@@ -54,9 +83,14 @@ cat > %{buildroot}%{_bindir}/astuted <<EOF
 ruby -r 'rubygems' -e "gem 'astute', '>= 0'; load Gem.bin_path('astute', 'astuted', '>= 0')" -- \$@
 EOF
 install -d -m 755 %{buildroot}%{_localstatedir}/log/astute
+install -D -m644 %{_builddir}/%{rbname}-%{version}/%{rbname}.sysconfig %{buildroot}/%{_sysconfdir}/sysconfig/%{rbname}
 #nailgun-mcagents
 mkdir -p %{buildroot}/usr/libexec/mcollective/mcollective/agent/
 cp -rf %{_builddir}/%{rbname}-%{version}/mcagents/* %{buildroot}/usr/libexec/mcollective/mcollective/agent/
+
+%if %{defined _unitdir}
+install -D -m644 %{_builddir}/%{rbname}-%{version}/%{rbname}.service %{buildroot}/%{_unitdir}/%{rbname}.service
+%endif
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -71,12 +105,27 @@ cp -rf %{_builddir}/%{rbname}-%{version}/mcagents/* %{buildroot}/usr/libexec/mco
 %dir %attr(0750, naily, naily) %{_sysconfdir}/%{rbname}
 %dir %attr(0755, naily, naily) %{_localstatedir}/log/%{rbname}
 %config(noreplace) %{_bindir}/astuted
+%config(noreplace) %{_sysconfdir}/sysconfig/%{rbname}
 
 %doc %{gemdir}/doc/%{rbname}-%{version}
 %{gemdir}/cache/%{rbname}-%{version}.gem
 %{gemdir}/specifications/%{rbname}-%{version}.gemspec
 
+%if %{defined _unitdir}
+/%{_unitdir}/%{rbname}.service
 
+%post
+%systemd_post %{rbname}.servive
+
+%preun
+%systemd_preun %{rbname}.service
+
+%postun
+%systemd_postun_with_restart %{rbname}.service
+
+%endif
+
+%if 0%{?rhel} == 6
 %package -n ruby21-nailgun-mcagents
 
 Summary:   MCollective Agents
@@ -91,6 +140,7 @@ MCollective agents
 
 %files -n ruby21-nailgun-mcagents
 /usr/libexec/mcollective/mcollective/agent/*
+%endif
 
 %package -n nailgun-mcagents
 
