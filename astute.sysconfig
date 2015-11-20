@@ -1,0 +1,6 @@
+CONFIG_FILE="/etc/astute/astuted.conf"
+LOG_FILE="/var/log/astute.log"
+LOG_LEVEL="info"
+WORKERS="1"
+
+OPTIONS="--config ${CONFIG_FILE} --logfile ${LOG_FILE} --loglevel ${LOG_LEVEL} --workers ${WORKERS}"
