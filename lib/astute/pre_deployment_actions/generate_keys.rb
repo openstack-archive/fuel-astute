@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require 'popen4'
+require 'open3'
 require 'fileutils'
 
 module Astute
@@ -47,8 +47,7 @@ module Astute
     private
 
     def run_system_command(cmd)
-      pid, _, stdout, stderr = Open4::popen4 cmd
-      _, status = Process::waitpid2 pid
+      stdout, stderr, status = Open3.capture3 cmd
       return status.exitstatus, stdout, stderr
     end
 
