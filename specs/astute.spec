@@ -13,6 +13,9 @@ Group: Development/Ruby
 License: Distributable
 URL: http://fuel.mirantis.com
 Source0: %{rbname}-%{version}.tar.gz
+Source1: %{rbname}.sysconfig
+Source2: %{rbname}.service
+
 # Make sure the spec template is included in the SRPM
 BuildRoot: %{_tmppath}/%{rbname}-%{version}-root
 Requires: ruby21 >= 2.1
@@ -31,6 +34,12 @@ BuildRequires: ruby21 >= 2.1
 BuildArch: noarch
 Provides: ruby21(Astute) = %{version}
 
+%if 0%{?fedora} > 16 || 0%{?rhel} > 6
+Requires(post): systemd-units
+Requires(preun): systemd-units
+Requires(postun): systemd-units
+BuildRequires: systemd-units
+%endif
 
 %description
 Deployment Orchestrator of Puppet via MCollective. Works as a library or from
@@ -55,9 +64,14 @@ cat > %{buildroot}%{_bindir}/astuted <<EOF
 ruby -r 'rubygems' -e "gem 'astute', '>= 0'; load Gem.bin_path('astute', 'astuted', '>= 0')" -- \$@
 EOF
 install -d -m 755 %{buildroot}%{_localstatedir}/log/astute
+install -D -m644 %{SOURCE1} %{buildroot}/%{_sysconfdir}/sysconfig/%{rbname}
 #nailgun-mcagents
 mkdir -p %{buildroot}/usr/libexec/mcollective/mcollective/agent/
 cp -rf %{_builddir}/%{rbname}-%{version}/mcagents/* %{buildroot}/usr/libexec/mcollective/mcollective/agent/
+
+%if %{defined _unitdir}
+install -D -m644 %{SOURCE2} %{buildroot}/%{_unitdir}/%{rbname}.service
+%endif
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -72,11 +86,25 @@ cp -rf %{_builddir}/%{rbname}-%{version}/mcagents/* %{buildroot}/usr/libexec/mco
 %dir %attr(0750, naily, naily) %{_sysconfdir}/%{rbname}
 %dir %attr(0755, naily, naily) %{_localstatedir}/log/%{rbname}
 %config(noreplace) %{_bindir}/astuted
+%config(noreplace) %{_sysconfdir}/sysconfig/%{rbname}
 
 %doc %{gemdir}/doc/%{rbname}-%{version}
 %{gemdir}/cache/%{rbname}-%{version}.gem
 %{gemdir}/specifications/%{rbname}-%{version}.gemspec
 
+%if %{defined _unitdir}
+/%{_unitdir}/%{rbname}.service
+
+%post
+%systemd_post %{rbname}.servive
+
+%preun
+%systemd_preun %{rbname}.service
+
+%postun
+%systemd_postun_with_restart %{rbname}.service
+
+%endif
 
 %package -n ruby21-nailgun-mcagents
 
