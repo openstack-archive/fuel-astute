@@ -87,14 +87,14 @@ module Astute
       @logger = Logger.new(LOG_PATH)
       @logger.formatter = proc do |severity, datetime, progname, msg|
         severity_map = {
-          'DEBUG' => 'debug',
-          'INFO' => 'info',
-          'WARN' => 'warning',
-          'ERROR' => 'err',
-          'FATAL' => 'crit'
+          'DEBUG' => 'DEBUG',
+          'INFO' => 'INFO',
+          'WARN' => 'WARNING',
+          'ERROR' => 'ERROR',
+          'FATAL' => 'CRITICAL'
         }
 
-        "#{datetime.strftime("%Y-%m-%dT%H:%M:%S")} #{severity_map[severity]}: [#{Process.pid}] #{msg}\n"
+        "#{datetime.strftime("%Y-%m-%d %H:%M:%S")} #{severity_map[severity]} [#{Process.pid}] #{msg}\n"
       end
     end
     @logger
