@@ -1,0 +1,14 @@
+Verified+2: Jenkins
+Code-Review+1: Thomas Goirand <thomas@goirand.fr>
+Code-Review+1: Evgeniy L <eli@mirantis.com>
+Code-Review+2: Vladimir Sharshov <vsharshov@mirantis.com>
+Workflow+1: Vladimir Sharshov <vsharshov@mirantis.com>
+Code-Review+1: Vladimir Kuklin <vkuklin@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+1: Dmitry Ilyin <dilyin@mirantis.com>
+Code-Review+1: Stanislaw Bogatkin <sbogatkin@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 23 Nov 2015 15:56:02 +0000
+Reviewed-on: https://review.openstack.org/248191
+Project: openstack/fuel-astute
+Branch: refs/heads/master
