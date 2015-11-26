@@ -61,7 +61,7 @@ module Astute
 
       # ready, error or deploying
       result.fetch('status', 'deploying')
-    rescue MClientTimeout
+    rescue MClientTimeout, Timeout::Error
       Astute.logger.warn "MCollective agents #{@node['uid']} " \
         "didn't respond within the allotted time"
       'error'
