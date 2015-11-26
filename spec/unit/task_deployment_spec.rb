@@ -1,4 +1,4 @@
-#    Copyright 2013 Mirantis, Inc.
+#    Copyright 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -11,24 +11,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-require 'timeout'
 
-module Astute
 
-  # Base class for all errors
-  class AstuteError < StandardError; end
+require File.join(File.dirname(__FILE__), '../spec_helper')
 
-  # Provisioning log errors
-  class ParseProvisionLogsError < AstuteError; end
-  # Image provisioning errors
-  class FailedImageProvisionError < AstuteError; end
-  # Deployment engine error
-  class DeploymentEngineError < AstuteError; end
-  # MClient errors
-  class MClientError < AstuteError; end
-  # MClient timeout error
-  class MClientTimeout < Timeout::Error; end
-  # Task validation error
-  class TaskValidationError < AstuteError; end
+describe Astute::TaskDeployment do
+  include SpecHelpers
+
 
 end

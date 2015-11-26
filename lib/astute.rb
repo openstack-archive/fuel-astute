@@ -45,14 +45,18 @@ require 'astute/task_manager'
 require 'astute/pre_delete'
 require 'astute/version'
 require 'astute/server/async_logger'
-
+require 'astute/task'
+require 'astute/task_deployment'
+require 'astute/task_node'
+require 'fuel_deployment'
 
 ['/astute/pre_deployment_actions/*.rb',
  '/astute/pre_deploy_actions/*.rb',
  '/astute/pre_node_actions/*.rb',
  '/astute/post_deploy_actions/*.rb',
  '/astute/post_deployment_actions/*.rb',
- '/astute/common_actions/*.rb'
+ '/astute/common_actions/*.rb',
+ '/astute/tasks/*.rb'
  ].each do |path|
   Dir[File.dirname(__FILE__) + path].each{ |f| require f }
 end
