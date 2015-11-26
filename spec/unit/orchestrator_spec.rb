@@ -24,6 +24,25 @@ describe Astute::Orchestrator do
     @reporter.stub_everything
   end
 
+  describe '#task_deployment' do
+    it 'should run task deployment' do
+      deployment_info = []
+      deployment_tasks = {'1' => []}
+
+      Astute::TaskDeployment.any_instance.expects(:deploy).with(
+        deployment_info,
+        deployment_tasks
+      )
+
+      @orchestrator.task_deploy(
+        @reporter,
+        'task_id',
+        deployment_info,
+        deployment_tasks
+      )
+    end
+  end
+
   describe '#verify_networks' do
     it 'should validate nodes availability before check' do
       nodes = [{'uid' => '1'}, {'uid' => '2'}]
