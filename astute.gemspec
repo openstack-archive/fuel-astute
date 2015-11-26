@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'symboltable', '>= 1.0.2'
   s.add_dependency 'rest-client', '>= 1.6.7'
   s.add_dependency 'net-ssh-multi', '>= 1.1'
+  s.add_dependency 'fuel-deployment'
 
   # Astute as service
   s.add_dependency 'bunny', '>= 2.0'
