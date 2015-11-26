@@ -131,7 +131,21 @@ module Astute
       super
       @actions = [
         EnablePuppetDeploy.new,
-        UploadFacts.new
+        UploadFacts.new,
+        InitialConnectFacts.new
+      ]
+    end
+
+  end
+
+  class TaskPreDeploymentActions < DeployActions
+
+    def initialize(deployment_info, context)
+      super
+      @actions = [
+        EnablePuppetDeploy.new,
+        UploadFacts.new,
+        InitialConnectFacts.new
       ]
     end
 
