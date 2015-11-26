@@ -68,7 +68,7 @@ describe MClient do
 
     mclient = MClient.new(@ctx, "faketest", nodes.map {|x| x['uid']}, check_result=true, timeout=nil, retries=1)
     expect { mclient.echo(:msg => 'hello world') }.to \
-      raise_error(Astute::MClientTimeout, /MCollective agents '3' didn't respond./)
+      raise_error(Astute::MClientTimeout, /MCollective agents 'faketest' '3' didn't respond./)
   end
 
   it "should raise error if agent returns statuscode != 0" do
