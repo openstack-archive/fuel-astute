@@ -54,6 +54,14 @@ require 'astute/version'
   Dir[File.dirname(__FILE__) + path].each{ |f| require f }
 end
 
+require 'astute/nailgun_task'
+[
+ '/astute/nailgun_tasks/*.rb'
+].each do |path|
+  Dir[File.dirname(__FILE__) + path].each{ |f| require f }
+end
+require 'astute/task_deployment'
+
 require 'astute/ssh'
 require 'astute/ssh_actions/ssh_erase_nodes'
 require 'astute/ssh_actions/ssh_hard_reboot'
