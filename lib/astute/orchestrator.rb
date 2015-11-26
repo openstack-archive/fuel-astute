@@ -52,6 +52,16 @@ module Astute
       )
     end
 
+    def task_deploy(up_reporter, task_id, deployment_info, deployment_tasks)
+      context = Context.new(task_id, up_reporter)
+      Astute.logger.info "Task based deployment will be used"
+
+      deployment_engine = TaskDeployment.new(context)
+      deployment_engine.deploy(deployment_info, deployment_tasks)
+
+      context.status
+    end
+
     def provision(up_reporter, task_id, provisioning_info, provision_method)
       proxy_reporter = ProxyReporter::ProvisiningProxyReporter.new(
         up_reporter,
