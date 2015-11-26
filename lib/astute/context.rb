@@ -35,5 +35,9 @@ module Astute
       reporter.report(data)
     end
 
+    def report(msg)
+      @reporter.report msg
+    end
+
   end
 end

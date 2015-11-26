@@ -59,6 +59,7 @@ module Astute
     conf[:puppet_deploy_interval] = 2     # sleep for ## sec, then check puppet status again
     conf[:puppet_fade_timeout] = 120      # how long it can take for puppet to exit after dumping to last_run_summary
     conf[:puppet_retries] = 2             # how many times astute will try to run puppet
+    conf[:puppet_module_path] = '/etc/puppet/modules' # where we should find basic modules for puppet
     conf[:mc_retries] = 10                # MClient tries to call mcagent before failure
     conf[:mc_retry_interval] = 1          # MClient sleeps for ## sec between retries
     conf[:puppet_fade_interval] = 30      # retry every ## seconds to check puppet state if it was running
@@ -66,7 +67,9 @@ module Astute
     conf[:reboot_timeout] = 240           # how long it can take for node to reboot
     conf[:dump_timeout] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
-
+    conf[:shell_timeout] = 300            # default timeout for shell task
+    conf[:shell_cwd] = '/'                # default cwd for shell task
+    conf[:rsync_options] = '-c -r --delete' # default rsync options
     conf[:keys_src_dir] = '/var/lib/fuel/keys' # path where ssh and openssl keys will be created
     conf[:puppet_ssh_keys] = [
       'neutron',
