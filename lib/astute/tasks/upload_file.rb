@@ -1,4 +1,4 @@
-#    Copyright 2013 Mirantis, Inc.
+#    Copyright 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -11,24 +11,30 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-require 'timeout'
 
 module Astute
+  class UploadFile < Task
 
-  # Base class for all errors
-  class AstuteError < StandardError; end
+    private
 
-  # Provisioning log errors
-  class ParseProvisionLogsError < AstuteError; end
-  # Image provisioning errors
-  class FailedImageProvisionError < AstuteError; end
-  # Deployment engine error
-  class DeploymentEngineError < AstuteError; end
-  # MClient errors
-  class MClientError < AstuteError; end
-  # MClient timeout error
-  class MClientTimeout < Timeout::Error; end
-  # Task validation error
-  class TaskValidationError < AstuteError; end
+    def process
+      @upload_status = :pending
+      @work_thread = Thread.new do
+        @upload_status = upload_file(@task['node_id'], @task['parameters'])
+      end
+    end
 
+    def calculate_status
+      failed! and return if @upload_status == false
+      succeed! and return if @upload_status == true
+
+      failed! if !@work_thread.alive? && @upload_status == :pending
+    end
+
+    def validation
+      validate_presence(@task, 'node_id')
+      validate_presence(@task['parameters'], 'files')
+    end
+
+  end
 end
