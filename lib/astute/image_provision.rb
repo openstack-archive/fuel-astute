@@ -54,7 +54,7 @@ module Astute
       uids = nodes.map { |node| node['uid'] }
       Astute.logger.debug "#{ctx.task_id}: running provision script: #{uids.join(', ')}"
       shell = MClient.new(ctx, 'execute_shell_command', uids, check_result=true, timeout=3600, retries=1)
-      shell.execute(:cmd => 'flock -n /var/lock/provision.lock /usr/bin/provision')
+      shell.execute(:cmd => 'flock -n /var/lock/provision.lock /usr/bin/provision --data_driver=nailgun_simple')
     end
 
     def self.report_error(ctx, msg)
