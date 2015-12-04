@@ -10,15 +10,15 @@ Gem::Specification.new do |s|
   s.authors = ['Mike Scherbakov']
   s.email   = ['mscherbakov@mirantis.com']
 
-  s.add_dependency 'activesupport', '3.0.10'
-  s.add_dependency 'mcollective-client', '~> 2.4.1'
-  s.add_dependency 'symboltable', '1.0.2'
-  s.add_dependency 'rest-client', '~> 1.6.7'
-  s.add_dependency 'net-ssh-multi', '~> 1.1'
+  s.add_dependency 'activesupport', '>= 3.0.10'
+  s.add_dependency 'mcollective-client', '>= 2.4.1'
+  s.add_dependency 'symboltable', '>= 1.0.2'
+  s.add_dependency 'rest-client', '>= 1.6.7'
+  s.add_dependency 'net-ssh-multi', '>= 1.1'
 
   # Astute as service
-  s.add_dependency 'bunny', ">= 2.0"
-  s.add_dependency 'raemon', '0.3.0'
+  s.add_dependency 'bunny', '>= 2.0'
+  s.add_dependency 'raemon', '>= 0.3'
 
   s.add_development_dependency 'facter'
   s.add_development_dependency 'rake', '10.0.4'
