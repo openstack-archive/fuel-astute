@@ -26,7 +26,15 @@ require 'rspec'
 # Following require is needed for rcov to provide valid results
 require 'rspec/autorun'
 
-require File.join(File.dirname(__FILE__), '../lib/astute')
+lib_dir = File.join File.dirname(__FILE__), '../lib'
+lib_dir = File.absolute_path File.expand_path lib_dir
+$LOAD_PATH << lib_dir
+
+require 'astute'
+require 'fuel_deployment'
+
+Deployment::Log.logger.level = Logger::WARN
+
 Dir[File.join(File.dirname(__FILE__), 'unit/fixtures/*.rb')].each { |file| require file }
 
 # NOTE(mihgen): I hate to wait for unit tests to complete,
