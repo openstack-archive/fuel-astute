@@ -51,6 +51,7 @@ Requires: rubygem-raemon
 Requires: rubygem-net-ssh
 Requires: rubygem-net-ssh-gateway
 Requires: rubygem-net-ssh-multi
+Requires: rubygem-ruby-graphviz
 BuildRequires: ruby
 BuildRequires: rubygems-devel
 %endif
