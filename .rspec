@@ -1,3 +1,4 @@
 --color
 -f d
+-r spec_helper
 #--profile
