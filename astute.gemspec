@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
   # Astute as service
   s.add_dependency 'bunny', '>= 2.0'
   s.add_dependency 'raemon', '>= 0.3'
+  s.add_dependency 'ruby-graphviz'
 
   s.add_development_dependency 'facter'
   s.add_development_dependency 'rake', '10.0.4'
