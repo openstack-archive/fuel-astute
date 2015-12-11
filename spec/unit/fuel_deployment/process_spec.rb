@@ -288,12 +288,12 @@ describe Deployment::Node do
 
     it 'can generate dot graph' do
       graph = <<-eof
-digraph test_graph {
+digraph 'test_graph' {
 node[ style = "filled, solid"];
-  "Task[task1/node1]" [label = "Task[task1/node1]"], fillcolor = "yellow"];
-  "Task[task2/node1]" [label = "Task[task2/node1]"], fillcolor = "white"];
-  "Task[task3/node1]" [label = "Task[task3/node1]"], fillcolor = "white"];
-  "Task[task4/node1]" [label = "Task[task4/node1]"], fillcolor = "white"];
+  "Task[task1/node1]" [label = "Task[task1/node1]", fillcolor = "yellow"];
+  "Task[task2/node1]" [label = "Task[task2/node1]", fillcolor = "white"];
+  "Task[task3/node1]" [label = "Task[task3/node1]", fillcolor = "white"];
+  "Task[task4/node1]" [label = "Task[task4/node1]", fillcolor = "white"];
 
   "Task[task1/node1]" -> "Task[task2/node1]";
   "Task[task1/node1]" -> "Task[task3/node1]";
