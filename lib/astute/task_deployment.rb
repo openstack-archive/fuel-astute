@@ -72,7 +72,7 @@ module Astute
         @ctx.report('status' => 'ready', 'progress' => 100)
       else
         result[:failed_nodes].each do |node|
-          report_status = {
+          node_status = {
             'uid' => node.id,
             'status' => 'error',
             'error_type' => 'deploy',
@@ -80,12 +80,12 @@ module Astute
           }
           task = result[:failed_tasks].find{ |t| t.node == node }
           if task
-            report_status.merge!({
+            node_status.merge!({
               'task' => task.name,
               'task_status' => task.status.to_s
             })
           end
-          @ctx.report(report_status)
+          @ctx.report('nodes' => [node_status])
         end
         @ctx.report(
           'status' => 'error',

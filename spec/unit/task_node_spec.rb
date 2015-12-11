@@ -216,10 +216,11 @@ describe Astute::TaskNode do
         Astute::Puppet.any_instance.expects(:status).returns(:running)
         task_node.run(task)
         ctx.expects(:report).with({
-          'uid' => 'node_id',
-          'status' => 'deploying',
-          'task' => task.name,
-          'progress' => 0
+          'nodes' => [{
+            'uid' => 'node_id',
+            'status' => 'deploying',
+            'task' => task.name,
+            'progress' => 0}]
         })
         task_node.poll
       end
@@ -228,11 +229,12 @@ describe Astute::TaskNode do
         Astute::Puppet.any_instance.expects(:status).returns(:successful)
         task_node.run(task)
         ctx.expects(:report).with({
-          'uid' => 'node_id',
-          'status' => 'ready',
-          'task' => task.name,
-          'task_status' => 'successful',
-          'progress' => 100
+          'nodes' => [{
+            'uid' => 'node_id',
+            'status' => 'ready',
+            'task' => task.name,
+            'task_status' => 'successful',
+            'progress' => 100}]
         })
         task_node.poll
       end
@@ -241,12 +243,13 @@ describe Astute::TaskNode do
         Astute::Puppet.any_instance.expects(:status).returns(:failed)
         task_node.run(task)
         ctx.expects(:report).with({
-          'uid' => 'node_id',
-          'status' => 'error',
-          'task' => task.name,
-          'task_status' => 'failed',
-          'error_type' => 'deploy',
-          'progress' => 100,
+          'nodes' => [{
+            'uid' => 'node_id',
+            'status' => 'error',
+            'task' => task.name,
+            'task_status' => 'failed',
+            'error_type' => 'deploy',
+            'progress' => 100}]
         })
         task_node.poll
       end
@@ -260,11 +263,12 @@ describe Astute::TaskNode do
 
         task_node.run(task)
         ctx.expects(:report).with({
-          'uid' => 'node_id',
-          'status' => 'deploying',
-          'task' => task.name,
-          'task_status' => 'successful',
-          'progress' => 50
+          'nodes' => [{
+            'uid' => 'node_id',
+            'status' => 'deploying',
+            'task' => task.name,
+            'task_status' => 'successful',
+            'progress' => 50}]
         })
         task_node.poll
       end
@@ -278,11 +282,12 @@ describe Astute::TaskNode do
 
         task_node.run(task)
         ctx.expects(:report).with({
-          'uid' => 'node_id',
-          'status' => 'deploying',
-          'task' => task.name,
-          'task_status' => 'failed',
-          'progress' => 50
+          'nodes' => [{
+            'uid' => 'node_id',
+            'status' => 'deploying',
+            'task' => task.name,
+            'task_status' => 'failed',
+            'progress' => 50}]
         })
         task_node.poll
       end
