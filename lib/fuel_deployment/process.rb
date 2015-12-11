@@ -334,10 +334,10 @@ module Deployment
     # @return [String]
     def to_dot
       template = <<-eos
-digraph <%= id || 'graph' %> {
+digraph "<%= id || graph %>" {
 node[ style = "filled, solid"];
 <% each_task do |task| -%>
-  "<%= task %>" [label = "<%= task %>"], fillcolor = "<%= task.color %>"];
+  "<%= task %>" [label = "<%= task %>", fillcolor = "<%= task.color %>"];
 <% end -%>
 
 <% each_task do |task| -%>
