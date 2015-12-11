@@ -242,8 +242,10 @@ module Deployment
     # returns nil if there is no such task
     # @return [Deployment::Task, nil]
     def ready_task
-      find do |task|
+      select do |task|
         task.ready?
+      end.max_by do |task|
+        task.weight
       end
     end
     alias :next_task :ready_task

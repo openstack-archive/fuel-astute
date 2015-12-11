@@ -13,6 +13,7 @@
 #    under the License.
 
 require 'erb'
+require 'open3'
 
 module Deployment
 
@@ -34,6 +35,7 @@ module Deployment
 
     attr_reader :nodes
     attr_accessor :id
+    attr_accessor :plot_number
 
     # Create the Process object with these nodes
     # @param [Array<Deployment::Node>] nodes The array of nodes to deploy
@@ -334,10 +336,10 @@ module Deployment
     # @return [String]
     def to_dot
       template = <<-eos
-digraph <%= id || 'graph' %> {
+digraph "<%= id || graph %>" {
 node[ style = "filled, solid"];
 <% each_task do |task| -%>
-  "<%= task %>" [label = "<%= task %>"], fillcolor = "<%= task.color %>"];
+  "<%= task %>" [label = "<%= task %>", fillcolor = "<%= task.color %>"];
 <% end -%>
 
 <% each_task do |task| -%>
@@ -348,6 +350,32 @@ node[ style = "filled, solid"];
 }
       eos
       ERB.new(template, nil, '-').result(binding)
+    end
+
+    # Plot the graph using the 'dot' binary
+    # @param [Integer,String] suffix File name index or suffix.
+    # Will use incrementing value unless provided.
+    # @param [String] type The type of image produced
+    # @return [true, false] Successful?
+    def plot(suffix=nil, type='png')
+      unless suffix
+        @plot_number = 0 unless @plot_number
+        suffix = @plot_number
+        @plot_number += 1
+      end
+      if suffix.is_a? Integer
+        suffix = suffix.to_s.rjust 5, '0'
+      end
+      graph_name = id || 'graph'
+      file_name = "#{graph_name}-#{suffix}.#{type}"
+      command = "dot -T #{type} > #{file_name}"
+      Open3.popen2e(command) do |stdin, out, process|
+        stdin.puts to_dot
+        stdin.close
+        output = out.read
+        debug output unless output.empty?
+        process.value.exitstatus == 0
+      end
     end
 
     # @return [String]
