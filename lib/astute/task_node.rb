@@ -39,10 +39,12 @@ module Astute
       task.status = @task_engine.status
       if @task.running?
         @ctx.report({
-          'uid' => id,
-          'status' => 'deploying',
-          'task' => task.name,
-          'progress' => current_progress_bar
+          'nodes' => [{
+            'uid' => id,
+            'status' => 'deploying',
+            'task' => task.name,
+            'progress' => current_progress_bar
+          }]
         })
       else
         set_status_online
@@ -56,13 +58,15 @@ module Astute
         end
 
         report_status = {
-          'uid' => id,
-          'status' => deploy_status,
-          'task' => task.name,
-          'task_status' => task.status.to_s,
-          'progress' => current_progress_bar
+          'nodes' => [{
+            'uid' => id,
+            'status' => deploy_status,
+            'task' => task.name,
+            'task_status' => task.status.to_s,
+            'progress' => current_progress_bar
+          }]
         }
-        report_status.merge!('error_type' => 'deploy') if
+        report_status['nodes'].first.merge!('error_type' => 'deploy') if
           deploy_status == 'error'
         @ctx.report(report_status)
       end
