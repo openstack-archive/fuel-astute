@@ -386,6 +386,22 @@ module Deployment
       forward_dependencies.each(&block)
     end
 
+    # Count the number of this task's forward dependencies
+    # multiplied by 10 if they lead to the other nodes.
+    # This value can be used to determine how important this
+    # task is and should be selected earlier.
+    # @return [Integer]
+    def weight
+      return @weight if @weight
+      @weight = each_forward_dependency.inject(0) do |weight, task|
+        if task.node == self.node
+          weight + 1
+        else
+          weight + 10
+        end
+      end
+    end
+
     # Check if any of direct backward dependencies of this
     # task are failed and set dep_failed status if so.
     # @return [true, false]

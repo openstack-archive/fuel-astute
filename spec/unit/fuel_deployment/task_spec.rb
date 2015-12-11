@@ -122,6 +122,14 @@ describe Deployment::Task do
       expect(task2_1.color).to eq :purple
       expect(task2_2.color).to eq :yellow
     end
+
+    it 'can determine the task weight' do
+      task2.after task1
+      task2_1.after task2
+      expect(task2.weight).to eq 10
+      expect(task1.weight).to eq 1
+      expect(task2_1.weight).to eq 0
+    end
   end
 
   context '#dependencies basic' do
