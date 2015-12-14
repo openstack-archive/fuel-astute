@@ -48,6 +48,7 @@ module Astute
     # instead of run it using full graph. Use from 7.1 to 8.0. Report progress
     # based on puppet logs
     def granular_deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
+      time_start = Time.now.to_i
       deploy_cluster(
         up_reporter,
         task_id,
@@ -56,19 +57,29 @@ module Astute
         pre_deployment,
         post_deployment
       )
+    ensure
+      Astute.logger.info "Deployment summary: #{time_summary(time_start)}"
     end
 
     # Deploy method which use small tasks in full graph.
     # Use from 8.0 (experimental). Report progress based on tasks
     def task_deploy(up_reporter, task_id, deployment_info, deployment_tasks)
-      context = Context.new(task_id, up_reporter)
+      time_start = Time.now.to_i
+      proxy_reporter = ProxyReporter::TaskProxyReporter.new(
+        up_reporter,
+        deployment_tasks.keys
+      )
+      context = Context.new(task_id, proxy_reporter)
       Astute.logger.info "Task based deployment will be used"
 
       deployment_engine = TaskDeployment.new(context)
       deployment_engine.deploy(deployment_info, deployment_tasks)
+    ensure
+      Astute.logger.info "Deployment summary: #{time_summary(time_start)}"
     end
 
     def provision(up_reporter, task_id, provisioning_info, provision_method)
+      time_start = Time.now.to_i
       proxy_reporter = ProxyReporter::ProvisiningProxyReporter.new(
         up_reporter,
         provisioning_info
@@ -108,6 +119,8 @@ module Astute
       cobbler.sync
 
       provisioner.provision(proxy_reporter, task_id, provisioning_info, provision_method)
+    ensure
+      Astute.logger.info "Provision summary: #{time_summary(time_start)}"
     end
 
     def remove_nodes(reporter, task_id, engine_attrs, nodes, options={})
@@ -254,6 +267,11 @@ module Astute
         result = remove_ceph_mons(reporter, task_id, nodes)
       end
       result
+    end
+
+    def time_summary(time)
+      rs = (Time.now.to_i - time).to_i
+      "#{rs / 60 / 60} hours, #{rs / 60} minutes, #{rs % 60} seconds"
     end
 
   end # class
