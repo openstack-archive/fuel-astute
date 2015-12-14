@@ -41,6 +41,25 @@ describe Astute::Orchestrator do
         deployment_tasks
       )
     end
+
+    it 'should use task proxy reporter' do
+      deployment_info = []
+      deployment_tasks = {'1' => []}
+
+      Astute::TaskDeployment.any_instance.stubs(:deploy)
+
+      Astute::ProxyReporter::TaskProxyReporter.expects(:new).with(
+        @reporter,
+        deployment_tasks.keys
+      )
+
+      @orchestrator.task_deploy(
+        @reporter,
+        'task_id',
+        deployment_info,
+        deployment_tasks
+      )
+    end
   end
 
   describe '#verify_networks' do

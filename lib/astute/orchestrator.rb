@@ -61,7 +61,11 @@ module Astute
     # Deploy method which use small tasks in full graph.
     # Use from 8.0 (experimental). Report progress based on tasks
     def task_deploy(up_reporter, task_id, deployment_info, deployment_tasks)
-      context = Context.new(task_id, up_reporter)
+      proxy_reporter = ProxyReporter::TaskProxyReporter.new(
+        up_reporter,
+        deployment_tasks.keys
+      )
+      context = Context.new(task_id, proxy_reporter)
       Astute.logger.info "Task based deployment will be used"
 
       deployment_engine = TaskDeployment.new(context)
