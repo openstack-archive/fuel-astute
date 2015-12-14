@@ -23,6 +23,7 @@ module Astute
       @task = task
       @status = :pending
       @ctx = context
+      @time_start = Time.now.to_i
     end
 
     # Run current task on node, specified in task
@@ -171,6 +172,7 @@ module Astute
 
     def failed!
       self.status = :failed
+      time_summary
     end
 
     def failed?
@@ -187,6 +189,7 @@ module Astute
 
     def succeed!
       self.status = :successful
+      time_summary
     end
 
     def successful?
@@ -199,6 +202,13 @@ module Astute
 
     def task_name
       @task['id'] || @task['diagnostic_name']
+    end
+
+    def time_summary
+      amount_time = (Time.now.to_i - @time_start).to_i
+      wasted_time = Time.at(amount_time).utc.strftime("%H:%M:%S")
+      Astute.logger.debug("Task time summary: #{task_name} with status" \
+        " #{@status.to_s} on node #{@task['node_id']} took #{wasted_time}")
     end
 
   end

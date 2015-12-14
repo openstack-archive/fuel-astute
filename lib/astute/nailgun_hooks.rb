@@ -26,6 +26,8 @@ module Astute
       @nailgun_hooks.sort_by { |f| f['priority'] }.each do |hook|
         Astute.logger.info "Run hook #{hook.to_yaml}"
 
+        time_start = Time.now.to_i
+
         hook_return = case hook['type']
         when 'copy_files' then copy_files_hook(hook)
         when 'upload_files' then upload_files_hook(hook)
@@ -38,8 +40,10 @@ module Astute
         else raise "Unknown hook type #{hook['type']}"
         end
 
+        time_summary(time_start, hook, hook_return)
+        hook_name = task_name(hook)
+
         is_raise_on_error = hook.fetch('fail_on_error', true)
-        hook_name = hook['id'] || hook['diagnostic_name'] || hook['type']
 
         if hook_return['error'] && is_raise_on_error
           nodes = hook['uids'].map do |uid|
@@ -64,6 +68,21 @@ module Astute
     end
 
     private
+
+    def task_name(hook)
+      hook['id'] || hook['diagnostic_name'] || hook['type']
+    end
+
+    def time_summary(time_start, hook, hook_return)
+      status =  hook_return && !hook_return['error'] ? 'successful' : 'error'
+      amount_time = (Time.now.to_i - time_start).to_i
+      wasted_time = Time.at(amount_time).utc.strftime("%H:%M:%S")
+
+      hook['uids'].each do |node_id|
+        Astute.logger.debug("Task time summary: #{task_name(hook)} with status" \
+          " #{status} on node #{node_id} took #{wasted_time}")
+      end
+    end
 
     def copy_files_hook(hook)
       validate_presence(hook, 'uids')
