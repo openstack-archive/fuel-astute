@@ -45,9 +45,14 @@ require 'astute/task_manager'
 require 'astute/pre_delete'
 require 'astute/version'
 require 'astute/server/async_logger'
+require 'astute/reporter'
+require 'astute/mclient'
+require 'astute/context'
+require 'astute/nodes_remover'
 require 'astute/task'
 require 'astute/task_deployment'
 require 'astute/task_node'
+require 'astute/task_proxy_reporter'
 require 'fuel_deployment'
 
 ['/astute/pre_deployment_actions/*.rb',
@@ -75,10 +80,6 @@ require 'astute/server/reporter'
 
 module Astute
   # Library
-  autoload 'Context', 'astute/context'
-  autoload 'MClient', 'astute/mclient'
-  autoload 'ProxyReporter', 'astute/reporter'
-  autoload 'NodesRemover', 'astute/nodes_remover'
   autoload 'Node', 'astute/node'
   autoload 'NodesHash', 'astute/node'
   autoload 'Rsyslogd', 'astute/rsyslogd'
