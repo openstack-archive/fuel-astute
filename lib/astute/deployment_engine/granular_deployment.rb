@@ -27,6 +27,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
     Astute.logger.info "#{@ctx.task_id}: Starting deployment"
 
     @running_tasks = {}
+    @start_times = {}
     @nodes_roles = nodes.inject({}) { |h, n| h.merge({n['uid'] => n['role']}) }
     @nodes_by_uid = nodes.inject({}) { |h, n| h.merge({ n['uid'] => n }) }
     @puppet_debug = nodes.first.fetch('puppet_debug', true)
@@ -74,7 +75,13 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
   end
 
   def run_task(node_id, task)
-    Astute.logger.info "#{@ctx.task_id}: run task '#{task.to_yaml}' on node #{node_id}"
+    @start_times[node_id] = {
+      'time_start' => Time.now.to_i,
+      'task_name' => task_name(task)
+    }
+
+    Astute.logger.info "#{@ctx.task_id}: run task '#{task.to_yaml}' on " \
+      "node #{node_id}"
     @running_tasks[node_id] = puppet_task(node_id, task)
     @running_tasks[node_id].run
   end
@@ -105,12 +112,14 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
             else
               nodes_to_report << process_success_node(node_id, task)
             end
+            time_summary(node_id, status)
           when 'deploying'
             progress_report = process_running_node(node_id, task, nodes)
             nodes_to_report << progress_report if progress_report
           when 'error'
             Astute.logger.error "Task '#{task}' failed on node #{node_id}"
             nodes_to_report << process_fail_node(node_id, task)
+            time_summary(node_id, status)
           else
             raise "Internal error. Known status '#{status}', but handler not provided"
           end
@@ -233,6 +242,19 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
       @ctx.report_and_update_status('nodes' => nodes)
       raise e
     end
+  end
+
+  def time_summary(node_id, status)
+    return unless @start_times.fetch('node_id',{}).fetch('time_start', nil)
+    amount_time = (Time.now.to_i - @start_times[node_id]['time_start']).to_i
+    wasted_time = Time.at(amount_time).utc.strftime("%H:%M:%S")
+    Astute.logger.debug("Task time summary:" \
+      " #{@start_times[node_id]['task_name']} with status" \
+      " #{status.to_s} on node #{node_id} took #{wasted_time}")
+  end
+
+  def task_name(task)
+    task['id'] || task['diagnostic_name']
   end
 
   class HookReporter
