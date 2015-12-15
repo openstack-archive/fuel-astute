@@ -16,7 +16,7 @@ Release: %{release}
 Provides: ruby21(Astute) = %{version}
 %else
 Name: rubygem-astute
-Release: %{release}~mos8.0.1
+Release: %{release}
 Provides: ruby(Astute) = %{version}
 %endif
 
