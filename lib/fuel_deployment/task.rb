@@ -394,6 +394,7 @@ module Deployment
     def weight
       return @weight if @weight
       @weight = each_forward_dependency.inject(0) do |weight, task|
+        weight += task.weight 
         if task.node == self.node
           weight + 1
         else

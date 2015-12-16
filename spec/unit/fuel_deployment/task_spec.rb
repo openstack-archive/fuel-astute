@@ -24,6 +24,10 @@ describe Deployment::Task do
     Deployment::Node.new 'node2'
   end
 
+  let(:node3) do
+    Deployment::Node.new 'node3'
+  end
+
   let(:task1) do
     Deployment::Task.new 'task1', node1
   end
@@ -42,6 +46,14 @@ describe Deployment::Task do
 
   let(:task2_2) do
     Deployment::Task.new 'task2', node2
+  end
+
+  let(:task2_3) do
+    Deployment::Task.new 'task3', node2
+  end
+
+  let(:task3_1) do
+    Deployment::Task.new 'task1', node3
   end
 
   subject { task1 }
@@ -125,10 +137,15 @@ describe Deployment::Task do
 
     it 'can determine the task weight' do
       task2.after task1
+      task3.after task2
       task2_1.after task2
-      expect(task2.weight).to eq 10
-      expect(task1.weight).to eq 1
-      expect(task2_1.weight).to eq 0
+      task2_2.after task2_1
+      task2_3.after task2_2
+      task2_3.after task3
+      task3_1.after task2_2
+      expect(task2.weight).to eq 33
+      expect(task1.weight).to eq 34
+      expect(task2_1.weight).to eq 12
     end
   end
 
