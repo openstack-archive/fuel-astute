@@ -56,10 +56,10 @@ module Deployment
     end
 
     # Retrieve a task object from the graph
-    # @param [String, Symbol] task_name The name of the task to retrieve
-    # @return [Deployment::Task]
-    def task_get(task_name)
-      tasks.fetch prepare_key(task_name), nil
+    # @param [String, Symbol] task The name of the task to retrieve
+    # @return [Deployment::Task, nil]
+    def task_get(task)
+      tasks.fetch prepare_key(task), nil
     end
     alias :get_task :task_get
     alias :[] :task_get
@@ -70,9 +70,13 @@ module Deployment
     # @return [Deployment::Task]
     def task_add(task)
       raise Deployment::InvalidArgument.new self, 'Graph can add only tasks!', task unless task.is_a? Deployment::Task
-      return task_get task if task_present? task
-      raise Deployment::InvalidArgument.new self, 'Graph cannot add tasks not for this node!', task unless task.node == node
+      if task.node != node
+        task.node.graph.task_remove task if task.node
+      else
+        return task_get task if task_present? task
+      end
       tasks.store prepare_key(task), task
+      task.node = node
       reset
       task
     end
@@ -85,14 +89,16 @@ module Deployment
     # Assigns the data payload to the created or found task if this
     # parameter is provided.
     # @param [String, Symbol] task The name of the new task
+    # @param [Object] data The task data payload
+    # @param [Class] task_class Optional custom task class
     # @return [Deployment::Task]
-    def task_create(task, data=nil)
+    def task_create(task, data=nil, task_class=Deployment::Task)
       if task_present? task
         task = task_get task
       elsif task.is_a? Deployment::Task
         task = task_add task
       else
-        task = Deployment::Task.new task, node, data
+        task = task_class.new task, node, data
         task = task_add task
       end
       task.data = data if data
@@ -128,20 +134,20 @@ module Deployment
     alias :add_new_task_with_dependencies :task_add_new_with_dependencies
 
     # Check if the task is present in the graph
-    # @param [Deployment::Task, String, Symbol] task_name
+    # @param [Deployment::Task, String, Symbol] task
     # @return [true, false]
-    def task_present?(task_name)
-      tasks.key? prepare_key(task_name)
+    def task_present?(task)
+      tasks.key? prepare_key(task)
     end
     alias :has_task? :task_present?
     alias :key? :task_present?
 
     # Remove a task from this graph
-    # @param [Deployment::Task, String, Symbol] task_name
+    # @param [Deployment::Task, String, Symbol] task
     # @return [void]
-    def task_remove(task_name)
-      return unless task_present? task_name
-      tasks.delete prepare_key(task_name)
+    def task_remove(task)
+      return unless task_present? task
+      tasks.delete prepare_key(task)
       reset
     end
     alias :remove_task :task_remove
@@ -242,8 +248,10 @@ module Deployment
     # returns nil if there is no such task
     # @return [Deployment::Task, nil]
     def ready_task
-      find do |task|
+      select do |task|
         task.ready?
+      end.max_by do |task|
+        task.weight
       end
     end
     alias :next_task :ready_task
