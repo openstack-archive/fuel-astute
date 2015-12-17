@@ -56,6 +56,7 @@ module Deployment
       @forward_dependencies = Set.new
       @data = data
       self.node = node
+      node.add_task self
     end
 
     include Enumerable
@@ -103,7 +104,7 @@ module Deployment
     end
 
     # Set this task's Node object
-    # @param [Deployment::Node] node The ne node object
+    # @param [Deployment::Node] node The new node object
     # @raise [Deployment::InvalidArgument] if the object is not a Node
     # @return [Deployment::Node]
     def node=(node)
@@ -386,6 +387,21 @@ module Deployment
       forward_dependencies.each(&block)
     end
 
+    # Count the number of this task's forward dependencies
+    # multiplied by 10 if they lead to the other nodes and
+    # recursively adding their weights too.
+    # This value can be used to determine how important this
+    # task is and should be selected earlier.
+    # @return [Integer]
+    def weight
+      return @weight if @weight
+      @weight = each_forward_dependency.inject(0) do |weight, task|
+        weight += task.node == self.node ? 1 : 10
+        weight += task.weight
+        weight
+      end
+    end
+
     # Check if any of direct backward dependencies of this
     # task are failed and set dep_failed status if so.
     # @return [true, false]
@@ -498,22 +514,18 @@ module Deployment
     # Get a sorted list of all this task's dependencies
     # @return [Array<String>]
     def dependency_backward_names
-      names = []
-      each_backward_dependency do |task|
-        names << task.to_s
-      end
-      names.sort
+      each_backward_dependency.map do |task|
+        task.to_s
+      end.sort
     end
     alias :dependency_names :dependency_backward_names
 
     # Get a sorted list of all tasks that depend on this task
     # @return [Array<String>]
     def dependency_forward_names
-      names = []
-      each_forward_dependency do |task|
-        names << task.to_s
-      end
-      names.sort
+      each_forward_dependency.map do |task|
+        task.to_s
+      end.sort
     end
 
     # Choose a color for a task vertex
@@ -531,7 +543,7 @@ module Deployment
         when :failed;
           :red
         when :dep_failed;
-          :rose
+          :magenta
         when :skipped;
           :purple
         when :running;

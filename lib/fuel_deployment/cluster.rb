@@ -13,48 +13,100 @@
 #    under the License.
 
 require 'erb'
+require 'open3'
 
 module Deployment
 
-  # The Process object controls the deployment flow.
+  # The Cluster object contains nodes and controls the deployment flow.
   # It loops through the nodes and runs tasks on then
   # when the node is ready and the task is available.
   #
   # attr [Object] id Misc identifier of this process
-  class Process
-
-    # @param [Array<Deployment::Node>] nodes The array of nodes to deploy
-    def initialize(*nodes)
-      self.nodes = nodes.flatten
-      @id = nil
+  # @attr_reader [Hash<Symbol => Deployment::Node>] nodes The nodes of this cluster
+  class Cluster
+    # @param [String] id Cluster name
+    def initialize(id=nil)
+      @nodes = {}
+      @id = id
     end
 
     include Enumerable
     include Deployment::Log
 
-    attr_reader :nodes
     attr_accessor :id
+    attr_reader :nodes
 
-    # Create the Process object with these nodes
-    # @param [Array<Deployment::Node>] nodes The array of nodes to deploy
-    def self.[](*nodes)
-      self.new(*nodes)
+    # Add an existing node object to the cluster
+    # @param [Deployment::Node] node a new node object
+    # @raise [Deployment::InvalidArgument] If the object is not a node
+    # @return [Deployment::Node]
+    def node_add(node)
+      raise Deployment::InvalidArgument.new self, 'Cluster can add only nodes!', node unless node.is_a? Deployment::Node
+      return node_get node if node_present? node
+      unless node.cluster == self
+        node.cluster.node_remove node if node.cluster
+      end
+      nodes.store prepare_key(node), node
+      node.cluster = self
+      node
+    end
+    alias :add_node :node_add
+
+    # Create a new node object by its name and add it to the cluster.
+    # Or, if the node already exists, return the existing node object.
+    # @param [String, Symbol] node The name of the new node
+    # @param [Class] node_class Optional custom node class
+    # @return [Deployment::Node]
+    def node_create(node, node_class=Deployment::Node)
+      if node_present? node
+        node = node_get node
+      elsif node.is_a? Deployment::Node
+        node = node_add node
+      else
+        node = node_class.new node, self
+        node = node_add node unless node_present? node
+      end
+      node
+    end
+    alias :create_node :node_create
+    alias :new_node :node_create
+    alias :node_new :node_create
+
+    # Remove a node from this cluster
+    # @param [Deployment::Node, String, Symbol] node
+    # @return [void]
+    def node_remove(node)
+      return unless node_present? node
+      nodes.delete prepare_key(node)
+    end
+    alias :remove_node :node_remove
+
+    # Retrieve a node object from the cluster
+    # @param [String, Symbol] node The name of the node to retrieve
+    # @return [Deployment::Node, nil]
+    def node_get(node)
+      nodes.fetch prepare_key(node), nil
+    end
+    alias :get_node :node_get
+    alias :[] :node_get
+
+    def node_present?(node)
+      nodes.key? prepare_key(node)
+    end
+    alias :has_node? :node_present?
+    alias :key? :node_present?
+
+    # Prepare the hash key from the node
+    # @param [Deployment::Task,String,Symbol] node
+    def prepare_key(node)
+      node = node.name if node.is_a? Deployment::Node
+      node.to_s.to_sym
     end
 
-    # Set a new nodes array
-    # @raise Deployment::InvalidArgument If this is not an array or it consists not only of Nodes
-    # @param [Array<Deployment::Node>] nodes The array of nodes to deploy
-    # @return Deployment::Node
-    def nodes=(nodes)
-      raise Deployment::InvalidArgument.new self, 'Nodes should be an array!', nodes unless nodes.is_a? Array
-      raise Deployment::InvalidArgument.new self, 'Nodes should contain only Node objects!', nodes unless nodes.all? { |n| n.is_a? Deployment::Node }
-      @nodes = nodes
-    end
-
-    # Iterates through all nodes
+    # Iterates through all cluster nodes
     # @yield Deployment::Node
     def each_node(&block)
-      nodes.each(&block)
+      nodes.each_value(&block)
     end
     alias :each :each_node
 
@@ -187,9 +239,9 @@ module Deployment
     # @return [true, false]
     def run
       ready_nodes = each_ready_task.to_a.join ', '
-      info "Starting the deployment process from tasks: #{ready_nodes}"
-      topology_sort
+      info "Starting the deployment process. Starting tasks: #{ready_nodes}"
       hook 'pre_run'
+      topology_sort
       result = loop do
         if all_nodes_are_successful?
           status = 'All nodes are deployed successfully. Stopping the deployment process!'
@@ -197,12 +249,10 @@ module Deployment
               :success => true,
               :status => status,
           }
-          info result[:status]
           break result
         end
         if has_failed_critical_nodes?
-          failed_names = failed_critical_nodes.map { |n| n.name }.join ', '
-          status =  "Critical nodes failed: #{failed_names}. Stopping the deployment process!"
+          status =  "Critical nodes failed: #{failed_critical_nodes.join ', '}. Stopping the deployment process!"
           result = {
               :success => false,
               :status => status,
@@ -212,7 +262,7 @@ module Deployment
           break result
         end
         if all_nodes_are_finished?
-          status = 'All nodes are finished. Stopping the deployment process!'
+          status = "All nodes are finished. Failed tasks: #{failed_tasks.join ', '} Stopping the deployment process!"
           result = {
               :success => false,
               :status => status,
@@ -224,9 +274,11 @@ module Deployment
         # run loop over all nodes
         process_all_nodes
       end
+      info result[:status]
       hook 'post_run', result
       result
     end
+    alias :deploy :run
 
     # Get the list of critical nodes
     # @return [Array<Deployment::Node>]
@@ -260,10 +312,37 @@ module Deployment
     end
 
     # Get the list of the failed nodes
-    # @return [Array<Deployment::Node>]
+    # @return [Array<Deployment::Task>]
     def failed_tasks
       each_task.select do |task|
         task.status == :failed
+      end
+    end
+
+    # Get the list of tasks that have no forward dependencies
+    # They are the ending points of the deployment.
+    # @return [Array<Deployment::Task>]
+    def ending_tasks
+      each_task.reject do |task|
+        task.dependency_forward_any?
+      end
+    end
+
+    # Get the list of tasks that have no backward dependencies
+    # They are the starting points of the deployment.
+    # @return [Array<Deployment::Task>]
+    def starting_tasks
+      each_task.reject do |task|
+        task.dependency_backward_any?
+      end
+    end
+
+    # Get the list of tasks that have no dependencies at all.
+    # They are most likely have been lost for some reason.
+    # @return [Array<Deployment::Task>]
+    def orphan_tasks
+      each_task.reject do |task|
+        task.dependency_backward_any? or task.dependency_forward_any?
       end
     end
 
@@ -334,10 +413,10 @@ module Deployment
     # @return [String]
     def to_dot
       template = <<-eos
-digraph <%= id || 'graph' %> {
-node[ style = "filled, solid"];
+digraph "<%= id || graph %>" {
+  node[ style = "filled, solid"];
 <% each_task do |task| -%>
-  "<%= task %>" [label = "<%= task %>"], fillcolor = "<%= task.color %>"];
+  "<%= task %>" [label = "<%= task %>", fillcolor = "<%= task.color %>"];
 <% end -%>
 
 <% each_task do |task| -%>
@@ -350,15 +429,54 @@ node[ style = "filled, solid"];
       ERB.new(template, nil, '-').result(binding)
     end
 
+    # Plot the graph using the 'dot' binary
+    # @param [Integer,String] suffix File name index or suffix.
+    # Will use incrementing value unless provided.
+    # @param [String] type The type of image produced
+    # @param [String] file Save image to this file
+    # Will use autogenerated name in the current folder unless provided
+    # @return [true, false] Successful?
+    def make_image(suffix=nil, file=nil, type='svg')
+      unless file
+        unless suffix
+          @plot_number = 0 unless @plot_number
+          suffix = @plot_number
+          @plot_number += 1
+        end
+        if suffix.is_a? Integer
+          suffix = suffix.to_s.rjust 5, '0'
+        end
+        graph_name = id || 'graph'
+        file = "#{graph_name}-#{suffix}.#{type}"
+      end
+      command = "dot -T#{type} -o#{file}"
+      Open3.popen2e(command) do |stdin, out, process|
+        stdin.puts to_dot
+        stdin.close
+        output = out.read
+        debug output unless output.empty?
+        process.value.exitstatus == 0
+      end
+    end
+
+    # Get the array of this cluster's node names.
+    # They can be used for reference.
+    # @return [Array<String>]
+    def node_names
+      map do |node|
+        node.name
+      end.sort
+    end
+
     # @return [String]
     def to_s
-      "Process[#{id}]"
+      "Cluster[#{id}]"
     end
 
     # @return [String]
     def inspect
       message = "#{self}"
-      message += "{Tasks: #{tasks_finished_count}/#{tasks_total_count} Nodes: #{map { |node| node.name }.join ', '}}" if nodes.any?
+      message += "{Tasks: #{tasks_finished_count}/#{tasks_total_count} Nodes: #{node_names.join ', '}}" if nodes.any?
       message
     end
 
