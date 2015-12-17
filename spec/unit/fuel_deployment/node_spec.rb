@@ -16,15 +16,23 @@ require 'spec_helper'
 
 describe Deployment::Node do
 
+  let(:cluster) do
+    cluster = Deployment::Cluster.new
+    cluster.id = 'test'
+    node1 = cluster.create_node 'node1'
+    node1.create_task 'task1'
+    cluster
+  end
+
   let(:node1) do
-    Deployment::Node.new 'node1'
+    cluster['node1']
+  end
+
+  let(:task1) do
+    node1['task1']
   end
 
   subject { node1 }
-
-  let(:task1) do
-    Deployment::Task.new 'task1', node1
-  end
 
   context '#attributes' do
     it 'should have a name' do
@@ -99,6 +107,7 @@ describe Deployment::Node do
     end
 
     it 'can set task only if it is in the graph' do
+      subject.task_remove task1
       expect do
         subject.task = task1
       end.to raise_exception Deployment::InvalidArgument, /not found in the graph/
@@ -135,8 +144,13 @@ describe Deployment::Node do
     end
 
     it 'can iterate through graph tasks' do
-      subject.graph.task_add task1
       expect(subject.each.to_a).to eq [task1]
+    end
+
+    it 'should add itself to the cluster when the node is created' do
+      expect(cluster.node_present? 'new_node').to eq false
+      Deployment::Node.new 'new_node', cluster
+      expect(cluster.node_present? 'new_node').to eq true
     end
   end
 
@@ -149,10 +163,9 @@ describe Deployment::Node do
     end
 
     it 'can inspect' do
-      expect(subject.inspect).to eq 'Node[node1]{Status: online Tasks: 0/0}'
+      expect(subject.inspect).to eq 'Node[node1]{Status: online Tasks: 0/1}'
       subject.status = :offline
-      expect(subject.inspect).to eq 'Node[node1]{Status: offline Tasks: 0/0}'
-      subject.add_task task1
+      expect(subject.inspect).to eq 'Node[node1]{Status: offline Tasks: 0/1}'
       subject.task = task1
       expect(subject.inspect).to eq 'Node[node1]{Status: offline Tasks: 0/1 CurrentTask: task1}'
     end
