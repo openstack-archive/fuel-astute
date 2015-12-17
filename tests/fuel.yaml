@@ -1,0 +1,7294 @@
+---
+'1':
+- parameters:
+    retries: 3
+    cmd: ruby /etc/puppet/modules/osnailyfacter/modular/astute/ironic_post_swift_key.rb
+    cwd: /
+    timeout: 180
+    interval: 20
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: '1'
+    name: enable_quorum
+  - node_id: '1'
+    name: enable_rados
+  id: ironic_post_swift_key
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/enable_rados.pp
+    timeout: 180
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: upload_cirros
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  - node_id: '1'
+    name: upload_cirros
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: enable_rados
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-mysqld.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-mysqld
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-cinder/db.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-cinder
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-database
+  - node_id: '3'
+    name: database
+  - node_id: '2'
+    name: database
+  id: cinder-db
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/netconfig.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: tools
+  id: netconfig
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/astute/dump_rabbitmq_definitions.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: dump_rabbitmq_definitions
+- requires:
+  - node_id: '1'
+    name: upload_core_repos_end
+  type: sync
+  id: rsync_core_puppet
+  parameters:
+    src: rsync://10.109.0.2:/puppet/2015.1.0-8.0/modules/
+    dst: /etc/puppet/modules
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_dns_setup.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: firewall
+  - node_id: '1'
+    name: ssl-add-trust-chain
+  id: ssl-dns-setup
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceilometer/controller.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: '1'
+    name: openstack-controller
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: ceilometer-keystone
+  id: ceilometer-controller
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/override_configuration.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: '1'
+    name: pre_hiera_config
+  id: override_configuration
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceilometer/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: ceilometer-controller
+  requires:
+  - node_id: '1'
+    name: keystone
+  id: ceilometer-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-controller/db.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-controller
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-database
+  - node_id: '3'
+    name: database
+  - node_id: '2'
+    name: database
+  id: nova-db
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/keystone/workloads_collector_add.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: keystone
+  id: workloads_collector_add
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/plugins/ml2.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  requires:
+  - node_id: '1'
+    name: openstack-network-common-config
+  - node_id: '1'
+    name: openstack-network-server-config
+  id: primary-openstack-network-plugins-l2
+- requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  type: shell
+  id: upload_core_repos_start
+  parameters:
+    retries: 3
+    cmd: '> /etc/apt/sources.list'
+    cwd: /
+    timeout: 60
+    interval: 1
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: hiera
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/virtual_ips/virtual_ips.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-cluster
+  - node_id: '1'
+    name: primary-cluster
+  id: virtual_ips
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/dns/dns-server.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: openstack-haproxy
+  id: primary-dns-server
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-murano.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-murano
+- requires: []
+  fail_on_error: false
+  type: skipped
+  id: openstack-network-end
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-radosgw.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-radosgw
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-swift.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-swift
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/heat/db.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: heat
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-database
+  - node_id: '3'
+    name: database
+  - node_id: '2'
+    name: database
+  id: heat-db
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-neutron.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-neutron
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/updatedb.pp
+    timeout: 60
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: updatedb
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ironic/db.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: '1'
+    name: ironic-api
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-database
+  - node_id: '3'
+    name: database
+  - node_id: '2'
+    name: database
+  id: ironic-db
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-controller/openstack-controller.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '2'
+    name: rabbitmq
+  id: openstack-controller
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceilometer/radosgw_user.pp
+    timeout: 300
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  - node_id: '1'
+    name: enable_rados
+  id: ceilometer-radosgw-user
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-keystone.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: netconfig
+  id: hosts
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/rabbitmq/rabbitmq.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '1'
+    name: openstack-controller
+  - node_id: '1'
+    name: glance
+  requires:
+  - node_id: '1'
+    name: openstack-haproxy
+  id: primary-rabbitmq
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster-haproxy/cluster-haproxy.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: virtual_ips
+  - node_id: '1'
+    name: primary-cluster
+  id: primary-cluster-haproxy
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/routers.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  requires:
+  - node_id: '1'
+    name: openstack-network-networks
+  id: openstack-network-routers
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/roles/controller.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires: []
+  id: controller_remaining_tasks
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/glance/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: glance
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: keystone
+  - node_id: '1'
+    name: keystone
+  - node_id: '3'
+    name: keystone
+  - node_id: '2'
+    name: keystone
+  id: glance-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/cfapi.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for: []
+  requires:
+  - node_id: '1'
+    name: murano
+  id: murano-cfapi
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/vmware/vcenter.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: controller_remaining_tasks
+  id: vmware-vcenter
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/metadata.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: openstack-network-common-config
+  - node_id: '1'
+    name: openstack-network-server-nova
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  - node_id: '1'
+    name: primary-openstack-network-agents-l3
+  - node_id: '3'
+    name: openstack-network-agents-l3
+  - node_id: '2'
+    name: openstack-network-agents-l3
+  - node_id: '5'
+    name: openstack-network-agents-l3
+  - node_id: '4'
+    name: openstack-network-agents-l3
+  id: primary-openstack-network-agents-metadata
+- parameters:
+    puppet_modules: /etc/puppet/modules/
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-cinder/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-cinder
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: keystone
+  - node_id: '1'
+    name: keystone
+  - node_id: '3'
+    name: keystone
+  - node_id: '2'
+    name: keystone
+  id: cinder-keystone
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/neutron/neutron.pub
+      dst: /var/lib/astute/neutron/neutron.pub
+    - src: /var/lib/fuel/keys/1/neutron/neutron
+      dst: /var/lib/astute/neutron/neutron
+    - src: /var/lib/fuel/keys/1/nova/nova.pub
+      dst: /var/lib/astute/nova/nova.pub
+    - src: /var/lib/fuel/keys/1/nova/nova
+      dst: /var/lib/astute/nova/nova
+    - src: /var/lib/fuel/keys/1/mysql/mysql.pub
+      dst: /var/lib/astute/mysql/mysql.pub
+    - src: /var/lib/fuel/keys/1/mysql/mysql
+      dst: /var/lib/astute/mysql/mysql
+    - src: /var/lib/fuel/keys/1/mongodb/mongodb.key
+      dst: /var/lib/astute/mongodb/mongodb.key
+    - src: /var/lib/fuel/keys/1/fernet-keys/0
+      dst: /var/lib/astute/keystone/0
+    - src: /var/lib/fuel/keys/1/fernet-keys/1
+      dst: /var/lib/astute/keystone/1
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys
+  id: copy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-sahara.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-sahara
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ntp/ntp-check.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: ntp-server
+  requires:
+  - node_id: '1'
+    name: dns-client
+  id: ntp-check
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/keystone/keystone.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-controller
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '2'
+    name: rabbitmq
+  - node_id: '1'
+    name: keystone-db
+  id: keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/astute/service_token_off.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: upload_cirros
+  - node_id: '1'
+    name: upload_cirros
+  id: disable_keystone_service_token
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/umm/umm.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: tools
+  id: umm
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/memcached/memcached.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '1'
+    name: keystone
+  requires:
+  - node_id: '1'
+    name: openstack-haproxy
+  id: memcached
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/sahara/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: '1'
+    name: sahara
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: keystone
+  - node_id: '1'
+    name: keystone
+  - node_id: '3'
+    name: keystone
+  - node_id: '2'
+    name: keystone
+  id: sahara-keystone
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#8
+  type: upload_file
+  id: upload_core_repos#9
+  parameters:
+    path: /etc/apt/preferences.d/mos-updates.pref
+    data: |-
+      Package: *
+      Pin: release a=mos8.0-updates,o=Mirantis,n=mos8.0-updates,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#7
+  type: upload_file
+  id: upload_core_repos#8
+  parameters:
+    path: /etc/apt/sources.list.d/mos-updates.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-updates main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/radosgw.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '1'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '1'
+    name: apache
+  - node_id: '1'
+    name: primary-ceph-mon
+  id: ceph-radosgw
+- requires:
+  - node_id: '1'
+    name: upload_nodes_info
+  type: puppet
+  id: update_hosts
+  parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#2
+  type: upload_file
+  id: upload_core_repos#3
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#1
+  type: upload_file
+  id: upload_core_repos#2
+  parameters:
+    path: /etc/apt/apt.conf.d/02mirantis-allow-unsigned
+    data: |
+      APT::Get::AllowUnauthenticated 1;
+  required_for: []
+- requires:
+  - node_id: '1'
+    name: upload_core_repos_start
+  type: upload_file
+  id: upload_core_repos#1
+  parameters:
+    path: /etc/apt/apt.conf.d/05disable-ipv6
+    data: |
+      Acquire::ForceIPv4 "true";
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster/cluster.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: hosts
+  - node_id: '1'
+    name: firewall
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: primary-cluster
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#5
+  type: upload_file
+  id: upload_core_repos#6
+  parameters:
+    path: /etc/apt/sources.list.d/mos.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/x86_64 mos8.0 main restricted
+  required_for: []
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#4
+  type: upload_file
+  id: upload_core_repos#5
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-security.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-security main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#3
+  type: upload_file
+  id: upload_core_repos#4
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-updates.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-updates main universe multiverse
+  required_for: []
+- parameters:
+    retries: 3
+    cmd: ruby /etc/puppet/modules/osnailyfacter/modular/astute/upload_cirros.rb
+    cwd: /
+    timeout: 180
+    interval: 20
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: '1'
+    name: enable_quorum
+  id: upload_cirros
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/l3.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  requires:
+  - node_id: '1'
+    name: openstack-network-networks
+  - node_id: '1'
+    name: openstack-network-routers
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  id: primary-openstack-network-agents-l3
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: keystone
+  - node_id: '1'
+    name: keystone
+  - node_id: '3'
+    name: keystone
+  - node_id: '2'
+    name: keystone
+  id: neutron-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/logging/logging.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: globals
+  id: logging
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-controller/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-controller
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: keystone
+  - node_id: '1'
+    name: keystone
+  - node_id: '3'
+    name: keystone
+  - node_id: '2'
+    name: keystone
+  id: nova-keystone
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#13
+  type: upload_file
+  id: upload_core_repos#14
+  parameters:
+    path: /etc/apt/sources.list.d/Auxiliary.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/auxiliary auxiliary main
+      restricted
+  required_for: []
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#12
+  type: upload_file
+  id: upload_core_repos#13
+  parameters:
+    path: /etc/apt/preferences.d/mos-holdback.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,a=mos8.0-holdback,l=mos8.0,n=mos8.0-holdback
+      Pin-Priority: 1100
+  required_for: []
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#11
+  type: upload_file
+  id: upload_core_repos#12
+  parameters:
+    path: /etc/apt/sources.list.d/mos-holdback.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-holdback main
+      restricted
+  required_for: []
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#10
+  type: upload_file
+  id: upload_core_repos#11
+  parameters:
+    path: /etc/apt/preferences.d/mos-security.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,n=mos8.0-security,a=mos8.0-security,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#9
+  type: upload_file
+  id: upload_core_repos#10
+  parameters:
+    path: /etc/apt/sources.list.d/mos-security.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-security main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/virtual_ips/conntrackd.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: virtual_ips
+  - node_id: '1'
+    name: primary-cluster
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster
+  - node_id: '1'
+    name: cluster-vrouter
+  - node_id: '1'
+    name: cluster_health
+  id: conntrackd
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/sahara/db.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: '1'
+    name: sahara
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-database
+  - node_id: '3'
+    name: database
+  - node_id: '2'
+    name: database
+  id: sahara-db
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/horizon/horizon.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: openstack-controller
+  id: horizon
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  - node_id: '1'
+    name: rsync_core_puppet
+  id: pre_hiera_config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-ceilometer.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-ceilometer
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/common-config.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  requires:
+  - node_id: '1'
+    name: openstack-network-start
+  id: openstack-network-common-config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/firewall/firewall.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: netconfig
+  id: firewall
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/apache/apache.pp
+    timeout: 1200
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: keystone
+  requires:
+  - node_id: '1'
+    name: openstack-haproxy
+  id: apache
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/globals/globals.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: hiera
+  id: globals
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/glance/glance.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: openstack-controller
+  requires:
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-database
+  id: glance
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/tools/tools.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: logging
+  id: tools
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: openstack-haproxy-ceilometer
+  - node_id: '1'
+    name: openstack-haproxy-cinder
+  - node_id: '1'
+    name: openstack-haproxy-glance
+  - node_id: '1'
+    name: openstack-haproxy-heat
+  - node_id: '1'
+    name: openstack-haproxy-horizon
+  - node_id: '1'
+    name: openstack-haproxy-keystone
+  - node_id: '1'
+    name: openstack-haproxy-murano
+  - node_id: '1'
+    name: openstack-haproxy-mysqld
+  - node_id: '1'
+    name: openstack-haproxy-neutron
+  - node_id: '1'
+    name: openstack-haproxy-nova
+  - node_id: '1'
+    name: openstack-haproxy-radosgw
+  - node_id: '1'
+    name: openstack-haproxy-sahara
+  - node_id: '1'
+    name: openstack-haproxy-swift
+  - node_id: '1'
+    name: openstack-haproxy-stats
+  - node_id: '1'
+    name: openstack-haproxy-ironic
+  id: openstack-haproxy
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/swift/swift.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '1'
+    name: controller_remaining_tasks
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: openstack-controller
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '2'
+    name: rabbitmq
+  id: primary-swift
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/keystone_cfapi.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: murano-cfapi
+  requires:
+  - node_id: '1'
+    name: keystone
+  id: murano-cfapi-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/ceph_pools.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: ceph_ready_check
+  - node_id: '1'
+    name: ceph_ready_check
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: ceph_create_pools
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-ironic.pp
+    timeout: 300
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-ironic
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/routers.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: openstack-network-routers-ha
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#6
+  type: upload_file
+  id: upload_core_repos#7
+  parameters:
+    path: /etc/apt/preferences.d/mos.pref
+    data: |-
+      Package: *
+      Pin: release n=mos8.0,o=Mirantis,l=mos8.0,a=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/glance/db.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: glance
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-database
+  - node_id: '3'
+    name: database
+  - node_id: '2'
+    name: database
+  id: glance-db
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/db.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-database
+  - node_id: '3'
+    name: database
+  - node_id: '2'
+    name: database
+  id: neutron-db
+- requires:
+  - node_id: '1'
+    name: enable_quorum
+  - node_id: '1'
+    name: enable_rados
+  type: skipped
+  id: ironic_upload_images
+  parameters:
+    retries: 3
+    cmd: ruby /etc/puppet/modules/osnailyfacter/modular/ironic/upload_images.rb 1
+    cwd: /
+    timeout: 180
+    interval: 20
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/swift/rebalance_cronjob.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-swift
+  - node_id: '1'
+    name: swift-rebalance-cron
+  - node_id: '1'
+    name: swift-keystone
+  id: swift-rebalance-cron
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/heat/heat.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: openstack-controller
+  id: heat
+- type: shell
+  requires:
+  - node_id: '1'
+    name: upload_core_repos#15
+  id: upload_core_repos_end
+  parameters:
+    retries: 3
+    cmd: apt-get update
+    cwd: /
+    timeout: 1800
+    interval: 1
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ironic/ironic.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: openstack-controller
+  requires:
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: ironic-db
+  - node_id: '1'
+    name: ironic-keystone
+  id: ironic-api
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/dns/dns-client.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for: []
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: dns-client
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster-vrouter/cluster-vrouter.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: virtual_ips
+  requires:
+  - node_id: '1'
+    name: primary-cluster
+  id: cluster-vrouter
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/rabbitmq.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: '1'
+    name: murano
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '1'
+    name: primary-rabbitmq
+  id: murano-rabbitmq
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/api-proxy/api-proxy.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '1'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '1'
+    name: apache
+  id: api-proxy
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster/health.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-cluster
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster
+  - node_id: '1'
+    name: cluster-vrouter
+  - node_id: '1'
+    name: cluster_health
+  id: cluster_health
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/heat/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: heat
+  requires:
+  - node_id: '1'
+    name: keystone
+  id: heat-keystone
+- requires:
+  - node_id: '1'
+    name: upload_core_repos#14
+  type: upload_file
+  id: upload_core_repos#15
+  parameters:
+    path: /etc/apt/preferences.d/Auxiliary.pref
+    data: |-
+      Package: *
+      Pin: release l=auxiliary,o=Mirantis,n=auxiliary,a=auxiliary
+      Pin-Priority: 1150
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-horizon.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-horizon
+- type: skipped
+  required_for:
+  - node_id: '1'
+    name: openstack-network-common-config
+  fail_on_error: false
+  requires:
+  - node_id: '1'
+    name: neutron-keystone
+  - node_id: '1'
+    name: neutron-db
+  - node_id: '1'
+    name: netconfig
+  - node_id: '1'
+    name: openstack-controller
+  - node_id: '1'
+    name: neutron-keystone
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: neutron-db
+  id: openstack-network-start
+- parameters:
+    retries: 1
+    cmd: rm -f /etc/hiera/nodes.yaml
+    cwd: /
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: clear_nodes_info
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ironic/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: ironic-api
+  requires:
+  - node_id: '1'
+    name: keystone
+  id: ironic-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/db.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: '1'
+    name: murano
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-database
+  - node_id: '3'
+    name: database
+  - node_id: '2'
+    name: database
+  id: murano-db
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/ceph/ceph.pub
+      dst: /var/lib/astute/ceph/ceph.pub
+    - src: /var/lib/fuel/keys/1/ceph/ceph
+      dst: /var/lib/astute/ceph/ceph
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys_ceph
+  id: copy_keys_ceph
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/sahara/sahara.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '1'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '1'
+    name: openstack-network-end
+  - node_id: '1'
+    name: horizon
+  id: sahara
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/fuel_pkgs/fuel_pkgs.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: hiera
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: fuel_pkgs
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/swift/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for: []
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: keystone
+  - node_id: '1'
+    name: keystone
+  - node_id: '3'
+    name: keystone
+  - node_id: '2'
+    name: keystone
+  id: swift-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/virtual_ips/public_vip_ping.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: public_vip_ping
+- type: upload_file
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: upload_nodes_info
+  parameters:
+    path: /etc/hiera/nodes.yaml
+    data: |
+      nodes:
+      - {fqdn: node-4.test.domain.local, internal_address: 10.109.2.7, internal_netmask: 255.255.255.0,
+        name: node-4, role: compute, storage_address: 10.109.4.3, storage_netmask: 255.255.255.0,
+        swift_zone: '4', uid: '4', user_node_name: 'Untitled (a0:2c)'}
+      - {fqdn: node-5.test.domain.local, internal_address: 10.109.2.6, internal_netmask: 255.255.255.0,
+        name: node-5, role: compute, storage_address: 10.109.4.4, storage_netmask: 255.255.255.0,
+        swift_zone: '5', uid: '5', user_node_name: 'Untitled (81:4a)'}
+      - {fqdn: node-1.test.domain.local, internal_address: 10.109.2.5, internal_netmask: 255.255.255.0,
+        name: node-1, public_address: 10.109.1.6, public_netmask: 255.255.255.0, role: primary-controller,
+        storage_address: 10.109.4.5, storage_netmask: 255.255.255.0, swift_zone: '1', uid: '1',
+        user_node_name: 'Untitled (3e:7b)'}
+      - {fqdn: node-3.test.domain.local, internal_address: 10.109.2.3, internal_netmask: 255.255.255.0,
+        name: node-3, public_address: 10.109.1.5, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.2, storage_netmask: 255.255.255.0, swift_zone: '3', uid: '3',
+        user_node_name: 'Untitled (d2:54)'}
+      - {fqdn: node-2.test.domain.local, internal_address: 10.109.2.4, internal_netmask: 255.255.255.0,
+        name: node-2, public_address: 10.109.1.4, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.1, storage_netmask: 255.255.255.0, swift_zone: '2', uid: '2',
+        user_node_name: 'Untitled (ae:7e)'}
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-glance.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-glance
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/murano.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '1'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '1'
+    name: heat
+  - node_id: '1'
+    name: horizon
+  - node_id: '1'
+    name: primary-rabbitmq
+  id: murano
+- parameters:
+    cmd: ruby /etc/puppet/modules/osnailyfacter/modular/ceph/ceph_ready_check.rb
+    cwd: /
+    timeout: 1800
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: enable_rados
+  - node_id: '1'
+    name: upload_cirros
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: ceph_ready_check
+- parameters:
+    cmd: ruby /etc/puppet/modules/osnailyfacter/modular/astute/enable_quorum.rb
+    cwd: /
+    timeout: 180
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: enable_quorum
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/connectivity_tests.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: firewall
+  - node_id: '1'
+    name: hosts
+  requires:
+  - node_id: '1'
+    name: netconfig
+  id: connectivity_tests
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-nova.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-nova
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/server-config.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  requires:
+  - node_id: '1'
+    name: openstack-network-common-config
+  id: openstack-network-server-config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/database/database.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: openstack-controller
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: openstack-haproxy
+  id: primary-database
+- parameters:
+    cmd: /usr/bin/python /etc/puppet/modules/osnailyfacter/modular/astute/vcenter_hooks.py
+      --create_zones
+    cwd: /
+    timeout: 180
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: vcenter_compute_zones_create
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-cinder.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-cinder
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ntp/ntp-server.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for: []
+  requires:
+  - node_id: '1'
+    name: dns-client
+  id: ntp-server
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/keystone.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: murano
+  requires:
+  - node_id: '1'
+    name: keystone
+  id: murano-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/dhcp.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: openstack-network-common-config
+  - node_id: '1'
+    name: openstack-network-server-nova
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: primary-openstack-network-agents-dhcp
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-heat.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-heat
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-cinder/openstack-cinder.pp
+    timeout: 1200
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '1'
+    name: openstack-controller
+  requires:
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '1'
+    name: keystone
+  - node_id: '1'
+    name: hosts
+  - node_id: '1'
+    name: firewall
+  id: openstack-cinder
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/keystone/db.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: keystone
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-database
+  - node_id: '1'
+    name: primary-database
+  id: keystone-db
+- parameters:
+    retries: 10
+    cmd: ntpdate -u $(awk '/^server/ { if ($2 !~ /127\.127\.[0-9]+\.[0-9]+/) {ORS="
+      "; print $2}}' /etc/ntp.conf)
+    cwd: /
+    timeout: 180
+    interval: 30
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: sync_time
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_keys_saving.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '1'
+    name: firewall
+  id: ssl-keys-saving
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/mon.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '1'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '1'
+    name: openstack-controller
+  id: primary-ceph-mon
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/server-nova.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: primary-openstack-network-agents-l3
+  - node_id: '3'
+    name: openstack-network-agents-l3
+  - node_id: '2'
+    name: openstack-network-agents-l3
+  - node_id: '5'
+    name: openstack-network-agents-l3
+  - node_id: '4'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-server-nova
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.pem
+      dst: /var/lib/astute/haproxy/public_haproxy.pem
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.crt
+      dst: /etc/pki/tls/certs/public_haproxy.pem
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_haproxy_keys
+  id: copy_haproxy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/networks.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: openstack-network-end
+  requires:
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  id: openstack-network-networks
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_add_trust_chain.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: hosts
+  requires:
+  - node_id: '1'
+    name: firewall
+  - node_id: '1'
+    name: ssl-keys-saving
+  id: ssl-add-trust-chain
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-stats.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: openstack-haproxy-stats
+'3':
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-mysqld.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-mysqld
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/l3.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '3'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  - node_id: '1'
+    name: primary-openstack-network-agents-l3
+  id: openstack-network-agents-l3
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/netconfig.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: tools
+  id: netconfig
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/astute/dump_rabbitmq_definitions.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: dump_rabbitmq_definitions
+- requires:
+  - node_id: '3'
+    name: upload_core_repos_end
+  type: sync
+  id: rsync_core_puppet
+  parameters:
+    src: rsync://10.109.0.2:/puppet/2015.1.0-8.0/modules/
+    dst: /etc/puppet/modules
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_dns_setup.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: firewall
+  - node_id: '3'
+    name: ssl-add-trust-chain
+  id: ssl-dns-setup
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceilometer/controller.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: '3'
+    name: openstack-controller
+  - node_id: '3'
+    name: swift
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: ceilometer-keystone
+  id: ceilometer-controller
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/override_configuration.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: '3'
+    name: pre_hiera_config
+  id: override_configuration
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/ceph_pools.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: ceph_ready_check
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: ceph_create_pools
+- requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  type: shell
+  id: upload_core_repos_start
+  parameters:
+    retries: 3
+    cmd: '> /etc/apt/sources.list'
+    cwd: /
+    timeout: 60
+    interval: 1
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: hiera
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/virtual_ips/virtual_ips.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: cluster
+  - node_id: '3'
+    name: cluster
+  id: virtual_ips
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-murano.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-murano
+- requires: []
+  fail_on_error: false
+  type: skipped
+  id: openstack-network-end
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-radosgw.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-radosgw
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-swift.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-swift
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-neutron.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-neutron
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/updatedb.pp
+    timeout: 60
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: updatedb
+- requires:
+  - node_id: '3'
+    name: upload_nodes_info
+  type: puppet
+  id: update_hosts
+  parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-controller/openstack-controller.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '2'
+    name: rabbitmq
+  id: openstack-controller
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceilometer/radosgw_user.pp
+    timeout: 300
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  - node_id: '3'
+    name: enable_rados
+  id: ceilometer-radosgw-user
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-keystone.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: netconfig
+  id: hosts
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/roles/controller.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires: []
+  id: controller_remaining_tasks
+- type: shell
+  requires:
+  - node_id: '3'
+    name: upload_core_repos#15
+  id: upload_core_repos_end
+  parameters:
+    retries: 3
+    cmd: apt-get update
+    cwd: /
+    timeout: 1800
+    interval: 1
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/vmware/vcenter.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: controller_remaining_tasks
+  id: vmware-vcenter
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/rabbitmq/rabbitmq.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '3'
+    name: openstack-controller
+  - node_id: '3'
+    name: glance
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-rabbitmq
+  id: rabbitmq
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/dns/dns-server.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-dns-server
+  id: dns-server
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/neutron/neutron.pub
+      dst: /var/lib/astute/neutron/neutron.pub
+    - src: /var/lib/fuel/keys/1/neutron/neutron
+      dst: /var/lib/astute/neutron/neutron
+    - src: /var/lib/fuel/keys/1/nova/nova.pub
+      dst: /var/lib/astute/nova/nova.pub
+    - src: /var/lib/fuel/keys/1/nova/nova
+      dst: /var/lib/astute/nova/nova
+    - src: /var/lib/fuel/keys/1/mysql/mysql.pub
+      dst: /var/lib/astute/mysql/mysql.pub
+    - src: /var/lib/fuel/keys/1/mysql/mysql
+      dst: /var/lib/astute/mysql/mysql
+    - src: /var/lib/fuel/keys/1/mongodb/mongodb.key
+      dst: /var/lib/astute/mongodb/mongodb.key
+    - src: /var/lib/fuel/keys/1/fernet-keys/0
+      dst: /var/lib/astute/keystone/0
+    - src: /var/lib/fuel/keys/1/fernet-keys/1
+      dst: /var/lib/astute/keystone/1
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys
+  id: copy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/enable_rados.pp
+    timeout: 180
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  - node_id: '1'
+    name: upload_cirros
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: enable_rados
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ntp/ntp-check.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: ntp-server
+  requires:
+  - node_id: '3'
+    name: dns-client
+  id: ntp-check
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/keystone/keystone.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '3'
+    name: openstack-controller
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '3'
+    name: database
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '2'
+    name: rabbitmq
+  - node_id: '1'
+    name: keystone-db
+  id: keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/astute/service_token_off.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: upload_cirros
+  id: disable_keystone_service_token
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/umm/umm.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: tools
+  id: umm
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/mon.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '3'
+    name: controller_remaining_tasks
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-controller
+  - node_id: '1'
+    name: primary-ceph-mon
+  id: ceph-mon
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/memcached/memcached.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '3'
+    name: keystone
+  requires:
+  - node_id: '3'
+    name: openstack-haproxy
+  id: memcached
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#8
+  type: upload_file
+  id: upload_core_repos#9
+  parameters:
+    path: /etc/apt/preferences.d/mos-updates.pref
+    data: |-
+      Package: *
+      Pin: release a=mos8.0-updates,o=Mirantis,n=mos8.0-updates,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#7
+  type: upload_file
+  id: upload_core_repos#8
+  parameters:
+    path: /etc/apt/sources.list.d/mos-updates.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-updates main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/radosgw.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '3'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '3'
+    name: apache
+  - node_id: '3'
+    name: ceph-mon
+  id: ceph-radosgw
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-sahara.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-sahara
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#2
+  type: upload_file
+  id: upload_core_repos#3
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#1
+  type: upload_file
+  id: upload_core_repos#2
+  parameters:
+    path: /etc/apt/apt.conf.d/02mirantis-allow-unsigned
+    data: |
+      APT::Get::AllowUnauthenticated 1;
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos_start
+  type: upload_file
+  id: upload_core_repos#1
+  parameters:
+    path: /etc/apt/apt.conf.d/05disable-ipv6
+    data: |
+      Acquire::ForceIPv4 "true";
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#6
+  type: upload_file
+  id: upload_core_repos#7
+  parameters:
+    path: /etc/apt/preferences.d/mos.pref
+    data: |-
+      Package: *
+      Pin: release n=mos8.0,o=Mirantis,l=mos8.0,a=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#5
+  type: upload_file
+  id: upload_core_repos#6
+  parameters:
+    path: /etc/apt/sources.list.d/mos.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/x86_64 mos8.0 main restricted
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#4
+  type: upload_file
+  id: upload_core_repos#5
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-security.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-security main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#3
+  type: upload_file
+  id: upload_core_repos#4
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-updates.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-updates main universe multiverse
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/apache/apache.pp
+    timeout: 1200
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: keystone
+  requires:
+  - node_id: '3'
+    name: openstack-haproxy
+  id: apache
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/swift/swift.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '3'
+    name: controller_remaining_tasks
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-controller
+  - node_id: '1'
+    name: primary-swift
+  id: swift
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/logging/logging.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: globals
+  id: logging
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#14
+  type: upload_file
+  id: upload_core_repos#15
+  parameters:
+    path: /etc/apt/preferences.d/Auxiliary.pref
+    data: |-
+      Package: *
+      Pin: release l=auxiliary,o=Mirantis,n=auxiliary,a=auxiliary
+      Pin-Priority: 1150
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#13
+  type: upload_file
+  id: upload_core_repos#14
+  parameters:
+    path: /etc/apt/sources.list.d/Auxiliary.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/auxiliary auxiliary main
+      restricted
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#12
+  type: upload_file
+  id: upload_core_repos#13
+  parameters:
+    path: /etc/apt/preferences.d/mos-holdback.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,a=mos8.0-holdback,l=mos8.0,n=mos8.0-holdback
+      Pin-Priority: 1100
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#11
+  type: upload_file
+  id: upload_core_repos#12
+  parameters:
+    path: /etc/apt/sources.list.d/mos-holdback.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-holdback main
+      restricted
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#10
+  type: upload_file
+  id: upload_core_repos#11
+  parameters:
+    path: /etc/apt/preferences.d/mos-security.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,n=mos8.0-security,a=mos8.0-security,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '3'
+    name: upload_core_repos#9
+  type: upload_file
+  id: upload_core_repos#10
+  parameters:
+    path: /etc/apt/sources.list.d/mos-security.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-security main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/virtual_ips/conntrackd.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: virtual_ips
+  - node_id: '3'
+    name: cluster
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-vrouter
+  - node_id: '3'
+    name: cluster_health
+  - node_id: '3'
+    name: cluster
+  id: conntrackd
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/horizon/horizon.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: openstack-controller
+  id: horizon
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  - node_id: '3'
+    name: rsync_core_puppet
+  id: pre_hiera_config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-ceilometer.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-ceilometer
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/common-config.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: openstack-network-end
+  requires:
+  - node_id: '3'
+    name: openstack-network-start
+  id: openstack-network-common-config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/firewall/firewall.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: netconfig
+  id: firewall
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster-haproxy/cluster-haproxy.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: virtual_ips
+  - node_id: '3'
+    name: cluster
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: cluster-haproxy
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/globals/globals.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: hiera
+  id: globals
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/glance/glance.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: openstack-controller
+  requires:
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '3'
+    name: database
+  id: glance
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/tools/tools.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: logging
+  id: tools
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: openstack-haproxy-ceilometer
+  - node_id: '3'
+    name: openstack-haproxy-cinder
+  - node_id: '3'
+    name: openstack-haproxy-glance
+  - node_id: '3'
+    name: openstack-haproxy-heat
+  - node_id: '3'
+    name: openstack-haproxy-horizon
+  - node_id: '3'
+    name: openstack-haproxy-keystone
+  - node_id: '3'
+    name: openstack-haproxy-murano
+  - node_id: '3'
+    name: openstack-haproxy-mysqld
+  - node_id: '3'
+    name: openstack-haproxy-neutron
+  - node_id: '3'
+    name: openstack-haproxy-nova
+  - node_id: '3'
+    name: openstack-haproxy-radosgw
+  - node_id: '3'
+    name: openstack-haproxy-sahara
+  - node_id: '3'
+    name: openstack-haproxy-swift
+  - node_id: '3'
+    name: openstack-haproxy-stats
+  - node_id: '3'
+    name: openstack-haproxy-ironic
+  id: openstack-haproxy
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-ironic.pp
+    timeout: 300
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-ironic
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/swift/rebalance_cronjob.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: swift
+  - node_id: '3'
+    name: swift
+  - node_id: '3'
+    name: swift-rebalance-cron
+  id: swift-rebalance-cron
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/heat/heat.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: openstack-controller
+  id: heat
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/cfapi.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for: []
+  requires:
+  - node_id: '3'
+    name: murano
+  id: murano-cfapi
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ironic/ironic.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: openstack-controller
+  requires:
+  - node_id: '3'
+    name: openstack-haproxy
+  id: ironic-api
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/dns/dns-client.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for: []
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: dns-client
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster-vrouter/cluster-vrouter.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: virtual_ips
+  requires:
+  - node_id: '3'
+    name: cluster
+  id: cluster-vrouter
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/api-proxy/api-proxy.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '3'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '3'
+    name: apache
+  id: api-proxy
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster/health.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: cluster
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-vrouter
+  - node_id: '3'
+    name: cluster_health
+  - node_id: '3'
+    name: cluster
+  id: cluster_health
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-horizon.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-horizon
+- type: skipped
+  required_for:
+  - node_id: '3'
+    name: openstack-network-common-config
+  fail_on_error: false
+  requires:
+  - node_id: '3'
+    name: netconfig
+  - node_id: '3'
+    name: openstack-controller
+  - node_id: '1'
+    name: neutron-keystone
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: neutron-db
+  id: openstack-network-start
+- parameters:
+    retries: 1
+    cmd: rm -f /etc/hiera/nodes.yaml
+    cwd: /
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: clear_nodes_info
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/ceph/ceph.pub
+      dst: /var/lib/astute/ceph/ceph.pub
+    - src: /var/lib/fuel/keys/1/ceph/ceph
+      dst: /var/lib/astute/ceph/ceph
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys_ceph
+  id: copy_keys_ceph
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster/cluster.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: hosts
+  - node_id: '3'
+    name: firewall
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster
+  id: cluster
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/sahara/sahara.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '3'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '3'
+    name: openstack-network-end
+  - node_id: '3'
+    name: horizon
+  id: sahara
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/fuel_pkgs/fuel_pkgs.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: hiera
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: fuel_pkgs
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/metadata.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '3'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-network-common-config
+  - node_id: '3'
+    name: openstack-network-server-nova
+  - node_id: '3'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-agents-metadata
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-agents-metadata
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/virtual_ips/public_vip_ping.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: public_vip_ping
+- type: upload_file
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: upload_nodes_info
+  parameters:
+    path: /etc/hiera/nodes.yaml
+    data: |
+      nodes:
+      - {fqdn: node-4.test.domain.local, internal_address: 10.109.2.7, internal_netmask: 255.255.255.0,
+        name: node-4, role: compute, storage_address: 10.109.4.3, storage_netmask: 255.255.255.0,
+        swift_zone: '4', uid: '4', user_node_name: 'Untitled (a0:2c)'}
+      - {fqdn: node-5.test.domain.local, internal_address: 10.109.2.6, internal_netmask: 255.255.255.0,
+        name: node-5, role: compute, storage_address: 10.109.4.4, storage_netmask: 255.255.255.0,
+        swift_zone: '5', uid: '5', user_node_name: 'Untitled (81:4a)'}
+      - {fqdn: node-1.test.domain.local, internal_address: 10.109.2.5, internal_netmask: 255.255.255.0,
+        name: node-1, public_address: 10.109.1.6, public_netmask: 255.255.255.0, role: primary-controller,
+        storage_address: 10.109.4.5, storage_netmask: 255.255.255.0, swift_zone: '1', uid: '1',
+        user_node_name: 'Untitled (3e:7b)'}
+      - {fqdn: node-3.test.domain.local, internal_address: 10.109.2.3, internal_netmask: 255.255.255.0,
+        name: node-3, public_address: 10.109.1.5, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.2, storage_netmask: 255.255.255.0, swift_zone: '3', uid: '3',
+        user_node_name: 'Untitled (d2:54)'}
+      - {fqdn: node-2.test.domain.local, internal_address: 10.109.2.4, internal_netmask: 255.255.255.0,
+        name: node-2, public_address: 10.109.1.4, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.1, storage_netmask: 255.255.255.0, swift_zone: '2', uid: '2',
+        user_node_name: 'Untitled (ae:7e)'}
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-glance.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-glance
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/murano.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '3'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '3'
+    name: heat
+  - node_id: '3'
+    name: horizon
+  - node_id: '3'
+    name: rabbitmq
+  id: murano
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/plugins/ml2.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '3'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-network-common-config
+  - node_id: '3'
+    name: openstack-network-server-config
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  id: openstack-network-plugins-l2
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/dhcp.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '3'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-network-common-config
+  - node_id: '3'
+    name: openstack-network-server-nova
+  - node_id: '3'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-agents-dhcp
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-agents-dhcp
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/connectivity_tests.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: firewall
+  - node_id: '3'
+    name: hosts
+  requires:
+  - node_id: '3'
+    name: netconfig
+  id: connectivity_tests
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-nova.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-nova
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/server-config.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: openstack-network-end
+  requires:
+  - node_id: '3'
+    name: openstack-network-common-config
+  id: openstack-network-server-config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-cinder.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-cinder
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ntp/ntp-server.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for: []
+  requires:
+  - node_id: '3'
+    name: dns-client
+  id: ntp-server
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-heat.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-heat
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-cinder/openstack-cinder.pp
+    timeout: 1200
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '3'
+    name: openstack-controller
+  requires:
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '3'
+    name: keystone
+  - node_id: '3'
+    name: hosts
+  - node_id: '3'
+    name: firewall
+  id: openstack-cinder
+- parameters:
+    retries: 10
+    cmd: ntpdate -u $(awk '/^server/ { if ($2 !~ /127\.127\.[0-9]+\.[0-9]+/) {ORS="
+      "; print $2}}' /etc/ntp.conf)
+    cwd: /
+    timeout: 180
+    interval: 30
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: sync_time
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/database/database.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '3'
+    name: openstack-controller
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-database
+  id: database
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_keys_saving.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '3'
+    name: firewall
+  id: ssl-keys-saving
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/server-nova.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '3'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '3'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-agents-l3
+  - node_id: '3'
+    name: openstack-network-agents-l3
+  - node_id: '2'
+    name: openstack-network-agents-l3
+  - node_id: '5'
+    name: openstack-network-agents-l3
+  - node_id: '4'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-server-nova
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.pem
+      dst: /var/lib/astute/haproxy/public_haproxy.pem
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.crt
+      dst: /etc/pki/tls/certs/public_haproxy.pem
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_haproxy_keys
+  id: copy_haproxy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_add_trust_chain.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '3'
+    name: hosts
+  requires:
+  - node_id: '3'
+    name: firewall
+  - node_id: '3'
+    name: ssl-keys-saving
+  id: ssl-add-trust-chain
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-stats.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '3'
+    name: cluster-haproxy
+  - node_id: '3'
+    name: cluster-haproxy
+  id: openstack-haproxy-stats
+'2':
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-mysqld.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-mysqld
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/l3.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '2'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  - node_id: '1'
+    name: primary-openstack-network-agents-l3
+  id: openstack-network-agents-l3
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/netconfig.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: tools
+  id: netconfig
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/astute/dump_rabbitmq_definitions.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: dump_rabbitmq_definitions
+- requires:
+  - node_id: '2'
+    name: upload_core_repos_end
+  type: sync
+  id: rsync_core_puppet
+  parameters:
+    src: rsync://10.109.0.2:/puppet/2015.1.0-8.0/modules/
+    dst: /etc/puppet/modules
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_dns_setup.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: firewall
+  - node_id: '2'
+    name: ssl-add-trust-chain
+  id: ssl-dns-setup
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceilometer/controller.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: '2'
+    name: openstack-controller
+  - node_id: '2'
+    name: swift
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: ceilometer-keystone
+  id: ceilometer-controller
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/override_configuration.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: '2'
+    name: pre_hiera_config
+  id: override_configuration
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/ceph_pools.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '1'
+    name: ceph_ready_check
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: ceph_create_pools
+- requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  type: shell
+  id: upload_core_repos_start
+  parameters:
+    retries: 3
+    cmd: '> /etc/apt/sources.list'
+    cwd: /
+    timeout: 60
+    interval: 1
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: hiera
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/virtual_ips/virtual_ips.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: cluster
+  - node_id: '2'
+    name: cluster
+  id: virtual_ips
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-murano.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-murano
+- requires: []
+  fail_on_error: false
+  type: skipped
+  id: openstack-network-end
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-radosgw.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-radosgw
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-swift.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-swift
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-neutron.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-neutron
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/updatedb.pp
+    timeout: 60
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: updatedb
+- requires:
+  - node_id: '2'
+    name: upload_nodes_info
+  type: puppet
+  id: update_hosts
+  parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-controller/openstack-controller.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '2'
+    name: rabbitmq
+  id: openstack-controller
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceilometer/radosgw_user.pp
+    timeout: 300
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  - node_id: '2'
+    name: enable_rados
+  id: ceilometer-radosgw-user
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-keystone.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: netconfig
+  id: hosts
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/roles/controller.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires: []
+  id: controller_remaining_tasks
+- type: shell
+  requires:
+  - node_id: '2'
+    name: upload_core_repos#15
+  id: upload_core_repos_end
+  parameters:
+    retries: 3
+    cmd: apt-get update
+    cwd: /
+    timeout: 1800
+    interval: 1
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/vmware/vcenter.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: controller_remaining_tasks
+  id: vmware-vcenter
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/rabbitmq/rabbitmq.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '2'
+    name: openstack-controller
+  - node_id: '2'
+    name: glance
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-rabbitmq
+  id: rabbitmq
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/dns/dns-server.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-dns-server
+  id: dns-server
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/neutron/neutron.pub
+      dst: /var/lib/astute/neutron/neutron.pub
+    - src: /var/lib/fuel/keys/1/neutron/neutron
+      dst: /var/lib/astute/neutron/neutron
+    - src: /var/lib/fuel/keys/1/nova/nova.pub
+      dst: /var/lib/astute/nova/nova.pub
+    - src: /var/lib/fuel/keys/1/nova/nova
+      dst: /var/lib/astute/nova/nova
+    - src: /var/lib/fuel/keys/1/mysql/mysql.pub
+      dst: /var/lib/astute/mysql/mysql.pub
+    - src: /var/lib/fuel/keys/1/mysql/mysql
+      dst: /var/lib/astute/mysql/mysql
+    - src: /var/lib/fuel/keys/1/mongodb/mongodb.key
+      dst: /var/lib/astute/mongodb/mongodb.key
+    - src: /var/lib/fuel/keys/1/fernet-keys/0
+      dst: /var/lib/astute/keystone/0
+    - src: /var/lib/fuel/keys/1/fernet-keys/1
+      dst: /var/lib/astute/keystone/1
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys
+  id: copy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/enable_rados.pp
+    timeout: 180
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  - node_id: '1'
+    name: upload_cirros
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: enable_rados
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ntp/ntp-check.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: ntp-server
+  requires:
+  - node_id: '2'
+    name: dns-client
+  id: ntp-check
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/keystone/keystone.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '2'
+    name: openstack-controller
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '2'
+    name: database
+  - node_id: '2'
+    name: rabbitmq
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '2'
+    name: rabbitmq
+  - node_id: '1'
+    name: keystone-db
+  id: keystone
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/astute/service_token_off.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: upload_cirros
+  id: disable_keystone_service_token
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/umm/umm.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: tools
+  id: umm
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/mon.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '2'
+    name: controller_remaining_tasks
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-controller
+  - node_id: '1'
+    name: primary-ceph-mon
+  id: ceph-mon
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/memcached/memcached.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '2'
+    name: keystone
+  requires:
+  - node_id: '2'
+    name: openstack-haproxy
+  id: memcached
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#8
+  type: upload_file
+  id: upload_core_repos#9
+  parameters:
+    path: /etc/apt/preferences.d/mos-updates.pref
+    data: |-
+      Package: *
+      Pin: release a=mos8.0-updates,o=Mirantis,n=mos8.0-updates,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#7
+  type: upload_file
+  id: upload_core_repos#8
+  parameters:
+    path: /etc/apt/sources.list.d/mos-updates.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-updates main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/radosgw.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '2'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '2'
+    name: apache
+  - node_id: '2'
+    name: ceph-mon
+  id: ceph-radosgw
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-sahara.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-sahara
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#2
+  type: upload_file
+  id: upload_core_repos#3
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#1
+  type: upload_file
+  id: upload_core_repos#2
+  parameters:
+    path: /etc/apt/apt.conf.d/02mirantis-allow-unsigned
+    data: |
+      APT::Get::AllowUnauthenticated 1;
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos_start
+  type: upload_file
+  id: upload_core_repos#1
+  parameters:
+    path: /etc/apt/apt.conf.d/05disable-ipv6
+    data: |
+      Acquire::ForceIPv4 "true";
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#6
+  type: upload_file
+  id: upload_core_repos#7
+  parameters:
+    path: /etc/apt/preferences.d/mos.pref
+    data: |-
+      Package: *
+      Pin: release n=mos8.0,o=Mirantis,l=mos8.0,a=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#5
+  type: upload_file
+  id: upload_core_repos#6
+  parameters:
+    path: /etc/apt/sources.list.d/mos.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/x86_64 mos8.0 main restricted
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#4
+  type: upload_file
+  id: upload_core_repos#5
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-security.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-security main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#3
+  type: upload_file
+  id: upload_core_repos#4
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-updates.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-updates main universe multiverse
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/apache/apache.pp
+    timeout: 1200
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: keystone
+  requires:
+  - node_id: '2'
+    name: openstack-haproxy
+  id: apache
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/swift/swift.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '2'
+    name: controller_remaining_tasks
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-controller
+  - node_id: '1'
+    name: primary-swift
+  id: swift
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/logging/logging.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: globals
+  id: logging
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#14
+  type: upload_file
+  id: upload_core_repos#15
+  parameters:
+    path: /etc/apt/preferences.d/Auxiliary.pref
+    data: |-
+      Package: *
+      Pin: release l=auxiliary,o=Mirantis,n=auxiliary,a=auxiliary
+      Pin-Priority: 1150
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#13
+  type: upload_file
+  id: upload_core_repos#14
+  parameters:
+    path: /etc/apt/sources.list.d/Auxiliary.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/auxiliary auxiliary main
+      restricted
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#12
+  type: upload_file
+  id: upload_core_repos#13
+  parameters:
+    path: /etc/apt/preferences.d/mos-holdback.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,a=mos8.0-holdback,l=mos8.0,n=mos8.0-holdback
+      Pin-Priority: 1100
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#11
+  type: upload_file
+  id: upload_core_repos#12
+  parameters:
+    path: /etc/apt/sources.list.d/mos-holdback.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-holdback main
+      restricted
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#10
+  type: upload_file
+  id: upload_core_repos#11
+  parameters:
+    path: /etc/apt/preferences.d/mos-security.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,n=mos8.0-security,a=mos8.0-security,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '2'
+    name: upload_core_repos#9
+  type: upload_file
+  id: upload_core_repos#10
+  parameters:
+    path: /etc/apt/sources.list.d/mos-security.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-security main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/virtual_ips/conntrackd.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: virtual_ips
+  - node_id: '2'
+    name: cluster
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-vrouter
+  - node_id: '2'
+    name: cluster_health
+  - node_id: '2'
+    name: cluster
+  id: conntrackd
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/horizon/horizon.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: openstack-controller
+  id: horizon
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  - node_id: '2'
+    name: rsync_core_puppet
+  id: pre_hiera_config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-ceilometer.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-ceilometer
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/common-config.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: openstack-network-end
+  requires:
+  - node_id: '2'
+    name: openstack-network-start
+  id: openstack-network-common-config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/firewall/firewall.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: netconfig
+  id: firewall
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster-haproxy/cluster-haproxy.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: virtual_ips
+  - node_id: '2'
+    name: cluster
+  - node_id: '1'
+    name: primary-cluster-haproxy
+  id: cluster-haproxy
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/globals/globals.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: hiera
+  id: globals
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/glance/glance.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: openstack-controller
+  requires:
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '2'
+    name: database
+  id: glance
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/tools/tools.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: logging
+  id: tools
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: openstack-haproxy-ceilometer
+  - node_id: '2'
+    name: openstack-haproxy-cinder
+  - node_id: '2'
+    name: openstack-haproxy-glance
+  - node_id: '2'
+    name: openstack-haproxy-heat
+  - node_id: '2'
+    name: openstack-haproxy-horizon
+  - node_id: '2'
+    name: openstack-haproxy-keystone
+  - node_id: '2'
+    name: openstack-haproxy-murano
+  - node_id: '2'
+    name: openstack-haproxy-mysqld
+  - node_id: '2'
+    name: openstack-haproxy-neutron
+  - node_id: '2'
+    name: openstack-haproxy-nova
+  - node_id: '2'
+    name: openstack-haproxy-radosgw
+  - node_id: '2'
+    name: openstack-haproxy-sahara
+  - node_id: '2'
+    name: openstack-haproxy-swift
+  - node_id: '2'
+    name: openstack-haproxy-stats
+  - node_id: '2'
+    name: openstack-haproxy-ironic
+  id: openstack-haproxy
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-ironic.pp
+    timeout: 300
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-ironic
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/swift/rebalance_cronjob.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: swift
+  - node_id: '2'
+    name: swift
+  - node_id: '2'
+    name: swift-rebalance-cron
+  id: swift-rebalance-cron
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/heat/heat.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: openstack-controller
+  id: heat
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/cfapi.pp
+    timeout: 1800
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for: []
+  requires:
+  - node_id: '2'
+    name: murano
+  id: murano-cfapi
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ironic/ironic.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: openstack-controller
+  requires:
+  - node_id: '2'
+    name: openstack-haproxy
+  id: ironic-api
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/dns/dns-client.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for: []
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: dns-client
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster-vrouter/cluster-vrouter.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: virtual_ips
+  requires:
+  - node_id: '2'
+    name: cluster
+  id: cluster-vrouter
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/api-proxy/api-proxy.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '2'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '2'
+    name: apache
+  id: api-proxy
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster/health.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: cluster
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-vrouter
+  - node_id: '2'
+    name: cluster_health
+  - node_id: '2'
+    name: cluster
+  id: cluster_health
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-horizon.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-horizon
+- type: skipped
+  required_for:
+  - node_id: '2'
+    name: openstack-network-common-config
+  fail_on_error: false
+  requires:
+  - node_id: '2'
+    name: netconfig
+  - node_id: '2'
+    name: openstack-controller
+  - node_id: '1'
+    name: neutron-keystone
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: neutron-db
+  id: openstack-network-start
+- parameters:
+    retries: 1
+    cmd: rm -f /etc/hiera/nodes.yaml
+    cwd: /
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: clear_nodes_info
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/ceph/ceph.pub
+      dst: /var/lib/astute/ceph/ceph.pub
+    - src: /var/lib/fuel/keys/1/ceph/ceph
+      dst: /var/lib/astute/ceph/ceph
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys_ceph
+  id: copy_keys_ceph
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/cluster/cluster.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: hosts
+  - node_id: '2'
+    name: firewall
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '1'
+    name: primary-cluster
+  id: cluster
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/sahara/sahara.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '2'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '2'
+    name: openstack-network-end
+  - node_id: '2'
+    name: horizon
+  id: sahara
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/fuel_pkgs/fuel_pkgs.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: hiera
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: fuel_pkgs
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/metadata.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '2'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-network-common-config
+  - node_id: '2'
+    name: openstack-network-server-nova
+  - node_id: '2'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-agents-metadata
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-agents-metadata
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/virtual_ips/public_vip_ping.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: public_vip_ping
+- type: upload_file
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: upload_nodes_info
+  parameters:
+    path: /etc/hiera/nodes.yaml
+    data: |
+      nodes:
+      - {fqdn: node-4.test.domain.local, internal_address: 10.109.2.7, internal_netmask: 255.255.255.0,
+        name: node-4, role: compute, storage_address: 10.109.4.3, storage_netmask: 255.255.255.0,
+        swift_zone: '4', uid: '4', user_node_name: 'Untitled (a0:2c)'}
+      - {fqdn: node-5.test.domain.local, internal_address: 10.109.2.6, internal_netmask: 255.255.255.0,
+        name: node-5, role: compute, storage_address: 10.109.4.4, storage_netmask: 255.255.255.0,
+        swift_zone: '5', uid: '5', user_node_name: 'Untitled (81:4a)'}
+      - {fqdn: node-1.test.domain.local, internal_address: 10.109.2.5, internal_netmask: 255.255.255.0,
+        name: node-1, public_address: 10.109.1.6, public_netmask: 255.255.255.0, role: primary-controller,
+        storage_address: 10.109.4.5, storage_netmask: 255.255.255.0, swift_zone: '1', uid: '1',
+        user_node_name: 'Untitled (3e:7b)'}
+      - {fqdn: node-3.test.domain.local, internal_address: 10.109.2.3, internal_netmask: 255.255.255.0,
+        name: node-3, public_address: 10.109.1.5, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.2, storage_netmask: 255.255.255.0, swift_zone: '3', uid: '3',
+        user_node_name: 'Untitled (d2:54)'}
+      - {fqdn: node-2.test.domain.local, internal_address: 10.109.2.4, internal_netmask: 255.255.255.0,
+        name: node-2, public_address: 10.109.1.4, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.1, storage_netmask: 255.255.255.0, swift_zone: '2', uid: '2',
+        user_node_name: 'Untitled (ae:7e)'}
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-glance.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-glance
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/murano/murano.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '2'
+    name: controller_remaining_tasks
+  requires:
+  - node_id: '2'
+    name: heat
+  - node_id: '2'
+    name: horizon
+  - node_id: '2'
+    name: rabbitmq
+  id: murano
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/plugins/ml2.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '2'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-network-common-config
+  - node_id: '2'
+    name: openstack-network-server-config
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  id: openstack-network-plugins-l2
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/dhcp.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '2'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-network-common-config
+  - node_id: '2'
+    name: openstack-network-server-nova
+  - node_id: '2'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-agents-dhcp
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-agents-dhcp
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/connectivity_tests.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: firewall
+  - node_id: '2'
+    name: hosts
+  requires:
+  - node_id: '2'
+    name: netconfig
+  id: connectivity_tests
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-nova.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-nova
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/server-config.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: openstack-network-end
+  requires:
+  - node_id: '2'
+    name: openstack-network-common-config
+  id: openstack-network-server-config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-cinder.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-cinder
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ntp/ntp-server.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for: []
+  requires:
+  - node_id: '2'
+    name: dns-client
+  id: ntp-server
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-heat.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-heat
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-cinder/openstack-cinder.pp
+    timeout: 1200
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: '2'
+    name: openstack-controller
+  requires:
+  - node_id: '2'
+    name: rabbitmq
+  - node_id: '2'
+    name: keystone
+  - node_id: '2'
+    name: hosts
+  - node_id: '2'
+    name: firewall
+  id: openstack-cinder
+- parameters:
+    retries: 10
+    cmd: ntpdate -u $(awk '/^server/ { if ($2 !~ /127\.127\.[0-9]+\.[0-9]+/) {ORS="
+      "; print $2}}' /etc/ntp.conf)
+    cwd: /
+    timeout: 180
+    interval: 30
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: sync_time
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/database/database.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '2'
+    name: openstack-controller
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: primary-database
+  id: database
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_keys_saving.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '2'
+    name: firewall
+  id: ssl-keys-saving
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/server-nova.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '2'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '2'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-agents-l3
+  - node_id: '3'
+    name: openstack-network-agents-l3
+  - node_id: '2'
+    name: openstack-network-agents-l3
+  - node_id: '5'
+    name: openstack-network-agents-l3
+  - node_id: '4'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-server-nova
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.pem
+      dst: /var/lib/astute/haproxy/public_haproxy.pem
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.crt
+      dst: /etc/pki/tls/certs/public_haproxy.pem
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_haproxy_keys
+  id: copy_haproxy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_add_trust_chain.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '2'
+    name: hosts
+  requires:
+  - node_id: '2'
+    name: firewall
+  - node_id: '2'
+    name: ssl-keys-saving
+  id: ssl-add-trust-chain
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-haproxy/openstack-haproxy-stats.pp
+    timeout: 300
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: '2'
+    name: cluster-haproxy
+  - node_id: '2'
+    name: cluster-haproxy
+  id: openstack-haproxy-stats
+master:
+- requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  type: shell
+  id: generate_keys
+  parameters:
+    retries: 3
+    cmd: sh /etc/puppet/modules/osnailyfacter/modular/astute/generate_keys.sh -p /var/lib/fuel/keys/
+      -i 1 -o 'mongodb' -s 'neutron nova mysql' -f '0 1'
+    cwd: /
+    timeout: 180
+    interval: 1
+  required_for: []
+- requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  type: skipped
+  id: generate_haproxy_keys
+  parameters:
+    retries: 3
+    cmd: sh /etc/puppet/modules/osnailyfacter/modular/astute/generate_haproxy_keys.sh
+      -i 1 -h public.fuel.local -o 'haproxy' -p /var/lib/fuel/keys/
+    cwd: /
+    timeout: 180
+    interval: 1
+  required_for: []
+- requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  type: shell
+  id: generate_keys_ceph
+  parameters:
+    retries: 3
+    cmd: sh /etc/puppet/modules/osnailyfacter/modular/astute/generate_keys.sh -i 1
+      -s 'ceph' -p /var/lib/fuel/keys/
+    cwd: /
+    timeout: 180
+    interval: 1
+  required_for: []
+'4':
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#13
+  type: upload_file
+  id: upload_core_repos#14
+  parameters:
+    path: /etc/apt/sources.list.d/Auxiliary.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/auxiliary auxiliary main
+      restricted
+  required_for: []
+- type: skipped
+  required_for:
+  - node_id: '4'
+    name: openstack-network-common-config
+  fail_on_error: false
+  requires:
+  - node_id: '4'
+    name: netconfig
+  - node_id: '4'
+    name: top-role-compute
+  - node_id: '1'
+    name: neutron-keystone
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: neutron-db
+  id: openstack-network-start
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/common-config.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '4'
+    name: openstack-network-end
+  requires:
+  - node_id: '4'
+    name: openstack-network-start
+  id: openstack-network-common-config
+- parameters:
+    retries: 1
+    cmd: rm -f /etc/hiera/nodes.yaml
+    cwd: /
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: clear_nodes_info
+- type: shell
+  requires:
+  - node_id: '4'
+    name: upload_core_repos#15
+  id: upload_core_repos_end
+  parameters:
+    retries: 3
+    cmd: apt-get update
+    cwd: /
+    timeout: 1800
+    interval: 1
+  required_for: []
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#11
+  type: upload_file
+  id: upload_core_repos#12
+  parameters:
+    path: /etc/apt/sources.list.d/mos-holdback.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-holdback main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/globals/globals.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '4'
+    name: hiera
+  id: globals
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/fuel_pkgs/fuel_pkgs.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '4'
+    name: hiera
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: fuel_pkgs
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/l3.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '4'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  - node_id: '1'
+    name: primary-openstack-network-agents-l3
+  id: openstack-network-agents-l3
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/ceph/ceph.pub
+      dst: /var/lib/astute/ceph/ceph.pub
+    - src: /var/lib/fuel/keys/1/ceph/ceph
+      dst: /var/lib/astute/ceph/ceph
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys_ceph
+  id: copy_keys_ceph
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#9
+  type: upload_file
+  id: upload_core_repos#10
+  parameters:
+    path: /etc/apt/sources.list.d/mos-security.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-security main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/tools/tools.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '4'
+    name: logging
+  id: tools
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/netconfig.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '4'
+    name: tools
+  id: netconfig
+- requires:
+  - node_id: '4'
+    name: upload_core_repos_end
+  type: sync
+  id: rsync_core_puppet
+  parameters:
+    src: rsync://10.109.0.2:/puppet/2015.1.0-8.0/modules/
+    dst: /etc/puppet/modules
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/astute/enable_compute.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: enable_nova_compute_service
+- type: upload_file
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: upload_nodes_info
+  parameters:
+    path: /etc/hiera/nodes.yaml
+    data: |
+      nodes:
+      - {fqdn: node-4.test.domain.local, internal_address: 10.109.2.7, internal_netmask: 255.255.255.0,
+        name: node-4, role: compute, storage_address: 10.109.4.3, storage_netmask: 255.255.255.0,
+        swift_zone: '4', uid: '4', user_node_name: 'Untitled (a0:2c)'}
+      - {fqdn: node-5.test.domain.local, internal_address: 10.109.2.6, internal_netmask: 255.255.255.0,
+        name: node-5, role: compute, storage_address: 10.109.4.4, storage_netmask: 255.255.255.0,
+        swift_zone: '5', uid: '5', user_node_name: 'Untitled (81:4a)'}
+      - {fqdn: node-1.test.domain.local, internal_address: 10.109.2.5, internal_netmask: 255.255.255.0,
+        name: node-1, public_address: 10.109.1.6, public_netmask: 255.255.255.0, role: primary-controller,
+        storage_address: 10.109.4.5, storage_netmask: 255.255.255.0, swift_zone: '1', uid: '1',
+        user_node_name: 'Untitled (3e:7b)'}
+      - {fqdn: node-3.test.domain.local, internal_address: 10.109.2.3, internal_netmask: 255.255.255.0,
+        name: node-3, public_address: 10.109.1.5, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.2, storage_netmask: 255.255.255.0, swift_zone: '3', uid: '3',
+        user_node_name: 'Untitled (d2:54)'}
+      - {fqdn: node-2.test.domain.local, internal_address: 10.109.2.4, internal_netmask: 255.255.255.0,
+        name: node-2, public_address: 10.109.1.4, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.1, storage_netmask: 255.255.255.0, swift_zone: '2', uid: '2',
+        user_node_name: 'Untitled (ae:7e)'}
+  required_for: []
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/neutron/neutron.pub
+      dst: /var/lib/astute/neutron/neutron.pub
+    - src: /var/lib/fuel/keys/1/neutron/neutron
+      dst: /var/lib/astute/neutron/neutron
+    - src: /var/lib/fuel/keys/1/nova/nova.pub
+      dst: /var/lib/astute/nova/nova.pub
+    - src: /var/lib/fuel/keys/1/nova/nova
+      dst: /var/lib/astute/nova/nova
+    - src: /var/lib/fuel/keys/1/mysql/mysql.pub
+      dst: /var/lib/astute/mysql/mysql.pub
+    - src: /var/lib/fuel/keys/1/mysql/mysql
+      dst: /var/lib/astute/mysql/mysql
+    - src: /var/lib/fuel/keys/1/mongodb/mongodb.key
+      dst: /var/lib/astute/mongodb/mongodb.key
+    - src: /var/lib/fuel/keys/1/fernet-keys/0
+      dst: /var/lib/astute/keystone/0
+    - src: /var/lib/fuel/keys/1/fernet-keys/1
+      dst: /var/lib/astute/keystone/1
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys
+  id: copy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/override_configuration.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: '4'
+    name: pre_hiera_config
+  id: override_configuration
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/firewall/firewall.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '4'
+    name: netconfig
+  id: firewall
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: hiera
+- requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  type: shell
+  id: upload_core_repos_start
+  parameters:
+    retries: 3
+    cmd: '> /etc/apt/sources.list'
+    cwd: /
+    timeout: 60
+    interval: 1
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/plugins/ml2.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '4'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '4'
+    name: openstack-network-common-config
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  id: openstack-network-plugins-l2
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#8
+  type: upload_file
+  id: upload_core_repos#9
+  parameters:
+    path: /etc/apt/preferences.d/mos-updates.pref
+    data: |-
+      Package: *
+      Pin: release a=mos8.0-updates,o=Mirantis,n=mos8.0-updates,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#7
+  type: upload_file
+  id: upload_core_repos#8
+  parameters:
+    path: /etc/apt/sources.list.d/mos-updates.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-updates main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_keys_saving.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '4'
+    name: firewall
+  id: ssl-keys-saving
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#2
+  type: upload_file
+  id: upload_core_repos#3
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#1
+  type: upload_file
+  id: upload_core_repos#2
+  parameters:
+    path: /etc/apt/apt.conf.d/02mirantis-allow-unsigned
+    data: |
+      APT::Get::AllowUnauthenticated 1;
+  required_for: []
+- requires:
+  - node_id: '4'
+    name: upload_core_repos_start
+  type: upload_file
+  id: upload_core_repos#1
+  parameters:
+    path: /etc/apt/apt.conf.d/05disable-ipv6
+    data: |
+      Acquire::ForceIPv4 "true";
+  required_for: []
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#6
+  type: upload_file
+  id: upload_core_repos#7
+  parameters:
+    path: /etc/apt/preferences.d/mos.pref
+    data: |-
+      Package: *
+      Pin: release n=mos8.0,o=Mirantis,l=mos8.0,a=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#5
+  type: upload_file
+  id: upload_core_repos#6
+  parameters:
+    path: /etc/apt/sources.list.d/mos.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/x86_64 mos8.0 main restricted
+  required_for: []
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#4
+  type: upload_file
+  id: upload_core_repos#5
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-security.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-security main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#3
+  type: upload_file
+  id: upload_core_repos#4
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-updates.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-updates main universe multiverse
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/configure_default_route.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: configure_default_route
+- requires: []
+  fail_on_error: false
+  type: skipped
+  id: openstack-network-end
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceilometer/compute.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '4'
+    name: top-role-compute
+  - node_id: '1'
+    name: ceilometer-controller
+  - node_id: '3'
+    name: ceilometer-controller
+  - node_id: '2'
+    name: ceilometer-controller
+  id: ceilometer-compute
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/connectivity_tests.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '4'
+    name: firewall
+  - node_id: '4'
+    name: hosts
+  requires:
+  - node_id: '4'
+    name: netconfig
+  id: connectivity_tests
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/logging/logging.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '4'
+    name: globals
+  id: logging
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/roles/compute.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '4'
+    name: hosts
+  - node_id: '4'
+    name: firewall
+  - node_id: '1'
+    name: keystone
+  - node_id: '3'
+    name: keystone
+  - node_id: '2'
+    name: keystone
+  - node_id: '1'
+    name: openstack-controller
+  - node_id: '3'
+    name: openstack-controller
+  - node_id: '2'
+    name: openstack-controller
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '2'
+    name: rabbitmq
+  id: top-role-compute
+- parameters:
+    retries: 10
+    cmd: ntpdate -u $(awk '/^server/ { if ($2 !~ /127\.127\.[0-9]+\.[0-9]+/) {ORS="
+      "; print $2}}' /etc/ntp.conf)
+    cwd: /
+    timeout: 180
+    interval: 30
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: sync_time
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/compute-nova.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '4'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '4'
+    name: openstack-network-common-config
+  - node_id: '4'
+    name: openstack-network-agents-l3
+  - node_id: '4'
+    name: openstack-network-agents-metadata
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-compute-nova
+- requires:
+  - node_id: '4'
+    name: upload_nodes_info
+  type: puppet
+  id: update_hosts
+  parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#12
+  type: upload_file
+  id: upload_core_repos#13
+  parameters:
+    path: /etc/apt/preferences.d/mos-holdback.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,a=mos8.0-holdback,l=mos8.0,n=mos8.0-holdback
+      Pin-Priority: 1100
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/dns/dns-client.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '4'
+    name: ntp-client
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: dns-client
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#10
+  type: upload_file
+  id: upload_core_repos#11
+  parameters:
+    path: /etc/apt/preferences.d/mos-security.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,n=mos8.0-security,a=mos8.0-security,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/metadata.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '4'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '4'
+    name: openstack-network-common-config
+  - node_id: '4'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-agents-metadata
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-agents-metadata
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/ceph_compute.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: ceph_create_pools
+  - node_id: '3'
+    name: ceph_create_pools
+  - node_id: '2'
+    name: ceph_create_pools
+  id: ceph-compute
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '4'
+    name: netconfig
+  id: hosts
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.pem
+      dst: /var/lib/astute/haproxy/public_haproxy.pem
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.crt
+      dst: /etc/pki/tls/certs/public_haproxy.pem
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_haproxy_keys
+  id: copy_haproxy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  - node_id: '4'
+    name: rsync_core_puppet
+  id: pre_hiera_config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ntp/ntp-client.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: '4'
+    name: dns-client
+  - node_id: '1'
+    name: ntp-server
+  id: ntp-client
+- requires:
+  - node_id: '4'
+    name: upload_core_repos#14
+  type: upload_file
+  id: upload_core_repos#15
+  parameters:
+    path: /etc/apt/preferences.d/Auxiliary.pref
+    data: |-
+      Package: *
+      Pin: release l=auxiliary,o=Mirantis,n=auxiliary,a=auxiliary
+      Pin-Priority: 1150
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_add_trust_chain.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '4'
+    name: hosts
+  requires:
+  - node_id: '4'
+    name: firewall
+  - node_id: '4'
+    name: ssl-keys-saving
+  id: ssl-add-trust-chain
+'5':
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#13
+  type: upload_file
+  id: upload_core_repos#14
+  parameters:
+    path: /etc/apt/sources.list.d/Auxiliary.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/auxiliary auxiliary main
+      restricted
+  required_for: []
+- type: skipped
+  required_for:
+  - node_id: '5'
+    name: openstack-network-common-config
+  fail_on_error: false
+  requires:
+  - node_id: '5'
+    name: netconfig
+  - node_id: '5'
+    name: top-role-compute
+  - node_id: '1'
+    name: neutron-keystone
+  - node_id: '1'
+    name: openstack-haproxy
+  - node_id: '3'
+    name: openstack-haproxy
+  - node_id: '2'
+    name: openstack-haproxy
+  - node_id: '1'
+    name: neutron-db
+  id: openstack-network-start
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/common-config.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '5'
+    name: openstack-network-end
+  requires:
+  - node_id: '5'
+    name: openstack-network-start
+  id: openstack-network-common-config
+- parameters:
+    retries: 1
+    cmd: rm -f /etc/hiera/nodes.yaml
+    cwd: /
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: clear_nodes_info
+- type: shell
+  requires:
+  - node_id: '5'
+    name: upload_core_repos#15
+  id: upload_core_repos_end
+  parameters:
+    retries: 3
+    cmd: apt-get update
+    cwd: /
+    timeout: 1800
+    interval: 1
+  required_for: []
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#11
+  type: upload_file
+  id: upload_core_repos#12
+  parameters:
+    path: /etc/apt/sources.list.d/mos-holdback.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-holdback main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/globals/globals.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '5'
+    name: hiera
+  id: globals
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/fuel_pkgs/fuel_pkgs.pp
+    timeout: 600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '5'
+    name: hiera
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: fuel_pkgs
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/l3.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '5'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  - node_id: '1'
+    name: primary-openstack-network-agents-l3
+  id: openstack-network-agents-l3
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/ceph/ceph.pub
+      dst: /var/lib/astute/ceph/ceph.pub
+    - src: /var/lib/fuel/keys/1/ceph/ceph
+      dst: /var/lib/astute/ceph/ceph
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys_ceph
+  id: copy_keys_ceph
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#9
+  type: upload_file
+  id: upload_core_repos#10
+  parameters:
+    path: /etc/apt/sources.list.d/mos-security.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-security main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/tools/tools.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '5'
+    name: logging
+  id: tools
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/netconfig.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '5'
+    name: tools
+  id: netconfig
+- requires:
+  - node_id: '5'
+    name: upload_core_repos_end
+  type: sync
+  id: rsync_core_puppet
+  parameters:
+    src: rsync://10.109.0.2:/puppet/2015.1.0-8.0/modules/
+    dst: /etc/puppet/modules
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/astute/enable_compute.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: enable_nova_compute_service
+- type: upload_file
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: upload_nodes_info
+  parameters:
+    path: /etc/hiera/nodes.yaml
+    data: |
+      nodes:
+      - {fqdn: node-4.test.domain.local, internal_address: 10.109.2.7, internal_netmask: 255.255.255.0,
+        name: node-4, role: compute, storage_address: 10.109.4.3, storage_netmask: 255.255.255.0,
+        swift_zone: '4', uid: '4', user_node_name: 'Untitled (a0:2c)'}
+      - {fqdn: node-5.test.domain.local, internal_address: 10.109.2.6, internal_netmask: 255.255.255.0,
+        name: node-5, role: compute, storage_address: 10.109.4.4, storage_netmask: 255.255.255.0,
+        swift_zone: '5', uid: '5', user_node_name: 'Untitled (81:4a)'}
+      - {fqdn: node-1.test.domain.local, internal_address: 10.109.2.5, internal_netmask: 255.255.255.0,
+        name: node-1, public_address: 10.109.1.6, public_netmask: 255.255.255.0, role: primary-controller,
+        storage_address: 10.109.4.5, storage_netmask: 255.255.255.0, swift_zone: '1', uid: '1',
+        user_node_name: 'Untitled (3e:7b)'}
+      - {fqdn: node-3.test.domain.local, internal_address: 10.109.2.3, internal_netmask: 255.255.255.0,
+        name: node-3, public_address: 10.109.1.5, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.2, storage_netmask: 255.255.255.0, swift_zone: '3', uid: '3',
+        user_node_name: 'Untitled (d2:54)'}
+      - {fqdn: node-2.test.domain.local, internal_address: 10.109.2.4, internal_netmask: 255.255.255.0,
+        name: node-2, public_address: 10.109.1.4, public_netmask: 255.255.255.0, role: controller,
+        storage_address: 10.109.4.1, storage_netmask: 255.255.255.0, swift_zone: '2', uid: '2',
+        user_node_name: 'Untitled (ae:7e)'}
+  required_for: []
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/neutron/neutron.pub
+      dst: /var/lib/astute/neutron/neutron.pub
+    - src: /var/lib/fuel/keys/1/neutron/neutron
+      dst: /var/lib/astute/neutron/neutron
+    - src: /var/lib/fuel/keys/1/nova/nova.pub
+      dst: /var/lib/astute/nova/nova.pub
+    - src: /var/lib/fuel/keys/1/nova/nova
+      dst: /var/lib/astute/nova/nova
+    - src: /var/lib/fuel/keys/1/mysql/mysql.pub
+      dst: /var/lib/astute/mysql/mysql.pub
+    - src: /var/lib/fuel/keys/1/mysql/mysql
+      dst: /var/lib/astute/mysql/mysql
+    - src: /var/lib/fuel/keys/1/mongodb/mongodb.key
+      dst: /var/lib/astute/mongodb/mongodb.key
+    - src: /var/lib/fuel/keys/1/fernet-keys/0
+      dst: /var/lib/astute/keystone/0
+    - src: /var/lib/fuel/keys/1/fernet-keys/1
+      dst: /var/lib/astute/keystone/1
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: copy_files
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_keys
+  id: copy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/override_configuration.pp
+    timeout: 180
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: '5'
+    name: pre_hiera_config
+  id: override_configuration
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/firewall/firewall.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '5'
+    name: netconfig
+  id: firewall
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: hiera
+- requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  type: shell
+  id: upload_core_repos_start
+  parameters:
+    retries: 3
+    cmd: '> /etc/apt/sources.list'
+    cwd: /
+    timeout: 60
+    interval: 1
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/plugins/ml2.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '5'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '5'
+    name: openstack-network-common-config
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  id: openstack-network-plugins-l2
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#8
+  type: upload_file
+  id: upload_core_repos#9
+  parameters:
+    path: /etc/apt/preferences.d/mos-updates.pref
+    data: |-
+      Package: *
+      Pin: release a=mos8.0-updates,o=Mirantis,n=mos8.0-updates,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#7
+  type: upload_file
+  id: upload_core_repos#8
+  parameters:
+    path: /etc/apt/sources.list.d/mos-updates.list
+    data: deb http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0/ mos8.0-updates main
+      restricted
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_keys_saving.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '5'
+    name: firewall
+  id: ssl-keys-saving
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#2
+  type: upload_file
+  id: upload_core_repos#3
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#1
+  type: upload_file
+  id: upload_core_repos#2
+  parameters:
+    path: /etc/apt/apt.conf.d/02mirantis-allow-unsigned
+    data: |
+      APT::Get::AllowUnauthenticated 1;
+  required_for: []
+- requires:
+  - node_id: '5'
+    name: upload_core_repos_start
+  type: upload_file
+  id: upload_core_repos#1
+  parameters:
+    path: /etc/apt/apt.conf.d/05disable-ipv6
+    data: |
+      Acquire::ForceIPv4 "true";
+  required_for: []
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#6
+  type: upload_file
+  id: upload_core_repos#7
+  parameters:
+    path: /etc/apt/preferences.d/mos.pref
+    data: |-
+      Package: *
+      Pin: release n=mos8.0,o=Mirantis,l=mos8.0,a=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#5
+  type: upload_file
+  id: upload_core_repos#6
+  parameters:
+    path: /etc/apt/sources.list.d/mos.list
+    data: deb http://10.109.0.2:8080/2015.1.0-8.0/ubuntu/x86_64 mos8.0 main restricted
+  required_for: []
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#4
+  type: upload_file
+  id: upload_core_repos#5
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-security.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-security main universe multiverse
+  required_for: []
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#3
+  type: upload_file
+  id: upload_core_repos#4
+  parameters:
+    path: /etc/apt/sources.list.d/ubuntu-updates.list
+    data: deb http://archive.ubuntu.com/ubuntu/ trusty-updates main universe multiverse
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/configure_default_route.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: configure_default_route
+- requires: []
+  fail_on_error: false
+  type: skipped
+  id: openstack-network-end
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceilometer/compute.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '5'
+    name: top-role-compute
+  - node_id: '1'
+    name: ceilometer-controller
+  - node_id: '3'
+    name: ceilometer-controller
+  - node_id: '2'
+    name: ceilometer-controller
+  id: ceilometer-compute
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/netconfig/connectivity_tests.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '5'
+    name: firewall
+  - node_id: '5'
+    name: hosts
+  requires:
+  - node_id: '5'
+    name: netconfig
+  id: connectivity_tests
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/logging/logging.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '5'
+    name: globals
+  id: logging
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/roles/compute.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  fail_on_error: true
+  requires:
+  - node_id: '5'
+    name: hosts
+  - node_id: '5'
+    name: firewall
+  - node_id: '1'
+    name: keystone
+  - node_id: '3'
+    name: keystone
+  - node_id: '2'
+    name: keystone
+  - node_id: '1'
+    name: openstack-controller
+  - node_id: '3'
+    name: openstack-controller
+  - node_id: '2'
+    name: openstack-controller
+  - node_id: '1'
+    name: primary-rabbitmq
+  - node_id: '3'
+    name: rabbitmq
+  - node_id: '2'
+    name: rabbitmq
+  id: top-role-compute
+- parameters:
+    retries: 10
+    cmd: ntpdate -u $(awk '/^server/ { if ($2 !~ /127\.127\.[0-9]+\.[0-9]+/) {ORS="
+      "; print $2}}' /etc/ntp.conf)
+    cwd: /
+    timeout: 180
+    interval: 30
+  type: shell
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: sync_time
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/compute-nova.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '5'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '5'
+    name: openstack-network-common-config
+  - node_id: '5'
+    name: openstack-network-agents-l3
+  - node_id: '5'
+    name: openstack-network-agents-metadata
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-compute-nova
+- requires:
+  - node_id: '5'
+    name: upload_nodes_info
+  type: puppet
+  id: update_hosts
+  parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#12
+  type: upload_file
+  id: upload_core_repos#13
+  parameters:
+    path: /etc/apt/preferences.d/mos-holdback.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,a=mos8.0-holdback,l=mos8.0,n=mos8.0-holdback
+      Pin-Priority: 1100
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/dns/dns-client.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: '5'
+    name: ntp-client
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: dns-client
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#10
+  type: upload_file
+  id: upload_core_repos#11
+  parameters:
+    path: /etc/apt/preferences.d/mos-security.pref
+    data: |-
+      Package: *
+      Pin: release o=Mirantis,n=mos8.0-security,a=mos8.0-security,l=mos8.0
+      Pin-Priority: 1050
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/openstack-network/agents/metadata.pp
+    timeout: 1800
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: '5'
+    name: openstack-network-end
+  fail_on_error: true
+  requires:
+  - node_id: '5'
+    name: openstack-network-common-config
+  - node_id: '5'
+    name: openstack-network-agents-l3
+  - node_id: '1'
+    name: primary-openstack-network-agents-metadata
+  - node_id: '1'
+    name: primary-openstack-network-plugins-l2
+  - node_id: '3'
+    name: openstack-network-plugins-l2
+  - node_id: '2'
+    name: openstack-network-plugins-l2
+  - node_id: '5'
+    name: openstack-network-plugins-l2
+  - node_id: '4'
+    name: openstack-network-plugins-l2
+  id: openstack-network-agents-metadata
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ceph/ceph_compute.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: '1'
+    name: ceph_create_pools
+  - node_id: '3'
+    name: ceph_create_pools
+  - node_id: '2'
+    name: ceph_create_pools
+  id: ceph-compute
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hosts/hosts.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  requires:
+  - node_id: '5'
+    name: netconfig
+  id: hosts
+- parameters:
+    files:
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.pem
+      dst: /var/lib/astute/haproxy/public_haproxy.pem
+    - src: /var/lib/fuel/keys/1/haproxy/public_haproxy.crt
+      dst: /etc/pki/tls/certs/public_haproxy.pem
+    dir_permissions: '0700'
+    cwd: /
+    permissions: '0600'
+  type: skipped
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: master
+    name: generate_haproxy_keys
+  id: copy_haproxy_keys
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/hiera/hiera.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  fail_on_error: true
+  required_for:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  - node_id: '5'
+    name: rsync_core_puppet
+  id: pre_hiera_config
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ntp/ntp-client.pp
+    timeout: 3600
+    cwd: /
+  type: puppet
+  required_for:
+  - node_id: virtual_sync_node
+    name: post_deployment_end
+  fail_on_error: true
+  requires:
+  - node_id: '5'
+    name: dns-client
+  - node_id: '1'
+    name: ntp-server
+  id: ntp-client
+- requires:
+  - node_id: '5'
+    name: upload_core_repos#14
+  type: upload_file
+  id: upload_core_repos#15
+  parameters:
+    path: /etc/apt/preferences.d/Auxiliary.pref
+    data: |-
+      Package: *
+      Pin: release l=auxiliary,o=Mirantis,n=auxiliary,a=auxiliary
+      Pin-Priority: 1150
+  required_for: []
+- parameters:
+    puppet_modules: /etc/puppet/modules
+    puppet_manifest: /etc/puppet/modules/osnailyfacter/modular/ssl/ssl_add_trust_chain.pp
+    timeout: 3600
+    cwd: /
+  type: skipped
+  fail_on_error: true
+  required_for:
+  - node_id: '5'
+    name: hosts
+  requires:
+  - node_id: '5'
+    name: firewall
+  - node_id: '5'
+    name: ssl-keys-saving
+  id: ssl-add-trust-chain
+virtual_sync_node:
+- type: skipped
+  fail_on_error: false
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_end
+  - node_id: virtual_sync_node
+    name: deploy_end
+  id: post_deployment_start
+  required_for: []
+- type: skipped
+  fail_on_error: false
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  - node_id: virtual_sync_node
+    name: pre_deployment_end
+  id: deploy_start
+  required_for: []
+- type: skipped
+  fail_on_error: false
+  requires:
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  - node_id: virtual_sync_node
+    name: pre_deployment_start
+  id: pre_deployment_end
+  required_for: []
+- requires: []
+  fail_on_error: false
+  type: skipped
+  id: pre_deployment_start
+  required_for: []
+- type: skipped
+  fail_on_error: false
+  requires:
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  - node_id: virtual_sync_node
+    name: post_deployment_start
+  id: post_deployment_end
+  required_for: []
+- type: skipped
+  fail_on_error: false
+  requires:
+  - node_id: virtual_sync_node
+    name: deploy_start
+  - node_id: virtual_sync_node
+    name: deploy_start
+  id: deploy_end
+  required_for: []
