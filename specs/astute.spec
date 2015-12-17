@@ -1,5 +1,5 @@
 %define rbname astute
-%{!?version: %define version 8.0.0}
+%{!?version: %define version 9.0.0}
 %{!?release: %define release 1}
 %if 0%{?rhel} == 6
 %global gem_dir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)

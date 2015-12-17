@@ -1,3 +1,9 @@
+astute (9.0.0-1) trusty; urgency=medium
+
+  * Update version to 9.0.0
+
+ -- Sergey Kulanov <skulanov@mirantis.com>  Thu, 17 Dec 2015 15:35:14 +0200
+
 astute (8.0.0-1) trusty; urgency=low
 
   * Update version to 8.0.0
