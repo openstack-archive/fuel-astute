@@ -29,18 +29,18 @@ module Astute
 
       deployment_tasks = support_virtual_node(deployment_tasks)
 
-      nodes = {}
+      cluster = Deployment::Cluster.new deployment_info.first['deployment_id']
+
       deployment_tasks.keys.each do |node_id|
-        node = TaskNode.new(node_id)
+        node = TaskNode.new(node_id, cluster)
         node.context = @ctx
         node.set_critical if critical_node_uids(deployment_info).include?(node_id)
         node.set_status_failed if offline_uids.include? node_id
-        nodes[node_id] = node
       end
 
       deployment_tasks.each do |node_id, tasks|
         tasks.each do |task|
-          nodes[node_id].graph.create_task(
+          cluster[node_id].graph.create_task(
             task['id'],
             task.merge({'node_id' => node_id})
           )
@@ -50,18 +50,17 @@ module Astute
       deployment_tasks.each do |node_id, tasks|
         tasks.each do |task|
           task['requires'].each do |d_t|
-            nodes[node_id][task['id']].depends nodes[d_t['node_id']][d_t['name']]
+            cluster[node_id][task['id']].depends cluster[d_t['node_id']][d_t['name']]
           end
 
           task['required_for'].each do |d_t|
-            nodes[node_id][task['id']].depended_on nodes[d_t['node_id']][d_t['name']]
+            cluster[node_id][task['id']].depended_on cluster[d_t['node_id']][d_t['name']]
           end
         end
       end
 
-      deployment = Deployment::Process.new(nodes.values)
-      write_graph_to_file(deployment)
-      result = deployment.run
+      write_graph_to_file(cluster)
+      result = cluster.run
       report_deploy_result(result)
     end
 

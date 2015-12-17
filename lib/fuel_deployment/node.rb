@@ -24,6 +24,7 @@ module Deployment
   # @attr [Symbol] status The node's status
   # @attr [String] name The node's name
   # @attr [Deployment::Task] task The currently running task of this node
+  # @attr [Deploymnet::Cluster] cluster The cluster this node is assigned to
   # @attr [Deployment::Graph] graph The Graph assigned to this node
   # @attr [Numeric, String] id Misc id that can be used by this node
   # @attr [true, false] critical This node is critical for the deployment
@@ -35,13 +36,16 @@ module Deployment
     FINISHED_STATUSES = [:failed, :successful, :skipped]
 
     # @param [String, Symbol] name
+    # @param [Deployment::Cluster] cluster
     # @param [Object] id
-    def initialize(name, id = nil)
+    def initialize(name, cluster, id = nil)
       @name = name
       @status = :online
       @task = nil
       @critical = false
       @id = id || self.name
+      self.cluster = cluster
+      cluster.node_add self
       create_new_graph
     end
 
@@ -51,6 +55,7 @@ module Deployment
     attr_reader :status
     attr_reader :name
     attr_reader :task
+    attr_reader :cluster
     alias :current_task :task
     attr_reader :graph
     attr_accessor :id
@@ -84,6 +89,15 @@ module Deployment
     # @return [false]
     def set_normal
       self.critical = false
+    end
+
+    # Set this node's Cluster Object
+    # @param [Deployment::Cluster] cluster The new cluster object
+    # @raise [Deployment::InvalidArgument] if the object is not a Node
+    # @return [Deployment::Node]
+    def cluster=(cluster)
+      raise Deployment::InvalidArgument.new self, 'Not a cluster used instead of the cluster object!', cluster unless cluster.is_a? Deployment::Cluster
+      @cluster = cluster
     end
 
     # The node have finished all its tasks

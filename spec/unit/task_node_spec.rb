@@ -18,6 +18,10 @@ require File.join(File.dirname(__FILE__), '../spec_helper')
 describe Astute::TaskNode do
   include SpecHelpers
 
+  let(:cluster) do
+    Deployment::Cluster.new
+  end
+
   let(:ctx) do
     ctx = mock('context')
     ctx.stubs(:task_id)
@@ -25,7 +29,7 @@ describe Astute::TaskNode do
   end
 
   let(:task_node) do
-    node = Astute::TaskNode.new('node_id')
+    node = Astute::TaskNode.new('node_id', cluster)
     node.context = ctx
     node
   end
