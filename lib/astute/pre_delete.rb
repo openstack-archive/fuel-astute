@@ -127,6 +127,72 @@ module Astute
       answer
     end
 
+    def self.remove_mongo_nodes(ctx, nodes)
+      answer = {"status" => "ready"}
+      # primary_mongo ?
+      mongo_nodes = nodes.select { |n| n["roles"].include? "mongo" } # array
+      return answer if mongo_nodes.empty?
+
+      # Shutdown mongo nodes before removing them
+      cmd_is_master = 'mongo --eval "load(\'/root/.mongorc.js\'); db.isMaster()"'
+      cmd_shutdown_mongo = 'mongo --eval "load(\'/root/.mongorc.js\'); db.adminCommand({shutdown : 1, force : true})"'
+
+      down_mongo_nodes = {}
+      mongo_nodes.each do |node|
+        shell = MClient.new(ctx, "execute_shell_command", [node["id"]])
+        info = shell.execute(:cmd => cmd_is_master)
+        # Get down nodes names
+        down_mongo_nodes[node] = JSON.parse(info[:data][:stdout])['me']
+        shell.execute(:cmd => cmd_shutdown_mongo)
+      end
+
+      # At least one node will be alive (it's not allowed to delete all mongo nodes from Fuel cluster)
+      # mongo_nodes = mongo_nodes - down_mongo_nodes
+      down_mongo_nodes.keys.each do |key|
+        mongo_nodes.delete(key)
+      end
+
+      retry_count = 10
+      n = 0
+      while n < retry_count do
+        n +=1
+        sleep 10
+
+        mongo_nodes.each do |alive|
+          shell = MClient.new(ctx, "execute_shell_command", [alive["id"]])
+          info = shell.execute(:cmd => cmd_is_master)
+          if JSON.parse(info[:data][:stdout])['ismaster'] == 'true'
+            # Get hostname of primary node
+            primary = JSON.parse(info[:data][:stdout])['me']
+            break
+          end
+        end
+        if !primary
+          Astute.logger.debug "Can't find Mongo replica set master. Retry: #{n}/#{retry_count}"
+          if n < retry_count
+            retry
+          else
+            return {"status" => "error", "error" => "Can't find Mongo replica set master"}
+          end
+        else
+          Astute.logger.debug "Primary node: #{primary}"
+          break
+        end
+      end
+
+      down_mongo_nodes.keys.each do |key|
+        # Run mongo client from first mongo node
+        shell = MClient.new(ctx, "execute_shell_command", [mongo_nodes.first["id"]])
+        result = shell.execute(:cmd => "mongo #{primary} --eval 'load(\'/root/.mongorc.js\'); rs.remove(#{down_mongo_nodes[key]})'")
+        if result[:data][:exit_code] != 0
+          answer = {"status" => "error", "error" => "Can't delete mongo nodes from mongo cluster"}
+          break
+        end
+      end
+
+      return answer
+    end
+
     def self.check_for_offline_nodes(ctx, nodes)
       answer = {"status" => "ready"}
       # FIXME(vsharshov): We send for node/cluster deletion operation
