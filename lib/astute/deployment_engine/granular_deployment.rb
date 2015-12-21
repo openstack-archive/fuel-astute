@@ -27,6 +27,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
     Astute.logger.info "#{@ctx.task_id}: Starting deployment"
 
     @running_tasks = {}
+    @start_times = {}
     @nodes_roles = nodes.inject({}) { |h, n| h.merge({n['uid'] => n['role']}) }
     @nodes_by_uid = nodes.inject({}) { |h, n| h.merge({ n['uid'] => n }) }
     @puppet_debug = nodes.first.fetch('puppet_debug', true)
@@ -64,7 +65,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
     Astute::PuppetTask.new(
       @hook_context,
       @nodes_by_uid[node_id], # Use single node uid instead of task['uids']
-      retries=task['parameters']['retries'] || Astute.config.puppet_retries,
+      task['parameters']['retries'] || Astute.config.puppet_retries,
       task['parameters']['puppet_manifest'],
       task['parameters']['puppet_modules'],
       task['parameters']['cwd'],
@@ -74,7 +75,13 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
   end
 
   def run_task(node_id, task)
-    Astute.logger.info "#{@ctx.task_id}: run task '#{task.to_yaml}' on node #{node_id}"
+    @start_times[node_id] = {
+      'time_start' => Time.now.to_i,
+      'task_name' => task_name(task)
+    }
+
+    Astute.logger.info "#{@ctx.task_id}: run task '#{task.to_yaml}' on " \
+      "node #{node_id}"
     @running_tasks[node_id] = puppet_task(node_id, task)
     @running_tasks[node_id].run
   end
@@ -98,7 +105,10 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
         if task = @task_manager.current_task(node_id)
           case status = check_status(node_id)
           when 'ready'
-            Astute.logger.info "Task '#{task}' on node uid=#{node_id} ended successfully"
+            Astute.logger.info "Task '#{task}' on node uid=#{node_id} " \
+              "ended successfully"
+            time_summary(node_id, status)
+
             new_task = @task_manager.next_task(node_id)
             if new_task
               run_task(node_id, new_task)
@@ -111,8 +121,10 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
           when 'error'
             Astute.logger.error "Task '#{task}' failed on node #{node_id}"
             nodes_to_report << process_fail_node(node_id, task)
+            time_summary(node_id, status)
           else
-            raise "Internal error. Known status '#{status}', but handler not provided"
+            raise "Internal error. Known status '#{status}', but " \
+              "handler not provided"
           end
         else
           Astute.logger.debug "No more tasks provided for node #{node_id}"
@@ -233,6 +245,19 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
       @ctx.report_and_update_status('nodes' => nodes)
       raise e
     end
+  end
+
+  def time_summary(node_id, status)
+    return unless @start_times.fetch(node_id, {}).fetch('time_start', nil)
+    amount_time = (Time.now.to_i - @start_times[node_id]['time_start']).to_i
+    wasted_time = Time.at(amount_time).utc.strftime("%H:%M:%S")
+    Astute.logger.debug("Task time summary:" \
+      " #{@start_times[node_id]['task_name']} with status" \
+      " #{status.to_s} on node #{node_id} took #{wasted_time}")
+  end
+
+  def task_name(task)
+    task['id'] || task['diagnostic_name'] || task['type']
   end
 
   class HookReporter
