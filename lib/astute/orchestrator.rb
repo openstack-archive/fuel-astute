@@ -263,8 +263,16 @@ module Astute
       PreDelete.remove_ceph_mons(Context.new(task_id, reporter), nodes)
     end
 
+    def remove_mongo_nodes(reporter, task_id, nodes)
+      PreDelete.remove_mongo_nodes(Context.new(task_id, reporter), nodes)
+    end
+
     def perform_pre_deletion_tasks(reporter, task_id, nodes, options={})
       result = {'status' => 'ready'}
+
+      result = remove_mongo_nodes(reporter, task_id, nodes)
+      return result if result['status'] != 'ready'
+
       # This option is no longer Ceph-specific and should be renamed
       # FIXME(rmoe): https://bugs.launchpad.net/fuel/+bug/1454377
       if options[:check_ceph]
