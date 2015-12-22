@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #    Copyright 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,11 +13,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require 'fuel_deployment/error'
-require 'fuel_deployment/log'
-require 'fuel_deployment/version'
+require File.absolute_path File.join File.dirname(__FILE__), 'test_node.rb'
 
-require 'fuel_deployment/task'
-require 'fuel_deployment/graph'
-require 'fuel_deployment/node'
-require 'fuel_deployment/cluster'
+cluster = Deployment::TestCluster.new 'mini'
+cluster.plot = true if options[:plot]
+node1 = Deployment::TestNode.new 'node1', cluster
+
+node1.graph.add_new_task 'task1'
+node1.graph.add_new_task 'task2'
+node1.graph.add_new_task 'task3'
+
+node1['task1'].before node1['task2']
+node1['task2'].before node1['task3']
+
+if options[:plot]
+  cluster.make_image 'start'
+end
+
+if options[:interactive]
+  binding.pry
+else
+  cluster.run
+end
