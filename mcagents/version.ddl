@@ -2,7 +2,7 @@ metadata    :name        => "Version",
             :description => "Checks package version",
             :author      => "Mirantis Inc",
             :license     => "Apache License 2.0",
-            :version     => "8.0.0",
+            :version     => "9.0.0",
             :url         => 'http://www.mirantis.com/',
             :timeout     => 60
 
