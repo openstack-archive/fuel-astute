@@ -92,10 +92,6 @@ module Astute
       raise e
     end
 
-    def image_provision(reporter, task_id, nodes)
-      ImageProvision.provision(Context.new(task_id, reporter), nodes)
-    end
-
     def provision_and_watch_progress(reporter,
                                      task_id,
                                      nodes_to_provision,
@@ -250,13 +246,18 @@ module Astute
         cobbler.netboot_nodes(provisioned_nodes, false)
 
         # in case of IBP we reboot only those nodes which we managed to provision
-        reboot_events = cobbler.reboot_nodes(provisioned_nodes)
+        soft_reboot(
+          reporter,
+          task_id,
+          provisioned_nodes.map{ |n| n['uid'] },
+          'reboot_provisioned_nodes'
+        )
       else
         reboot_events = cobbler.reboot_nodes(nodes)
+        not_rebooted = cobbler.check_reboot_nodes(reboot_events)
+        not_rebooted = nodes.select { |n| not_rebooted.include?(n['slave_name'])}
+        failed_uids |= not_rebooted.map { |n| n['uid']}
       end
-      not_rebooted = cobbler.check_reboot_nodes(reboot_events)
-      not_rebooted = nodes.select { |n| not_rebooted.include?(n['slave_name'])}
-      failed_uids |= not_rebooted.map { |n| n['uid']}
 
       # control reboot for nodes which still in bootstrap state
       # Note: if the image based provisioning is used nodes are already
@@ -290,6 +291,14 @@ module Astute
     end
 
     private
+
+    def image_provision(reporter, task_id, nodes)
+      ImageProvision.provision(Context.new(task_id, reporter), nodes)
+    end
+
+    def soft_reboot(reporter, task_id, nodes, task_name)
+      ImageProvision.reboot(Context.new(task_id, reporter), nodes, task_name)
+    end
 
     def report_result(result, reporter)
       default_result = {'status' => 'ready', 'progress' => 100}
@@ -525,20 +534,12 @@ module Astute
       )
 
       if existent_nodes.present?
-        Astute::NailgunHooks.new(
-          [{
-            "priority" =>  100,
-            "type" =>  "reboot",
-            "fail_on_error" => false,
-            "diagnostic_name" => "reboot_reprovisioned_nodes",
-            "uids" =>  existent_nodes.map { |n| n['uid'] },
-            "parameters" =>  {
-              "timeout" =>  Astute.config.reboot_timeout
-            }
-          }],
-          Context.new(task_id, reporter),
-          'provision'
-        ).process
+        soft_reboot(
+          reporter,
+          task_id,
+          existent_nodes.map{ |n| n['uid'] },
+          "reboot_reprovisioned_nodes"
+        )
       end
 
       cobbler.remove_nodes(nodes)
