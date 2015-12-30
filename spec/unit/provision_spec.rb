@@ -241,24 +241,23 @@ describe Astute::Provisioner do
         Astute::Provision::Cobbler.any_instance do
           expects(:power_reboot).with('controller-1')
         end
-        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
         Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
         Astute::CobblerManager.any_instance.stubs(:edit_nodes)
         @provisioner.stubs(:change_nodes_type)
         @provisioner.stubs(:image_provision).returns([])
 
+        Astute::CobblerManager.any_instance.expects(:check_reboot_nodes).never
+        @provisioner.expects(:soft_reboot).returns()
+
         @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
       end
 
       it "does not reboot nodes which failed during provisioning" do
-        Astute::Provision::Cobbler.any_instance do
-          expects(:power_reboot).never
-        end
-        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
         Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
         Astute::CobblerManager.any_instance.stubs(:edit_nodes)
         @provisioner.stubs(:change_nodes_type)
         @provisioner.stubs(:image_provision).returns(['1'])
+        @provisioner.stubs(:soft_reboot).returns()
 
         expect(@provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')).to eql(['1'])
       end
@@ -270,11 +269,11 @@ describe Astute::Provisioner do
             {'profile' => Astute.config.bootstrap_profile}
           )
         end
-        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
         Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
         Astute::CobblerManager.any_instance.stubs(:edit_nodes)
         @provisioner.stubs(:change_nodes_type)
         @provisioner.stubs(:image_provision).returns([])
+        @provisioner.stubs(:soft_reboot).returns()
 
         @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
       end
@@ -283,10 +282,10 @@ describe Astute::Provisioner do
         Astute::CobblerManager.any_instance do
           expects(:netboot_nodes).with([], false)
         end
-        Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns([])
         Astute::CobblerManager.any_instance.stubs(:edit_nodes)
         Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
         @provisioner.stubs(:change_nodes_type)
+        @provisioner.stubs(:soft_reboot).returns()
         @provisioner.stubs(:image_provision).returns([1])
 
         @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
@@ -302,6 +301,7 @@ describe Astute::Provisioner do
             .returns([Time.now.to_f, 'controller-1', 'complete'])
           Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
           @provisioner.stubs(:change_nodes_type)
+          @provisioner.stubs(:soft_reboot).returns()
           @provisioner.stubs(:image_provision).returns([])
 
           @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
@@ -1066,11 +1066,11 @@ describe Astute::Provisioner do
 
     it 'return failed nodes if image provision return failed uid' do
       Astute::CobblerManager.any_instance.stubs(:netboot_nodes)
-      Astute::CobblerManager.any_instance.stubs(:reboot_nodes)
       Astute::CobblerManager.any_instance.stubs(:check_reboot_nodes).returns(['node1'])
       @provisioner.stubs(:change_nodes_type)
+      @provisioner.stubs(:control_reboot_using_ssh)
       Astute::ImageProvision.stubs(:provision).returns(['1'])
-      result = @provisioner.provision_piece(@reporter, 'task_uuid', engine_attrs, nodes, 'image')
+      result = @provisioner.provision_piece(@reporter, 'task_uuid', engine_attrs, nodes, 'native')
       result.should eql(['1'])
     end
   end

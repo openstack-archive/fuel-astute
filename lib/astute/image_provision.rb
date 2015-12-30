@@ -61,5 +61,22 @@ module Astute
       ctx.reporter.report({'status' => 'error', 'error' => msg, 'progress' => 100})
     end
 
+    def self.reboot(ctx, node_ids, task_id="reboot_provisioned_nodes")
+      Astute::NailgunHooks.new(
+        [{
+          "priority" =>  100,
+          "type" => "reboot",
+          "fail_on_error" => false,
+          "id" => task_id,
+          "uids" =>  node_ids,
+          "parameters" =>  {
+            "timeout" =>  Astute.config.reboot_timeout
+          }
+        }],
+        ctx,
+        'provision'
+      ).process
+    end
+
   end
 end
