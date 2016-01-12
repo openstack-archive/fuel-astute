@@ -254,8 +254,8 @@ module Astute
         )
       else
         reboot_events = cobbler.reboot_nodes(nodes)
-        not_rebooted = cobbler.check_reboot_nodes(reboot_events)
-        not_rebooted = nodes.select { |n| not_rebooted.include?(n['slave_name'])}
+        cobbler_not_rebooted = cobbler.check_reboot_nodes(reboot_events)
+        not_rebooted = nodes.select { |n| cobbler_not_rebooted.include?(n['slave_name'])}
         failed_uids |= not_rebooted.map { |n| n['uid']}
       end
 

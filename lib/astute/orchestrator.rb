@@ -49,6 +49,8 @@ module Astute
     # based on puppet logs
     def granular_deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
       time_start = Time.now.to_i
+
+      setup_puppet_retries(deployment_info)
       deploy_cluster(
         up_reporter,
         task_id,
@@ -72,6 +74,7 @@ module Astute
       )
       context = Context.new(task_id, proxy_reporter)
       Astute.logger.info "Task based deployment will be used"
+      setup_puppet_retries(deployment_info)
 
       deployment_engine = TaskDeployment.new(context)
       deployment_engine.deploy(deployment_info, deployment_tasks)
@@ -280,6 +283,13 @@ module Astute
     def time_summary(time)
       amount_time = (Time.now.to_i - time).to_i
       Time.at(amount_time).utc.strftime("%H:%M:%S")
+    end
+
+    def setup_puppet_retries(d_info)
+      Astute.config.puppet_retries = d_info.first['puppet_retries'].to_i
+    rescue => e
+      Astute.logger.warn("Could not setup number of puppet retries: #{e.message}." \
+        "Astute will use current retires value #{Astute.config.puppet_retries}")
     end
 
   end # class
