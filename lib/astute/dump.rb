@@ -16,10 +16,15 @@
 module Astute
   module Dump
     def self.dump_environment(ctx, settings)
-      lastdump = settings['lastdump']
-
-      timeout = settings['timeout'] || Astute.config.dump_timeout
-      shell = MClient.new(ctx, 'execute_shell_command', ['master'], check_result=true, timeout=timeout, retries=0)
+      shell = MClient.new(
+        ctx,
+        'execute_shell_command',
+        ['master'],
+        check_result=true,
+        settings['timeout'] || Astute.config.dump_timeout,
+        retries=0,
+        enable_result_logging=false
+      )
 
       upload_file = MClient.new(ctx, 'uploadfile', ['master'])
       begin
@@ -31,7 +36,7 @@ module Astute
           :group_owner => 'root',
           :overwrite => true)
 
-        dump_cmd = "shotgun -c #{config_path} 2>&1 && cat #{lastdump}"
+        dump_cmd = "shotgun -c #{config_path} >> /dev/null 2>&1 && cat #{settings['lastdump']}"
         Astute.logger.debug("Try to execute command: #{dump_cmd}")
         result = shell.execute(:cmd => dump_cmd).first.results
 
