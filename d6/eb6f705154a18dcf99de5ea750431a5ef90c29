@@ -1,0 +1,12 @@
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+1: Maksim Malchuk <mmalchuk@mirantis.com>
+Code-Review+1: Evgeniy L <eli@mirantis.com>
+Code-Review+1: Ivan Ponomarev <iponomarev@mirantis.com>
+Code-Review+2: Vladimir Sharshov <vsharshov@mirantis.com>
+Workflow+1: Vladimir Sharshov <vsharshov@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 18 Jan 2016 13:59:01 +0000
+Reviewed-on: https://review.openstack.org/268287
+Project: openstack/fuel-astute
+Branch: refs/heads/master
