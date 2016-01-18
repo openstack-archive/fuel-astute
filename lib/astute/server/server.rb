@@ -163,8 +163,6 @@ module Astute
       end
 
       def dispatch_message(data, service_data=nil)
-        Astute.logger.debug "Dispatching message:\n#{data.pretty_inspect}"
-
         if Astute.config.fake_dispatch
           Astute.logger.debug "Fake dispatch"
           return
@@ -204,7 +202,6 @@ module Astute
       end
 
       def parse_data(data)
-        Astute.logger.debug "Got message with payload\n#{data.pretty_inspect}"
         messages = nil
         begin
           messages = JSON.load(data)

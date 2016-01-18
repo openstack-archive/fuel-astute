@@ -38,7 +38,7 @@ describe 'dump_environment' do
 
   it "should upload the config and call execute method with shotgun as cmd" do
     config_path = '/tmp/dump_config'
-    dump_cmd = "shotgun -c #{config_path} 2>&1 && cat #{settings['lastdump']}"
+    dump_cmd = "shotgun -c #{config_path} > /dev/null 2>&1 && cat #{settings['lastdump']}"
     rpc_mock.expects(:upload).with({
         path: config_path,
         content: settings.to_json,
@@ -67,7 +67,7 @@ describe 'dump_environment' do
 
   it "non default timeout should be used" do
     Astute::MClient.stubs(:new).with(ctx, 'uploadfile', ['master'])
-    Astute::MClient.stubs(:new).with(ctx, 'execute_shell_command', ['master'], true, 300, 0)
+    Astute::MClient.stubs(:new).with(ctx, 'execute_shell_command', ['master'], true, 300, 0, false)
     Astute::Dump.dump_environment(ctx, settings)
   end
 

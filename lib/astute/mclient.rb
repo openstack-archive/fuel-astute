@@ -24,7 +24,16 @@ module Astute
 
     attr_accessor :retries
 
-    def initialize(ctx, agent, nodes=nil, check_result=true, timeout=nil, retries=Astute.config.mc_retries)
+    def initialize(
+        ctx,
+        agent,
+        nodes=nil,
+        check_result=true,
+        timeout=nil,
+        retries=Astute.config.mc_retries,
+        enable_result_logging=true
+      )
+
       @task_id = ctx.task_id
       @agent = agent
       @nodes = nodes.map { |n| n.to_s } if nodes
@@ -38,6 +47,7 @@ module Astute
       # timeout - 20 sec, DDL - not set. Result — 10 sec.
       @timeout = timeout
       @retries = retries
+      @enable_result_logging = enable_result_logging
       initialize_mclient
     end
 
@@ -55,7 +65,7 @@ module Astute
       end
 
       # Enable if needed. In normal case it eats the screen pretty fast
-      log_result(@mc_res, method)
+      log_result(@mc_res, method) if @enable_result_logging
 
       check_results_with_retries(method, args) if @check_result
 
@@ -79,8 +89,10 @@ module Astute
           Astute.logger.debug "Retry ##{retry_index} to run mcollective agent on nodes: '#{not_responded.join(',')}'"
           mc_send :discover, :nodes => not_responded
           @new_res = mc_send(method, *args)
-          log_result(@new_res, method)
+
+          log_result(@new_res, method) if @enable_result_logging
           # @new_res can have some nodes which finally responded
+
           @mc_res += @new_res
           break if @mc_res.length == @nodes.length
           retry_index += 1
