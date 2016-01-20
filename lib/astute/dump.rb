@@ -45,9 +45,12 @@ module Astute
         if result[:data][:exit_code] == 0
           Astute.logger.info("#{ctx.task_id}: Snapshot is done.")
           report_success(ctx, result[:data][:stdout].rstrip)
+        elsif result[:data][:exit_code] == 28
+          Astute.logger.error("#{ctx.task_id}: Disk space for creating snapshot exceeded.")
+          report_error(ctx, "Shotgun exit code: #{result[:data][:exit_code]}. Disk space for creating snapshot exceeded.")
         else
           Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code. For details see /var/log/shotgun.log")
-          report_error(ctx, "exit code: #{result[:data][:exit_code]} stderr: #{result[:data][:stderr]}")
+          report_error(ctx, "Shotgun exit code: #{result[:data][:exit_code]}")
         end
       rescue Timeout::Error
         msg = "Dump is timed out"
