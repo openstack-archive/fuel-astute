@@ -60,8 +60,15 @@ describe 'dump_environment' do
 
   it "should report error if shell agent returns not 0" do
     rpc_mock.expects(:upload).returns([mock_mc_result])
-    rpc_mock.expects(:execute).returns(exec_result(1, '', 'stderr'))
-    Astute::Dump.expects(:report_error).with(ctx, "exit code: 1 stderr: stderr")
+    rpc_mock.expects(:execute).returns(exec_result(1, '', ''))
+    Astute::Dump.expects(:report_error).with(ctx, "Shotgun exit code: 1")
+    Astute::Dump.dump_environment(ctx, settings)
+  end
+
+  it "should report disk space error if shell agent returns 28" do
+    rpc_mock.expects(:upload).returns([mock_mc_result])
+    rpc_mock.expects(:execute).returns(exec_result(28, '', ''))
+    Astute::Dump.expects(:report_error).with(ctx, "Shotgun exit code: 28. Disk space for creating snapshot exceeded.")
     Astute::Dump.dump_environment(ctx, settings)
   end
 
