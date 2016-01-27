@@ -20,6 +20,7 @@ describe Astute::NodesRemover do
 
   let(:nodes) { [{'uid' => '1'}, {'uid' => '2'}] }
   let(:ctx) { mock_ctx }
+  let(:ctl_time) { {'1' => '100', '2' => '200'} }
 
   let(:mcollective_answer) do
     [
@@ -30,6 +31,7 @@ describe Astute::NodesRemover do
 
   before(:each) do
     Astute::NodesRemover.any_instance.stubs(:mclient_remove_piece_nodes).returns(mcollective_answer)
+    Astute::NodesRemover.any_instance.stubs(:run_shell_without_check).returns(ctl_time)
   end
 
   it 'should erase nodes (mbr) and reboot nodes(default)' do
@@ -54,7 +56,7 @@ describe Astute::NodesRemover do
             {'uid' => '3', 'mclient_remove' => false},
             {'uid' => '2'},
           ],
-          "inaccessible_nodes" => [{"uid"=>"1", "error"=>"Node not answered by RPC."}]
+          "inaccessible_nodes" => [{"uid"=>"1", "error"=>"Node not answered by RPC.", "boot_time"=>100}]
         }
       )
     end
@@ -78,8 +80,8 @@ describe Astute::NodesRemover do
       nr = Astute::NodesRemover.new(ctx, nodes)
       nr.stubs(:mclient_remove_nodes).with(
         Astute::NodesHash.build([
-          {'uid' => '1'},
-          {'uid' => '2', 'mclient_remove' => true}
+          {'uid' => '1', 'boot_time' => 100},
+          {'uid' => '2', 'mclient_remove' => true, 'boot_time' => 200}
         ])
       ).returns(mcollective_answer).once
       nr.remove
@@ -106,8 +108,8 @@ describe Astute::NodesRemover do
         { "nodes"=>[],
           "status" => "error",
           "error_nodes" => [
-          {"uid"=>"1", "error"=>"RPC agent 'erase_node' failed. Result:\n{:sender=>\"1\", :statuscode=>1, :data=>{:rebooted=>false}}\n"},
-          {"uid"=>"2", "error"=>"RPC agent 'erase_node' failed. Result:\n{:sender=>\"2\", :statuscode=>1, :data=>{:rebooted=>false}}\n"}
+          {"uid"=>"1", "error"=>"RPC agent 'erase_node' failed. Result:\n{:sender=>\"1\", :statuscode=>1, :data=>{:rebooted=>false}}\n", "boot_time"=>100},
+          {"uid"=>"2", "error"=>"RPC agent 'erase_node' failed. Result:\n{:sender=>\"2\", :statuscode=>1, :data=>{:rebooted=>false}}\n", "boot_time"=>200}
           ]
         }
       )
@@ -159,10 +161,28 @@ describe Astute::NodesRemover do
         { "nodes"=>[],
           "status" => "error",
           "error_nodes" => [
-            {"uid"=>"1", "error"=>"RPC method 'erase_node' failed with message: Could not reboot"},
-            {"uid"=>"2", "error"=>"RPC method 'erase_node' failed with message: Could not reboot"}
+            {"uid"=>"1", "error"=>"RPC method 'erase_node' failed with message: Could not reboot", "boot_time"=>100},
+            {"uid"=>"2", "error"=>"RPC method 'erase_node' failed with message: Could not reboot", "boot_time"=>200}
           ]
         }
+      )
+    end
+  end
+
+  context 'nodes fail to send status, but erased and rebooted' do
+    let(:mcollective_answer) do
+      []
+    end
+
+    let(:ctl_time2) { {} }
+    let(:ctl_time3) { {'1' => '150', '2' => '250'} }
+
+    it 'should process rebooted nodes as erased' do
+      Astute::NodesRemover.any_instance.stubs(:mclient_remove_piece_nodes).returns(mcollective_answer)
+      Astute::NodesRemover.any_instance.stubs(:run_shell_without_check).returns(ctl_time)
+                          .then.returns(ctl_time2).then.returns(ctl_time3)
+      expect(Astute::NodesRemover.new(ctx, nodes, reboot=true).remove).to eq(
+        { "nodes"=>[{"uid"=>"1"}, {"uid"=>"2"}] }
       )
     end
   end

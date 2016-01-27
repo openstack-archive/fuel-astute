@@ -77,6 +77,26 @@ module Astute
       [mclient_skipped_nodes, mclient_nodes]
     end
 
+    def get_already_removed_nodes(nodes)
+      removed_nodes = []
+      control_time = {}
+
+      nodes.uids.sort.each_slice(Astute.config[:max_nodes_per_call]) do |part|
+        control_time.merge!(get_boot_time(part))
+      end
+
+      nodes.each do |uid, node|
+        boot_time = control_time[uid].to_i
+        next if boot_time.zero?
+        if node.boot_time
+          removed_nodes << uid if boot_time != node.boot_time
+        else
+          node.boot_time = boot_time
+        end
+      end
+      removed_nodes
+    end
+
     def remove_nodes(nodes)
       if nodes.empty?
         Astute.logger.info "#{@ctx.task_id}: Nodes to remove are not provided. Do nothing."
@@ -84,10 +104,19 @@ module Astute
       end
 
       erased_nodes, mclient_nodes = skipped_unskipped_mclient_nodes(nodes)
+
+      removed_nodes = get_already_removed_nodes(mclient_nodes)
+      removed_nodes.each do |uid|
+        erased_node = Node.new('uid' => uid)
+        erased_nodes << erased_node
+        mclient_nodes.delete(uid)
+        Astute.logger.info "#{@ctx.task_id}: Node #{uid} is removed already, skipping"
+      end
+
       responses = mclient_remove_nodes(mclient_nodes)
       inaccessible_uids = mclient_nodes.uids - responses.map { |response| response[:sender] }
       inaccessible_nodes = NodesHash.build(inaccessible_uids.map do |uid|
-        {'uid' => uid, 'error' => 'Node not answered by RPC.'}
+        {'uid' => uid, 'error' => 'Node not answered by RPC.', 'boot_time' => mclient_nodes[uid][:boot_time]}
       end)
       error_nodes = NodesHash.new
 
@@ -134,6 +163,34 @@ module Astute
       responses = remover.erase_node(:reboot => @reboot)
       Astute.logger.debug "#{@ctx.task_id}: Data received from nodes:\n#{responses.pretty_inspect}"
       responses.map(&:results)
+    end
+
+    def run_shell_without_check(context, node_uids, cmd, timeout=10)
+      shell = MClient.new(
+        context,
+        'execute_shell_command',
+        node_uids,
+        check_result=false,
+        timeout=timeout
+      )
+      results = shell.execute(:cmd => cmd)
+      results.inject({}) do |h, res|
+        Astute.logger.debug(
+          "#{context.task_id}: cmd: #{cmd}\n" \
+          "stdout: #{res.results[:data][:stdout]}\n" \
+          "stderr: #{res.results[:data][:stderr]}\n" \
+          "exit code: #{res.results[:data][:exit_code]}")
+        h.merge({res.results[:sender] => res.results[:data][:stdout].chomp})
+      end
+    end
+
+    def get_boot_time(node_uids)
+      run_shell_without_check(
+        @ctx,
+        node_uids,
+        "stat --printf='%Y' /proc/1",
+        timeout=10
+      )
     end
 
   end
