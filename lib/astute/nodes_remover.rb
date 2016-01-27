@@ -77,6 +77,23 @@ module Astute
       [mclient_skipped_nodes, mclient_nodes]
     end
 
+    def fetch_already_removed_nodes(nodes, erased_nodes)
+      nodes.each do |uid, node|
+        if node.boot_time && node.boot_time > 0
+          boot_time = get_boot_time(uid)
+          if boot_time > 0 && boot_time != node.boot_time
+            erased_node = Node.new('uid' => uid)
+            nodes.delete uid
+            erased_nodes << erased_node
+            Astute.logger.info "#{@ctx.task_id}: Node #{uid} is removed already, skipping"
+          end
+        else
+          boot_time = get_boot_time(uid)
+          node.boot_time = boot_time if boot_time > 0
+        end
+      end
+    end
+
     def remove_nodes(nodes)
       if nodes.empty?
         Astute.logger.info "#{@ctx.task_id}: Nodes to remove are not provided. Do nothing."
@@ -84,10 +101,11 @@ module Astute
       end
 
       erased_nodes, mclient_nodes = skipped_unskipped_mclient_nodes(nodes)
+      fetch_already_removed_nodes(mclient_nodes, erased_nodes)
       responses = mclient_remove_nodes(mclient_nodes)
       inaccessible_uids = mclient_nodes.uids - responses.map { |response| response[:sender] }
       inaccessible_nodes = NodesHash.build(inaccessible_uids.map do |uid|
-        {'uid' => uid, 'error' => 'Node not answered by RPC.'}
+        {'uid' => uid, 'error' => 'Node not answered by RPC.', 'boot_time' => mclient_nodes[uid][:boot_time]}
       end)
       error_nodes = NodesHash.new
 
@@ -134,6 +152,48 @@ module Astute
       responses = remover.erase_node(:reboot => @reboot)
       Astute.logger.debug "#{@ctx.task_id}: Data received from nodes:\n#{responses.pretty_inspect}"
       responses.map(&:results)
+    end
+
+    def run_shell_without_check(node_uid, cmd, timeout=2)
+      shell = MClient.new(
+        @ctx,
+        'execute_shell_command',
+        Array(node_uid),
+        check_result=false,
+        timeout=timeout
+      )
+      results = shell.execute(:cmd => cmd)
+      Astute.logger.debug("Mcollective shell result: #{results}")
+      if results && !results.empty?
+        result = results.first
+        Astute.logger.debug(
+          "#{@ctx.task_id}: cmd: #{cmd}\n" \
+          "stdout: #{result.results[:data][:stdout]}\n" \
+          "stderr: #{result.results[:data][:stderr]}\n" \
+          "exit code: #{result.results[:data][:exit_code]}")
+        {
+          :stdout =>result.results[:data][:stdout].chomp,
+          :stderr => result.results[:data][:stderr].chomp,
+          :exit_code => result.results[:data][:exit_code]
+        }
+      else
+        Astute.logger.warn("#{@ctx.task_id}: Failed to run shell #{cmd} on " \
+          "node #{node_uid}. Error will not raise because shell was run " \
+          "without check")
+        {}
+      end
+    end
+
+    def get_boot_time(node_uid)
+      run_shell_without_check(
+        node_uid,
+        "stat --printf='%Y' /proc/1",
+        timeout=2
+      )[:stdout].to_i
+    rescue Astute::MClientTimeout, Astute::MClientError => e
+      Astute.logger.debug("#{@ctx.task_id}: mcollective " \
+        "get boot time command failed with error #{e.message}")
+      0
     end
 
   end
