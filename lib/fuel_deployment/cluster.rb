@@ -197,7 +197,7 @@ module Deployment
     # Process a single node when it's visited.
     # First, poll the node's status nad leave it the node is not ready.
     # Then try to get a next task from the node and run it, or leave, if
-    # there is none available.
+    # there is none available or gracefully stop activated
     # @param [Deployment::Node] node
     # @return [void]
     def process_node(node)
