@@ -54,7 +54,7 @@ describe Astute::NodesRemover do
             {'uid' => '3', 'mclient_remove' => false},
             {'uid' => '2'},
           ],
-          "inaccessible_nodes" => [{"uid"=>"1", "error"=>"Node not answered by RPC."}]
+          "inaccessible_nodes" => [{"uid"=>"1", "error"=>"Node not answered by RPC.", "boot_time"=>nil}]
         }
       )
     end
