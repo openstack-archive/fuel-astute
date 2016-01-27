@@ -29,7 +29,10 @@ module Astute
 
       deployment_tasks = support_virtual_node(deployment_tasks)
 
-      cluster = Deployment::Cluster.new deployment_info.first['deployment_id']
+      Deployment::Log.logger = Astute.logger
+      cluster = Deployment::Cluster.new(deployment_info.first['deployment_id']) do
+        Thread.current[:gracefully_stop]
+      end
 
       deployment_tasks.keys.each do |node_id|
         node = TaskNode.new(node_id, cluster)
