@@ -49,25 +49,32 @@ module Astute
       else
         set_status_online
 
-        deploy_status = if !finished?
-          'deploying'
-        elsif successful?
-          'ready'
-        else
-          'error'
-        end
-
-        node_status = {
-          'uid' => id,
-          'status' => deploy_status,
-          'task' => task.name,
-          'task_status' => task.status.to_s,
-          'progress' => current_progress_bar
-        }
-        node_status.merge!('error_type' => 'deploy') if
-          deploy_status == 'error'
-        @ctx.report('nodes' => [node_status])
+        report_node_status
       end
+    end
+
+    def report_node_status
+      deploy_status = if !finished?
+        'deploying'
+      elsif successful?
+        'ready'
+      elsif skipped?
+        'stopped'
+      else
+        'error'
+      end
+
+      node_status = {
+        'uid' => id,
+        'status' => deploy_status,
+        'task' => task.name,
+        'task_status' => task.status.to_s,
+        'progress' => current_progress_bar
+      }
+
+      node_status.merge!('error_type' => 'deploy') if
+        deploy_status == 'error'
+      @ctx.report('nodes' => [node_status])
     end
 
     private

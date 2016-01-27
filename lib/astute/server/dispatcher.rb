@@ -101,6 +101,7 @@ module Astute
           msg = "Timeout of deployment is exceeded."
           Astute.logger.error(msg)
           reporter.report('status' => 'error', 'error' => msg)
+
         end
       end
 
@@ -108,6 +109,7 @@ module Astute
         Astute.logger.info("'task_deploy' method called with data:\n"\
                            "#{data.pretty_inspect}")
 
+        Thread.current[:gracefully_stop] = false
         reporter = create_reporter(data)
         begin
           @orchestrator.task_deploy(
@@ -282,11 +284,10 @@ module Astute
         task_uuid = data['args']['task_uuid']
         nodes = data['args']['nodes']
 
-        Astute.logger.info("Try to kill running task #{target_task_uuid}")
-        service_data[:main_work_thread].kill
-
-        result = if ['deploy', 'task_deploy', 'granular_deploy'].include? (
+        result = if ['deploy', 'granular_deploy'].include? (
             service_data[:tasks_queue].current_task_method)
+          kill_main_process(target_task_uuid, service_data)
+
           @orchestrator.stop_puppet_deploy(reporter, task_uuid, nodes)
           @orchestrator.remove_nodes(
             reporter,
@@ -294,7 +295,17 @@ module Astute
             data['args']['engine'],
             nodes
           )
+        elsif ['task_deploy'].include? (
+            service_data[:tasks_queue].current_task_method)
+          gracefully_stop_main_process(target_task_uuid, service_data)
+          wait_while_process_run(
+            service_data[:main_work_thread],
+            Astute.config.stop_timeout,
+            target_task_uuid,
+            service_data
+          )
         else
+          kill_main_process(target_task_uuid, service_data)
           @orchestrator.stop_provision(
             reporter,
             task_uuid,
@@ -302,6 +313,29 @@ module Astute
             nodes
           )
         end
+      end
+
+      def kill_main_process(target_task_uuid, service_data)
+        Astute.logger.info("Try to kill running task #{target_task_uuid}")
+        service_data[:main_work_thread].kill
+      end
+
+      def gracefully_stop_main_process(target_task_uuid, service_data)
+        Astute.logger.info("Try to stop gracefully running " \
+          "task #{target_task_uuid}")
+        service_data[:main_work_thread][:gracefully_stop] = true
+      end
+
+      def wait_while_process_run(process, timeout, target_task_uuid, service_data)
+        Astute.logger.info("Wait until process will stop or exit " \
+          "by timeout #{timeout}")
+        Timeout::timeout(timeout) { process.join }
+        {}
+      rescue Timeout::Error => e
+        msg = "Timeout (#{timeout} sec) was reached."
+        Astute.logger.warn(msg)
+        kill_main_process(target_task_uuid, service_data)
+         {'status' => 'error', 'error' => msg}
       end
 
       def data_for_rm_nodes(data)

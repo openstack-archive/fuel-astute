@@ -54,6 +54,7 @@ require 'astute/task'
 require 'astute/task_deployment'
 require 'astute/task_node'
 require 'astute/task_proxy_reporter'
+require 'astute/task_cluster'
 require 'fuel_deployment'
 
 ['/astute/pre_deployment_actions/*.rb',
