@@ -62,7 +62,7 @@ describe Astute::TaskDeployment do
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
 
-      Deployment::Cluster.any_instance.expects(:run).returns({:success => true})
+      Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
       task_deployment.deploy(deployment_info, deployment_tasks)
     end
 
@@ -77,7 +77,7 @@ describe Astute::TaskDeployment do
       task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
-      Deployment::Cluster.any_instance.stubs(:run).returns({:success => true})
+      Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
       pre_deployment = Astute::TaskPreDeploymentActions.new(deployment_info, ctx)
       Astute::TaskPreDeploymentActions.expects(:new)
@@ -101,7 +101,30 @@ describe Astute::TaskDeployment do
 
       task_deployment.expects(:remove_failed_nodes).returns([deployment_info, []])
 
-      Deployment::Cluster.any_instance.stubs(:run).returns({:success => true})
+      Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
+      task_deployment.deploy(deployment_info, deployment_tasks)
+    end
+
+    it 'should setup stop condition' do
+      Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+      task_deployment.stubs(:write_graph_to_file)
+      ctx.stubs(:report)
+      task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+      Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
+
+      Astute::TaskCluster.any_instance.expects(:stop_condition)
+      task_deployment.deploy(deployment_info, deployment_tasks)
+    end
+
+    it 'should setup deployment logger' do
+      Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+      task_deployment.stubs(:write_graph_to_file)
+      ctx.stubs(:report)
+      task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+      Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
+
+
+      Deployment::Log.expects(:logger=).with(Astute.logger)
       task_deployment.deploy(deployment_info, deployment_tasks)
     end
 
@@ -120,12 +143,12 @@ describe Astute::TaskDeployment do
         task_deployment.stubs(:write_graph_to_file)
         ctx.stubs(:report)
 
-        Deployment::Cluster.any_instance
+        Astute::TaskCluster.any_instance
           .stubs(:run)
           .returns({:success => true})
 
         node_concurrency = mock('node_concurrency')
-        Deployment::Cluster.any_instance
+        Astute::TaskCluster.any_instance
           .expects(:node_concurrency).returns(node_concurrency)
 
         node_concurrency.expects(:maximum=).with(Astute.config.max_nodes_per_call)
@@ -138,7 +161,7 @@ describe Astute::TaskDeployment do
 
       it 'succeed status' do
         Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
-        Deployment::Cluster.any_instance.stubs(:run).returns({:success => true})
+        Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
         task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
         task_deployment.stubs(:write_graph_to_file)
         ctx.expects(:report).with({'status' => 'ready', 'progress' => 100})
@@ -148,7 +171,7 @@ describe Astute::TaskDeployment do
 
       it 'failed status' do
         Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
-        Deployment::Cluster.any_instance.stubs(:run).returns({
+        Astute::TaskCluster.any_instance.stubs(:run).returns({
           :success => false,
           :failed_nodes => [],
           :failed_tasks => [],
@@ -178,7 +201,7 @@ describe Astute::TaskDeployment do
         task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
         Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
         ctx.stubs(:report)
-        Deployment::Cluster.any_instance.stubs(:run).returns({:success => true})
+        Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
         file_handle = mock
         file_handle.expects(:write).with(regexp_matches(/digraph/)).never
@@ -194,7 +217,7 @@ describe Astute::TaskDeployment do
         task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
         Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
         ctx.stubs(:report)
-        Deployment::Cluster.any_instance.stubs(:run).returns({:success => true})
+        Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
         file_handle = mock
         file_handle.expects(:write).with(regexp_matches(/digraph/)).once

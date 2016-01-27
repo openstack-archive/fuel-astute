@@ -68,6 +68,7 @@ module Astute
     conf[:dump_timeout] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
     conf[:shell_timeout] = 300            # default timeout for shell task
+    conf[:stop_timeout] = 600             # how long it can take for stop
     conf[:shell_cwd] = '/'                # default cwd for shell task
     conf[:rsync_options] = '-c -r --delete' # default rsync options
     conf[:keys_src_dir] = '/var/lib/fuel/keys' # path where ssh and openssl keys will be created
