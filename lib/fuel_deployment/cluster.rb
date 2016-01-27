@@ -25,9 +25,11 @@ module Deployment
   # @attr_reader [Hash<Symbol => Deployment::Node>] nodes The nodes of this cluster
   class Cluster
     # @param [String] id Cluster name
-    def initialize(id=nil)
+    # @yield [Block] gracefully_stop Is gracefully stop activated
+    def initialize(id=nil, &block)
       @nodes = {}
       @id = id
+      @gracefully_stop = block
     end
 
     include Enumerable
@@ -197,7 +199,7 @@ module Deployment
     # Process a single node when it's visited.
     # First, poll the node's status nad leave it the node is not ready.
     # Then try to get a next task from the node and run it, or leave, if
-    # there is none available.
+    # there is none available or gracefully stop activated
     # @param [Deployment::Node] node
     # @return [void]
     def process_node(node)
@@ -205,10 +207,26 @@ module Deployment
       hook 'pre_node', node
       node.poll
       return unless node.online?
+      if gracefully_stop?
+        node.set_status_skipped
+        return
+      end
+
       ready_task = node.ready_task
       return unless ready_task
       ready_task.run
+
       hook 'post_node', node
+    end
+
+    # Check if the deployment process should stop
+    # @return [true, false]
+    def gracefully_stop?
+      if @gracefully_stop
+        @gracefully_stop.call
+      else
+        false
+      end
     end
 
     # Run a hook method is this method is defined
