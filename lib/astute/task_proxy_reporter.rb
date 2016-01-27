@@ -16,8 +16,8 @@ module Astute
   module ProxyReporter
     class TaskProxyReporter
 
-      STATES = ['deploying', 'ready', 'error']
-      FINAL_STATES = ['ready', 'error']
+      STATES = ['deploying', 'ready', 'error', 'stopped']
+      FINAL_STATES = ['ready', 'error', 'stopped']
 
       def initialize(up_reporter, nodes_uids=[])
         @up_reporter = up_reporter

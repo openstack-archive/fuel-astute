@@ -53,6 +53,8 @@ module Astute
           'deploying'
         elsif successful?
           'ready'
+        elsif skipped?
+          'stopped'
         else
           'error'
         end
