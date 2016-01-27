@@ -29,8 +29,11 @@ module Astute
 
       deployment_tasks = support_virtual_node(deployment_tasks)
 
-      cluster = Deployment::Cluster.new deployment_info.first['deployment_id']
+      Deployment::Log.logger = Astute.logger
+
+      cluster = TaskCluster.new(deployment_info.first['deployment_id'])
       cluster.node_concurrency.maximum = Astute.config.max_nodes_per_call
+      cluster.stop_condition { Thread.current[:gracefully_stop] }
 
       deployment_tasks.keys.each do |node_id|
         node = TaskNode.new(node_id, cluster)
