@@ -71,6 +71,8 @@ module Astute
     conf[:shell_cwd] = '/'                # default cwd for shell task
     conf[:rsync_options] = '-c -r --delete' # default rsync options
     conf[:keys_src_dir] = '/var/lib/fuel/keys' # path where ssh and openssl keys will be created
+    conf[:puppet_succeed_retries] = 1
+    conf[:shell_succeed_retries] = 1
     conf[:puppet_ssh_keys] = [
       'neutron',
       'nova',
