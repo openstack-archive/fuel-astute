@@ -51,6 +51,7 @@ describe Astute::PuppetTask do
 
   let(:puppet_task) { Astute::PuppetTask.new(ctx, node)}
   let(:puppet_task_wo_retries) { Astute::PuppetTask.new(ctx, node, retries=0)}
+  let(:puppet_task_success_retries) { Astute::PuppetTask.new(ctx, node, retries=1, puppet_manifest=nil, puppet_modules=nil, cwd=nil, timeout=nil, puppet_debug=false, succeed_retries=1) }
 
   let(:mco_puppet_stopped) do
     {
@@ -202,6 +203,15 @@ describe Astute::PuppetTask do
       puppet_task.run
 
       expect(puppet_task.status).to eql('error')
+    end
+
+    it 'status will retry successful puppet task if configured' do
+      puppet_task_success_retries.stubs(:puppet_status).returns(mco_puppet_finished)
+      puppet_task_success_retries.stubs(:node_status).returns('succeed')
+
+      puppet_task_success_retries.expects(:puppetd_runonce).times(2)
+      puppet_task_success_retries.run
+      puppet_task_success_retries.status
     end
   end #status
 

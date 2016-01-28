@@ -18,7 +18,7 @@ module Astute
 
   class PuppetTask
 
-    def initialize(ctx, node, retries=1, puppet_manifest=nil, puppet_modules=nil, cwd=nil, timeout=nil, puppet_debug=false)
+    def initialize(ctx, node, retries=1, puppet_manifest=nil, puppet_modules=nil, cwd=nil, timeout=nil, puppet_debug=false, succeed_retries=nil)
       @ctx = ctx
       @node = node
       @retries = retries
@@ -29,6 +29,7 @@ module Astute
       @prev_summary = nil
       @is_hung = false
       @puppet_debug = puppet_debug
+      @succeed_retries = succeed_retries || Astute.config.puppet_succeed_retries
     end
 
     def run
@@ -49,7 +50,7 @@ module Astute
 
       result = case status
         when 'succeed'
-          processing_succeed_node
+          processing_succeed_node(last_run)
         when 'running'
           processing_running_node
         when 'error'
@@ -165,9 +166,23 @@ module Astute
       end
     end
 
-    def processing_succeed_node
+    def processing_succeed_node(last_run)
       Astute.logger.debug "Puppet completed within #{@time_observer.stop} seconds"
-      { 'uid' => @node['uid'], 'status' => 'ready', 'role' => @node['role'] }
+      if @succeed_retries > 0
+        @succeed_retries -= 1
+        Astute.logger.debug "Succeed puppet on node #{@node['uid']} will be "\
+          "restarted. #{@succeed_retries} retries remained."
+        Astute.logger.info "Retrying to run puppet for following succeed " \
+          "node: #{@node['uid']}"
+        puppetd_runonce
+        # We need this magic with prev_summary to reflect new puppetd run statuses..
+        @prev_summary = last_run
+        node_report_format('status' => 'deploying')
+      else
+        Astute.logger.debug "Node #{@node['uid']} has succeed to deploy. " \
+          "There is no more retries for puppet run."
+        { 'uid' => @node['uid'], 'status' => 'ready', 'role' => @node['role'] }
+      end
     end
 
     def processing_error_node(last_run)
