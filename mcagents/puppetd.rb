@@ -13,6 +13,7 @@
 #    under the License.
 
 require 'timeout'
+require 'puppet'
 
 module MCollective
   module Agent
@@ -46,10 +47,12 @@ module MCollective
         @puppetd_agent = "/usr/bin/puppet apply"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
         @lockmcofile = "/tmp/mcopuppetd.lock"
+        @last_report = @config.pluginconf["puppet.report"] || "/var/lib/puppet/state/last_run_report.yaml"
       end
 
       action "last_run_summary" do
         last_run_summary
+        last_run_report
         set_status
       end
 
@@ -94,6 +97,27 @@ module MCollective
         ["time", "events", "changes", "version"].each do |dat|
           reply[dat.to_sym] = summary[dat]
         end
+      end
+
+      def last_run_report
+        begin
+          report = YAML.load_file(@last_report)
+        rescue
+          report = nil
+        end
+
+        changed = []
+        failed = []
+        # only generate list of changes and failures if we could parse the
+        # puppet report
+        if report.is_a?(Puppet::Transaction::Report)
+          report.resource_statuses.each do |name, resource|
+            changed << name if resource.changed
+            failed << name if resource.failed
+          end
+        end
+        # add list of resources into the reply
+        reply[:resources] = {"changed_resources" => changed.join(','), "failed_resources" => failed.join(',')}.merge(reply[:resources])
       end
 
       def set_status
@@ -177,7 +201,7 @@ module MCollective
           '--logdest',
           'syslog',
           '--trace',
-          '--no-report'
+          '--report'
         ]
         unless request[:forcerun]
           if @splaytime && @splaytime > 0
