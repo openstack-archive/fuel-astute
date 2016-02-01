@@ -128,7 +128,7 @@ module Astute
     end
 
     def critical_node_uids(deployment_info)
-      @critcial_nodes ||= deployment_info.select{ |n| n['fail_if_error'] }
+      @critical_nodes ||= deployment_info.select{ |n| n['fail_if_error'] }
                                          .map{ |n| n['uid'] }.uniq
     end
 
