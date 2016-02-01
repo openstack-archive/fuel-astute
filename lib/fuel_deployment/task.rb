@@ -186,20 +186,20 @@ module Deployment
       @maximum_concurrency[key]
     end
 
-    # Get the maximum concurrency
+    # Get the maximum task concurrency
     # @return [Integer]
     def maximum_concurrency
       self.class.maximum_concurrency self
     end
 
-    # Set the maximum concurrency
+    # Set the maximum task concurrency
     # @param [Integer] value
     # @return [Integer]
     def maximum_concurrency=(value)
       self.class.maximum_concurrency self, value
     end
 
-    # Increase or decrease the concurrency value
+    # Increase or decrease the task concurrency value
     # when the task's status is changed.
     # @param [Symbol] status_from
     # @param [Symbol] status_to
@@ -208,45 +208,45 @@ module Deployment
       return unless maximum_concurrency_is_set?
       if status_to == :running
         current_concurrency_increase
-        info "Increasing concurrency to: #{current_concurrency}"
+        info "Increasing task concurrency to: #{current_concurrency}"
       elsif status_from == :running
         current_concurrency_decrease
-        info "Decreasing concurrency to: #{current_concurrency}"
+        info "Decreasing task concurrency to: #{current_concurrency}"
       end
     end
 
-    # Get the current concurrency
+    # Get the current task concurrency
     # @return [Integer]
     def current_concurrency
       self.class.current_concurrency self
     end
 
-    # Increase the current concurrency by one
+    # Increase the current task concurrency by one
     # @return [Integer]
     def current_concurrency_increase
       self.class.current_concurrency self, :inc
     end
 
-    # Decrease the current concurrency by one
+    # Decrease the current task concurrency by one
     # @return [Integer]
     def current_concurrency_decrease
       self.class.current_concurrency self, :dec
     end
 
-    # Reset the current concurrency to zero
+    # Reset the current task concurrency to zero
     # @return [Integer]
     def current_concurrency_zero
       self.class.current_concurrency self, :zero
     end
 
-    # Manually set the current concurrency value
+    # Manually set the current task concurrency value
     # @param [Integer] value
     # @return [Integer]
     def current_concurrency=(value)
       self.class.current_concurrency self, :set, value
     end
 
-    # Check if there are concurrency slots available
+    # Check if there are task concurrency slots available
     # to run this task.
     # @return [true, false]
     def concurrency_available?
@@ -254,7 +254,7 @@ module Deployment
       current_concurrency < maximum_concurrency
     end
 
-    # Check if the maximum concurrency of this task is set
+    # Check if the maximum task concurrency of this task is set
     # @return [true, false]
     def maximum_concurrency_is_set?
       maximum_concurrency > 0
