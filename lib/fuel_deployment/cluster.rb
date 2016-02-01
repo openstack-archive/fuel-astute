@@ -204,7 +204,8 @@ module Deployment
       debug "Process node: #{node}"
       hook 'pre_node', node
       node.poll
-      return unless node.online?
+      hook 'post_node_poll', node
+      return unless node.ready?
       ready_task = node.ready_task
       return unless ready_task
       ready_task.run

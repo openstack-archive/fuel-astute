@@ -154,6 +154,86 @@ describe Deployment::Node do
     end
   end
 
+  context '#concurrency' do
+
+    it 'has maximum_concurrency' do
+      expect(subject.maximum_concurrency).to eq 0
+    end
+
+    it 'can set maximum_concurrency' do
+      subject.maximum_concurrency = 1
+      expect(subject.maximum_concurrency).to eq 1
+      subject.maximum_concurrency = '2'
+      expect(subject.maximum_concurrency).to eq 2
+      expect do
+        subject.maximum_concurrency = 'value'
+      end.to raise_error Deployment::InvalidArgument, /should be an integer/
+    end
+
+    it 'can read the current concurrency counter' do
+      expect(subject.current_concurrency).to eq 0
+    end
+
+    it 'can increase the current concurrency counter' do
+      subject.current_concurrency_zero
+      expect(subject.current_concurrency_increase).to eq 1
+      expect(subject.current_concurrency).to eq 1
+      subject.current_concurrency_increase
+      expect(subject.current_concurrency).to eq 2
+    end
+
+    it 'can decrease the current concurrency counter' do
+      subject.current_concurrency_zero
+      subject.current_concurrency_increase
+      expect(subject.current_concurrency).to eq 1
+      expect(subject.current_concurrency_decrease).to eq 0
+      expect(subject.current_concurrency).to eq 0
+      expect(subject.current_concurrency_decrease).to eq 0
+      expect(subject.current_concurrency).to eq 0
+    end
+
+    it 'can manually set the current concurrency value' do
+      subject.current_concurrency_zero
+      expect(subject.current_concurrency = 100).to eq 100
+      expect(subject.current_concurrency).to eq 100
+      expect(subject.current_concurrency = -100).to eq -100
+      expect(subject.current_concurrency).to eq 0
+    end
+
+    it 'can reset the current concurrency' do
+      subject.current_concurrency_zero
+      subject.current_concurrency_increase
+      expect(subject.current_concurrency).to eq 1
+      expect(subject.current_concurrency_zero).to eq 0
+      expect(subject.current_concurrency).to eq 0
+    end
+
+    it 'can check that the concurrency is available' do
+      subject.current_concurrency_zero
+      expect(subject.concurrency_available?).to eq true
+      subject.maximum_concurrency = 1
+      expect(subject.concurrency_available?).to eq true
+      subject.current_concurrency_increase
+      expect(subject.concurrency_available?).to eq false
+      subject.current_concurrency_decrease
+      expect(subject.concurrency_available?).to eq true
+      subject.current_concurrency_increase
+      expect(subject.concurrency_available?).to eq false
+      subject.maximum_concurrency = 2
+      expect(subject.concurrency_available?).to eq true
+    end
+
+    it 'can change the current concurrency when the status of the node changes' do
+      subject.current_concurrency_zero
+      subject.maximum_concurrency = 1
+      subject.status = :busy
+      expect(subject.current_concurrency).to eq 1
+      subject.status = :successful
+      expect(subject.current_concurrency).to eq 0
+    end
+
+  end
+
   context '#inspection' do
 
     it 'can to_s' do

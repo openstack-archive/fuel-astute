@@ -69,6 +69,7 @@ module Deployment
     def status=(value)
       value = value.to_sym
       raise Deployment::InvalidArgument.new self, 'Invalid node status!', value unless ALLOWED_STATUSES.include? value
+      status_changes_concurrency @status, value
       @status = value
     end
 
@@ -100,11 +101,136 @@ module Deployment
       @cluster = cluster
     end
 
+    # Get the current node concurrency value
+    # or perform an action with this value.
+    # @param [Symbol] action
+    # @option action [Symbol] :inc Increase the value
+    # @option action [Symbol] :dec Decrease the value
+    # @option action [Symbol] :reset Set the value to zero
+    # @option action [Symbol] :set Manually set the value
+    # @param [Integer] value Manually set to this value
+    # @return [Integer]
+    def self.current_concurrency(action = :get, value = nil)
+      @current_concurrency = 0 unless @current_concurrency
+      return @current_concurrency unless action
+      if action == :inc
+        @current_concurrency += 1
+      elsif action == :dec
+        @current_concurrency -= 1
+      elsif action == :zero
+        @current_concurrency = 0
+      elsif action == :set
+        begin
+          @current_concurrency = Integer(value)
+        rescue TypeError, ArgumentError
+          raise Deployment::InvalidArgument.new self, 'Current concurrency should be an integer number!', value
+        end
+      end
+      @current_concurrency = 0 if @current_concurrency < 0
+      @current_concurrency
+    end
+
+    # Get or set the maximum node concurrency value.
+    # Value is set if the second argument is provided.
+    # @param [Integer, nil] value
+    # @return [Integer]
+    def self.maximum_concurrency(value = nil)
+      @maximum_concurrency = 0 unless @maximum_concurrency
+      return @maximum_concurrency unless value
+      begin
+        @maximum_concurrency = Integer(value)
+      rescue TypeError, ArgumentError
+        raise Deployment::InvalidArgument.new self, 'Maximum concurrency should be an integer number!', value
+      end
+      @maximum_concurrency
+    end
+
+    # Get the maximum node concurrency
+    # @return [Integer]
+    def maximum_concurrency
+      self.class.maximum_concurrency
+    end
+
+    # Set the maximum node concurrency
+    # @param [Integer] value
+    # @return [Integer]
+    def maximum_concurrency=(value)
+      self.class.maximum_concurrency value
+    end
+
+    # Get the current node concurrency
+    # @return [Integer]
+    def current_concurrency
+      self.class.current_concurrency
+    end
+
+    # Increase the current node concurrency by one
+    # @return [Integer]
+    def current_concurrency_increase
+      self.class.current_concurrency :inc
+    end
+
+    # Decrease the current node concurrency by one
+    # @return [Integer]
+    def current_concurrency_decrease
+      self.class.current_concurrency :dec
+    end
+
+    # Reset the current node concurrency to zero
+    # @return [Integer]
+    def current_concurrency_zero
+      self.class.current_concurrency :zero
+    end
+
+    # Manually set the node current concurrency value
+    # @param [Integer] value
+    # @return [Integer]
+    def current_concurrency=(value)
+      self.class.current_concurrency :set, value
+    end
+
+    # Check if there are node concurrency slots available
+    # to run this task.
+    # @return [true, false]
+    def concurrency_available?
+      return true unless maximum_concurrency_is_set?
+      current_concurrency < maximum_concurrency
+    end
+
+    # Check if the maximum node concurrency is set
+    # @return [true, false]
+    def maximum_concurrency_is_set?
+      maximum_concurrency > 0
+    end
+
+    # Increase or decrease the node concurrency value
+    # when the node's status is changed.
+    # @param [Symbol] status_from
+    # @param [Symbol] status_to
+    # @return [void]
+    def status_changes_concurrency(status_from, status_to)
+      return unless maximum_concurrency_is_set?
+      if status_to == :busy
+        current_concurrency_increase
+        info "Increasing node concurrency to: #{current_concurrency}"
+      elsif status_from == :busy
+        current_concurrency_decrease
+        info "Decreasing node concurrency to: #{current_concurrency}"
+      end
+    end
+
     # The node have finished all its tasks
     # or has one of finished statuses
     # @return [true, false]
     def finished?
       FINISHED_STATUSES.include? status or tasks_are_finished?
+    end
+
+    # Check if this node is ready to receive a task: it's online and
+    # concurrency slots are available.
+    # @return [true, false]
+    def ready?
+      online? and concurrency_available?
     end
 
     # The node is online and can accept new tasks
