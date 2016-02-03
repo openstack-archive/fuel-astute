@@ -26,7 +26,7 @@ module Astute
       systems.map do |n|
         {
           'uid'       => n.results[:sender],
-          'node_type' => n.results[:data][:node_type].chomp
+          'node_type' => n.results[:data][:node_type].to_s.chomp
         }
       end
     end
