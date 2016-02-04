@@ -507,14 +507,20 @@ describe Astute::Provisioner do
       end.to raise_error(Astute::AstuteError)
     end
 
-    it "should try to unlock nodes discovery" do
-      @provisioner.expects(:unlock_nodes_discovery)
+    it "should try to unlock discovery for all nodes if provision fail unexpectedly" do
+      @provisioner.expects(:unlock_nodes_discovery).with(
+        @reporter,
+        data['task_uuid'],
+        data['nodes'].map { |n| n['uid'] },
+        data['nodes']
+      )
+      @provisioner.stubs(:prepare_nodes).returns([])
+      @provisioner.stubs(:provision_and_watch_progress).raises(
+        StandardError,
+        "MESSAGE"
+      )
+      Astute::Rsyslogd.stubs(:send_sighup)
       begin
-        @provisioner.stubs(:remove_nodes).returns([])
-        @provisioner.stubs(:prepare_nodes).returns([])
-        Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
-        @provisioner.stubs(:node_type).returns([])
-        @provisioner.stubs(:provision_piece).returns([{'uid' => '1'}])
         @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
       rescue
       end
@@ -841,7 +847,7 @@ describe Astute::Provisioner do
                         'fault_tolerance' => []}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info, 'image')
 
     end
   end
@@ -1070,7 +1076,7 @@ describe Astute::Provisioner do
       @provisioner.stubs(:change_nodes_type)
       @provisioner.stubs(:control_reboot_using_ssh)
       Astute::ImageProvision.stubs(:provision).returns(['1'])
-      result = @provisioner.provision_piece(@reporter, 'task_uuid', engine_attrs, nodes, 'native')
+      result = @provisioner.provision_piece(@reporter, 'task_uuid', engine_attrs, nodes, 'image')
       result.should eql(['1'])
     end
   end

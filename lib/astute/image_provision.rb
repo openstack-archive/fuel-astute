@@ -62,6 +62,8 @@ module Astute
     end
 
     def self.reboot(ctx, node_ids, task_id="reboot_provisioned_nodes")
+      return if node_ids.empty?
+
       Astute::NailgunHooks.new(
         [{
           "priority" =>  100,
