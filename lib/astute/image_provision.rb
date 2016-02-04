@@ -27,13 +27,15 @@ module Astute
         results.each do |node|
           unless node.results[:data][:exit_code] == 0
             failed = node.results[:sender]
-            Astute.logger.error("#{ctx.task_id}: Provision command returned non zero exit code on node: #{failed}")
+            Astute.logger.error("#{ctx.task_id}: Provision command returned" \
+              " non zero exit code on node: #{failed}")
             failed_uids << failed
           end
         end
 
       rescue => e
-        msg = "Error while provisioning: message: #{e.message} trace: #{e.format_backtrace}"
+        msg = "Error while provisioning: message: #{e.message}" \
+          " trace: #{e.format_backtrace}"
         Astute.logger.error("#{ctx.task_id}: #{msg}")
         report_error(ctx, msg)
       end
@@ -41,7 +43,8 @@ module Astute
     end
 
     def self.upload_provision(ctx, node)
-      Astute.logger.debug "#{ctx.task_id}: uploading provision data: #{node.to_json}"
+      Astute.logger.debug("#{ctx.task_id}: uploading provision " \
+        "data: #{node.to_json}")
       client = MClient.new(ctx, "uploadfile", [node['uid']])
       client.upload(:path => '/tmp/provision.json',
                     :content => node.to_json,
@@ -52,16 +55,35 @@ module Astute
 
     def self.run_provision(ctx, nodes)
       uids = nodes.map { |node| node['uid'] }
-      Astute.logger.debug "#{ctx.task_id}: running provision script: #{uids.join(', ')}"
-      shell = MClient.new(ctx, 'execute_shell_command', uids, check_result=true, timeout=3600, retries=1)
-      shell.execute(:cmd => 'flock -n /var/lock/provision.lock /usr/bin/provision')
+      Astute.logger.debug("#{ctx.task_id}: running provision script: " \
+        "#{uids.join(', ')}")
+      shell = MClient.new(
+        ctx,
+        'execute_shell_command',
+        uids,
+        check_result=true,
+        timeout=3600,
+        retries=1
+      )
+      shell.execute(:cmd => 'flock -n /var/lock/provision.lock' \
+        '/usr/bin/provision')
     end
 
     def self.report_error(ctx, msg)
-      ctx.reporter.report({'status' => 'error', 'error' => msg, 'progress' => 100})
+      ctx.reporter.report({
+        'status' => 'error',
+        'error' => msg,
+        'progress' => 100
+      })
     end
 
     def self.reboot(ctx, node_ids, task_id="reboot_provisioned_nodes")
+      if node_ids.empty?
+        Astute.logger.warn("No nodes were sent to reboot for " \
+          "task: #{task_id}")
+        return
+      end
+
       Astute::NailgunHooks.new(
         [{
           "priority" =>  100,
