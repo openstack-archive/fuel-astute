@@ -153,6 +153,7 @@ Version:   %{version}
 Release:   %{release}
 License:   GPLv2
 Requires:  mcollective >= 2.2
+Requires:  network-checker
 URL:       http://mirantis.com
 
 %description -n nailgun-mcagents
