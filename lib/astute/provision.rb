@@ -55,7 +55,7 @@ module Astute
             'status' => 'error',
             'error' => e.message,
             'progress' => 100})
-        unlock_nodes_discovery(reporter, task_id, nodes.map {|n| n['slave_name']}, nodes)
+        unlock_nodes_discovery(reporter, task_id, nodes.map { |n| n['uid'] }, nodes)
         raise e
       end
 
