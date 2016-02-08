@@ -88,7 +88,7 @@ module Astute
       )
       provisioner = Provisioner.new(@log_parsing)
       if provisioning_info['pre_provision']
-        image_build_log = "/var/log/docker-logs/fuel-agent-env" \
+        image_build_log = "/var/log/fuel-agent-env" \
           "-#{calculate_cluster_id(provisioning_info)}.log"
         Astute.logger.info "Please check image build log here: " \
           "#{image_build_log}"

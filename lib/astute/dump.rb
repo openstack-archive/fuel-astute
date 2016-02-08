@@ -46,7 +46,7 @@ module Astute
           Astute.logger.info("#{ctx.task_id}: Snapshot is done.")
           report_success(ctx, result[:data][:stdout].rstrip)
         else
-          Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code. For details see /var/log/docker-logs/shotgun.log")
+          Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code. For details see /var/log/shotgun.log")
           report_error(ctx, "exit code: #{result[:data][:exit_code]} stderr: #{result[:data][:stderr]}")
         end
       rescue Timeout::Error
