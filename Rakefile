@@ -9,3 +9,4 @@ namespace :spec do
 end
 
 task :default => 'spec:unit'
+task :spec => 'spec:unit'
