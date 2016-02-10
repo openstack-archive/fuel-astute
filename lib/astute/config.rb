@@ -98,7 +98,7 @@ module Astute
                                           # and last node in group should be 30 sec. Empirical observation.
                                           # Please increase if nodes could not provisioning
     conf[:agent_nodiscover_file] = '/etc/nailgun-agent/nodiscover' # if this file in place, nailgun-agent will do nothing
-    conf[:bootstrap_profile] = 'bootstrap' # use the CentOS based bootstrap by default
+    conf[:bootstrap_profile] = 'ubuntu_bootstrap' # use the Ubuntu based bootstrap by default
     conf[:graph_dot_dir] = "/tmp/" # default dir patch for debug graph file
     conf[:enable_graph_file] = false  # enable debug graph records to file
 
