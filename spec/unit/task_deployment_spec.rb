@@ -105,6 +105,33 @@ describe Astute::TaskDeployment do
       task_deployment.deploy(deployment_info, deployment_tasks)
     end
 
+    context 'config' do
+      around(:each) do |example|
+        max_nodes_old_value = Astute.config.max_nodes_per_call
+        example.run
+        Astute.config.max_nodes_per_call = max_nodes_old_value
+      end
+
+      it 'should setup max nodes per call using config' do
+        Astute.config.max_nodes_per_call = 33
+
+        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+        task_deployment.stubs(:write_graph_to_file)
+        ctx.stubs(:report)
+
+        Deployment::Cluster.any_instance
+          .stubs(:run)
+          .returns({:success => true})
+
+        Deployment::Cluster.any_instance
+          .expects(:maximum_node_concurrency=)
+          .with(Astute.config.max_nodes_per_call)
+
+        task_deployment.deploy(deployment_info, deployment_tasks)
+      end
+    end
+
     context 'should report final status' do
 
       it 'succeed status' do

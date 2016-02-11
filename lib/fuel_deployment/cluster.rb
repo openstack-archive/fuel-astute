@@ -461,6 +461,19 @@ digraph "<%= id || 'graph' %>" {
       end
     end
 
+    # Get the maximum task concurrency
+    # @return [Integer]
+    def maximum_node_concurrency
+      Node.maximum_concurrency
+    end
+
+    # Set the maximum nodes concurrency
+    # @param [Integer] value
+    # @return [Integer]
+    def maximum_node_concurrency=(value)
+      Node.maximum_concurrency value
+    end
+
     # Get the array of this cluster's node names.
     # They can be used for reference.
     # @return [Array<String>]

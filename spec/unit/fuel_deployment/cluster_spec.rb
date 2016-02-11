@@ -66,6 +66,7 @@ describe Deployment::Node do
   subject { cluster }
 
   context '#attributes' do
+
     it 'have an id' do
       expect(subject.id).to eq 'test'
     end
@@ -77,6 +78,19 @@ describe Deployment::Node do
 
     it 'have nodes' do
       expect(subject.nodes).to eq({:node1 => node1, :node2 => node2})
+    end
+
+    context 'maximum node concurrency' do
+      around(:each) do |example|
+        max_nodes_old_value = Deployment::Node.maximum_concurrency
+        example.run
+        Deployment::Node.maximum_concurrency max_nodes_old_value
+      end
+
+      it 'can set maximum node concurrency' do
+        subject.maximum_node_concurrency = 33
+        expect(subject.maximum_node_concurrency).to eq 33
+      end
     end
 
   end
