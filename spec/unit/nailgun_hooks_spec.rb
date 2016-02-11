@@ -590,21 +590,21 @@ describe Astute::NailgunHooks do
 
       it 'if exit code eql 0 -> do not raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns(true).once
+        hooks.expects(:run_shell_command).returns(nil).once
 
         expect {hooks.process}.to_not raise_error
       end
 
       it 'if exit code not eql 0 -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns(false).once
+        hooks.expects(:run_shell_command).returns("err").once
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
 
       it 'if exit code not presence -> raise error' do
         hooks = Astute::NailgunHooks.new([shell_hook], ctx)
-        hooks.expects(:run_shell_command).returns(false).once
+        hooks.expects(:run_shell_command).returns("err").once
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
@@ -873,21 +873,21 @@ describe Astute::NailgunHooks do
 
       it 'if exit code eql 0 -> do not raise error' do
         hooks = Astute::NailgunHooks.new([sync_hook], ctx)
-        hooks.expects(:run_shell_command).returns(true).once
+        hooks.expects(:run_shell_command).returns(nil).once
 
         expect {hooks.process}.to_not raise_error
       end
 
       it 'if exit code not eql 0 -> raise error' do
         hooks = Astute::NailgunHooks.new([sync_hook], ctx)
-        hooks.expects(:run_shell_command).returns(false).once
+        hooks.expects(:run_shell_command).returns("err").once
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
 
       it 'if exit code not presence -> raise error' do
         hooks = Astute::NailgunHooks.new([sync_hook], ctx)
-        hooks.expects(:run_shell_command).returns(false).once
+        hooks.expects(:run_shell_command).returns("err").once
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
