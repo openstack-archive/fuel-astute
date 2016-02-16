@@ -15,6 +15,7 @@
 require 'json'
 require 'securerandom'
 require 'astute/server/task_queue'
+require 'zlib'
 
 module Astute
   module Server
@@ -75,15 +76,12 @@ module Astute
       end
 
       def main_worker
-        @queue.subscribe(:manual_ack => true) do |delivery_info, _, payload|
+        @queue.subscribe(:manual_ack => true) do |delivery_info, properties, payload|
           if @main_work_thread.nil? || !@main_work_thread.alive?
-            Astute.logger.debug "Process message from worker queue:\n"\
-                                "#{payload.pretty_inspect}"
             @channel.acknowledge(delivery_info.delivery_tag, false)
-            perform_main_job(payload)
+            perform_main_job(payload, properties)
           else
-            Astute.logger.debug "Requeue message because worker is busy:"\
-                                "\n#{payload.pretty_inspect}"
+            Astute.logger.debug "Requeue message because worker is busy"
             # Avoid throttle by consume/reject cycle
             # if only one worker is running
             @channel.reject(delivery_info.delivery_tag, true)
@@ -92,10 +90,8 @@ module Astute
       end
 
       def service_worker
-        @service_queue.subscribe do |_delivery_info, _properties, payload|
-          Astute.logger.debug "Process message from service queue:\n"\
-                              "#{payload.pretty_inspect}"
-          perform_service_job(payload)
+        @service_queue.subscribe do |_delivery_info, properties, payload|
+          perform_service_job(payload, properties)
         end
       end
 
@@ -113,9 +109,11 @@ module Astute
         end
       end
 
-      def perform_main_job(payload)
+      def perform_main_job(payload, properties)
         @main_work_thread = Thread.new do
-          data = parse_data(payload)
+          data = parse_data(payload, properties)
+          Astute.logger.debug("Process message from worker queue:\n"\
+            "#{data.pretty_inspect}")
           @tasks_queue = Astute::Server::TaskQueue.new
 
           @tasks_queue.add_task(data)
@@ -128,13 +126,15 @@ module Astute
         end
       end
 
-      def perform_service_job(payload)
+      def perform_service_job(payload, properties)
         Thread.new do
           service_data = {
             :main_work_thread => @main_work_thread,
             :tasks_queue => @tasks_queue
           }
-          data = parse_data(payload)
+          data = parse_data(payload, properties)
+          Astute.logger.debug("Process message from service queue:\n"\
+            "#{data.pretty_inspect}")
           send_message_task_in_orchestrator(data)
           dispatch(data, service_data)
         end
@@ -201,15 +201,30 @@ module Astute
         end
       end
 
-      def parse_data(data)
-        messages = nil
-        begin
-          messages = JSON.load(data)
+      def parse_data(data, properties)
+        data = unzip_message(data, properties) if zip?(properties)
+        messages = begin
+          JSON.load(data)
         rescue => e
           Astute.logger.error "Error deserializing payload: #{e.message},"\
                               " trace:\n#{e.backtrace.pretty_inspect}"
+          nil
         end
         messages.is_a?(Array) ? messages : [messages]
+      end
+
+      def unzip_message(data, properties)
+        Zlib::Inflate.inflate(data)
+      rescue => e
+        msg = "Gzip failure with error #{e.message} in\n"\
+          "#{e.backtrace.pretty_inspect} with properties\n"\
+          "#{properties.pretty_inspect} on data\n#{data.pretty_inspect}"
+        Astute.logger.error(msg)
+        raise e, msg
+      end
+
+      def zip?(properties)
+        properties[:headers]['compression'] == "application/x-gzip"
       end
 
       def abort_messages(messages)
