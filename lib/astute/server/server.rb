@@ -202,28 +202,29 @@ module Astute
       end
 
       def parse_data(data, properties)
-        messages = nil
-        data = unzip_message(data, properties)
-        begin
-          messages = JSON.load(data)
+        data = zip?(properties) ? unzip_message(data, properties) : data
+        messages = begin
+          JSON.load(data)
         rescue => e
           Astute.logger.error "Error deserializing payload: #{e.message},"\
                               " trace:\n#{e.backtrace.pretty_inspect}"
+          nil
         end
         messages.is_a?(Array) ? messages : [messages]
       end
 
       def unzip_message(data, properties)
-        if properties[:headers]['compression'] == "application/x-gzip"
-          Zlib::Inflate.inflate(data)
-        else
-          data
-        end
+        Zlib::Inflate.inflate(data)
       rescue => e
-        Astute.logger.error("Gzip failure with error #{e.message} in\n"\
+        msg = "Gzip failure with error #{e.message} in\n"\
           "#{e.backtrace.pretty_inspect} with properties\n"\
-          "#{properties.pretty_inspect} on data\n#{data.pretty_inspect}")
-        nil
+          "#{properties.pretty_inspect} on data\n#{data.pretty_inspect}"
+        Astute.logger.error(msg)
+        raise e, msg
+      end
+
+      def zip?(properties)
+        properties[:headers]['compression'] == "application/x-gzip"
       end
 
       def abort_messages(messages)
