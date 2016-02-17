@@ -23,11 +23,15 @@ module Deployment
   #
   # attr [Object] id Misc identifier of this process
   # @attr_reader [Hash<Symbol => Deployment::Node>] nodes The nodes of this cluster
+  # @attr [Deployment::Concurrency::Counter] node_concurrency Controls the
+  # maximum number of nodes running tasks at the same time
   class Cluster
     # @param [String] id Cluster name
     def initialize(id=nil)
       @nodes = {}
       @id = id
+      @node_concurrency = Deployment::Concurrency::Counter.new
+      @task_concurrency = Deployment::Concurrency::Group.new
     end
 
     include Enumerable
@@ -35,6 +39,8 @@ module Deployment
 
     attr_accessor :id
     attr_reader :nodes
+    attr_reader :node_concurrency
+    attr_reader :task_concurrency
 
     # Add an existing node object to the cluster
     # @param [Deployment::Node] node a new node object
@@ -203,8 +209,10 @@ module Deployment
     def process_node(node)
       debug "Process node: #{node}"
       hook 'pre_node', node
+      return if node.skipped?
       node.poll
-      return unless node.online?
+      hook 'post_node_poll', node
+      return unless node.ready?
       ready_task = node.ready_task
       return unless ready_task
       ready_task.run

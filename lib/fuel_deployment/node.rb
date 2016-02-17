@@ -24,7 +24,7 @@ module Deployment
   # @attr [Symbol] status The node's status
   # @attr [String] name The node's name
   # @attr [Deployment::Task] task The currently running task of this node
-  # @attr [Deploymnet::Cluster] cluster The cluster this node is assigned to
+  # @attr [Deployment::Cluster] cluster The cluster this node is assigned to
   # @attr [Deployment::Graph] graph The Graph assigned to this node
   # @attr [Numeric, String] id Misc id that can be used by this node
   # @attr [true, false] critical This node is critical for the deployment
@@ -69,6 +69,7 @@ module Deployment
     def status=(value)
       value = value.to_sym
       raise Deployment::InvalidArgument.new self, 'Invalid node status!', value unless ALLOWED_STATUSES.include? value
+      status_changes_concurrency @status, value
       @status = value
     end
 
@@ -100,11 +101,50 @@ module Deployment
       @cluster = cluster
     end
 
+    # Check if this node has a Concurrency::Counter set
+    # and it has a defined maximum value
+    # @return [true,false]
+    def concurrency_present?
+      return false unless cluster.is_a? Deployment::Cluster
+      return false unless cluster.node_concurrency.is_a? Deployment::Concurrency::Counter
+      cluster.node_concurrency.maximum_set?
+    end
+
+    # Check if this node has a free concurrency slot to run a new task
+    # @return [true,false]
+    def concurrency_available?
+      return true unless concurrency_present?
+      cluster.node_concurrency.available?
+    end
+
+    # Increase or decrease the node concurrency value
+    # when the node's status is changed.
+    # @param [Symbol] status_from
+    # @param [Symbol] status_to
+    # @return [void]
+    def status_changes_concurrency(status_from, status_to)
+      return unless concurrency_present?
+      if status_to == :busy
+        cluster.node_concurrency.increment
+        info "Increasing node concurrency to: #{cluster.node_concurrency.current}"
+      elsif status_from == :busy
+        cluster.node_concurrency.decrement
+        info "Decreasing node concurrency to: #{cluster.node_concurrency.current}"
+      end
+    end
+
     # The node have finished all its tasks
     # or has one of finished statuses
     # @return [true, false]
     def finished?
       FINISHED_STATUSES.include? status or tasks_are_finished?
+    end
+
+    # Check if this node is ready to receive a task: it's online and
+    # concurrency slots are available.
+    # @return [true, false]
+    def ready?
+      online? and concurrency_available?
     end
 
     # The node is online and can accept new tasks

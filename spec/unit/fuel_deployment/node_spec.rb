@@ -154,6 +154,84 @@ describe Deployment::Node do
     end
   end
 
+  context '#concurrency' do
+
+    context 'maximum is not set' do
+      it 'concurrency is NOT present' do
+        is_expected.not_to be_concurrency_present
+      end
+
+      it 'concurrency is available' do
+        is_expected.to be_concurrency_available
+      end
+
+      it 'will not try to count node concurrency if maximum is not set' do
+        subject.status = :busy
+        expect(subject.cluster.node_concurrency.current).to eq 0
+        subject.status = :successful
+        expect(subject.cluster.node_concurrency.current).to eq 0
+      end
+
+      it 'online node is counted as a ready node' do
+        subject.status == :online
+        is_expected.to be_ready
+      end
+    end
+    context 'maximum is set and active' do
+      before(:each) do
+        cluster.node_concurrency.maximum = 2
+        cluster.node_concurrency.current = 1
+      end
+
+      it 'concurrency is present' do
+        is_expected.to be_concurrency_present
+      end
+
+      it 'concurrency is available' do
+        is_expected.to be_concurrency_available
+      end
+
+      it 'can change the current concurrency when the status of the node changes' do
+        subject.status = :busy
+        expect(subject.cluster.node_concurrency.current).to eq 2
+        subject.status = :successful
+        expect(subject.cluster.node_concurrency.current).to eq 1
+      end
+
+      it 'online node is counted as a ready node' do
+        subject.status == :online
+        is_expected.to be_ready
+      end
+    end
+
+    context 'maximum is set and not active' do
+      before(:each) do
+        cluster.node_concurrency.maximum = 1
+        cluster.node_concurrency.current = 2
+      end
+
+      it 'concurrency is present' do
+        is_expected.to be_concurrency_present
+      end
+
+      it 'concurrency is NOT available' do
+        is_expected.not_to be_concurrency_available
+      end
+
+      it 'can change the current concurrency when the status of the node changes' do
+        subject.status = :busy
+        expect(subject.cluster.node_concurrency.current).to eq 3
+        subject.status = :successful
+        expect(subject.cluster.node_concurrency.current).to eq 2
+      end
+
+      it 'online node is NOT counted as a ready node' do
+        subject.status == :online
+        is_expected.not_to be_ready
+      end
+    end
+  end
+
   context '#inspection' do
 
     it 'can to_s' do
