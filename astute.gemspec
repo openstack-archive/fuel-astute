@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'facter'
   s.add_development_dependency 'rake', '10.0.4'
-  s.add_development_dependency 'rspec', '2.13.0'
+  s.add_development_dependency 'rspec', '~> 3.0.0'
   s.add_development_dependency 'mocha', '0.13.3'
   s.add_development_dependency 'simplecov', '~> 0.7.1'
   s.add_development_dependency 'simplecov-rcov', '~> 0.2.3'

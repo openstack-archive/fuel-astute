@@ -341,84 +341,107 @@ describe Deployment::Task do
   end
 
   context '#concurrency' do
-    it 'has maximum_concurrency' do
-      expect(subject.maximum_concurrency).to eq 0
+
+    context 'concurrency is not defined' do
+      it 'concurrency is NOT present' do
+        is_expected.not_to be_concurrency_present
+      end
+
+      it 'concurrency is available' do
+        is_expected.to be_concurrency_available
+      end
+
+      it 'will not try to change the current concurrency when the status of the task changes' do
+        subject.status = :running
+        expect(cluster.task_concurrency[subject.name].current).to eq 0
+        subject.status = :successful
+        expect(cluster.task_concurrency[subject.name].current).to eq 0
+      end
+
+      it 'ready task is counted as a ready task' do
+        subject.status == :ready
+        is_expected.to be_ready
+      end
     end
 
-    it 'can set maximum_concurrency' do
-      subject.maximum_concurrency = 1
-      expect(subject.maximum_concurrency).to eq 1
-      subject.maximum_concurrency = '2'
-      expect(subject.maximum_concurrency).to eq 2
-      expect do
-        subject.maximum_concurrency = 'value'
-      end.to raise_error Deployment::InvalidArgument, /should be an integer/
+    context 'defined, but maximum is not set' do
+      before(:each) do
+        cluster.task_concurrency.create 'task1'
+      end
+
+      it 'concurrency is NOT present' do
+        is_expected.not_to be_concurrency_present
+      end
+
+      it 'concurrency is available' do
+        is_expected.to be_concurrency_available
+      end
+
+      it 'will not try to change the current concurrency when the status of the task changes' do
+        subject.status = :running
+        expect(cluster.task_concurrency[subject.name].current).to eq 0
+        subject.status = :successful
+        expect(cluster.task_concurrency[subject.name].current).to eq 0
+      end
+
+      it 'ready task is counted as a ready task' do
+        subject.status == :ready
+        is_expected.to be_ready
+      end
     end
 
-    it 'can read the current concurrency counter' do
-      expect(subject.current_concurrency).to eq 0
+    context 'maximum is set and active' do
+      before(:each) do
+        cluster.task_concurrency['task1'].maximum = 2
+        cluster.task_concurrency['task1'].current = 1
+      end
+
+      it 'concurrency is present' do
+        is_expected.to be_concurrency_present
+      end
+
+      it 'concurrency is available' do
+        is_expected.to be_concurrency_available
+      end
+
+      it 'can change the current concurrency when the status of the task changes' do
+        subject.status = :running
+        expect(cluster.task_concurrency[subject.name].current).to eq 2
+        subject.status = :successful
+        expect(cluster.task_concurrency[subject.name].current).to eq 1
+      end
+
+      it 'ready task is counted as a ready task' do
+        subject.status == :ready
+        is_expected.to be_ready
+      end
     end
 
-    it 'can increase the current concurrency counter' do
-      subject.current_concurrency_zero
-      expect(subject.current_concurrency_increase).to eq 1
-      expect(subject.current_concurrency).to eq 1
-      subject.current_concurrency_increase
-      expect(subject.current_concurrency).to eq 2
-    end
+    context 'maximum is set and not active' do
+      before(:each) do
+        cluster.task_concurrency['task1'].maximum = 1
+        cluster.task_concurrency['task1'].current = 2
+      end
 
-    it 'can decrease the current concurrency counter' do
-      subject.current_concurrency_zero
-      subject.current_concurrency_increase
-      expect(subject.current_concurrency).to eq 1
-      expect(subject.current_concurrency_decrease).to eq 0
-      expect(subject.current_concurrency).to eq 0
-      expect(subject.current_concurrency_decrease).to eq 0
-      expect(subject.current_concurrency).to eq 0
-    end
+      it 'concurrency is present' do
+        is_expected.to be_concurrency_present
+      end
 
-    it 'can manually set the current concurrency value' do
-      subject.current_concurrency_zero
-      expect(subject.current_concurrency = 100).to eq 100
-      expect(subject.current_concurrency).to eq 100
-      expect(subject.current_concurrency = -100).to eq -100
-      expect(subject.current_concurrency).to eq 0
-    end
+      it 'concurrency is NOT available' do
+        is_expected.not_to be_concurrency_available
+      end
 
-    it 'can reset the current concurrency' do
-      subject.current_concurrency_zero
-      subject.current_concurrency_increase
-      expect(subject.current_concurrency).to eq 1
-      expect(subject.current_concurrency_zero).to eq 0
-      expect(subject.current_concurrency).to eq 0
-    end
+      it 'can change the current concurrency when the status of the task changes' do
+        subject.status = :running
+        expect(cluster.task_concurrency[subject.name].current).to eq 3
+        subject.status = :successful
+        expect(cluster.task_concurrency[subject.name].current).to eq 2
+      end
 
-    it 'can check that the concurrency is available' do
-      subject.current_concurrency_zero
-      expect(subject.concurrency_available?).to eq true
-      subject.maximum_concurrency = 1
-      expect(subject.concurrency_available?).to eq true
-      subject.current_concurrency_increase
-      expect(subject.concurrency_available?).to eq false
-      subject.current_concurrency_decrease
-      expect(subject.concurrency_available?).to eq true
-      subject.current_concurrency_increase
-      expect(subject.concurrency_available?).to eq false
-      subject.maximum_concurrency = 2
-      expect(subject.concurrency_available?).to eq true
-    end
-
-    it 'can change the current concurrency when the status changes for all nodes' do
-      task1.current_concurrency_zero
-      task1.maximum_concurrency = 1
-      task1.status = :running
-      expect(task1.current_concurrency).to eq 1
-      expect(task2_1.current_concurrency).to eq 1
-      expect(task2_2.current_concurrency).to eq 0
-      task1.status = :successful
-      expect(task1.current_concurrency).to eq 0
-      expect(task2_1.current_concurrency).to eq 0
-      expect(task2_2.current_concurrency).to eq 0
+      it 'ready task is NOT counted as a ready task' do
+        subject.status == :ready
+        is_expected.not_to be_ready
+      end
     end
   end
 

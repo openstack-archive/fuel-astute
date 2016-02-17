@@ -134,130 +134,38 @@ module Deployment
       value
     end
 
-    # Get the current concurrency value for a given task
-    # or perform an action with this value.
-    # @param [Deployment::Task, String, Symbol] task
-    # @param [Symbol] action
-    # @option action [Symbol] :inc Increase the value
-    # @option action [Symbol] :dec Decrease the value
-    # @option action [Symbol] :reset Set the value to zero
-    # @option action [Symbol] :set Manually set the value
-    # @param [Integer] value Manually set to this value
-    # @return [Integer]
-    def self.current_concurrency(task, action = :get, value = nil)
-      @current_concurrency = {} unless @current_concurrency
-      task = task.name if task.is_a? Deployment::Task
-      key = task.to_sym
-      @current_concurrency[key] = 0 unless @current_concurrency[key]
-      return @current_concurrency[key] unless action
-      if action == :inc
-        @current_concurrency[key] += 1
-      elsif action == :dec
-        @current_concurrency[key] -= 1
-      elsif action == :zero
-        @current_concurrency[key] = 0
-      elsif action == :set
-        begin
-          @current_concurrency[key] = Integer(value)
-        rescue TypeError, ArgumentError
-          raise Deployment::InvalidArgument.new self, 'Current concurrency should be an integer number!', value
-        end
-      end
-      @current_concurrency[key] = 0 if @current_concurrency[key] < 0
-      @current_concurrency[key]
+    # Check if this task has a Concurrency::Counter defined in the Group
+    # identified by this task's name and it has a defined maximum value
+    # @return [true,false]
+    def concurrency_present?
+      return false unless node.is_a? Deployment::Node
+      return false unless node.cluster.is_a? Deployment::Cluster
+      return false unless node.cluster.task_concurrency.is_a? Deployment::Concurrency::Group
+      return false unless node.cluster.task_concurrency.key? name
+      node.cluster.task_concurrency[name].maximum_set?
     end
 
-    # Get or set the maximum concurrency value for a given task.
-    # Value is set if the second argument is provided.
-    # @param [Deployment::Task, String, Symbol] task
-    # @param [Integer, nil] value
-    # @return [Integer]
-    def self.maximum_concurrency(task, value = nil)
-      @maximum_concurrency = {} unless @maximum_concurrency
-      task = task.name if task.is_a? Deployment::Task
-      key = task.to_sym
-      @maximum_concurrency[key] = 0 unless @maximum_concurrency[key]
-      return @maximum_concurrency[key] unless value
-      begin
-        @maximum_concurrency[key] = Integer(value)
-      rescue TypeError, ArgumentError
-        raise Deployment::InvalidArgument.new self, 'Maximum concurrency should be an integer number!', value
-      end
-      @maximum_concurrency[key]
+    # Check if this task has a free concurrency slot to run
+    # @return [true,false]
+    def concurrency_available?
+      return true unless concurrency_present?
+      node.cluster.task_concurrency[name].available?
     end
 
-    # Get the maximum concurrency
-    # @return [Integer]
-    def maximum_concurrency
-      self.class.maximum_concurrency self
-    end
-
-    # Set the maximum concurrency
-    # @param [Integer] value
-    # @return [Integer]
-    def maximum_concurrency=(value)
-      self.class.maximum_concurrency self, value
-    end
-
-    # Increase or decrease the concurrency value
+    # Increase or decrease the task concurrency value
     # when the task's status is changed.
     # @param [Symbol] status_from
     # @param [Symbol] status_to
     # @return [void]
     def status_changes_concurrency(status_from, status_to)
-      return unless maximum_concurrency_is_set?
+      return unless concurrency_present?
       if status_to == :running
-        current_concurrency_increase
-        info "Increasing concurrency to: #{current_concurrency}"
+        node.cluster.task_concurrency[name].increment
+        info "Increasing task concurrency to: #{node.cluster.task_concurrency[name].current}"
       elsif status_from == :running
-        current_concurrency_decrease
-        info "Decreasing concurrency to: #{current_concurrency}"
+        node.cluster.task_concurrency[name].decrement
+        info "Decreasing task concurrency to: #{node.cluster.task_concurrency[name].current}"
       end
-    end
-
-    # Get the current concurrency
-    # @return [Integer]
-    def current_concurrency
-      self.class.current_concurrency self
-    end
-
-    # Increase the current concurrency by one
-    # @return [Integer]
-    def current_concurrency_increase
-      self.class.current_concurrency self, :inc
-    end
-
-    # Decrease the current concurrency by one
-    # @return [Integer]
-    def current_concurrency_decrease
-      self.class.current_concurrency self, :dec
-    end
-
-    # Reset the current concurrency to zero
-    # @return [Integer]
-    def current_concurrency_zero
-      self.class.current_concurrency self, :zero
-    end
-
-    # Manually set the current concurrency value
-    # @param [Integer] value
-    # @return [Integer]
-    def current_concurrency=(value)
-      self.class.current_concurrency self, :set, value
-    end
-
-    # Check if there are concurrency slots available
-    # to run this task.
-    # @return [true, false]
-    def concurrency_available?
-      return true unless maximum_concurrency_is_set?
-      current_concurrency < maximum_concurrency
-    end
-
-    # Check if the maximum concurrency of this task is set
-    # @return [true, false]
-    def maximum_concurrency_is_set?
-      maximum_concurrency > 0
     end
 
     ALLOWED_STATUSES.each do |status|
@@ -488,6 +396,7 @@ module Deployment
     # @return [true, false]
     def ready?
       poll_dependencies
+      return false unless concurrency_available?
       status == :ready
     end
 
@@ -564,3 +473,4 @@ module Deployment
 
   end
 end
+

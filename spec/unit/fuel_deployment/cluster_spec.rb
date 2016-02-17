@@ -15,7 +15,7 @@
 require 'spec_helper'
 require 'set'
 
-describe Deployment::Node do
+describe Deployment::Cluster do
 
   let(:cluster) do
     cluster = Deployment::Cluster.new
@@ -66,7 +66,7 @@ describe Deployment::Node do
   subject { cluster }
 
   context '#attributes' do
-    it 'have an id' do
+    it 'has an id' do
       expect(subject.id).to eq 'test'
     end
 
@@ -75,8 +75,16 @@ describe Deployment::Node do
       expect(subject.id).to eq 1
     end
 
-    it 'have nodes' do
+    it 'has nodes' do
       expect(subject.nodes).to eq({:node1 => node1, :node2 => node2})
+    end
+
+    it 'has node_concurrency' do
+      expect(subject.node_concurrency).to be_a Deployment::Concurrency::Counter
+    end
+
+    it 'has task_concurrency' do
+      expect(subject.task_concurrency).to be_a Deployment::Concurrency::Group
     end
 
   end

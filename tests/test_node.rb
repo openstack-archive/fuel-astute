@@ -78,7 +78,7 @@ module Deployment
 
   class TestCluster < Cluster
     attr_accessor :plot
-    def hook_post_node(*args)
+    def hook_pre_node(*args)
       make_image if plot
     end
   end
