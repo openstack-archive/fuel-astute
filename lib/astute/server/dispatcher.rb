@@ -114,7 +114,8 @@ module Astute
             reporter,
             data['args']['task_uuid'],
             data['args']['deployment_info'],
-            data['args']['deployment_tasks']
+            data['args']['tasks_graph'],
+            data['args']['tasks_directory']
           )
         rescue Timeout::Error
           msg = "Timeout of deployment is exceeded."

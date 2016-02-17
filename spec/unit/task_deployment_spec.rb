@@ -33,9 +33,8 @@ describe Astute::TaskDeployment do
     ]
   end
 
-  let(:deployment_tasks) do
-    {
-      "1"=>
+  let(:tasks_graph) do
+    {"1"=>
       [{
         "type"=>"noop",
         "fail_on_error"=>true,
@@ -53,6 +52,22 @@ describe Astute::TaskDeployment do
     }
   end
 
+  let(:tasks_directory) do
+    {"ironic_post_swift_key"=>{
+      "parameters"=>{
+        "retries"=>3,
+        "cmd"=>"sh generate_keys.sh -i 1 -s 'ceph' -p /var/lib/fuel/keys/",
+        "cwd"=>"/",
+        "timeout"=>180,
+        "interval"=>1},
+       "type"=>"shell",
+       "id"=>"ironic_post_swift_key"},
+     "post_deployment_start"=>{
+       "parameters"=>{}
+     }
+    }
+  end
+
   let(:task_deployment) { Astute::TaskDeployment.new(ctx) }
 
   describe '#deploy' do
@@ -63,11 +78,11 @@ describe Astute::TaskDeployment do
       ctx.stubs(:report)
 
       Deployment::Cluster.any_instance.expects(:run).returns({:success => true})
-      task_deployment.deploy(deployment_info, deployment_tasks)
+      task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
     end
 
     it 'should raise error if deployment info not provided' do
-      expect{task_deployment.deploy([],{})}.to raise_error(
+      expect{task_deployment.deploy([],{}, {})}.to raise_error(
         Astute::DeploymentEngineError,
         "Deployment info are not provided!"
       )
@@ -84,11 +99,11 @@ describe Astute::TaskDeployment do
                                       .with(deployment_info, ctx)
                                       .returns(pre_deployment)
       Astute::TaskPreDeploymentActions.any_instance.expects(:process)
-      task_deployment.deploy(deployment_info, deployment_tasks)
+      task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
     end
 
     it 'should support virtual node' do
-      d_t = task_deployment.send(:support_virtual_node, deployment_tasks)
+      d_t = task_deployment.send(:support_virtual_node, tasks_graph)
       expect(d_t.keys).to include 'virtual_sync_node'
       expect(d_t.keys).not_to include 'null'
     end
@@ -102,7 +117,7 @@ describe Astute::TaskDeployment do
       task_deployment.expects(:remove_failed_nodes).returns([deployment_info, []])
 
       Deployment::Cluster.any_instance.stubs(:run).returns({:success => true})
-      task_deployment.deploy(deployment_info, deployment_tasks)
+      task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
     end
 
     context 'config' do
@@ -130,7 +145,7 @@ describe Astute::TaskDeployment do
 
         node_concurrency.expects(:maximum=).with(Astute.config.max_nodes_per_call)
 
-        task_deployment.deploy(deployment_info, deployment_tasks)
+        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
       end
     end
 
@@ -143,7 +158,7 @@ describe Astute::TaskDeployment do
         task_deployment.stubs(:write_graph_to_file)
         ctx.expects(:report).with({'status' => 'ready', 'progress' => 100})
 
-        task_deployment.deploy(deployment_info, deployment_tasks)
+        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
       end
 
       it 'failed status' do
@@ -160,7 +175,7 @@ describe Astute::TaskDeployment do
             'progress' => 100,
             'error' => 'Failed because of'})
 
-        task_deployment.deploy(deployment_info, deployment_tasks)
+        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
       end
     end
 
@@ -185,7 +200,7 @@ describe Astute::TaskDeployment do
         File.expects(:open).with("/tmp/graph-#{ctx.task_id}.dot", 'w')
             .yields(file_handle).never
 
-        task_deployment.deploy(deployment_info, deployment_tasks)
+        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
       end
 
       it 'should write graph if enable' do
@@ -201,7 +216,7 @@ describe Astute::TaskDeployment do
         File.expects(:open).with("/tmp/graph-#{ctx.task_id}.dot", 'w')
             .yields(file_handle).once
 
-        task_deployment.deploy(deployment_info, deployment_tasks)
+        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
       end
     end # 'graph file'
 
