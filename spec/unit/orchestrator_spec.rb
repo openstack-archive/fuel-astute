@@ -25,39 +25,72 @@ describe Astute::Orchestrator do
   end
 
   describe '#task_deployment' do
-    it 'should run task deployment' do
-      deployment_info = []
-      deployment_tasks = {'1' => []}
+    let(:deployment_info) { [] }
 
+    let(:tasks_links) do
+      {"1"=>
+        [{
+          "required_for" => [{
+            "node_id" => "1", "name"=>"openstack-network-common-config"
+          }],
+          "requires"=>[
+            {"node_id"=>"1", "name"=>"netconfig"},
+            {"node_id"=>"2", "name"=>"neutron-db"},
+            {"node_id"=>"2", "name"=>"neutron-keystone"},
+            {"node_id"=>"1", "name"=>"top-role-compute"},
+            {"node_id"=>"2", "name"=>"openstack-haproxy"}
+          ],
+          "type"=>"shell",
+          "id"=>"generate_keys_ceph"
+        }]
+      }
+    end
+
+    let(:tasks_directory) do
+      {"generate_keys_ceph"=>
+        {"parameters"=>
+          {"retries"=>3,
+           "cmd"=>"sh generate_keys.sh -i 1 -s 'ceph' -p /var/lib/fuel/keys/",
+           "cwd"=>"/",
+           "timeout"=>180,
+           "interval"=>1},
+         "type"=>"shell",
+         "id"=>"generate_keys_ceph"
+       }
+     }
+    end
+
+
+    it 'should run task deployment' do
       Astute::TaskDeployment.any_instance.expects(:deploy).with(
         deployment_info,
-        deployment_tasks
+        tasks_links,
+        tasks_directory
       )
 
       @orchestrator.task_deploy(
         @reporter,
         'task_id',
         deployment_info,
-        deployment_tasks
+        tasks_links,
+        tasks_directory
       )
     end
 
     it 'should use task proxy reporter' do
-      deployment_info = []
-      deployment_tasks = {'1' => []}
-
       Astute::TaskDeployment.any_instance.stubs(:deploy)
 
       Astute::ProxyReporter::TaskProxyReporter.expects(:new).with(
         @reporter,
-        deployment_tasks.keys
+        tasks_links.keys
       )
 
       @orchestrator.task_deploy(
         @reporter,
         'task_id',
         deployment_info,
-        deployment_tasks
+        tasks_links,
+        tasks_directory
       )
     end
   end

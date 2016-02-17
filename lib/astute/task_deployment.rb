@@ -20,41 +20,41 @@ module Astute
       @ctx = context
     end
 
-    def deploy(deployment_info, deployment_tasks)
+    def deploy(deployment_info, tasks_links, tasks_directory)
       raise DeploymentEngineError, "Deployment info are not provided!" if
-        deployment_info.blank? || deployment_tasks.blank?
+        [deployment_info, tasks_links, tasks_directory].map(&:blank?).any?
 
       deployment_info, offline_uids = remove_failed_nodes(deployment_info)
       Astute::TaskPreDeploymentActions.new(deployment_info, @ctx).process
 
-      deployment_tasks = support_virtual_node(deployment_tasks)
+      tasks_links = support_virtual_node(tasks_links)
 
       cluster = Deployment::Cluster.new deployment_info.first['deployment_id']
       cluster.node_concurrency.maximum = Astute.config.max_nodes_per_call
 
-      deployment_tasks.keys.each do |node_id|
+      tasks_links.keys.each do |node_id|
         node = TaskNode.new(node_id, cluster)
         node.context = @ctx
         node.set_critical if critical_node_uids(deployment_info).include?(node_id)
         node.set_status_failed if offline_uids.include? node_id
       end
 
-      deployment_tasks.each do |node_id, tasks|
+      tasks_links.each do |node_id, tasks|
         tasks.each do |task|
           cluster[node_id].graph.create_task(
             task['id'],
-            task.merge({'node_id' => node_id})
+            task.merge({'node_id' => node_id}).reverse_merge(tasks_directory[task['id']])
           )
         end
       end
 
-      deployment_tasks.each do |node_id, tasks|
+      tasks_links.each do |node_id, tasks|
         tasks.each do |task|
-          task['requires'].each do |d_t|
+          task.fetch('requires', []).each do |d_t|
             cluster[node_id][task['id']].depends cluster[d_t['node_id']][d_t['name']]
           end
 
-          task['required_for'].each do |d_t|
+          task.fetch('required_for', []).each do |d_t|
             cluster[node_id][task['id']].depended_on cluster[d_t['node_id']][d_t['name']]
           end
         end
@@ -109,23 +109,23 @@ module Astute
     # Astute use special virtual node for deployment tasks, because
     # any task must be connected to node. For task, which play
     # synchronization role, we create virtual_sync_node
-    def support_virtual_node(deployment_tasks)
-      deployment_tasks['virtual_sync_node'] = deployment_tasks['null']
-      deployment_tasks.delete('null')
+    def support_virtual_node(tasks_links)
+      tasks_links['virtual_sync_node'] = tasks_links['null']
+      tasks_links.delete('null')
 
-      deployment_tasks.each do |node_id, tasks|
+      tasks_links.each do |node_id, tasks|
         tasks.each do |task|
-          task['requires'].each do |d_t|
+          task.fetch('requires',[]).each do |d_t|
             d_t['node_id'] = 'virtual_sync_node' if d_t['node_id'].nil?
           end
 
-          task['required_for'].each do |d_t|
+          task.fetch('required_for', []).each do |d_t|
             d_t['node_id'] = 'virtual_sync_node' if d_t['node_id'].nil?
           end
         end
       end
 
-      deployment_tasks
+      tasks_links
     end
 
     def critical_node_uids(deployment_info)
