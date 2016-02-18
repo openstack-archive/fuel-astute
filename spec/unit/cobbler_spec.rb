@@ -211,7 +211,7 @@ describe Cobbler do
       cobbler = Astute::Provision::Cobbler.new
       cobbler.stubs(:sleep).with(10).times(1)
 
-      expect { cobbler.sync }.to_not raise_exception(Net::ReadTimeout)
+      expect { cobbler.sync }.not_to raise_exception(Net::ReadTimeout)
     end
 
     it 'should try sync several time before raise a exception (XMLRPC)' do
@@ -227,7 +227,7 @@ describe Cobbler do
       cobbler = Astute::Provision::Cobbler.new
       cobbler.stubs(:sleep).with(10).times(1)
 
-      expect { cobbler.sync }.to_not raise_exception(XMLRPC::FaultException)
+      expect { cobbler.sync }.not_to raise_exception(XMLRPC::FaultException)
     end
 
     it 'should raise a exception if sync do not succeed after several(3) tries' do

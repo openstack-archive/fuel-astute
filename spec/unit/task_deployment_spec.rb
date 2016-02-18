@@ -89,8 +89,8 @@ describe Astute::TaskDeployment do
 
     it 'should support virtual node' do
       d_t = task_deployment.send(:support_virtual_node, deployment_tasks)
-      expect(d_t.keys.include?('virtual_sync_node')).to be_true
-      expect(d_t.keys.include?('null')).to be_false
+      expect(d_t.keys).to include 'virtual_sync_node'
+      expect(d_t.keys).not_to include 'null'
     end
 
     it 'should remove failed nodes' do

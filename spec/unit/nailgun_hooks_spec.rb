@@ -682,7 +682,9 @@ describe Astute::NailgunHooks do
           .then.raises(Astute::MClientError)
           .then.returns([mc_result('3', true)])
 
-        expect {hooks.process}.to_not raise_error(Astute::DeploymentEngineError)
+        expect {
+          hooks.process
+        }.not_to raise_error(Astute::DeploymentEngineError)
       end
 
       it 'should fail if it still raise error after retries' do

@@ -81,7 +81,7 @@ describe Astute::SyncPuppetStuff do
       Astute::MClient.any_instance.stubs(:check_results_with_retries)
                                   .raises(Astute::MClientError)
                                   .then.returns("")
-      expect { sync_puppet_stuff.process(nodes, ctx) }.to_not raise_error(Astute::MClientError)
+      expect { sync_puppet_stuff.process(nodes, ctx) }.not_to raise_error(Astute::MClientError)
     end
   end
 

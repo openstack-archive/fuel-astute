@@ -108,8 +108,9 @@ describe Astute::UploadCirrosImage do
                        .returns(:data => {:exit_code => 1}).times(5)
     upload_cirros_image.stubs(:sleep).with(10).times(4)
 
-    expect {upload_cirros_image.process(deploy_data, ctx)}
-            .to_not raise_error(Astute::CirrosError)
+    expect {
+      upload_cirros_image.process(deploy_data, ctx)
+    }.not_to raise_error(Astute::CirrosError)
   end
 
   it 'should not send node error status for last node and raise if deploy \
@@ -121,8 +122,9 @@ describe Astute::UploadCirrosImage do
                        .returns(:data => {:exit_code => 1}).times(5)
     upload_cirros_image.stubs(:sleep).with(10).times(4)
 
-    expect {upload_cirros_image.process([deploy_data.last], ctx)}
-            .to_not raise_error(Astute::CirrosError)
+    expect {
+      upload_cirros_image.process([deploy_data.last], ctx)
+    }.not_to raise_error(Astute::CirrosError)
   end
 
   it 'should try to add image again if we only add new nodes \
@@ -137,7 +139,7 @@ describe Astute::UploadCirrosImage do
     upload_cirros_image.stubs(:run_shell_command)
                        .returns(:data => {:exit_code => 0})
                        .then.returns(:data => {:exit_code => 0})
-    expect(upload_cirros_image.process(deploy_data, ctx)).to be_true
+    expect(upload_cirros_image.process(deploy_data, ctx)).to eq true
   end
 
   it 'should add new image if cluster deploy success and \
@@ -145,7 +147,7 @@ describe Astute::UploadCirrosImage do
     upload_cirros_image.stubs(:run_shell_command)
                        .returns(:data => {:exit_code => 0})
                        .then.returns(:data => {:exit_code => 0})
-    expect(upload_cirros_image.process(deploy_data, ctx)).to be_true
+    expect(upload_cirros_image.process(deploy_data, ctx)).to eq true
   end
 
   it 'should send node error status for controller and raise if deploy \
