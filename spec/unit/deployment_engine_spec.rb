@@ -48,7 +48,7 @@ describe Astute::DeploymentEngine do
     end
 
     it 'should be avaliable as superclass' do
-      expect { Engine.new(ctx) }.to be_true
+      expect(Engine.new(ctx)).to be_truthy
     end
   end
 

@@ -44,14 +44,14 @@ describe Astute::GenerateKeys do
   end
 
 
-  it 'should save files in correct place: KEY_DIR/<name of key>/' do
+  it 'should save files in correct place: KEY_DIR/<uid>/<name of key>/' do
     generate_keys.stubs(:run_system_command).returns([0, "", ""])
 
     Dir.mktmpdir do |temp_dir|
       Astute.config.keys_src_dir = temp_dir
       generate_keys.process(deploy_data, ctx)
-
-      expect { File.directory? File.join(temp_dir, 'mongodb.key') }.to be_true
+      key_dir = File.join(temp_dir, deploy_data.first['uid'].to_s, 'mongodb')
+      expect(File.directory? key_dir).to eq true
     end
   end
 
@@ -100,13 +100,14 @@ describe Astute::GenerateKeys do
   it 'should not overwrite files' do
     Dir.mktmpdir do |temp_dir|
       Astute.config.keys_src_dir = temp_dir
-      key_path = File.join(temp_dir,'mongodb', 'mongodb.key')
-      FileUtils.mkdir_p File.join(temp_dir, 'mongodb')
+      key_dir = File.join(temp_dir, deploy_data.first['uid'].to_s, 'mongodb')
+      key_path = File.join(key_dir, 'mongodb.key')
+      FileUtils.mkdir_p key_dir
       File.open(key_path, 'w') { |file| file.write("say no overwrite") }
       generate_keys.process(deploy_data, ctx)
 
-      expect { File.exist? File.join(key_path, 'mongodb', 'mongodb.key') }.to be_true
-      expect { File.read File.join(key_path, 'mongodb', 'mongodb.key') == "say no overwrite" }.to be_true
+      expect(File.exist? key_path).to eq true
+      expect(File.read key_path).to eq 'say no overwrite'
     end
   end
 
