@@ -244,10 +244,13 @@ module Astute
     def calculate_cluster_id(provisioning_info)
       return nil unless provisioning_info['pre_provision'].present?
       cmd = provisioning_info['pre_provision'].first.fetch('parameters', {}).fetch('cmd', "")
-      # find cluster id from cmd using pattern fuel-agent-env-<Integer>.log
-      # FIXME(vsharshov): https://bugs.launchpad.net/fuel/+bug/1449512
-      cluster_id = cmd[/fuel-agent-env-(\d+)/, 1]
-      Astute.logger.debug "Cluster id: #{cluster_id}"
+      cluster_id = provisioning_info['pre_provision'].first.fetch('parameters', {}).fetch('cluster_id', "")
+      if cluster_id.nil? or cluster_id.empty?
+        # find cluster id from cmd using pattern fuel-agent-env-<Integer>.log
+        # FIXME(vsharshov): https://bugs.launchpad.net/fuel/+bug/1449512
+        cluster_id = cmd[/fuel-agent-env-(\d+)/, 1]
+        Astute.logger.debug "Cluster id: #{cluster_id}"
+      end
       cluster_id
     end
 
