@@ -63,17 +63,19 @@ describe Astute::Orchestrator do
 
     it 'should run task deployment' do
       Astute::TaskDeployment.any_instance.expects(:deploy).with(
-        deployment_info,
-        tasks_graph,
-        tasks_directory
+        :deployment_info => deployment_info,
+        :tasks_graph => tasks_graph,
+        :tasks_directory => tasks_directory
       )
 
       @orchestrator.task_deploy(
         @reporter,
         'task_id',
-        deployment_info,
-        tasks_graph,
-        tasks_directory
+        {
+          :deployment_info => deployment_info,
+          :tasks_graph => tasks_graph,
+          :tasks_directory => tasks_directory
+        }
       )
     end
 
@@ -88,9 +90,11 @@ describe Astute::Orchestrator do
       @orchestrator.task_deploy(
         @reporter,
         'task_id',
-        deployment_info,
-        tasks_graph,
-        tasks_directory
+        {
+          :deployment_info => deployment_info,
+          :tasks_graph => tasks_graph,
+          :tasks_directory => tasks_directory
+        }
       )
     end
   end

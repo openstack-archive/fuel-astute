@@ -78,13 +78,29 @@ describe Astute::TaskDeployment do
       ctx.stubs(:report)
 
       Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
-      task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+      task_deployment.deploy(
+        deployment_info: deployment_info,
+        tasks_graph: tasks_graph,
+        tasks_directory: tasks_directory)
     end
 
-    it 'should raise error if deployment info not provided' do
-      expect{task_deployment.deploy([],{}, {})}.to raise_error(
+    it 'should not raise error if deployment info not provided' do
+      task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+      Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+      task_deployment.stubs(:write_graph_to_file)
+      ctx.stubs(:report)
+
+      Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
+      expect{task_deployment.deploy(
+        tasks_graph: tasks_graph,
+        tasks_directory: tasks_directory)}.to_not raise_error
+    end
+
+    it 'should raise error if tasks graph not provided' do
+      expect{task_deployment.deploy(
+        tasks_directory: tasks_directory)}.to raise_error(
         Astute::DeploymentEngineError,
-        "Deployment info are not provided!"
+        "Deployment graph was not provided!"
       )
     end
 
@@ -99,7 +115,10 @@ describe Astute::TaskDeployment do
                                       .with(deployment_info, ctx)
                                       .returns(pre_deployment)
       Astute::TaskPreDeploymentActions.any_instance.expects(:process)
-      task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+      task_deployment.deploy(
+        deployment_info: deployment_info,
+        tasks_graph: tasks_graph,
+        tasks_directory: tasks_directory)
     end
 
     it 'should support virtual node' do
@@ -117,7 +136,10 @@ describe Astute::TaskDeployment do
       task_deployment.expects(:remove_failed_nodes).returns([deployment_info, []])
 
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
-      task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+      task_deployment.deploy(
+        deployment_info: deployment_info,
+        tasks_graph: tasks_graph,
+        tasks_directory: tasks_directory)
     end
 
     it 'should setup stop condition' do
@@ -128,7 +150,10 @@ describe Astute::TaskDeployment do
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
       Astute::TaskCluster.any_instance.expects(:stop_condition)
-      task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+      task_deployment.deploy(
+        deployment_info: deployment_info,
+        tasks_graph: tasks_graph,
+        tasks_directory: tasks_directory)
     end
 
     it 'should setup deployment logger' do
@@ -139,7 +164,11 @@ describe Astute::TaskDeployment do
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
       Deployment::Log.expects(:logger=).with(Astute.logger)
-      task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+      Deployment::Cluster.any_instance.stubs(:run).returns({:success => true})
+      task_deployment.deploy(
+        deployment_info: deployment_info,
+        tasks_graph: tasks_graph,
+        tasks_directory: tasks_directory)
     end
 
     context 'config' do
@@ -167,7 +196,10 @@ describe Astute::TaskDeployment do
 
         node_concurrency.expects(:maximum=).with(Astute.config.max_nodes_per_call)
 
-        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+        task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)
       end
     end
 
@@ -180,7 +212,10 @@ describe Astute::TaskDeployment do
         task_deployment.stubs(:write_graph_to_file)
         ctx.expects(:report).with({'status' => 'ready', 'progress' => 100})
 
-        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+        task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)
       end
 
       it 'failed status' do
@@ -197,7 +232,10 @@ describe Astute::TaskDeployment do
             'progress' => 100,
             'error' => 'Failed because of'})
 
-        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+        task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)
       end
     end
 
@@ -222,7 +260,10 @@ describe Astute::TaskDeployment do
         File.expects(:open).with("/tmp/graph-#{ctx.task_id}.dot", 'w')
             .yields(file_handle).never
 
-        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+        task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)
       end
 
       it 'should write graph if enable' do
@@ -238,7 +279,10 @@ describe Astute::TaskDeployment do
         File.expects(:open).with("/tmp/graph-#{ctx.task_id}.dot", 'w')
             .yields(file_handle).once
 
-        task_deployment.deploy(deployment_info, tasks_graph, tasks_directory)
+        task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)
       end
     end # 'graph file'
 

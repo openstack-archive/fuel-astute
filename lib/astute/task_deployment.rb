@@ -20,18 +20,16 @@ module Astute
       @ctx = context
     end
 
-    def deploy(deployment_info, tasks_graph, tasks_directory)
-      raise DeploymentEngineError, "Deployment info are not provided!" if
-        [deployment_info, tasks_graph, tasks_directory].map(&:blank?).any?
+    def deploy(tasks_graph: {}, tasks_directory: {} , deployment_info: [])
+      raise DeploymentEngineError, "Deployment graph was not provided!" if
+        [tasks_graph, tasks_directory].map(&:blank?).any?
 
-      deployment_info, offline_uids = remove_failed_nodes(deployment_info)
-      Astute::TaskPreDeploymentActions.new(deployment_info, @ctx).process
+      deployment_info, offline_uids = pre_deployment_process(deployment_info)
 
       tasks_graph = support_virtual_node(tasks_graph)
 
       Deployment::Log.logger = Astute.logger
-
-      cluster = TaskCluster.new(deployment_info.first['deployment_id'])
+      cluster = TaskCluster.new
       cluster.node_concurrency.maximum = Astute.config.max_nodes_per_call
       cluster.stop_condition { Thread.current[:gracefully_stop] }
 
@@ -69,6 +67,14 @@ module Astute
     end
 
     private
+
+    def pre_deployment_process(deployment_info)
+      return [[],[]] if deployment_info.blank?
+
+      deployment_info, offline_uids = remove_failed_nodes(deployment_info)
+      Astute::TaskPreDeploymentActions.new(deployment_info, @ctx).process
+      [deployment_info, offline_uids]
+    end
 
     def report_deploy_result(result)
       if result[:success]

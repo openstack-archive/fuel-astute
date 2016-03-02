@@ -115,9 +115,11 @@ module Astute
           @orchestrator.task_deploy(
             reporter,
             data['args']['task_uuid'],
-            data['args']['deployment_info'],
-            data['args']['tasks_graph'],
-            data['args']['tasks_directory']
+            {
+              :deployment_info => data['args'].fetch('deployment_info', []),
+              :tasks_graph => data['args'].fetch('tasks_graph', {}),
+              :tasks_directory => data['args'].fetch('tasks_directory', {})
+            }
           )
         rescue Timeout::Error
           msg = "Timeout of deployment is exceeded."
