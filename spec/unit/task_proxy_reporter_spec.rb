@@ -64,6 +64,18 @@ describe "TaskProxyReporter" do
       reporter.report(msg2)
     end
 
+    it "should report only nodes with integer > 0 or master uid" do
+      input_msg = {'nodes' => [
+        {'uid' => '0', 'status' => 'deploying', 'progress' => 10},
+        {'uid' => 'virtual_sync_node', 'status' => 'deploying', 'progress' => 10},
+        {'uid' => '1', 'status' => 'deploying', 'progress' => 10}
+      ]}
+
+      expected_msg = {'nodes' => [{'uid' => '1', 'status' => 'deploying', 'progress' => 10}]}
+      up_reporter.expects(:report).with(expected_msg).once
+      reporter.report(input_msg)
+    end
+
     it "raises exception if wrong key passed" do
       msg['nodes'][0]['ups'] = 'some_value'
       lambda {reporter.report(msg)}.should raise_error

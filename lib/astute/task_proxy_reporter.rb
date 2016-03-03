@@ -45,9 +45,14 @@ module Astute
       end
 
       def node_validate(node)
+        return if node_should_exclude?(node)
         validates_basic_fields(node)
         normalization_progress(node)
         compare_with_previous_state(node)
+      end
+
+      def node_should_exclude?(node)
+        node['uid'].to_i == 0 && node['uid'] != 'master'
       end
 
       def valid_status?(status)
