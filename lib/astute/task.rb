@@ -57,6 +57,18 @@ module Astute
       @status = value
     end
 
+    # Run current task on node, specified in task, using sync mode
+    def sync_run
+      run
+      loop do
+        sleep 1
+        status
+        break if finished?
+      end
+
+      successful?
+    end
+
     private
 
     # Run current task on node, specified in task
