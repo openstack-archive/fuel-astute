@@ -13,6 +13,7 @@
 #    under the License.
 
 require File.join(File.dirname(__FILE__), '../spec_helper')
+require 'json'
 
 describe Astute::ImageProvision do
   include SpecHelpers
@@ -31,22 +32,25 @@ describe Astute::ImageProvision do
     reporter
   end
 
-  let(:node_ids) { ['1', '2'] }
-
-  let(:reboot_hook) do
-    {
-      "priority" =>  100,
-      "type" => "reboot",
-      "fail_on_error" => false,
-      "id" => 'reboot_provisioned_nodes',
-      "uids" =>  node_ids,
-      "parameters" =>  {
-        "timeout" =>  Astute.config.reboot_timeout
-      }
-    }
-  end
+  let(:upload_task) { mock('upload_task') }
 
   describe ".reboot" do
+
+    let(:reboot_hook) do
+      {
+        "priority" =>  100,
+        "type" => "reboot",
+        "fail_on_error" => false,
+        "id" => 'reboot_provisioned_nodes',
+        "uids" =>  node_ids,
+        "parameters" => {
+          "timeout" => Astute.config.reboot_timeout
+        }
+      }
+    end
+
+    let(:node_ids) { ['1', '2'] }
+
     it 'should reboot nodes using reboot nailgun hook' do
       nailgun_hook = mock('nailgun_hook')
       Astute::NailgunHooks.expects(:new)
@@ -60,6 +64,120 @@ describe Astute::ImageProvision do
       Astute::NailgunHooks.expects(:new).never
       provisioner.reboot(ctx, [], task_id="reboot_provisioned_nodes")
     end
+  end
+
+  describe ".upload_provision" do
+    let(:nodes) do
+      [
+        {
+          'uid' => 5,
+          "profile" => "ubuntu_1404_x86_64",
+          "name_servers_search" => "test.domain.local"
+        },
+        {
+          'uid' => 6,
+          "profile" => "ubuntu_1404_x86_64",
+          "name_servers_search" => "test.domain.local"
+        }
+      ]
+    end
+
+    it 'should upload provision data on all nodes' do
+      upload_task.stubs(:successful?).returns(true)
+
+      provisioner.expects(:upload_provision_data)
+                 .with(ctx, nodes[0])
+                 .returns(true)
+      provisioner.expects(:upload_provision_data)
+                 .with(ctx, nodes[1])
+                 .returns(false)
+
+      provisioner.upload_provision(ctx, nodes)
+    end
+
+    it 'should return uids to provision and fail uids' do
+      provisioner.stubs(:upload_provision_data)
+                 .with(ctx, nodes[0])
+                 .returns(false)
+      provisioner.stubs(:upload_provision_data)
+                 .with(ctx, nodes[1])
+                 .returns(true)
+
+      expect(provisioner.upload_provision(ctx, nodes)).to eql([[6],[5]])
+    end
+  end
+
+
+  describe ".upload_provision_data" do
+    let(:node) do
+      {
+        'uid' => 5,
+        "profile" => "ubuntu_1404_x86_64",
+        "name_servers_search" => "test.domain.local"
+      }
+    end
+
+    let(:upload_file_task) do
+      {
+        "id" => 'upload_provision_data',
+        "node_id" =>  node['uid'],
+        "parameters" =>  {
+          "path" => '/tmp/provision.json',
+          "data" => node.to_json,
+          "user_owner" => 'root',
+          "group_owner" => 'root',
+          "overwrite" => true
+        }
+      }
+    end
+
+    before(:each) do
+      provisioner.stubs(:sleep)
+    end
+
+    # it 'should upload provision using upload file task' do
+    #   Astute::UploadFile.expects(:new)
+    #                     .with(upload_file_task, ctx)
+    #                     .returns(upload_task)
+    #   upload_task.expects(:run)
+    #   upload_task.expects(:status)
+    #   upload_task.expects(:finished?).returns(true)
+    #   upload_task.expects(:successful?).returns(true)
+    #
+    #   provisioner.upload_provision_data(ctx, node)
+    # end
+    #
+    # it 'should return task status after finish' do
+    #   Astute::UploadFile.stubs(:new).returns(upload_task)
+    #   upload_task.stubs(:run)
+    #   upload_task.stubs(:status)
+    #   upload_task.stubs(:successful?).returns(false)
+    #
+    #   upload_task.stubs(:finished?).twice.returns(false).then.returns(true)
+    #   provisioner.expects(:sleep).twice
+    #
+    #   expect(provisioner.upload_provision_data(ctx, node)).to eql(false)
+    # end
+
+    it 'should upload provision using upload file task' do
+      Astute::UploadFile.expects(:new)
+                        .with(upload_file_task, ctx)
+                        .returns(upload_task)
+      upload_task.stubs(:sync_run).returns(true)
+
+      provisioner.upload_provision_data(ctx, node)
+    end
+
+    it 'should return task status after finish' do
+      Astute::UploadFile.stubs(:new).returns(upload_task)
+      upload_task.expects(:sync_run).returns(false)
+
+      expect(provisioner.upload_provision_data(ctx, node)).to eql(false)
+    end
+  end
+
+  describe ".run_provision" do
+
   end
 
 end
