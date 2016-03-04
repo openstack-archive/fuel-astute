@@ -59,6 +59,7 @@ module Astute
     conf[:puppet_deploy_interval] = 2     # sleep for ## sec, then check puppet status again
     conf[:puppet_fade_timeout] = 120      # how long it can take for puppet to exit after dumping to last_run_summary
     conf[:puppet_retries] = 2             # how many times astute will try to run puppet
+    conf[:puppet_succeed_retries] = 0     # use this to rerun a puppet task again if it was successful (idempotency)
     conf[:puppet_module_path] = '/etc/puppet/modules' # where we should find basic modules for puppet
     conf[:mc_retries] = 10                # MClient tries to call mcagent before failure
     conf[:mc_retry_interval] = 1          # MClient sleeps for ## sec between retries
