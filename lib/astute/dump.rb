@@ -36,7 +36,7 @@ module Astute
           :group_owner => 'root',
           :overwrite => true)
 
-        dump_cmd = "shotgun -c #{config_path} > /dev/null 2>&1 && cat #{settings['lastdump']}"
+        dump_cmd = "shotgun -c #{config_path} -e /var/log/puppet-error.log > /dev/null 2>&1 && cat #{settings['lastdump']}"
         Astute.logger.debug("Try to execute command: #{dump_cmd}")
         result = shell.execute(:cmd => dump_cmd).first.results
 
