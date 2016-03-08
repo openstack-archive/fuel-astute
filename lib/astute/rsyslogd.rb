@@ -19,7 +19,7 @@ module Astute
         timeout = Astute.config.ssh_retry_timeout
         shell = MClient.new(ctx, 'execute_shell_command', ['master'],
                             check_result=true, timeout=timeout, retries=1)
-        cmd = "ssh root@#{master_ip} 'pkill -HUP rsyslogd'"
+        cmd = "ssh root@#{master_ip} 'pkill -HUP rsyslogd -d'"
 
         begin
             result = shell.execute(:cmd => cmd).first.results
