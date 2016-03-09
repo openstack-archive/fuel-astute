@@ -71,5 +71,9 @@ maintainers:
   - name:   Igor Yozhikov
     email:  iyozhikov@mirantis.com
     IRC:    IgorYozhikov
+  
+ -  name: test gate job
+    email: test@test.com
+    IRC: test_gate 
 
 - specs/: *packaging_team
