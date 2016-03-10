@@ -69,6 +69,16 @@ module Astute
       successful?
     end
 
+    # Show additional info about tasks: last run summary, sdtout etc
+    def summary
+      {}
+    end
+
+    # Report info about this task to Nailgun
+    def should_report?
+      true
+    end
+
     private
 
     # Run current task on node, specified in task
