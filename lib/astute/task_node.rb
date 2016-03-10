@@ -42,8 +42,9 @@ module Astute
           'nodes' => [{
             'uid' => id,
             'status' => 'deploying',
-            'task' => task.name,
-            'progress' => current_progress_bar
+            'deployment_graph_task_name' => task.name,
+            'progress' => current_progress_bar,
+            'task_status' => task.status.to_s,
           }]
         })
       else
@@ -67,13 +68,15 @@ module Astute
       node_status = {
         'uid' => id,
         'status' => deploy_status,
-        'task' => task.name,
+        'progress' => current_progress_bar,
+        'deployment_graph_task_name' => task.name,
         'task_status' => task.status.to_s,
-        'progress' => current_progress_bar
+        'custom' => @task_engine.summary,
       }
 
       node_status.merge!('error_type' => 'deploy') if
         deploy_status == 'error'
+
       @ctx.report('nodes' => [node_status])
     end
 

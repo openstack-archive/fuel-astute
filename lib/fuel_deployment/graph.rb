@@ -217,7 +217,7 @@ module Deployment
       return true if @tasks_are_successful
       return false if @tasks_have_failed
       successful = all? do |task|
-        task.successful?
+        task.successful? || task.skipped?
       end
       if successful
         debug 'All tasks are successful'

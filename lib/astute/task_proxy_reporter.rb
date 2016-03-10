@@ -12,12 +12,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+require 'json'
+
 module Astute
   module ProxyReporter
     class TaskProxyReporter
 
       STATES = ['deploying', 'ready', 'error', 'stopped']
       FINAL_STATES = ['ready', 'error', 'stopped']
+      TASK_STATES = ['running', 'successful', 'failed', 'skipped']
+
+      REPORT_REAL_STATE_MAP = {
+        'running' => 'running',
+        'successful' => 'ready',
+        'failed' => 'error',
+        'skipped' => 'skip'
+      }
+
+      REPORT_REAL_NODE_MAP = {
+        'virtual_sync_node' => 'null'
+      }
 
       def initialize(up_reporter, nodes_uids=[])
         @up_reporter = up_reporter
@@ -26,7 +40,8 @@ module Astute
         end
       end
 
-      def report(data)
+      def report(original_data)
+        data = deep_copy(original_data)
         if data['nodes']
           nodes_to_report = get_nodes_to_report(data['nodes'])
           return if nodes_to_report.empty? # Let's report only if nodes updated
@@ -44,27 +59,37 @@ module Astute
         nodes.map{ |node| node_validate(node) }.compact
       end
 
-      def node_validate(node)
+      def node_validate(original_node)
+        node = deep_copy(original_node)
         return if node_should_exclude?(node)
-        validates_basic_fields(node)
+        validates_node_basic_fields(node)
+        validates_task_basic_fields(node)
+        conver_node_name_to_original(node)
+        conver_task_status_to_status(node)
         normalization_progress(node)
         compare_with_previous_state(node)
       end
 
       def node_should_exclude?(node)
-        node['uid'].to_i == 0 && node['uid'] != 'master'
+        node['uid'].to_i == 0 &&
+        node['uid'] != 'master' &&
+        node['uid'] != 'virtual_sync_node'
       end
 
       def valid_status?(status)
         STATES.include? status.to_s
       end
 
+      def valid_task_status?(status)
+        TASK_STATES.include? status.to_s
+      end
+
       def final_status?(status)
         FINAL_STATES.include? status.to_s
       end
 
-      # Validate of basic fields in message about nodes
-      def validates_basic_fields(node)
+      # Validate of basic fields in message about node
+      def validates_node_basic_fields(node)
         err = []
 
         err << "Status provided '#{node['status']}' is not supported" if
@@ -73,12 +98,23 @@ module Astute
           !node['status'] && node['progress']
         err << "Node uid is not provided" unless node['uid']
 
-        if err.any?
-          msg = "Validation of node:\n#{node.pretty_inspect} for " \
-            "report failed: #{err.join('; ')}"
-          Astute.logger.error(msg)
-          raise msg
-        end
+        fail_validation(node, err) if err.any?
+      end
+
+       # Validate of basic fields in message about task
+      def validates_task_basic_fields(node)
+        err = []
+
+        err << "Task status provided '#{node['task_status']}' is not supported" if
+         !valid_task_status?(node['task_status'])
+        err << "Task name is not provided" if node['deployment_graph_task_name'].blank?
+
+        fail_validation(node, err) if err.any?
+      end
+
+
+      def conver_task_status_to_status(node)
+        node['task_status'] = REPORT_REAL_STATE_MAP.fetch(node['task_status'])
       end
 
       # Normalization of progress field: ensures that the scaling progress was
@@ -105,7 +141,8 @@ module Astute
           !final_status?(node['status'])
         # Allow to send only node progress/status update
         return if node_progress.to_i <= saved_node['progress'].to_i &&
-          node['status'] == saved_node['status']
+          node['status'] == saved_node['status'] &&
+          node['deployment_graph_task_name'] == saved_node['deployment_graph_task_name']
 
         node
       end
@@ -119,6 +156,23 @@ module Astute
             @nodes[node['uid']] = node
           end
         end
+      end
+
+      def fail_validation(node, err)
+        msg = "Validation of node:\n#{node.pretty_inspect} for " \
+          "report failed: #{err.join('; ')}"
+        Astute.logger.error(msg)
+        raise Astute::AstuteError, msg
+      end
+
+      def conver_node_name_to_original(node)
+        if REPORT_REAL_NODE_MAP.keys.include?(node['uid'])
+          node['uid'] = REPORT_REAL_NODE_MAP.fetch(node['uid'])
+        end
+      end
+
+      def deep_copy(data)
+        JSON.load(data.to_json)
       end
 
     end
