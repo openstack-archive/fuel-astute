@@ -15,7 +15,7 @@
 module Astute
   class Task
 
-    ALLOWED_STATUSES = [:successful, :failed, :running, :pending]
+    ALLOWED_STATUSES = [:successful, :failed, :running, :pending, :skipped]
 
     def initialize(task, context)
       # WARNING: this code expect that only one node will be send
@@ -67,6 +67,11 @@ module Astute
       end
 
       successful?
+    end
+
+    # Show additional info about tasks: last run summary, sdtout etc
+    def summary
+      {}
     end
 
     private
@@ -179,7 +184,7 @@ module Astute
     end
 
     def finished?
-      [:successful, :failed].include? @status
+      [:successful, :failed, :skipped].include? @status
     end
 
     def failed!
@@ -210,6 +215,15 @@ module Astute
 
     def pending?
       @status == :pending
+    end
+
+    def skipped?
+      @status == :skipped
+    end
+
+    def skipped!
+      self.status = :skipped
+      time_summary
     end
 
     def task_name

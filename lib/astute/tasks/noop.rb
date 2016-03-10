@@ -22,7 +22,7 @@ module Astute
     end
 
     def calculate_status
-      succeed!
+      skipped!
     end
 
   end

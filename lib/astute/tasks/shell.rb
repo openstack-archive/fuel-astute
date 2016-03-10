@@ -25,6 +25,12 @@ module Astute
       @puppet_task = nil
     end
 
+    def summary
+      @puppet_task.summary
+    rescue
+      {}
+    end
+
     private
 
     SHELL_MANIFEST_DIR = '/etc/puppet/shell_manifests'
