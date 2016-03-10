@@ -37,13 +37,14 @@ module Astute
       # of Deployment::Node class. We use special method `task`
       # to manage task status, graph of tasks and nodes.
       task.status = @task_engine.status
-      if @task.running?
+      if @task.running? && @task_engine.should_report?
         @ctx.report({
           'nodes' => [{
             'uid' => id,
             'status' => 'deploying',
-            'task' => task.name,
-            'progress' => current_progress_bar
+            'deployment_graph_task_name' => task.name,
+            'progress' => current_progress_bar,
+            'task_status' => task.status.to_s,
           }]
         })
       else
@@ -67,13 +68,20 @@ module Astute
       node_status = {
         'uid' => id,
         'status' => deploy_status,
-        'task' => task.name,
-        'task_status' => task.status.to_s,
         'progress' => current_progress_bar
       }
 
+      if @task_engine.should_report?
+        node_status.merge!(
+          'deployment_graph_task_name' => task.name,
+          'task_status' => task.status.to_s,
+          'custom' => @task_engine.summary,
+        )
+      end
+
       node_status.merge!('error_type' => 'deploy') if
         deploy_status == 'error'
+
       @ctx.report('nodes' => [node_status])
     end
 

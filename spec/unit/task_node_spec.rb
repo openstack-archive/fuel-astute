@@ -46,17 +46,17 @@ describe Astute::TaskNode do
     let(:task_data) do
       {
         "parameters" => {
-        "puppet_modules" => "/etc/puppet/modules",
-        "puppet_manifest" => "/etc/puppet/modules/osnailyfacter/modular" \
-          "/openstack-haproxy/openstack-haproxy-mysqld.pp",
-        "timeout" => 300,
-        "cwd" => "/"
+          "puppet_modules" => "/etc/puppet/modules",
+          "puppet_manifest" => "/etc/puppet/modules/osnailyfacter/modular" \
+            "/openstack-haproxy/openstack-haproxy-mysqld.pp",
+          "timeout" => 300,
+          "cwd" => "/"
         },
         "type" => "puppet",
         "fail_on_error" => true,
         "required_for" => [],
         "requires" => [],
-        "id" => "openstack-haproxy-mysqld"
+        "id" => "openstack-haproxy-mysqld",
       }
     end
 
@@ -86,7 +86,7 @@ describe Astute::TaskNode do
           "fail_on_error" => false,
           "required_for" => [],
           "requires" => [],
-          "id" => "test-task"
+          "id" => "test-task",
         }
       end
 
@@ -190,7 +190,7 @@ describe Astute::TaskNode do
           "fail_on_error" => false,
           "required_for" => [],
           "requires" => [],
-          "id" => "test-task"
+          "id" => "test-task",
         }
       end
 
@@ -223,7 +223,8 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'deploying',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'task_status' => 'running',
             'progress' => 0}]
         })
         task_node.poll
@@ -236,7 +237,8 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'ready',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'custom' => {},
             'task_status' => 'successful',
             'progress' => 100}]
         })
@@ -250,7 +252,8 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'error',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'custom' => {},
             'task_status' => 'failed',
             'error_type' => 'deploy',
             'progress' => 100}]
@@ -270,7 +273,8 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'deploying',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'custom' => {},
             'task_status' => 'successful',
             'progress' => 50}]
         })
@@ -289,11 +293,37 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'deploying',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'custom' => {},
             'task_status' => 'failed',
             'progress' => 50}]
         })
         task_node.poll
+      end
+
+      context 'should report' do
+
+        let(:task_data) do
+          {
+            "type" => "noop",
+            "fail_on_error" => false,
+            "required_for" => [],
+            "requires" => [],
+            "id" => "openstack-haproxy-mysqld",
+          }
+        end
+
+        it 'should not report task status if task do not support report' do
+          task_node.run(task)
+          ctx.expects(:report).with({
+            'nodes' => [{
+              'uid' => 'node_id',
+              'status' => 'ready',
+              'progress' => 100}]
+          })
+
+          task_node.poll
+        end
       end
 
     end
