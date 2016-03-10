@@ -15,6 +15,10 @@
 module Astute
   class Noop < Task
 
+    def should_report?
+      false
+    end
+
     private
 
     def process
