@@ -17,6 +17,12 @@ require 'timeout'
 module Astute
   class Puppet < Task
 
+    def summary
+      @puppet_task.summary
+    rescue
+      {}
+    end
+
     private
 
     def process

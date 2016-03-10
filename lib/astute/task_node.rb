@@ -43,6 +43,7 @@ module Astute
             'uid' => id,
             'status' => 'deploying',
             'task' => task.name,
+            'library_id' => @task_engine.library_id,
             'progress' => current_progress_bar
           }]
         })
@@ -68,12 +69,15 @@ module Astute
         'uid' => id,
         'status' => deploy_status,
         'task' => task.name,
+        'library_id' => @task_engine.library_id,
+        'summary' => @task_engine.summary,
         'task_status' => task.status.to_s,
         'progress' => current_progress_bar
       }
 
       node_status.merge!('error_type' => 'deploy') if
         deploy_status == 'error'
+
       @ctx.report('nodes' => [node_status])
     end
 

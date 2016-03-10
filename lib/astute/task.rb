@@ -57,6 +57,15 @@ module Astute
       @status = value
     end
 
+    def library_id
+      @task['library_id']
+    end
+
+    # Show additional info about tasks: last run summary, sdtout etc
+    def summary
+      {}
+    end
+
     private
 
     # Run current task on node, specified in task
