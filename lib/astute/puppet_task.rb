@@ -30,6 +30,7 @@ module Astute
       @is_hung = false
       @puppet_debug = puppet_debug
       @succeed_retries = succeed_retries || Astute.config.puppet_succeed_retries
+      @summary = {}
     end
 
     def run
@@ -44,17 +45,17 @@ module Astute
     def status
       raise Timeout::Error unless @time_observer.enough_time?
 
-      last_run = puppet_status
-      status = node_status(last_run)
+      @summary = puppet_status
+      status = node_status(@summary)
       Astute.logger.debug "Node #{@node['uid']}(#{@node['role']}) status: #{status}"
 
       result = case status
         when 'succeed'
-          processing_succeed_node(last_run)
+          processing_succeed_node(@summary)
         when 'running'
           processing_running_node
         when 'error'
-          processing_error_node(last_run)
+          processing_error_node(@summary)
         end
 
       #TODO(vsharshov): Should we move it to control module?
@@ -66,6 +67,10 @@ module Astute
       Astute.logger.warn "Puppet agent #{@node['uid']} " \
         "didn't respond within the allotted time"
       'error'
+    end
+
+    def summary
+      @summary
     end
 
     private
