@@ -50,8 +50,10 @@ describe "TaskProxyReporter" do
     end
 
     it "reports only if progress value is greater" do
-      msg1 = {'nodes' => [{'status' => 'deploying', 'uid' => '1', 'progress' => 54},
-                          {'status' => 'deploying', 'uid' => '2', 'progress' => 54}]}
+      msg1 = {'nodes' => [{'status' => 'deploying', 'uid' => '1', 'progress' => 54,
+                           'deployment_graph_task_name' => 'test_1', 'task_status' => 'running'},
+                          {'status' => 'deploying', 'uid' => '2', 'progress' => 54,
+                           'deployment_graph_task_name' => 'test_1', 'task_status' => 'running'}]}
       msg2 = Marshal.load(Marshal.dump(msg1))
       msg2['nodes'][1]['progress'] = 100
       msg2['nodes'][1]['status'] = 'ready'
@@ -60,6 +62,18 @@ describe "TaskProxyReporter" do
 
       up_reporter.expects(:report).with(msg1)
       up_reporter.expects(:report).with(expected_msg)
+      reporter.report(msg1)
+      reporter.report(msg2)
+    end
+
+    it "reports if progress value same, but deployment graph task name different" do
+      msg1 = {'nodes' => [{'status' => 'deploying', 'uid' => '1', 'progress' => 54,
+                           'deployment_graph_task_name' => 'test_1', 'task_status' => 'running'}]}
+      msg2 = {'nodes' => [{'status' => 'deploying', 'uid' => '1', 'progress' => 54,
+                           'deployment_graph_task_name' => 'test_2', 'task_status' => 'running'}]}
+
+      up_reporter.expects(:report).with(msg1)
+      up_reporter.expects(:report).with(msg2)
       reporter.report(msg1)
       reporter.report(msg2)
     end
@@ -209,6 +223,76 @@ describe "TaskProxyReporter" do
       up_reporter.expects(:report).with(msgs[0])
       up_reporter.expects(:report).with(msgs[1])
       msgs.each {|msg| reporter.report(msg)}
+    end
+
+
+    context 'tasks' do
+      let(:msg) do
+        {'nodes' => [{'status' => 'deploying', 'uid' => '1', 'progress' => 54}.merge(task_part_msg)]
+        }
+      end
+
+      let(:task_part_msg) do
+        {'deployment_graph_task_name' => 'test_1', 'task_status' => 'running'}
+      end
+
+      context 'validation' do
+        it 'should not validate if no task fields present' do
+          node_report_msg = {'nodes' => [{'uid' => 1, 'status' => 'deploying'}]}
+          up_reporter.expects(:report).with(node_report_msg)
+          reporter.report(node_report_msg)
+        end
+
+        it 'should validate deployment graph task name' do
+          msg['nodes'].first.delete('deployment_graph_task_name')
+          up_reporter.expects(:report).never
+          expect { reporter.report(msg) }.to raise_error(
+            Astute::AstuteError,
+            /Task name is not provided/
+          )
+        end
+
+        it 'should validate task status absent' do
+          msg['nodes'].first.delete('task_status')
+          up_reporter.expects(:report).never
+          expect { reporter.report(msg) }.to raise_error(
+            Astute::AstuteError,
+            /Status provided '' is not supported/
+          )
+        end
+      end
+
+      context 'task status convertation' do
+        it 'should convert task running status to running' do
+          up_reporter.expects(:report).with(msg)
+          reporter.report(msg)
+        end
+
+        it 'should convert task failed status to error' do
+          task_part_msg['task_status'] = 'failed'
+          expected_msg = msg.deep_dup
+          expected_msg['nodes'].first['task_status'] = 'error'
+          up_reporter.expects(:report).with(expected_msg)
+          reporter.report(msg)
+        end
+
+        it 'should convert task successful status to ready' do
+          task_part_msg['task_status'] = 'successful'
+          expected_msg = msg.deep_dup
+          expected_msg['nodes'].first['task_status'] = 'ready'
+          up_reporter.expects(:report).with(expected_msg)
+          reporter.report(msg)
+        end
+
+        it 'should failed if task has inccorect status' do
+          task_part_msg['task_status'] = 'unknown'
+          up_reporter.expects(:report).never
+          expect { reporter.report(msg) }.to raise_error(
+            Astute::AstuteError,
+            /Status provided 'unknown' is not supported/
+          )
+        end
+      end
     end
 
   end
