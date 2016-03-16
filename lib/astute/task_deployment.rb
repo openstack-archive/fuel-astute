@@ -22,7 +22,7 @@ module Astute
 
     def deploy(tasks_graph: {}, tasks_directory: {} , deployment_info: [])
       raise DeploymentEngineError, "Deployment graph was not provided!" if
-        [tasks_graph, tasks_directory].map(&:blank?).any?
+        tasks_graph.blank?
 
       deployment_info, offline_uids = pre_deployment_process(deployment_info)
 
