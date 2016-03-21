@@ -2,7 +2,7 @@ metadata  :name           => "uploadfile",
 		      :description    => "Text file upload agent",
 		      :author         => "Mirantis Inc",
 		      :license        => "Apache License 2.0",
-		      :version        => "9.0.0",
+		      :version        => "10.0.0",
 		      :url            => "http://mirantis.com",
 		      :timeout        => 60
 
