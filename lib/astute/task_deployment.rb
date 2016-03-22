@@ -44,7 +44,8 @@ module Astute
         tasks.each do |task|
           cluster[node_id].graph.create_task(
             task['id'],
-            task.merge({'node_id' => node_id}).reverse_merge(tasks_directory[task['id']])
+            task.merge({'node_id' => node_id})
+                .reverse_merge(tasks_directory.fetch(task['id'], {}))
           )
         end
       end
