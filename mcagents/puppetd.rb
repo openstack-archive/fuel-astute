@@ -36,7 +36,7 @@ module MCollective
     class Puppetd<RPC::Agent
       def startup_hook
         @splaytime = @config.pluginconf["puppetd.splaytime"].to_i || 0
-        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/puppetd.lock"
+        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/fuel-puppetd.lock"
         @log = @config.pluginconf["puppetd.log"] || "/var/log/puppet.log"
         @statefile = @config.pluginconf["puppetd.statefile"] || "/var/lib/puppet/state/state.yaml"
         @pidfile = @config.pluginconf["puppet.pidfile"] || "/var/run/puppet/agent.pid"
@@ -145,24 +145,19 @@ module MCollective
       def puppet_daemon_status
         err_msg = ""
         alive = puppet_pid
-        locked = expected_puppet_pid == puppet_pid && !expected_puppet_pid.nil?
         disabled = File.exists?(@lockfile) && File::Stat.new(@lockfile).zero?
 
-        if locked && !disabled && !alive
+        if !alive && !expected_puppet_pid.nil?
           err_msg << "Process not running but not empty lockfile is present. Trying to remove lockfile..."
           err_msg << (rm_file(@lockfile) ? "ok." : "failed.")
         end
 
         reply[:err_msg] = err_msg unless err_msg.empty?
 
-        if disabled && !alive
+        if disabled
           'disabled'
-        elsif disabled && alive
+        elsif alive
           'running'
-        elsif alive && locked
-          'running'
-        elsif alive && !locked
-          'idling'
         elsif !alive
           'stopped'
         end
@@ -178,10 +173,6 @@ module MCollective
           when 'running' then      # can't run two simultaniously
             reply.fail "Lock file and PID file exist; puppet is running."
 
-          when 'idling' then       # signal daemon
-            kill_process
-            set_status             # recalculate state after puppet kill
-            reply[:err_msg] = "Looks like another puppet run at the same time. Try to kill it"
           when 'stopped' then      # just run
             runonce_background
           else
@@ -294,19 +285,8 @@ module MCollective
       end
 
       def puppet_pid
-        result = `ps -C puppet -o pid,comm --no-headers`.lines.first
-        actual_pid = result && result.strip.split(' ')[0].to_i
-        expected_pid = expected_puppet_pid
-
-        case actual_pid
-        when expected_pid then expected_pid
-        when nil then nil
-        else
-          reply[:err_msg] = "Potencial error. Looks like expecting puppet " \
-            "and actual are different. Expecting pid(lockfile): " \
-            "#{expected_pid}, actual(ps): #{actual_pid}"
-          actual_pid
-        end
+        result = `ps -p #{expected_puppet_pid} -o pid,comm --no-headers`.lines.first
+        result && result.strip.split(' ')[0].to_i
       rescue NoMethodError
         nil
       end
