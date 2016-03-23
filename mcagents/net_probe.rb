@@ -70,7 +70,7 @@ module MCollective
       action "check_url_retrieval" do
         urls = request.data[:urls] || []
 
-        cmd = "urlaccesscheck check '#{urls.join("' '")}'"
+        cmd = "urlaccesscheck check --timeout 5 '#{urls.join("' '")}'"
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
         reply[:out] = reply[:out] && reply[:out].length >= 2 ? JSON.parse(reply[:out]) : ""
       end
@@ -83,6 +83,7 @@ module MCollective
           -g #{config['gateway']} \
           -a #{config['addr']} \
           --vlan #{config['vlan']} \
+          --timeout 5 \
           '#{config['urls'].join("' '")}'"
         Log.debug("about to execute: #{cmd}")
 
