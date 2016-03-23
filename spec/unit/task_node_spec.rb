@@ -46,17 +46,17 @@ describe Astute::TaskNode do
     let(:task_data) do
       {
         "parameters" => {
-        "puppet_modules" => "/etc/puppet/modules",
-        "puppet_manifest" => "/etc/puppet/modules/osnailyfacter/modular" \
-          "/openstack-haproxy/openstack-haproxy-mysqld.pp",
-        "timeout" => 300,
-        "cwd" => "/"
+          "puppet_modules" => "/etc/puppet/modules",
+          "puppet_manifest" => "/etc/puppet/modules/osnailyfacter/modular" \
+            "/openstack-haproxy/openstack-haproxy-mysqld.pp",
+          "timeout" => 300,
+          "cwd" => "/"
         },
         "type" => "puppet",
         "fail_on_error" => true,
         "required_for" => [],
         "requires" => [],
-        "id" => "openstack-haproxy-mysqld"
+        "id" => "openstack-haproxy-mysqld",
       }
     end
 
@@ -86,7 +86,7 @@ describe Astute::TaskNode do
           "fail_on_error" => false,
           "required_for" => [],
           "requires" => [],
-          "id" => "test-task"
+          "id" => "test-task",
         }
       end
 
@@ -190,7 +190,7 @@ describe Astute::TaskNode do
           "fail_on_error" => false,
           "required_for" => [],
           "requires" => [],
-          "id" => "test-task"
+          "id" => "test-task",
         }
       end
 
@@ -214,6 +214,26 @@ describe Astute::TaskNode do
           task_node.poll
           expect(task_node.status).to eql(:online)
         end
+
+        context "skipped" do
+          let(:task_data) do
+            {
+              "parameters" => {},
+              "type" => "noop",
+              "fail_on_error" => false,
+              "required_for" => [],
+              "requires" => [],
+              "id" => "test-task",
+            }
+          end
+
+          it 'if task skipped' do
+            ctx.stubs(:report)
+            task_node.run(task)
+            task_node.poll
+            expect(task_node.status).to eql(:online)
+          end
+        end
       end
 
       it 'should report progress if task running' do
@@ -223,7 +243,8 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'deploying',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'task_status' => 'running',
             'progress' => 0}]
         })
         task_node.poll
@@ -236,11 +257,58 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'ready',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'custom' => {},
             'task_status' => 'successful',
             'progress' => 100}]
         })
         task_node.poll
+      end
+
+      context 'skipped' do
+        let(:task_data) do
+          {
+            "parameters" => {},
+            "type" => "noop",
+            "fail_on_error" => false,
+            "required_for" => [],
+            "requires" => [],
+            "id" => "test-task",
+          }
+        end
+
+        it 'should report ready if task skipped and no more task' do
+          task_node.run(task)
+          ctx.expects(:report).with({
+            'nodes' => [{
+              'uid' => 'node_id',
+              'status' => 'ready',
+              'deployment_graph_task_name' => task.name,
+              'custom' => {},
+              'task_status' => 'skipped',
+              'progress' => 100}]
+          })
+          task_node.poll
+        end
+
+        it 'should report deploy progress if task skipped and another tasks exists' do
+          task_node.graph.create_task(
+            'second_task',
+            task_data.merge({'node_id' => 'node_id'})
+          )
+
+          task_node.run(task)
+          ctx.expects(:report).with({
+            'nodes' => [{
+              'uid' => 'node_id',
+              'status' => 'deploying',
+              'deployment_graph_task_name' => task.name,
+              'custom' => {},
+              'task_status' => 'skipped',
+              'progress' => 50}]
+          })
+          task_node.poll
+        end
       end
 
       it 'should report error if task failed and no more task' do
@@ -250,7 +318,8 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'error',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'custom' => {},
             'task_status' => 'failed',
             'error_type' => 'deploy',
             'progress' => 100}]
@@ -270,7 +339,8 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'deploying',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'custom' => {},
             'task_status' => 'successful',
             'progress' => 50}]
         })
@@ -289,13 +359,13 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'status' => 'deploying',
-            'task' => task.name,
+            'deployment_graph_task_name' => task.name,
+            'custom' => {},
             'task_status' => 'failed',
             'progress' => 50}]
         })
         task_node.poll
       end
-
     end
 
   end
