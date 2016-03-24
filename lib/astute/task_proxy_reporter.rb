@@ -27,7 +27,7 @@ module Astute
       }
 
       REPORT_REAL_NODE_MAP = {
-        'virtual_sync_node' => 'null'
+        'virtual_sync_node' => nil
       }
 
       def initialize(up_reporter, nodes_uids=[])

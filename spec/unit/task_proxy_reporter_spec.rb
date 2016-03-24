@@ -127,7 +127,7 @@ describe "TaskProxyReporter" do
          'progress' => 10,
          'deployment_graph_task_name' => 'test_2',
          'task_status' => 'running'},
-        {'uid' => 'null',
+        {'uid' => nil,
          'status' => 'deploying',
          'progress' => 10,
          'deployment_graph_task_name' => 'test_2',
