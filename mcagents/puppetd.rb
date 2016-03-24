@@ -43,7 +43,8 @@ module MCollective
         @puppetd = @config.pluginconf["puppetd.puppetd"] ||
           "/usr/sbin/daemonize -a \
            -l #{@lockfile} \
-           -p #{@lockfile} "
+           -p #{@lockfile} \
+           -e /var/log/puppet-error.log"
         @puppetd_agent = "/usr/bin/puppet apply"
         @last_summary = @config.pluginconf["puppet.summary"] || "/var/lib/puppet/state/last_run_summary.yaml"
         @lockmcofile = "/tmp/mcopuppetd.lock"
