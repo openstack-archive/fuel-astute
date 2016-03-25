@@ -112,19 +112,10 @@ module MCollective
         File.open('/proc/sys/kernel/panic','w') {|file| file.write("10\n")}
 
         begin
-          # Delete data disks first, then OS drive to address bug #1437511
-          (get_devices(type='data') + get_devices(type='root')).each do |dev|
+          get_devices(type='all').each do |dev|
             debug_msg("erasing #{dev[:name]}")
-            # try an make sure any ext2/3/4 paritions won't cause a panic
-            # when the file system gets erased
-            suppress_fs_panic(dev[:name])
-            # clear out the partitions of the device
-            erase_partitions(dev[:name])
-            # attempt to clear our the file system data on the device partitions
-            # to ensure that we aren't left with extra filesystem data when we
-            # reparition the devices next time.
-            erase_data(dev[:name])
-            erase_data(dev[:name], 1, dev[:size], '512')
+            # clear out the boot code in MBR
+            system("dd if=/dev/zero of=#{dev[:name]} bs=446 count=1 oflag=direct")
           end
 
           reply[:erased] = true
@@ -147,30 +138,6 @@ module MCollective
           File.open('/proc/sysrq-trigger','w') { |file| file.write("b\n")}
         end
         Process.detach(pid)
-      end
-
-      def suppress_fs_panic(dev)
-        Dir["/dev/#{dev}{p,}[0-9]*"].each do |part|
-          # if the partition has ext2/3/4, make sure error action is set to
-          # continue and not panic so that we can erase it correctly.
-          if system("blkid -p -n ext2,ext3,ext4 #{part}") == true && system("findmnt -ln -S #{part}") == true
-            system("mount -o remount,ro,errors=continue #{part}")
-          end
-        end
-      end
-
-      def erase_partitions(dev)
-        Dir["/dev/#{dev}{p,}[0-9]*"].each do |part|
-          system("dd if=/dev/zero of=#{part} bs=1M count=10 oflag=direct")
-        end
-      end
-
-      def erase_data(dev, length=1, offset=0, bs='1M')
-        cmd = "dd if=/dev/zero of=/dev/#{dev} bs=#{bs} count=#{length} seek=#{offset} oflag=direct"
-        status = system(cmd)
-        debug_msg("Run device erasing command '#{cmd}' returned '#{status}'")
-
-        status
       end
 
       # Prevent discover by agent while node rebooting
