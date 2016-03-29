@@ -91,7 +91,7 @@ module Astute
           task = result[:failed_tasks].find{ |t| t.node == node }
           if task
             node_status.merge!({
-              'task' => task.name,
+              'deployment_graph_task_name' => task.name,
               'task_status' => task.status.to_s
             })
           end
