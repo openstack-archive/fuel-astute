@@ -38,7 +38,7 @@ module Astute
       end
 
       def report(original_data)
-        data = deep_copy(original_data)
+        data = original_data.deep_dup
         if data['nodes']
           nodes_to_report = get_nodes_to_report(data['nodes'])
           return if nodes_to_report.empty? # Let's report only if nodes updated
@@ -59,12 +59,15 @@ module Astute
       def node_validate(original_node)
         node = deep_copy(original_node)
         return unless node_should_include?(node)
-        validates_node_basic_fields(node)
-        validates_task_basic_fields(node)
+        return node unless is_fields_valid?(node)
         conver_node_name_to_original(node)
         conver_task_status_to_status(node)
         normalization_progress(node)
         compare_with_previous_state(node)
+      end
+
+      def is_fields_valid?(node)
+        is_node_basic_fields_valid?(node) && is_task_basic_fields_valid?(node)
       end
 
       def node_should_include?(node)
@@ -85,7 +88,7 @@ module Astute
       end
 
       # Validate of basic fields in message about node
-      def validates_node_basic_fields(node)
+      def is_node_basic_fields_valid?(node)
         err = []
 
         err << "Status provided '#{node['status']}' is not supported" if
@@ -94,18 +97,18 @@ module Astute
           !node['status'] && node['progress']
         err << "Node uid is not provided" unless node['uid']
 
-        fail_validation(node, err) if err.any?
+        err.any? ? fail_validation(node, err) : true
       end
 
        # Validate of basic fields in message about task
-      def validates_task_basic_fields(node)
+      def is_task_basic_fields_valid?(node)
         err = []
 
         err << "Task status provided '#{node['task_status']}' is not supported" if
          !valid_task_status?(node['task_status'])
         err << "Task name is not provided" if node['deployment_graph_task_name'].blank?
 
-        fail_validation(node, err) if err.any?
+        err.any? ? fail_validation(node, err) : true
       end
 
 
@@ -157,18 +160,14 @@ module Astute
       def fail_validation(node, err)
         msg = "Validation of node:\n#{node.pretty_inspect} for " \
           "report failed: #{err.join('; ')}"
-        Astute.logger.error(msg)
-        raise Astute::AstuteError, msg
+        Astute.logger.warn(msg)
+        false
       end
 
       def conver_node_name_to_original(node)
         if REPORT_REAL_NODE_MAP.keys.include?(node['uid'])
           node['uid'] = REPORT_REAL_NODE_MAP.fetch(node['uid'])
         end
-      end
-
-      def deep_copy(data)
-        data.deep_dup
       end
 
       def is_num?(str)

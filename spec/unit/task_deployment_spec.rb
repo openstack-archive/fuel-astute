@@ -220,17 +220,34 @@ describe Astute::TaskDeployment do
 
       it 'failed status' do
         Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+
+        node = mock('node')
+        node.expects(:id).returns('1')
+
+        faild_task = mock('task')
+        faild_task.expects(:node).returns(node)
+        faild_task.expects(:name).returns('test')
+        faild_task.expects(:status).returns(:failed)
+
         Astute::TaskCluster.any_instance.stubs(:run).returns({
           :success => false,
-          :failed_nodes => [],
-          :failed_tasks => [],
+          :failed_nodes => [node],
+          :failed_tasks => [faild_task],
           :status => 'Failed because of'})
         task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
         task_deployment.stubs(:write_graph_to_file)
+        ctx.expects(:report).with('nodes' => [{
+          'uid' => '1',
+          'status' => 'error',
+          'error_type' => 'deploy',
+          'error_msg' => 'Failed because of',
+          'deployment_graph_task_name' => 'test',
+          'task_status' => 'failed'
+        }])
         ctx.expects(:report).with({
-            'status' => 'error',
-            'progress' => 100,
-            'error' => 'Failed because of'})
+          'status' => 'error',
+          'progress' => 100,
+          'error' => 'Failed because of'})
 
         task_deployment.deploy(
           deployment_info: deployment_info,
