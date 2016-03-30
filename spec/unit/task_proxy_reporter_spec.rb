@@ -257,22 +257,22 @@ describe "TaskProxyReporter" do
       reporter.report(msg2)
     end
 
-    it "raises exception if progress provided and no status" do
+    it "reports w/o change if progress provided and no status (bad message)" do
       msg1 = {'nodes' => [{'uid' => 1,
                            'status' => 'deploying',
                            'deployment_graph_task_name' => 'test_2',
                            'task_status' => 'running'}]}
       msg2 = {'nodes' => [{'uid' => 1, 'progress' => 100}]}
       up_reporter.expects(:report).with(msg1)
-      up_reporter.expects(:report).never
+      up_reporter.expects(:report).with(msg2)
       reporter.report(msg1)
-      expect{ reporter.report(msg2) }.to raise_error
+      reporter.report(msg2)
     end
 
-    it "raises exception if status of node is not supported" do
+    it "reports w/o change if status of node is not supported (bad message)" do
       msg1 = {'nodes' => [{'uid' => 1, 'status' => 'hah'}]}
-      up_reporter.expects(:report).never
-      lambda {reporter.report(msg1)}.should raise_error
+      up_reporter.expects(:report).with(msg1)
+      reporter.report(msg1)
     end
 
     it "some other attrs are valid and passed" do
@@ -453,22 +453,16 @@ describe "TaskProxyReporter" do
       end
 
       context 'validation' do
-        it 'should validate deployment graph task name' do
+        it 'should send message without deployment graph task name (bad message)' do
           msg['nodes'].first.delete('deployment_graph_task_name')
-          up_reporter.expects(:report).never
-          expect { reporter.report(msg) }.to raise_error(
-            Astute::AstuteError,
-            /Task name is not provided/
-          )
+          up_reporter.expects(:report).with(msg)
+          reporter.report(msg)
         end
 
-        it 'should validate task status absent' do
+        it 'should send message without task status (bad message)' do
           msg['nodes'].first.delete('task_status')
-          up_reporter.expects(:report).never
-          expect { reporter.report(msg) }.to raise_error(
-            Astute::AstuteError,
-            /Task status provided '' is not supported/
-          )
+          up_reporter.expects(:report).with(msg)
+          reporter.report(msg)
         end
       end
 
@@ -494,13 +488,10 @@ describe "TaskProxyReporter" do
           reporter.report(msg)
         end
 
-        it 'should failed if task has inccorect status' do
+        it 'should send w/o change if task has inccorect status (bad message)' do
           task_part_msg['task_status'] = 'unknown'
-          up_reporter.expects(:report).never
-          expect { reporter.report(msg) }.to raise_error(
-            Astute::AstuteError,
-            /Task status provided 'unknown' is not supported/
-          )
+          up_reporter.expects(:report).with(msg)
+          reporter.report(msg)
         end
       end
     end
