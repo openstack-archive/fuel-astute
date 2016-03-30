@@ -58,7 +58,7 @@ module Astute
 
     def reboot
       run_shell_without_check(
-        Array(@task['node_id']),
+        @task['node_id'],
         'reboot',
         timeout=2
       )
@@ -70,7 +70,7 @@ module Astute
 
     def boot_time
       run_shell_without_check(
-        Array(@task['node_id']),
+        @task['node_id'],
         "stat --printf='%Y' /proc/1",
         timeout=2
       )[:stdout].to_i

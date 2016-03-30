@@ -113,6 +113,8 @@ module Astute
     # In other case please use shell task
     # Synchronous (blocking) call
     def run_shell_without_check(node_uid, cmd, timeout=2)
+      Astute.logger.debug("Executing shell command without check: #{cmd} " \
+          "on node #{node_uid} with timeout #{timeout}.")
       shell = MClient.new(
         @ctx,
         'execute_shell_command',
