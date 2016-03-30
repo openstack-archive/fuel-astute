@@ -113,6 +113,8 @@ module Astute
     # In other case please use shell task
     # Synchronous (blocking) call
     def run_shell_without_check(node_uid, cmd, timeout=2)
+      Astute.logger.debug("Executing shell command without check: #{cmd} " \
+          "on node #{node_uid} with timeout #{timeout}.")
       shell = MClient.new(
         @ctx,
         'execute_shell_command',
@@ -121,10 +123,8 @@ module Astute
         timeout=timeout
       )
       results = shell.execute(:cmd => cmd)
-      #FIXME(vsharshov): remove after find problem with
-      # undefined method `results' for nil:NilClas
       Astute.logger.debug("Mcollective shell result: #{results}")
-      if results
+      if results.present?
         result = results.first
         Astute.logger.debug(
           "#{@ctx.task_id}: cmd: #{cmd}\n" \
