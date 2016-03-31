@@ -138,8 +138,8 @@ module Astute
         # Allow to send only node progress/status update
         return if node_progress.to_i <= saved_node['progress'].to_i &&
           node['status'] == saved_node['status'] &&
-          node['deployment_graph_task_name'] == saved_node['deployment_graph_task_name']
-
+          node['deployment_graph_task_name'] == saved_node['deployment_graph_task_name'] &&
+          node['task_status'] ==  saved_node['task_status']
         node
       end
 

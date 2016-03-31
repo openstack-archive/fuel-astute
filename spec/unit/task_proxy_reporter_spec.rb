@@ -417,6 +417,39 @@ describe "TaskProxyReporter" do
       msgs.each {|msg| reporter.report(msg)}
     end
 
+    it 'should report if status changed, but progress is not' do
+      msgs = [
+        {'nodes' => [{'uid' => 1,
+                      'status' => 'deploying',
+                      'deployment_graph_task_name' => 'test_2',
+                      'task_status' => 'running',
+                      'progress' => 50}]},
+        {'nodes' => [{'uid' => 1,
+                      'status' => 'deploying',
+                      'deployment_graph_task_name' => 'test_2',
+                      'task_status' => 'running',
+                      'progress' => 50}]},
+        {'nodes' => [{'uid' => 1,
+                      'status' => 'deploying',
+                      'deployment_graph_task_name' => 'test_2',
+                      'task_status' => 'running',
+                      'progress' => 50}]},
+        {'nodes' => [{'uid' => 1,
+                      'status' => 'deploying',
+                      'deployment_graph_task_name' => 'test_2',
+                      'task_status' => 'successful',
+                      'progress' => 50}]}
+        ]
+
+        up_reporter.expects(:report).with(msgs[0])
+        expected_msg_3 = msgs[3].deep_dup
+        expected_msg_3['nodes'].first['task_status'] = 'ready'
+        up_reporter.expects(:report).with(expected_msg_3)
+
+        msgs.each {|msg| reporter.report(msg)}
+
+    end
+
     it "report stopped status" do
       msgs = [
         {'nodes' => [{'uid' => 1,
