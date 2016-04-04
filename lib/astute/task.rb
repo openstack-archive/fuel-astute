@@ -121,10 +121,7 @@ module Astute
         timeout=timeout
       )
       results = shell.execute(:cmd => cmd)
-      #FIXME(vsharshov): remove after find problem with
-      # undefined method `results' for nil:NilClas
-      Astute.logger.debug("Mcollective shell result: #{results}")
-      if results
+      if results && !results.empty?
         result = results.first
         Astute.logger.debug(
           "#{@ctx.task_id}: cmd: #{cmd}\n" \
