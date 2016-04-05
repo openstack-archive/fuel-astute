@@ -46,7 +46,7 @@ module Astute
       @task['parameters']['cwd'] ||= '/'
       @task['parameters']['timeout'] ||= Astute.config.puppet_timeout
       @task['parameters']['retries'] ||= Astute.config.puppet_retries
-      @task['parameters']['debug'] = false unless @task['parameters']['debug'].present?
+      @task['parameters']['debug'] = true unless @task['parameters']['debug'].present?
       @task['parameters']['puppet_modules'] ||= Astute.config.puppet_module_path
     end
 

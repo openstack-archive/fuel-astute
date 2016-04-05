@@ -209,7 +209,7 @@ module MCollective
 
         output = reply[:output] || ''
         run(cmd, :stdout => :output, :chomp => true, :cwd => cwd, :environment => { 'LC_ALL' => 'en_US.UTF-8' })
-        reply[:output] = "Called #{cmd}, " + output + (reply[:output] || '')
+        reply[:output] = "Debug: #{request[:puppet_debug]}, Called #{cmd}, " + output + (reply[:output] || '')
       end
 
       def stop_and_disable
