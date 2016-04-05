@@ -210,15 +210,15 @@ module MCollective
           end
         end
 
-        cmd << '--debug' if request[:puppet_debug]
-        cmd << '--evaltrace' if request[:puppet_debug]
+        cmd << '--debug' if request.fetch[:puppet_debug, false]
+        cmd << '--evaltrace' if request.fetch[:puppet_debug, false]
         cmd << "--logdest #{@log}" if @log
 
         cmd = cmd.join(" ")
 
         output = reply[:output] || ''
         run(cmd, :stdout => :output, :chomp => true, :cwd => cwd, :environment => { 'LC_ALL' => 'en_US.UTF-8' })
-        reply[:output] = "Called #{cmd}, " + output + (reply[:output] || '')
+        reply[:output] = "Request: #{request}\nCalled #{cmd}, " + output + (reply[:output] || '')
       end
 
       def stop_and_disable
