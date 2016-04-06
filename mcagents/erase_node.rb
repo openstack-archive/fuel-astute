@@ -25,7 +25,7 @@ module MCollective
       # Look at https://github.com/torvalds/linux/blob/master/Documentation/devices.txt
       # Please also update the device codes here
       # https://github.com/openstack/fuel-web/blob/master/bin/agent#L43
-      STORAGE_CODES = [3, 8, 65, 66, 67, 68, 69, 70, 71, 104, 105, 106, 107, 108, 109, 110, 111, 202, 252, 253, 259]
+      STORAGE_CODES = [3, 8, 65, 66, 67, 68, 69, 70, 71, 104, 105, 106, 107, 108, 109, 110, 111, 202, 251, 252, 253, 259]
 
       AGENT_NODISCOVER_FILE = '/etc/nailgun-agent/nodiscover'
 
