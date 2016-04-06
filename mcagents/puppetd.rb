@@ -36,10 +36,9 @@ module MCollective
     class Puppetd<RPC::Agent
       def startup_hook
         @splaytime = @config.pluginconf["puppetd.splaytime"].to_i || 0
-        @lockfile = @config.pluginconf["puppetd.lockfile"] || "/tmp/fuel-puppetd.lock"
+        @lockfile = "/tmp/fuel-puppetd.lock"
         @log = @config.pluginconf["puppetd.log"] || "/var/log/puppet.log"
         @statefile = @config.pluginconf["puppetd.statefile"] || "/var/lib/puppet/state/state.yaml"
-        @pidfile = @config.pluginconf["puppet.pidfile"] || "/var/run/puppet/agent.pid"
         @puppetd = @config.pluginconf["puppetd.puppetd"] ||
           "/usr/sbin/daemonize -a \
            -l #{@lockfile} \
@@ -111,7 +110,7 @@ module MCollective
         failed = []
         # only generate list of changes and failures if we could parse the
         # puppet report
-        if report.is_a?(Puppet::Transaction::Report)
+        if report.is_a?(Puppet::Transaction::Report) && report.resource_statuses
           report.resource_statuses.each do |name, resource|
             changed << name if resource.changed
             failed << name if resource.failed
