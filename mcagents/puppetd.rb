@@ -111,7 +111,7 @@ module MCollective
         failed = []
         # only generate list of changes and failures if we could parse the
         # puppet report
-        if report.is_a?(Puppet::Transaction::Report)
+        if report.is_a?(Puppet::Transaction::Report) && report.resource_statuses
           report.resource_statuses.each do |name, resource|
             changed << name if resource.changed
             failed << name if resource.failed
