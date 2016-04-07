@@ -25,6 +25,7 @@ describe Astute::TaskNode do
   let(:ctx) do
     ctx = mock('context')
     ctx.stubs(:task_id)
+    ctx.stubs(:report)
     ctx
   end
 
@@ -75,6 +76,19 @@ describe Astute::TaskNode do
       Astute::Puppet.any_instance.stubs(:run)
       task_node.run(task)
       expect(task.status).to eql(:running)
+    end
+
+    it 'should report about task as running' do
+      Astute::Puppet.any_instance.stubs(:run)
+      ctx.expects(:report).with('nodes' => [{
+        'uid' => 'node_id',
+        'status' => 'deploying',
+        'progress' => 0,
+        'deployment_graph_task_name' => 'openstack-haproxy-mysqld',
+        'task_status' => 'running',
+        'custom' => {}
+      }])
+      task_node.run(task)
     end
 
     context 'support different task type' do
