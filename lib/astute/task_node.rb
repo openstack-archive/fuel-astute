@@ -26,6 +26,7 @@ module Astute
       @task_engine.run
       task.set_status_running
       set_status_busy
+      report_node_status
     end
 
     def poll
