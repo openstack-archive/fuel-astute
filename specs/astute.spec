@@ -79,6 +79,8 @@ cd %{_builddir}/%{rbname}-%{version}/ && gem build *.gemspec
 mkdir -p %{gembuilddir}
 gem install --local --install-dir %{gembuilddir} --force %{_builddir}/%{rbname}-%{version}/%{rbname}-%{version}.gem
 mkdir -p %{buildroot}%{_bindir}
+mkdir -p %{buildroot}/var/lib/astute
+mkdir -p %{buildroot}/var/lib/astute/graphs
 mv %{gembuilddir}/bin/* %{buildroot}%{_bindir}
 rmdir %{gembuilddir}/bin
 install -d -m 750 %{buildroot}%{_sysconfdir}/astute
