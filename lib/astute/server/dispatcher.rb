@@ -118,7 +118,8 @@ module Astute
             {
               :deployment_info => data['args'].fetch('deployment_info', []),
               :tasks_graph => data['args'].fetch('tasks_graph', {}),
-              :tasks_directory => data['args'].fetch('tasks_directory', {})
+              :tasks_directory => data['args'].fetch('tasks_directory', {}),
+              :dry_run => data['args'].fetch('dry_run', False)
             }
           )
         rescue Timeout::Error
