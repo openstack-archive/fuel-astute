@@ -87,6 +87,8 @@ cat > %{buildroot}%{_bindir}/astuted <<EOF
 ruby -r 'rubygems' -e "gem 'astute', '>= 0'; load Gem.bin_path('astute', 'astuted', '>= 0')" -- \$@
 EOF
 install -d -m 755 %{buildroot}%{_localstatedir}/log/astute
+install -d -m 755 %{buildroot}/var/lib/astute
+install -d -m 755 %{buildroot}/var/lib/astute/graphs
 install -D -m644 %{_builddir}/%{rbname}-%{version}/%{rbname}.sysconfig %{buildroot}/%{_sysconfdir}/sysconfig/%{rbname}
 #nailgun-mcagents
 mkdir -p %{buildroot}/usr/libexec/mcollective/mcollective/agent/
@@ -108,6 +110,8 @@ install -D -m644 %{_builddir}/%{rbname}-%{version}/%{rbname}.service %{buildroot
 
 %dir %attr(0750, naily, naily) %{_sysconfdir}/%{rbname}
 %dir %attr(0755, naily, naily) %{_localstatedir}/log/%{rbname}
+%dir /var/lib/astute
+%dir /var/lib/astute/graphs
 %config(noreplace) %{_bindir}/astuted
 %config(noreplace) %{_sysconfdir}/sysconfig/%{rbname}
 
