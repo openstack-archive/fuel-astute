@@ -101,8 +101,8 @@ module Astute
                                           # Please increase if nodes could not provisioning
     conf[:agent_nodiscover_file] = '/etc/nailgun-agent/nodiscover' # if this file in place, nailgun-agent will do nothing
     conf[:bootstrap_profile] = 'ubuntu_bootstrap' # use the Ubuntu based bootstrap by default
-    conf[:graph_dot_dir] = "/tmp/" # default dir patch for debug graph file
-    conf[:enable_graph_file] = false  # enable debug graph records to file
+    conf[:graph_dot_dir] = "/var/lib/astute/graphs" # default dir patch for debug graph file
+    conf[:enable_graph_file] = true  # enable debug graph records to file
 
     # Server settings
     conf[:broker_host] = 'localhost'

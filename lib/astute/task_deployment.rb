@@ -20,7 +20,7 @@ module Astute
       @ctx = context
     end
 
-    def deploy(tasks_graph: {}, tasks_directory: {} , deployment_info: [])
+    def deploy(tasks_graph: {}, tasks_directory: {} , deployment_info: [], dry_run: false)
       raise DeploymentEngineError, "Deployment graph was not provided!" if
         tasks_graph.blank?
 
@@ -46,7 +46,12 @@ module Astute
       setup_task_concurrency(tasks_graph, cluster)
 
       write_graph_to_file(cluster)
-      result = cluster.run
+      if dry_run
+        result = Hash.new
+        result[:success] = true
+      else
+        result = cluster.run
+      end
       report_deploy_result(result)
     end
 
