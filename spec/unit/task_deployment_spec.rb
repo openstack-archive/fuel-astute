@@ -250,6 +250,23 @@ describe Astute::TaskDeployment do
       end
     end
 
+    context 'dry_run' do
+      it 'should not run actual deployment if dry_run is set to True' do
+        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+        task_deployment.stubs(:write_graph_to_file)
+        ctx.stubs(:report)
+
+        Astute::TaskCluster.any_instance.expects(:run).never
+
+        task_deployment.deploy(
+            deployment_info: deployment_info,
+            tasks_graph: tasks_graph,
+            tasks_directory: tasks_directory,
+            dry_run: true)
+      end
+    end
+
     context 'config' do
       around(:each) do |example|
         max_nodes_old_value = Astute.config.max_nodes_per_call
@@ -353,7 +370,7 @@ describe Astute::TaskDeployment do
 
         file_handle = mock
         file_handle.expects(:write).with(regexp_matches(/digraph/)).never
-        File.expects(:open).with("/tmp/graph-#{ctx.task_id}.dot", 'w')
+        File.expects(:open).with("#{Astute.config.graph_dot_dir}/graph-#{ctx.task_id}.dot", 'w')
             .yields(file_handle).never
 
         task_deployment.deploy(
@@ -372,7 +389,7 @@ describe Astute::TaskDeployment do
 
         file_handle = mock
         file_handle.expects(:write).with(regexp_matches(/digraph/)).once
-        File.expects(:open).with("/tmp/graph-#{ctx.task_id}.dot", 'w')
+        File.expects(:open).with("#{Astute.config.graph_dot_dir}/graph-#{ctx.task_id}.dot", 'w')
             .yields(file_handle).once
 
         task_deployment.deploy(
