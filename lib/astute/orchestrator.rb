@@ -77,7 +77,8 @@ module Astute
       deployment_engine.deploy(
         deployment_info: deployment_options[:deployment_info],
         tasks_graph: deployment_options[:tasks_graph],
-        tasks_directory: deployment_options[:tasks_directory]
+        tasks_directory: deployment_options[:tasks_directory],
+        dry_run: deployment_options[:dry_run]
       )
     ensure
       Astute.logger.info "Deployment summary: time was spent " \
