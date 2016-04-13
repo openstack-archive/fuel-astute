@@ -65,7 +65,8 @@ describe Astute::Orchestrator do
       Astute::TaskDeployment.any_instance.expects(:deploy).with(
         :deployment_info => deployment_info,
         :tasks_graph => tasks_graph,
-        :tasks_directory => tasks_directory
+        :tasks_directory => tasks_directory,
+        :dry_run => false
       )
 
       @orchestrator.task_deploy(
