@@ -164,11 +164,85 @@ describe Astute::TaskDeployment do
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
       Deployment::Log.expects(:logger=).with(Astute.logger)
-      Deployment::Cluster.any_instance.stubs(:run).returns({:success => true})
       task_deployment.deploy(
         deployment_info: deployment_info,
         tasks_graph: tasks_graph,
         tasks_directory: tasks_directory)
+    end
+
+    context 'task concurrency' do
+      let(:task_concurrency) { mock('task_concurrency') }
+
+      before(:each) do
+        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+        task_deployment.stubs(:write_graph_to_file)
+        ctx.stubs(:report)
+        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+        Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
+        Deployment::Concurrency::Counter.any_instance
+                                        .stubs(:maximum=).with(
+                                          Astute.config.max_nodes_per_call)
+      end
+
+      it 'should setup 0 if no task concurrency setup' do
+        Deployment::Concurrency::Counter.any_instance.expects(:maximum=).with(0).times(5)
+
+        task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)
+      end
+
+      it 'it should setup 1 if task concurrency type one_by_one' do
+        tasks_graph['1'].first['strategy'] = {'type' => 'one_by_one'}
+        Deployment::Concurrency::Counter.any_instance.expects(:maximum=)
+                                                     .with(0).times(4)
+        Deployment::Concurrency::Counter.any_instance.expects(:maximum=)
+                                                     .with(1)
+
+        task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)
+      end
+
+      it 'should setup task concurrency as amount if type is parallel' do
+        tasks_graph['1'].first['strategy'] = {'type' => 'parallel', 'amount' => 7}
+        Deployment::Concurrency::Counter.any_instance.expects(:maximum=)
+                                                     .with(0).times(4)
+        Deployment::Concurrency::Counter.any_instance.expects(:maximum=)
+                                                     .with(7)
+
+        task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)
+      end
+
+      it 'should setup 0 if task strategy is parallel and amount do not set' do
+        tasks_graph['1'].first['strategy'] = {'type' => 'parallel'}
+        Deployment::Concurrency::Counter.any_instance.expects(:maximum=)
+                                        .with(0).times(5)
+
+        task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)
+      end
+
+      it 'should raise error if amount is non-positive integer and type is parallel' do
+        tasks_graph['1'].first['strategy'] = {'type' => 'parallel', 'amount' => -4}
+        Deployment::Concurrency::Counter.any_instance.expects(:maximum=)
+                                        .with(0).times(2)
+
+        expect {task_deployment.deploy(
+          deployment_info: deployment_info,
+          tasks_graph: tasks_graph,
+          tasks_directory: tasks_directory)}.to raise_error(
+        Astute::DeploymentEngineError, /expect only non-negative integer, but got -4./
+
+      )
+      end
     end
 
     context 'config' do

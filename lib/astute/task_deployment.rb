@@ -50,17 +50,8 @@ module Astute
         end
       end
 
-      tasks_graph.each do |node_id, tasks|
-        tasks.each do |task|
-          task.fetch('requires', []).each do |d_t|
-            cluster[node_id][task['id']].depends cluster[d_t['node_id']][d_t['name']]
-          end
-
-          task.fetch('required_for', []).each do |d_t|
-            cluster[node_id][task['id']].depended_on cluster[d_t['node_id']][d_t['name']]
-          end
-        end
-      end
+      setup_task_depends(tasks_graph, cluster)
+      setup_task_concurrency(tasks_graph, cluster)
 
       write_graph_to_file(cluster)
       result = cluster.run
@@ -68,6 +59,42 @@ module Astute
     end
 
     private
+
+    def setup_task_depends(tasks_graph, cluster)
+      tasks_graph.each do |node_id, tasks|
+        tasks.each do |task|
+          task.fetch('requires', []).each do |d_t|
+            cluster[node_id][task['id']].depends(
+              cluster[d_t['node_id']][d_t['name']])
+          end
+
+          task.fetch('required_for', []).each do |d_t|
+            cluster[node_id][task['id']].depended_on(
+              cluster[d_t['node_id']][d_t['name']])
+          end
+        end
+      end
+    end
+
+    def setup_task_concurrency(tasks_graph, cluster)
+      tasks_graph.each do |_node_id, tasks|
+        tasks.each do |task|
+          cluster.task_concurrency[task['id']].maximum = task_concurrency_value(task)
+        end
+      end
+    end
+
+    def task_concurrency_value(task)
+      strategy = task.fetch('strategy', {})
+      value = case strategy['type']
+      when 'one_by_one' then 1
+      when 'parallel' then strategy['amount'].to_i
+      else 0
+      end
+      return value if value >= 0
+      raise DeploymentEngineError, "Task concurrency expect only "\
+        "non-negative integer, but got #{value}. Please check task #{task}"
+    end
 
     def pre_deployment_process(deployment_info)
       return [[],[]] if deployment_info.blank?
@@ -227,7 +254,7 @@ module Astute
           @ctx,
           "systemtype",
           all_uids,
-          check_result=false,
+          _check_result=false,
           10
         )
         available_nodes = systemtype.get_type.select do |node|
