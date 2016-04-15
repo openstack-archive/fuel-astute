@@ -159,6 +159,7 @@ module Deployment
     # @return [void]
     def status_changes_concurrency(status_from, status_to)
       return unless concurrency_present?
+      return if status_from == status_to
       if status_to == :running
         node.cluster.task_concurrency[name].increment
         info "Increasing task concurrency to: #{node.cluster.task_concurrency[name].current}"
