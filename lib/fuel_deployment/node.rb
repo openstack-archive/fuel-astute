@@ -126,10 +126,10 @@ module Deployment
       return unless concurrency_present?
       if status_to == :busy
         cluster.node_concurrency.increment
-        info "Increasing node concurrency to: #{cluster.node_concurrency.current}"
+        debug "Increasing node concurrency to: #{cluster.node_concurrency.current}"
       elsif status_from == :busy
         cluster.node_concurrency.decrement
-        info "Decreasing node concurrency to: #{cluster.node_concurrency.current}"
+        debug "Decreasing node concurrency to: #{cluster.node_concurrency.current}"
       end
     end
 

@@ -359,7 +359,7 @@ describe Deployment::Task do
       end
 
       it 'ready task is counted as a ready task' do
-        subject.status == :ready
+        subject.status = :ready
         is_expected.to be_ready
       end
     end
@@ -385,7 +385,7 @@ describe Deployment::Task do
       end
 
       it 'ready task is counted as a ready task' do
-        subject.status == :ready
+        subject.status = :ready
         is_expected.to be_ready
       end
     end
@@ -411,8 +411,15 @@ describe Deployment::Task do
         expect(cluster.task_concurrency[subject.name].current).to eq 1
       end
 
+      it 'do nothing when the status of the task was updated but not changed' do
+        subject.status = :running
+        expect(cluster.task_concurrency[subject.name].current).to eq 2
+        subject.status = :running
+        expect(cluster.task_concurrency[subject.name].current).to eq 2
+      end
+
       it 'ready task is counted as a ready task' do
-        subject.status == :ready
+        subject.status = :ready
         is_expected.to be_ready
       end
     end
@@ -439,7 +446,7 @@ describe Deployment::Task do
       end
 
       it 'ready task is NOT counted as a ready task' do
-        subject.status == :ready
+        subject.status = :ready
         is_expected.not_to be_ready
       end
     end
