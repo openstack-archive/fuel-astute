@@ -59,9 +59,9 @@ module Astute
       def node_validate(original_node)
         node = deep_copy(original_node)
         return unless node_should_include?(node)
+        convert_node_name_to_original(node)
         return node unless are_fields_valid?(node)
-        conver_node_name_to_original(node)
-        conver_task_status_to_status(node)
+        convert_task_status_to_status(node)
         normalization_progress(node)
         compare_with_previous_state(node)
       end
@@ -112,7 +112,7 @@ module Astute
       end
 
 
-      def conver_task_status_to_status(node)
+      def convert_task_status_to_status(node)
         node['task_status'] = REPORT_REAL_TASK_STATE_MAP.fetch(node['task_status'])
       end
 
@@ -164,7 +164,7 @@ module Astute
         false
       end
 
-      def conver_node_name_to_original(node)
+      def convert_node_name_to_original(node)
         if REPORT_REAL_NODE_MAP.keys.include?(node['uid'])
           node['uid'] = REPORT_REAL_NODE_MAP.fetch(node['uid'])
         end

@@ -109,7 +109,7 @@ describe "TaskProxyReporter" do
       reporter.report(msg2)
     end
 
-    it "should report only nodes with integer or master uid or virtual node" do
+    it "should report and process nodes with integer or master uid or virtual node" do
       input_msg = {'nodes' => [
         {'uid' => 'master', 'status' => 'deploying', 'progress' => 10,
          'deployment_graph_task_name' => 'test_2', 'task_status' => 'running'},
@@ -139,11 +139,6 @@ describe "TaskProxyReporter" do
           'task_status' => 'running'}]}
       up_reporter.expects(:report).with(expected_msg).once
       reporter.report(input_msg)
-    end
-
-    it "raises exception if wrong key passed" do
-      msg['nodes'][0]['ups'] = 'some_value'
-      lambda {reporter.report(msg)}.should raise_error
     end
 
     it "adjusts progress to 100 if passed greater" do
@@ -477,7 +472,8 @@ describe "TaskProxyReporter" do
 
     context 'tasks' do
       let(:msg) do
-        {'nodes' => [{'status' => 'deploying', 'uid' => '1', 'progress' => 54}.merge(task_part_msg)]
+        {'nodes' => [{'status' => 'deploying', 'uid' => '1', 'progress' => 54}
+        .merge(task_part_msg)]
         }
       end
 
@@ -486,6 +482,17 @@ describe "TaskProxyReporter" do
       end
 
       context 'validation' do
+        it 'send send correct msg with node, but not task, after name conversation' do
+          msg['nodes'].first['uid'] = 'virtual_sync_node'
+          msg['nodes'].first.delete('deployment_graph_task_name')
+          up_reporter.expects(:report).with('nodes' => [{
+            'status' => 'deploying',
+            'uid' => nil,
+            'progress' => 54,
+            'task_status' => 'running'}])
+          reporter.report(msg)
+        end
+
         it 'should send message without deployment graph task name (bad message)' do
           msg['nodes'].first.delete('deployment_graph_task_name')
           up_reporter.expects(:report).with(msg)
