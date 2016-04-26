@@ -282,7 +282,7 @@ module Astute
 
       #TODO(vsharshov): will be enough for safe reboot without exceptions?
       perform_with_limit(hook['uids']) do |node_uids|
-        run_shell_without_check(@ctx, node_uids, 'reboot', timeout=10)
+        run_shell_without_check(@ctx, node_uids, 'if [ $(hostname) == bootstrap ]; then reboot; fi; while true; do if [ -f /run/cloud-init/status.json ]; then reboot; else sleep 1; fi; done', timeout=60)
       end
 
       already_rebooted = Hash[hook['uids'].collect { |uid| [uid, false] }]
