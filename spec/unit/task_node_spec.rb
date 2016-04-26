@@ -91,6 +91,23 @@ describe Astute::TaskNode do
       task_node.run(task)
     end
 
+    context 'noop' do
+      let(:task_data) do
+        {
+          "type" => "noop",
+          "fail_on_error" => true,
+          "required_for" => [],
+          "requires" => [],
+          "id" => "openstack-haproxy"
+        }
+      end
+
+      it 'should not report about task as running if it is noop' do
+        ctx.expects(:report).never
+        task_node.run(task)
+      end
+    end
+
     context 'support different task type' do
 
       let(:task_data) do
