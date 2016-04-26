@@ -26,7 +26,7 @@ module Astute
       @task_engine.run
       task.set_status_running
       set_status_busy
-      report_node_status
+      report_node_status if report_running?(task.data)
     end
 
     def poll
@@ -104,5 +104,10 @@ module Astute
       else raise TaskValidationError, "Unknown task type '#{data['type']}'"
       end
     end
+
+    def report_running?(data)
+      !['noop', 'stage', 'skipped'].include?(data['type'])
+    end
+
   end
 end

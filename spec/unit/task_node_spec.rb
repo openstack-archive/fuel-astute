@@ -91,6 +91,41 @@ describe Astute::TaskNode do
       task_node.run(task)
     end
 
+    context 'should not report about task as running' do
+      let(:task_data_wo_type) do
+        {
+          "type" => "noop",
+          "fail_on_error" => true,
+          "required_for" => [],
+          "requires" => [],
+          "id" => "openstack-haproxy"
+        }
+      end
+
+      shared_examples 'disable running report' do
+        it 'task should not report running status' do
+          ctx.unstub(:report)
+          ctx.expects(:report).never
+          task_node.run(task)
+        end
+      end
+
+      context 'noop' do
+        let(:task_data) { task_data_wo_type.merge!('type'=> 'noop') }
+        it_behaves_like 'disable running report'
+      end
+
+      context 'stage' do
+        let(:task_data) { task_data_wo_type.merge!('type'=> 'stage') }
+        it_behaves_like 'disable running report'
+      end
+
+      context 'skipped' do
+        let(:task_data) { task_data_wo_type.merge!('type'=> 'skipped') }
+        it_behaves_like 'disable running report'
+      end
+    end
+
     context 'support different task type' do
 
       let(:task_data) do
