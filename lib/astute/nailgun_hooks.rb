@@ -280,9 +280,25 @@ module Astute
         control_time.merge!(boot_time(node_uids))
       end
 
-      #TODO(vsharshov): will be enough for safe reboot without exceptions?
       perform_with_limit(hook['uids']) do |node_uids|
-        run_shell_without_check(@ctx, node_uids, 'reboot', timeout=10)
+      # Reboot immediately if we're in a bootstrap. Wait until system boots
+      # completely in case of provisioned node. We check it by existense
+      # of /run/cloud-init/status.json (it's located on tmpfs, so no stale
+      # file from previous boot can be found). If this file hasn't appeared
+      # after 60 seconds - reboot as is.
+      cmd = "if [ $(hostname) = bootstrap ]; then "\
+            "   reboot; "\
+            "fi; "\
+            "while true; do "\
+            "   t=0; "\
+            "   if [ -f /run/cloud-init/status.json -o $t -gt 60 ]; then "\
+            "       reboot; "\
+            "   else "\
+            "       sleep 1; "\
+            "       t=$((t + 1)); "\
+            "   fi; "\
+            "done"
+        run_shell_without_check(@ctx, node_uids, cmd, timeout=60)
       end
 
       already_rebooted = Hash[hook['uids'].collect { |uid| [uid, false] }]
