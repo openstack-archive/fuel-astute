@@ -117,6 +117,8 @@ module MCollective
             debug_msg("erasing bootstrap code area in MBR of #{dev[:name]}")
             # clear out the boot code in MBR
             system("dd if=/dev/zero of=#{dev[:name]} bs=446 count=1")
+            # clear out the signature
+            system("dd if=/dev/zero of=#{dev[:name]} seek=510 bs=1 count=2")
             system("sync")
           end
 
