@@ -280,9 +280,8 @@ module Astute
         control_time.merge!(boot_time(node_uids))
       end
 
-      #TODO(vsharshov): will be enough for safe reboot without exceptions?
       perform_with_limit(hook['uids']) do |node_uids|
-        run_shell_without_check(@ctx, node_uids, 'reboot', timeout=10)
+        run_shell_without_check(@ctx, node_uids, RebootCommand::CMD, timeout=60)
       end
 
       already_rebooted = Hash[hook['uids'].collect { |uid| [uid, false] }]
