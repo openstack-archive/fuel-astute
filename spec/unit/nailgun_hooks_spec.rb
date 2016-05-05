@@ -1107,8 +1107,8 @@ describe Astute::NailgunHooks do
       hooks.expects(:run_shell_without_check).once.with(
         ctx,
         ['2','3'],
-        "reboot",
-        10,
+        regexp_matches(/reboot/),
+        60,
       )
       .returns('2' => '', '3' => '')
 
@@ -1134,7 +1134,7 @@ describe Astute::NailgunHooks do
         ctx,
         ['2','3'],
         regexp_matches(/reboot/),
-        10,
+        60,
       )
       .returns('2' => '', '3' => '')
 
@@ -1160,7 +1160,7 @@ describe Astute::NailgunHooks do
         ctx,
         ['2','3'],
         regexp_matches(/reboot/),
-        10,
+        60,
       )
       .returns('2' => '', '3' => '')
 
@@ -1187,7 +1187,7 @@ describe Astute::NailgunHooks do
         ctx,
         ['2','3'],
         regexp_matches(/reboot/),
-        10,
+        60,
       )
       .returns('2' => '', '3' => '')
 
@@ -1222,7 +1222,7 @@ describe Astute::NailgunHooks do
         ctx,
         ['2'],
         regexp_matches(/reboot/),
-        10,
+        60,
       )
       .returns('2' => '')
 
@@ -1230,7 +1230,7 @@ describe Astute::NailgunHooks do
         ctx,
         ['3'],
         regexp_matches(/reboot/),
-        10,
+        60,
       )
       .returns('3' => '')
 
@@ -1260,7 +1260,7 @@ describe Astute::NailgunHooks do
           ctx,
           ['2','3'],
           regexp_matches(/reboot/),
-          10,
+          60,
         )
         .returns('2' => '', '3' => '')
 
