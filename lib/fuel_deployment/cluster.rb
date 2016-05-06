@@ -288,6 +288,10 @@ module Deployment
     end
     alias :deploy :run
 
+    def node_has_failed_tasks?(node)
+      failed_tasks.find{ |t| t.node == node }.present?
+    end
+
     # Get the list of critical nodes
     # @return [Array<Deployment::Node>]
     def critical_nodes
@@ -300,7 +304,7 @@ module Deployment
     # @return [Array<Deployment::Node>]
     def failed_critical_nodes
       critical_nodes.select do |node|
-        node.failed?
+        node_has_failed_tasks? node or node.failed?
       end
     end
 
@@ -315,7 +319,7 @@ module Deployment
     # @return [Array<Deployment::Node>]
     def failed_nodes
       select do |node|
-        node.failed?
+        node_has_failed_tasks? node or node.failed?
       end
     end
 

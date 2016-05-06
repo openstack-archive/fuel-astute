@@ -169,7 +169,7 @@ module Deployment
     # or has the failed status
     # @return [true, false]
     def failed?
-      status == :failed or tasks_have_failed?
+      status == :failed
     end
 
     # The node has all tasks successful
