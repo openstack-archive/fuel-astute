@@ -98,7 +98,7 @@ module MCollective
             # requested type
             if (type.eql? 'all') or (type.eql? 'root' and device_root_count > 0) or (type.eql? 'data' and device_root_count == 0)
               debug_msg("get_devices(type=#{type}): adding #{dev_name}")
-              blocks << {:name => dev_name, :size => size}
+              blocks << {:name => dev_info[:DEVNAME], :size => size}
             end
           end
           blocks
