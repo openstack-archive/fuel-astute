@@ -116,7 +116,7 @@ module MCollective
           get_devices(type='all').each do |dev|
             debug_msg("erasing bootstrap code area in MBR of #{dev[:name]}")
             # clear out the boot code in MBR
-            system("dd if=/dev/zero of=#{dev[:name]} bs=446 count=1")
+            system("dd if=/dev/zero of=/dev/#{dev[:name]} bs=446 count=1")
             system("sync")
           end
 
