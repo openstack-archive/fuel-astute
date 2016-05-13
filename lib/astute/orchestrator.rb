@@ -233,10 +233,10 @@ module Astute
 
     def validate_nodes_access(ctx, nodes)
       nodes_types = node_type(ctx.reporter, ctx.task_id, nodes.map{ |n| n['uid'] }, timeout=10)
-      not_avaliable_nodes = nodes.map { |n| n['uid'].to_s } - nodes_types.map { |n| n['uid'].to_s }
-      unless not_avaliable_nodes.empty?
-        raise "Network verification not avaliable because nodes #{not_avaliable_nodes} " \
-          "not avaliable via mcollective"
+      not_available_nodes = nodes.map { |n| n['uid'].to_s } - nodes_types.map { |n| n['uid'].to_s }
+      unless not_available_nodes.empty?
+        raise "Network verification not available because nodes #{not_available_nodes} " \
+          "not available via mcollective"
       end
     end
 
