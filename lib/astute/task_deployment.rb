@@ -242,7 +242,7 @@ module Astute
 
       # In case of deploy in already existing cluster in nodes block
       # we will have all cluster nodes. We should remove only missing
-      # nodes instead of stay only avaliable.
+      # nodes instead of stay only available.
       # Example: deploy 3 nodes, after it deploy 2 nodes.
       # In 1 of 2 seconds nodes missing, in nodes block we should
       # contain only 4 nodes.

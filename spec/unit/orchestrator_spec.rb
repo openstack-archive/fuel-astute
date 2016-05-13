@@ -115,7 +115,7 @@ describe Astute::Orchestrator do
       @orchestrator.expects(:node_type).returns([{'uid' => '1', 'node_type' => 'target'}])
       Astute::Network.expects(:check_network).never
       expect {@orchestrator.verify_networks(@reporter, 'task_id', nodes) }
-        .to raise_error(/Network verification not avaliable because/)
+        .to raise_error(/Network verification not available because/)
     end
 
     it 'should check network configuration' do
