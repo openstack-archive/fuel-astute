@@ -43,11 +43,11 @@ describe Astute::DeploymentEngine do
   end
 
   describe '#new' do
-    it 'should not be avaliable to instantiation' do
+    it 'should not be available to instantiation' do
       expect { Astute::DeploymentEngine.new(ctx) }.to raise_exception(/Instantiation of this superclass is not allowed/)
     end
 
-    it 'should be avaliable as superclass' do
+    it 'should be available as superclass' do
       expect { Engine.new(ctx) }.to be_true
     end
   end
