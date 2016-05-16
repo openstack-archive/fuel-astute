@@ -84,7 +84,9 @@ module Astute
           format_dhcp_response(response)
       end
 
-      {'nodes' => result, 'status'=> 'ready'}
+      status = result.any?{|node| node[:status] == 'error'} && 'error' || 'ready'
+
+      {'nodes' => result, 'status'=> status}
     end
 
     def self.multicast_verification(ctx, nodes)
@@ -221,7 +223,7 @@ module Astute
       if response.results[:data][:out].present?
         Astute.logger.debug("DHCP checker received:\n#{response.pretty_inspect}")
         node_result[:data] = JSON.parse(response.results[:data][:out])
-      elsif response.results[:data][:error].present?
+      elsif response.results[:data][:err].present?
         Astute.logger.debug("DHCP checker errred with:\n#{response.pretty_inspect}")
         node_result[:status] = 'error'
         node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
