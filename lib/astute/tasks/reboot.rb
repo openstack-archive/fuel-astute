@@ -59,7 +59,7 @@ module Astute
     def reboot
       run_shell_without_check(
         @task['node_id'],
-        'reboot',
+        RebootCommand::CMD,
         timeout=2
       )
     rescue Astute::MClientTimeout, Astute::MClientError => e

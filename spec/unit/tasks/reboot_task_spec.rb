@@ -131,7 +131,7 @@ describe Astute::Reboot do
       subject.stubs(:boot_time).returns(12)
       subject.expects(:run_shell_without_check).with(
         task['node_id'],
-        'reboot',
+        regexp_matches(/reboot/),
         _timeout=2
       )
       subject.run
@@ -151,7 +151,7 @@ describe Astute::Reboot do
       subject.stubs(:boot_time).returns(12)
       subject.expects(:run_shell_without_check).with(
         task['node_id'],
-        'reboot',
+        regexp_matches(/reboot/),
         _timeout=2
       ).raises(Astute::MClientTimeout)
       expect{subject.run}.not_to raise_error(Astute::MClientTimeout)
