@@ -55,12 +55,14 @@ module Astute
       PuppetTask.new(
         @ctx,
         n,
-        @retries,
-        @puppet_manifest,
-        @puppet_modules,
-        @cwd,
-        timeout=Astute.config.puppet_timeout,
-        @puppet_debug)
+        {
+          :retries => @retries,
+          :puppet_manifest => @puppet_manifest,
+          :puppet_modules => @puppet_modules,
+          :cwd => @cwd,
+          :timeout => Astute.config.puppet_timeout,
+          :puppet_debug => @puppet_debug
+        })
     end
 
   end

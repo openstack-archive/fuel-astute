@@ -58,12 +58,14 @@ module Astute
           LogParser::NoParsing.new
         ),
         {'uid' => @task['node_id'].to_s, 'role' => task_name},
-        @task['parameters']['retries'],
-        @task['parameters']['puppet_manifest'],
-        @task['parameters']['puppet_modules'],
-        @task['parameters']['cwd'],
-        @task['parameters']['timeout'],
-        @task['parameters']['debug']
+        {
+          :retries => @task['parameters']['retries'],
+          :puppet_manifest => @task['parameters']['puppet_manifest'],
+          :puppet_modules => @task['parameters']['puppet_modules'],
+          :cwd => @task['parameters']['cwd'],
+          :timeout => @task['parameters']['timeout'],
+          :debug => @task['parameters']['debug']
+        }
       )
     end
 

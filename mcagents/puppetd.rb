@@ -92,7 +92,13 @@ module MCollective
         summary["time"] ||= {}
         summary["time"]["last_run"] ||= 0
         # if 'failed' is not provided, it means something is wrong. So default value is 1.
-        reply[:resources] = {"failed"=>1, "changed"=>0, "total"=>0, "restarted"=>0, "out_of_sync"=>0}.merge(summary["resources"])
+        reply[:resources] = {
+          "failed"=>1,
+          "changed"=>0,
+          "total"=>0,
+          "restarted"=>0,
+          "out_of_sync"=>0
+        }.merge(summary["resources"])
 
         ["time", "events", "changes", "version"].each do |dat|
           reply[dat.to_sym] = summary[dat]
@@ -108,16 +114,21 @@ module MCollective
 
         changed = []
         failed = []
-        # only generate list of changes and failures if we could parse the
-        # puppet report
-        if report.is_a?(Puppet::Transaction::Report) && report.resource_statuses
+        if valid_report?(report)
           report.resource_statuses.each do |name, resource|
             changed << name if resource.changed
             failed << name if resource.failed
           end
         end
         # add list of resources into the reply
-        reply[:resources] = {"changed_resources" => changed.join(','), "failed_resources" => failed.join(',')}.merge(reply[:resources])
+        reply[:resources] = {
+            "changed_resources" => changed.join(','),
+            "failed_resources" => failed.join(',')
+        }.merge(reply[:resources])
+
+        if valid_report?(report) && request.fetch(:raw_report, false)
+          reply[:raw_report] = File.read(@last_report)
+        end
       end
 
       def set_status
@@ -258,6 +269,10 @@ module MCollective
       end
 
       private
+
+      def valid_report?(report)
+        report.is_a?(Puppet::Transaction::Report) && report.resource_statuses
+      end
 
       def kill_process
         return if ['stopped', 'disabled'].include? puppet_daemon_status
