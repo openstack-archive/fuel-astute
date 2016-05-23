@@ -50,8 +50,17 @@ describe Astute::PuppetTask do
   }
 
   let(:puppet_task) { Astute::PuppetTask.new(ctx, node)}
-  let(:puppet_task_wo_retries) { Astute::PuppetTask.new(ctx, node, retries=0)}
-  let(:puppet_task_success_retries) { Astute::PuppetTask.new(ctx, node, retries=1, puppet_manifest=nil, puppet_modules=nil, cwd=nil, timeout=nil, puppet_debug=false, succeed_retries=1) }
+  let(:puppet_task_wo_retries) { Astute::PuppetTask.new(ctx, node, {:retries=>0})}
+  let(:puppet_task_success_retries) { Astute::PuppetTask.new(ctx, node, {
+    :retries=>1,
+    :puppet_manifest=>nil,
+    :puppet_modules=>nil,
+    :cwd=>nil,
+    :timeout=>nil,
+    :puppet_debug=>false,
+    :succeed_retries=>1
+    })
+  }
 
   let(:mco_puppet_stopped) do
     {

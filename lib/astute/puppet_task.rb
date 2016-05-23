@@ -18,18 +18,27 @@ module Astute
 
   class PuppetTask
 
-    def initialize(ctx, node, retries=1, puppet_manifest=nil, puppet_modules=nil, cwd=nil, timeout=nil, puppet_debug=false, succeed_retries=nil)
+    def initialize(ctx, node, options={})
+      default_options = {
+        :retries => Astute.config.puppet_retries,
+        :puppet_manifest =>  '/etc/puppet/manifests/site.pp',
+        :puppet_modules => Astute.config.puppet_module_path,
+        :cwd => Astute.config.shell_cwd,
+        :timeout => Astute.config.puppet_timeout,
+        :puppet_debug => false,
+        :succeed_retries => Astute.config.puppet_succeed_retries,
+        :raw_report => Astute.config.puppet_raw_report
+      }
+      @options = options.compact.reverse_merge(default_options)
+      @options.freeze
+
       @ctx = ctx
       @node = node
-      @retries = retries
-      @puppet_manifest = puppet_manifest || '/etc/puppet/manifests/site.pp'
-      @puppet_modules = puppet_modules || '/etc/puppet/modules'
-      @cwd = cwd || '/'
-      @time_observer = TimeObserver.new(timeout || Astute.config.puppet_timeout)
+      @retries = @options[:retries]
+      @time_observer = TimeObserver.new(@options[:timeout])
       @prev_summary = nil
       @is_hung = false
-      @puppet_debug = puppet_debug
-      @succeed_retries = succeed_retries || Astute.config.puppet_succeed_retries
+      @succeed_retries = @options[:succeed_retries]
       @summary = {}
     end
 
@@ -93,15 +102,17 @@ module Astute
     end
 
     def puppet_status
-      puppetd.last_run_summary.first[:data]
+      puppetd.last_run_summary(
+        :raw_report => @options[:raw_report]
+      ).first[:data]
     end
 
     def puppet_run
       puppetd.runonce(
-        :puppet_debug => @puppet_debug,
-        :manifest => @puppet_manifest,
-        :modules  => @puppet_modules,
-        :cwd => @cwd
+        :puppet_debug => @options[:puppet_debug],
+        :manifest => @options[:puppet_manifest],
+        :modules  => @options[:puppet_modules],
+        :cwd => @options[:cwd]
       )
     end
 
