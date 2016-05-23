@@ -92,7 +92,13 @@ module MCollective
         summary["time"] ||= {}
         summary["time"]["last_run"] ||= 0
         # if 'failed' is not provided, it means something is wrong. So default value is 1.
-        reply[:resources] = {"failed"=>1, "changed"=>0, "total"=>0, "restarted"=>0, "out_of_sync"=>0}.merge(summary["resources"])
+        reply[:resources] = {
+          "failed"=>1,
+          "changed"=>0,
+          "total"=>0,
+          "restarted"=>0,
+          "out_of_sync"=>0
+        }.merge(summary["resources"])
 
         ["time", "events", "changes", "version"].each do |dat|
           reply[dat.to_sym] = summary[dat]
@@ -117,7 +123,12 @@ module MCollective
           end
         end
         # add list of resources into the reply
-        reply[:resources] = {"changed_resources" => changed.join(','), "failed_resources" => failed.join(',')}.merge(reply[:resources])
+        reply[:resources] = {
+            "changed_resources" => changed.join(','),
+            "failed_resources" => failed.join(',')
+        }.merge(reply[:resources])
+
+        reply[:last_run_report] = report if request.fetch(:puppet_detailed_report, false)
       end
 
       def set_status
