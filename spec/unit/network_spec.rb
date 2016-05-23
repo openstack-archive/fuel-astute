@@ -109,6 +109,14 @@ describe Astute::Network do
   describe '.check_dhcp' do
 
     it "dhcp check should return expected info" do
+      def mock_and_verify_check_dhcp(nodes, result, expected)
+        rpcclient = mock_rpcclient(nodes)
+        rpcclient.expects(:dhcp_discover).at_least_once.returns(result)
+        Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
+        actual = Astute::Network.check_dhcp(Astute::Context.new('task_uuid', reporter), nodes)
+        actual.should eql(expected)
+      end
+
       nodes = make_nodes(1, 2)
       expected_data = [{'iface'=>'eth1',
                         'mac'=> 'ff:fa:1f:er:ds:as'},
@@ -122,17 +130,19 @@ describe Astute::Network do
         :data => {:out => json_output},
         :sender => "2"})
 
-      rpcclient = mock_rpcclient(nodes)
-      rpcclient.expects(:dhcp_discover).at_least_once.returns([res1, res2])
-
-      Astute::MClient.any_instance.stubs(:rpcclient).returns(rpcclient)
-
-      res = Astute::Network.check_dhcp(Astute::Context.new('task_uuid', reporter), nodes)
-
       expected = {"nodes" => [{:status=>"ready", :uid=>"1", :data=>expected_data},
                               {:status=>"ready", :uid=>"2", :data=>expected_data}],
                   "status"=> "ready"}
-      res.should eql(expected)
+
+      mock_and_verify_check_dhcp(nodes, [res1, res2], expected)
+
+      # check case when the check failed for one of the nodes
+      err_res = mock_mc_result({:sender => "1", :data => {:err => 'Test err'}})
+      expected = {"nodes" => [{:uid => "1", :status => "error",
+                               :error_msg => "Error in dhcp checker. Check logs for details"}],
+                  "status" => "error"}
+      mock_and_verify_check_dhcp([nodes[0]], [err_res], expected)
+
     end
   end
 
