@@ -43,10 +43,6 @@ maintainers:
     email:  vkozhukalov@mirantis.com
     IRC:    kozhukalov
 
-  - name:   Lukasz Oles
-    email:  loles@mirantis.com
-    IRC:    salmon_
-
 - debian/: &packaging_team
   - name:   Mikhail Ivanov
     email:  mivanov@mirantis.com
