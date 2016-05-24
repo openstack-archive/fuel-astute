@@ -315,6 +315,7 @@ module Deployment
     # task are failed and set dep_failed status if so.
     # @return [true, false]
     def check_for_failed_dependencies
+      return if self.sync_point?
       return false if FAILED_STATUSES.include? status
       failed = each_backward_dependency.any? do |task|
         FAILED_STATUSES.include? task.status
@@ -329,7 +330,9 @@ module Deployment
     def check_for_ready_dependencies
       return false unless status == :pending
       ready = each_backward_dependency.all? do |task|
-        SUCCESS_STATUSES.include? task.status
+        ready_statuses = SUCCESS_STATUSES
+        ready_statuses += FAILED_STATUSES if sync_point?
+        ready_statuses.include? task.status
       end
       self.status = :ready if ready
       ready
@@ -408,6 +411,24 @@ module Deployment
       FAILED_STATUSES.include? status
     end
 
+    # This task have not been run because of failed dependencies
+    # @return [true, false]
+    def dep_failed?
+      status == :dep_failed
+    end
+
+    # # This task failed
+    # # @return [true, false]
+    # def abortive?
+    #   status == :failed
+    # end
+
+    #This task is sync point
+    # @return [true, false]
+    def sync_point?
+      self.node.sync_point?
+    end
+
     # @return [String]
     def to_s
       "Task[#{name}/#{node.name}]"
@@ -445,7 +466,7 @@ module Deployment
       poll_dependencies
       case status
         when :pending;
-          :white
+          sync_point? ? :cyan : :white
         when :ready
           :yellow
         when :successful;

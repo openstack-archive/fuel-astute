@@ -32,7 +32,7 @@ node1_data = [
     [11, 13],
     [12, 13],
     [13, 9],
-    [9, 14],
+    # [9, 14],
     [14, 15],
 ]
 
@@ -42,7 +42,7 @@ node2_data = [
     [0, 3],
     [3, 4],
     [4, 5],
-    [5, 6],
+    # [5, 6],
     [5, 7],
     [6, 8],
 ]
@@ -54,7 +54,13 @@ cluster.plot = true if options[:plot]
 node1 = cluster.node_create 'node1', Deployment::TestNode
 node2 = cluster.node_create 'node2', Deployment::TestNode
 
+sync_node = cluster.node_create 'sync_node', Deployment::TestNode
+
 node2.set_critical if options[:critical]
+
+sync_node.set_as_sync_point
+
+sync_node.create_task 'sync_task'
 
 node1_data.each do |task_from, task_to|
   task_from = node1.graph.create_task "task#{task_from}"
@@ -73,6 +79,11 @@ node2.fail_tasks << node2['task4'] if options[:fail]
 node2['task4'].depends node1['task3']
 node2['task5'].depends node1['task13']
 node1['task15'].depends node2['task6']
+
+sync_node['sync_task'].depends node2['task5']
+sync_node['sync_task'].depends node1['task9']
+node2['task6'].depends sync_node['sync_task']
+node1['task14'].depends sync_node['sync_task']
 
 if options[:plot]
   cluster.make_image 'start'
