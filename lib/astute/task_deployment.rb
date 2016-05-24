@@ -24,8 +24,6 @@ module Astute
       raise DeploymentEngineError, "Deployment graph was not provided!" if
         tasks_graph.blank?
 
-      deployment_info, offline_uids = pre_deployment_process(deployment_info)
-
       support_virtual_node(tasks_graph)
       unzip_graph(tasks_graph, tasks_directory)
 
@@ -34,11 +32,14 @@ module Astute
       cluster.node_concurrency.maximum = Astute.config.max_nodes_per_call
       cluster.stop_condition { Thread.current[:gracefully_stop] }
 
+      offline_uids = fail_offline_nodes(tasks_graph)
+
       tasks_graph.keys.each do |node_id|
         node = TaskNode.new(node_id, cluster)
         node.context = @ctx
-        node.set_critical if critical_node_uids(deployment_info).include?(node_id)
-        node.set_status_failed if offline_uids.include? node_id
+        node.set_critical if critical_node_uids(tasks_graph).include?(node_id)
+        node.set_as_sync_point if sync_point?(node_id)
+        node.set_status_failed if offline_uids.include?(node_id)
       end
 
       setup_tasks(tasks_graph, cluster)
@@ -56,6 +57,10 @@ module Astute
     end
 
     private
+
+    def sync_point?(node_id)
+      'virtual_sync_node' == node_id
+    end
 
     def unzip_graph(tasks_graph, tasks_directory)
       tasks_graph.each do |node_id, tasks|
@@ -111,39 +116,38 @@ module Astute
         "non-negative integer, but got #{value}. Please check task #{task}"
     end
 
-    def pre_deployment_process(deployment_info)
-      return [[],[]] if deployment_info.blank?
-
-      deployment_info, offline_uids = remove_failed_nodes(deployment_info)
-      Astute::TaskPreDeploymentActions.new(deployment_info, @ctx).process
-      [deployment_info, offline_uids]
-    end
-
     def report_deploy_result(result)
-      if result[:success]
+      if result[:success] && result.fetch(:failed_nodes, []).empty?
+        @ctx.report('status' => 'ready', 'progress' => 100)
+      elsif result[:success] && result.fetch(:failed_nodes, []).present?
+        report_failed_nodes(result)
         @ctx.report('status' => 'ready', 'progress' => 100)
       else
-        result[:failed_nodes].each do |node|
-          node_status = {
-            'uid' => node.id,
-            'status' => 'error',
-            'error_type' => 'deploy',
-            'error_msg' => result[:status]
-          }
-          task = result[:failed_tasks].find{ |t| t.node == node }
-          if task
-            node_status.merge!({
-              'deployment_graph_task_name' => task.name,
-              'task_status' => task.status.to_s
-            })
-          end
-          @ctx.report('nodes' => [node_status])
-        end
+        report_failed_nodes(result)
         @ctx.report(
           'status' => 'error',
           'progress' => 100,
           'error' => result[:status]
         )
+      end
+    end
+
+    def report_failed_nodes(result)
+      result.fetch(:failed_nodes, []).each do |node|
+        node_status = {
+          'uid' => node.id,
+          'status' => 'error',
+          'error_type' => 'deploy',
+          'error_msg' => result[:status]
+        }
+        task = result[:failed_tasks].find{ |t| t.node == node }
+        if task
+          node_status.merge!({
+            'deployment_graph_task_name' => task.name,
+            'task_status' => task.status.to_s
+          })
+        end
+        @ctx.report('nodes' => [node_status])
       end
     end
 
@@ -180,21 +184,18 @@ module Astute
       tasks_graph
     end
 
-    def critical_node_uids(deployment_info)
-      @critical_nodes ||= deployment_info.select{ |n| n['fail_if_error'] }
-                                         .map{ |n| n['uid'] }.uniq
+    def critical_node_uids(tasks_graph)
+      @critical_node ||= tasks_graph.select { |n, tasks| critical_node?(tasks) }.keys
     end
 
-    # Removes nodes which failed to provision
-    def remove_failed_nodes(deployment_info)
-      uids = get_uids_from_deployment_info deployment_info
-      required_uids = critical_node_uids(deployment_info)
+    def critical_node?(tasks)
+      tasks.any? { |task| task['fail_on_error'] }
+    end
 
-      available_uids = detect_available_nodes(uids)
-      offline_uids = uids - available_uids
+    def fail_offline_nodes(tasks_graph)
+      offline_uids = detect_offline_nodes(tasks_graph.keys)
       if offline_uids.present?
-        # set status for all failed nodes to error
-        nodes = (uids - available_uids).map do |uid|
+        nodes = offline_uids.map do |uid|
           {'uid' => uid,
            'status' => 'error',
            'error_type' => 'provision',
@@ -208,9 +209,7 @@ module Astute
           'error' => 'Node is not ready for deployment'
         )
 
-        # check if all required nodes are online
-        # if not, raise error
-        missing_required = required_uids - available_uids
+        missing_required = critical_node_uids(tasks_graph) & offline_uids
         if missing_required.present?
           error_message = "Critical nodes are not available for deployment: " \
                           "#{missing_required}"
@@ -218,57 +217,21 @@ module Astute
         end
       end
 
-      return remove_offline_nodes(
-        uids,
-        available_uids,
-        deployment_info,
-        offline_uids)
+      offline_uids
     end
 
-    def remove_offline_nodes(uids, available_uids, deployment_info, offline_uids)
-      if offline_uids.blank?
-        return [deployment_info, offline_uids]
-      end
-
-      Astute.logger.info "Removing nodes which failed to provision: " \
-                         "#{offline_uids}"
-      deployment_info = cleanup_nodes_block(deployment_info, offline_uids)
-      deployment_info = deployment_info.select do |node|
-        available_uids.include? node['uid']
-      end
-
-      [deployment_info, offline_uids]
-    end
-
-    def cleanup_nodes_block(deployment_info, offline_uids)
-      return deployment_info if offline_uids.blank?
-
-      nodes = deployment_info.first['nodes']
-
-      # In case of deploy in already existing cluster in nodes block
-      # we will have all cluster nodes. We should remove only missing
-      # nodes instead of stay only available.
-      # Example: deploy 3 nodes, after it deploy 2 nodes.
-      # In 1 of 2 seconds nodes missing, in nodes block we should
-      # contain only 4 nodes.
-      nodes_wthout_missing = nodes.select do |node|
-        !offline_uids.include?(node['uid'])
-      end
-      deployment_info.each { |node| node['nodes'] = nodes_wthout_missing }
-      deployment_info
-    end
-
-    def detect_available_nodes(uids)
-      all_uids = uids.clone
+    def detect_offline_nodes(uids)
       available_uids = []
 
+      uids.delete('master')
+      uids.delete('virtual_sync_node')
       # In case of big amount of nodes we should do several calls to be sure
       # about node status
-      Astute.config[:mc_retries].times.each do
+      Astute.config.mc_retries.times.each do
         systemtype = Astute::MClient.new(
           @ctx,
           "systemtype",
-          all_uids,
+          uids,
           _check_result=false,
           10
         )
@@ -277,22 +240,14 @@ module Astute
         end
 
         available_uids += available_nodes.map { |node| node.results[:sender] }
-        all_uids -= available_uids
-        break if all_uids.empty?
+        uids -= available_uids
+        break if uids.empty?
 
-        sleep Astute.config[:mc_retry_interval]
+        sleep Astute.config.mc_retry_interval
       end
 
-      available_uids
+      uids
     end
 
-    def get_uids_from_deployment_info(deployment_info)
-      top_level_uids = deployment_info.map{ |node| node["uid"] }
-
-      inside_uids = deployment_info.inject([]) do |uids, node|
-        uids += node.fetch('nodes', []).map{ |n| n['uid'] }
-      end
-      top_level_uids | inside_uids
-    end
   end
 end

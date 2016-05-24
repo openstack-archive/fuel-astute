@@ -247,17 +247,19 @@ describe Astute::TaskNode do
         Astute::Puppet.any_instance.stubs(:run)
       end
 
-      context 'mark online' do
-        it 'if task successful' do
-          Astute::Puppet.any_instance.stubs(:status).returns(:successful)
+      context 'mark failed' do
+        it 'if task failed' do
+          Astute::Puppet.any_instance.stubs(:status).returns(:failed)
           ctx.stubs(:report)
           task_node.run(task)
           task_node.poll
-          expect(task_node.status).to eql(:online)
+          expect(task_node.status).to eql(:failed)
         end
+      end
 
-        it 'if task failed' do
-          Astute::Puppet.any_instance.stubs(:status).returns(:failed)
+      context 'mark online' do
+        it 'if task successful' do
+          Astute::Puppet.any_instance.stubs(:status).returns(:successful)
           ctx.stubs(:report)
           task_node.run(task)
           task_node.poll
@@ -396,7 +398,7 @@ describe Astute::TaskNode do
         task_node.poll
       end
 
-      it 'should report deploy progress if task failed and another tasks exists' do
+      it 'should not report deploy progress if task failed and another tasks exists' do
         Astute::Puppet.any_instance.expects(:status).returns(:failed)
         task_node.graph.create_task(
           'second_task',
@@ -404,15 +406,7 @@ describe Astute::TaskNode do
         )
 
         task_node.run(task)
-        ctx.expects(:report).with({
-          'nodes' => [{
-            'uid' => 'node_id',
-            'status' => 'deploying',
-            'deployment_graph_task_name' => task.name,
-            'custom' => {},
-            'task_status' => 'failed',
-            'progress' => 50}]
-        })
+        ctx.expects(:report).never
         task_node.poll
       end
     end

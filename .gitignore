@@ -16,3 +16,4 @@ docs/_build
 # Local raemon copy
 raemon/
 
+*.svg
