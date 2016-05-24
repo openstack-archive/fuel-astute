@@ -408,6 +408,12 @@ module Deployment
       FAILED_STATUSES.include? status
     end
 
+    # This task have not been run because of failed dependencies
+    # @return [true, false]
+    def dep_failed?
+      status == :dep_failed
+    end
+
     # @return [String]
     def to_s
       "Task[#{name}/#{node.name}]"
