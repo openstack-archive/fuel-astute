@@ -30,6 +30,7 @@ module Deployment
       @tasks_have_failed = false
       @tasks_are_finished = false
       @tasks_are_successful = false
+      @tasks_have_only_dep_failed = false
       self.node = node
       @tasks = {}
     end
@@ -243,6 +244,28 @@ module Deployment
     end
     alias :failed? :tasks_have_failed?
 
+    # Check if some of the tasks in this graph have failed deps
+    # because of dependens and has no failed tasks
+    # memorises the positive result
+    # @return [true, false]
+    def tasks_have_only_dep_failed?
+      return true if @tasks_have_only_dep_failed
+      dep_failed = select do |task|
+        task.dep_failed?
+      end
+      has_failed = any? do |task|
+        task.abortive?
+      end
+
+      return false if has_failed
+      if dep_failed.any?
+        debug "Found failed deps tasks: #{dep_failed.map { |t| t.name }.join ', '}"
+        @tasks_have_dep_failed = true
+      end
+      dep_failed.any?
+    end
+    alias :dep_only_failed? :tasks_have_only_dep_failed?
+
     # Find a task in the graph that has all dependencies met
     # and can be run right now
     # returns nil if there is no such task
@@ -312,6 +335,7 @@ module Deployment
       message = "#{self}{"
       message += "Tasks: #{tasks_finished_count}/#{tasks_total_count}"
       message += " Finished: #{tasks_are_finished?} Failed: #{tasks_have_failed?} Successful: #{tasks_are_successful?}"
+      message += " All tasks: #{tasks.map {|t| t.inspect}}"
       message + '}'
     end
   end
