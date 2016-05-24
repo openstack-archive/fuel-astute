@@ -1,0 +1,10 @@
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+2: Vladimir Sharshov <vsharshov@mirantis.com>
+Code-Review+1: Ivan Ponomarev <iponomarev@mirantis.com>
+Workflow+1: Vladimir Sharshov <vsharshov@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 24 May 2016 17:52:30 +0000
+Reviewed-on: https://review.openstack.org/319851
+Project: openstack/fuel-astute
+Branch: refs/heads/stable/mitaka
