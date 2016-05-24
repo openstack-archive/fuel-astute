@@ -181,7 +181,7 @@ module Deployment
 
     # The node is skipped and will not get any tasks
     def skipped?
-      status == :skipped
+      status == :skipped or tasks_have_dep_failed?
     end
 
     ALLOWED_STATUSES.each do |status|
@@ -235,7 +235,7 @@ module Deployment
     def inspect
       message = "#{self}{Status: #{status}"
       message += " Tasks: #{tasks_finished_count}/#{tasks_total_count}"
-      message += " CurrentTask: #{task.name}" if task
+      message += " CurrentTask: #{task.name}, task status: #{task.status}" if task
       message + '}'
     end
 
