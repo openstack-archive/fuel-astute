@@ -72,6 +72,9 @@ module Deployment
         debug "#{task} finished with: #{status}"
         self.task.status = status
         self.status = :online
+
+        self.status = :skipped if task.status == :dep_failed
+        self.status = :failed if task.status == :failed
       end
     end
   end

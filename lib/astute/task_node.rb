@@ -37,7 +37,7 @@ module Astute
       # Please be informed that this code define special method
       # of Deployment::Node class. We use special method `task`
       # to manage task status, graph of tasks and nodes.
-      task.status = @task_engine.status
+      task.status = setup_task_status
       if @task.running?
         @ctx.report({
           'nodes' => [{
@@ -49,8 +49,7 @@ module Astute
           }]
         })
       else
-        set_status_online
-
+        setup_node_status
         report_node_status
       end
     end
@@ -70,10 +69,13 @@ module Astute
         'uid' => id,
         'status' => deploy_status,
         'progress' => current_progress_bar,
+      }
+
+      node_status.merge!(
         'deployment_graph_task_name' => task.name,
         'task_status' => task.status.to_s,
-        'custom' => @task_engine.summary,
-      }
+        'custom' => @task_engine.summary
+      ) if task
 
       node_status.merge!('error_type' => 'deploy') if
         deploy_status == 'error'
@@ -82,6 +84,27 @@ module Astute
     end
 
     private
+
+    # This method support special task behavior. If task failed
+    # and we do not think that deployment should be stopped, Astute
+    # will mark such task as skipped and do not report error
+    def setup_task_status
+      if !task.data.fetch('fail_on_error', true) && @task_engine.failed?
+        Astute.logger.warn "Task #{task.name} failed, but marked as skipped "\
+                           "because of 'fail on error' behavior"
+        return :skipped
+      end
+      @task_engine.status
+    end
+
+    def setup_node_status
+      if task
+        set_status_failed && return if task.failed?
+        set_status_skipped && return if task.dep_failed?
+      end
+
+      set_status_online
+    end
 
     def current_progress_bar
       100 * tasks_finished_count / tasks_total_count

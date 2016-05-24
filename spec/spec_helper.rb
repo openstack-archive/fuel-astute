@@ -33,7 +33,7 @@ $LOAD_PATH << lib_dir
 require 'astute'
 require 'fuel_deployment'
 
-Deployment::Log.logger.level = Logger::WARN
+Deployment::Log.logger.level = Logger::DEBUG
 
 Dir[File.join(File.dirname(__FILE__), 'unit/fixtures/*.rb')].each { |file| require file }
 
