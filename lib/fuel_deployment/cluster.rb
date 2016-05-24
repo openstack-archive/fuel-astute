@@ -32,15 +32,19 @@ module Deployment
       @id = id
       @node_concurrency = Deployment::Concurrency::Counter.new
       @task_concurrency = Deployment::Concurrency::Group.new
+      @emergency_brake = false
     end
 
     include Enumerable
     include Deployment::Log
 
     attr_accessor :id
+    attr_accessor :gracefully_stop_mark
+    attr_reader :emergency_brake
     attr_reader :nodes
     attr_reader :node_concurrency
     attr_reader :task_concurrency
+    attr_reader :fault_tolerance_groups
 
     # Add an existing node object to the cluster
     # @param [Deployment::Node] node a new node object
@@ -211,6 +215,7 @@ module Deployment
       hook 'pre_node', node
       return if node.skipped?
       node.poll
+      hook 'internal_post_node_poll', node
       hook 'post_node_poll', node
       return unless node.ready?
       ready_task = node.ready_task
@@ -248,35 +253,42 @@ module Deployment
     def run
       ready_nodes = each_ready_task.to_a.join ', '
       info "Starting the deployment process. Starting tasks: #{ready_nodes}"
+      hook 'internal_pre_run'
       hook 'pre_run'
       topology_sort
       result = loop do
         if all_nodes_are_successful?
-          status = 'All nodes are deployed successfully. Stopping the deployment process!'
+          status = 'All nodes are deployed successfully.'\
+                   'Stopping the deployment process!'
           result = {
               :success => true,
               :status => status,
           }
           break result
         end
-        if has_failed_critical_nodes?
-          status =  "Critical nodes failed: #{failed_critical_nodes.join ', '}. Stopping the deployment process!"
-          result = {
-              :success => false,
-              :status => status,
-              :failed_nodes => failed_critical_nodes,
-              :failed_tasks => failed_tasks,
-          }
-          break result
-        end
+        gracefully_stop! if has_failed_critical_nodes?
+
         if all_nodes_are_finished?
-          status = "All nodes are finished. Failed tasks: #{failed_tasks.join ', '} Stopping the deployment process!"
-          result = {
+          status = "All nodes are finished. Failed tasks: "\
+                  "#{failed_tasks.join ', '} Stopping the "\
+                  "deployment process!"
+          result = if has_failed_critical_nodes?
+            {
               :success => false,
               :status => status,
               :failed_nodes => failed_nodes,
-              :failed_tasks => failed_tasks,
-          }
+              :skipped_nodes => skipped_nodes,
+              :failed_tasks => failed_tasks
+            }
+          else
+            {
+              :success => true,
+              :status => status,
+              :failed_nodes => failed_nodes,
+              :skipped_nodes => skipped_nodes,
+              :failed_tasks => failed_tasks
+            }
+          end
           break result
         end
         # run loop over all nodes
@@ -300,7 +312,7 @@ module Deployment
     # @return [Array<Deployment::Node>]
     def failed_critical_nodes
       critical_nodes.select do |node|
-        node.failed?
+        node.failed? && !node.skipped?
       end
     end
 
@@ -315,9 +327,16 @@ module Deployment
     # @return [Array<Deployment::Node>]
     def failed_nodes
       select do |node|
-        node.failed?
+        node.failed? && !node.skipped?
       end
     end
+
+    def skipped_nodes
+      select do |node|
+        node.skipped?
+      end
+    end
+
 
     # Get the list of the failed nodes
     # @return [Array<Deployment::Task>]
@@ -474,6 +493,79 @@ digraph "<%= id || 'graph' %>" {
       map do |node|
         node.name
       end.sort
+    end
+
+    def stop_condition(&block)
+      self.gracefully_stop_mark = block
+    end
+
+    def hook_internal_post_node_poll(*args)
+      gracefully_stop(args[0])
+      validate_fault_tolerance(args[0])
+    end
+
+    def hook_internal_pre_run(*args)
+      return unless has_failed_nodes?
+      failed_nodes.each { |node| validate_fault_tolerance(node) }
+    end
+
+    # Check if the deployment process should stop
+    # @return [true, false]
+    def gracefully_stop?
+      return true if @emergency_brake
+      if gracefully_stop_mark && gracefully_stop_mark.call
+        info "Stop deployment by stop condition (external reason)"
+        @emergency_brake = true
+      end
+      @emergency_brake
+    end
+
+    def gracefully_stop(node)
+      if gracefully_stop? && node.ready?
+        node.set_status_skipped
+        hook 'post_gracefully_stop', node
+      end
+    end
+
+    def gracefully_stop!
+      return if @emergency_brake
+
+      info "Stop deployment by internal reason"
+      @emergency_brake = true
+    end
+
+    def fault_tolerance_groups=(groups=[])
+      @fault_tolerance_groups = groups.select { |group| group['node_ids'].present? }
+      @fault_tolerance_groups.each { |group| group['failed_node_ids'] = [] }
+      debug "Setup fault tolerance groups: #{@fault_tolerance_groups}"
+    end
+
+    def validate_fault_tolerance(node)
+      return if gracefully_stop?
+
+      if node.failed?
+        count_tolerance_fail(node)
+        gracefully_stop! if fault_tolerance_excess?
+      end
+    end
+
+    def count_tolerance_fail(node)
+      @fault_tolerance_groups.select do |g|
+        g['node_ids'].include?(node.name)
+      end.each do |group|
+        debug "Count faild node #{node.name} for group #{group['name']}"
+        group['fault_tolerance'] -= 1
+        group['node_ids'].delete(node.name)
+        group['failed_node_ids'] << node.name
+      end
+    end
+
+    def fault_tolerance_excess?
+      is_failed  = @fault_tolerance_groups.select { |group| group['fault_tolerance'] < 0 }
+      return false if is_failed.empty?
+
+      warn "Fault tolerance exceeded the stop conditions #{is_failed}"
+      true
     end
 
     # @return [String]

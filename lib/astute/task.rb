@@ -74,6 +74,30 @@ module Astute
       {}
     end
 
+    def finished?
+      [:successful, :failed, :skipped].include? @status
+    end
+
+    def successful?
+      @status == :successful
+    end
+
+    def pending?
+      @status == :pending
+    end
+
+    def skipped?
+      @status == :skipped
+    end
+
+    def running?
+      @status == :running
+    end
+
+    def failed?
+      @status == :failed
+    end
+
     private
 
     # Run current task on node, specified in task
@@ -183,42 +207,18 @@ module Astute
       false
     end
 
-    def finished?
-      [:successful, :failed, :skipped].include? @status
-    end
-
     def failed!
       self.status = :failed
       time_summary
-    end
-
-    def failed?
-      @status == :failed
     end
 
     def running!
       self.status = :running
     end
 
-    def running?
-      @status == :running
-    end
-
     def succeed!
       self.status = :successful
       time_summary
-    end
-
-    def successful?
-      @status == :successful
-    end
-
-    def pending?
-      @status == :pending
-    end
-
-    def skipped?
-      @status == :skipped
     end
 
     def skipped!

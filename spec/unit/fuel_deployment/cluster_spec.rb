@@ -200,6 +200,54 @@ describe Deployment::Cluster do
       expect(subject.has_failed_nodes?).to eq true
     end
 
+    context 'fault_tolerance_groups' do
+
+      let(:fault_tolerance_groups) do
+        [{
+           "fault_tolerance"=>1,
+           "name"=>"test_group",
+           "node_ids"=>['node2']
+         },
+         {
+           "fault_tolerance"=> 0,
+           "name"=>"test_group2",
+           "node_ids"=>[]
+          }]
+      end
+
+      it 'can find tolerance group' do
+        cluster.fault_tolerance_groups = fault_tolerance_groups
+        task1_1.status = :successful
+        task1_2.status = :successful
+        task2_1.status = :successful
+        task2_2.status = :failed
+        expect(cluster.fault_tolerance_groups).to eq [fault_tolerance_groups.first]
+      end
+
+      it 'can validate tolerance group' do
+        cluster.fault_tolerance_groups = fault_tolerance_groups
+        task1_1.status = :successful
+        task1_2.status = :successful
+        task2_1.status = :failed
+        cluster.validate_fault_tolerance(node1)
+        cluster.validate_fault_tolerance(node2)
+        expect(cluster.fault_tolerance_excess?).to eq false
+        expect(cluster.gracefully_stop?).to eq false
+      end
+
+      it 'can control deploy using tolerance group' do
+        fault_tolerance_groups.first['fault_tolerance'] = 0
+        cluster.fault_tolerance_groups = fault_tolerance_groups
+        task1_1.status = :successful
+        task1_2.status = :successful
+        task2_1.status = :failed
+        cluster.validate_fault_tolerance(node1)
+        cluster.validate_fault_tolerance(node2)
+        expect(cluster.fault_tolerance_excess?).to eq true
+        expect(cluster.gracefully_stop?).to eq true
+      end
+    end
+
     it 'can find critical nodes' do
       expect(subject.critical_nodes).to eq([])
       node1.critical = true
