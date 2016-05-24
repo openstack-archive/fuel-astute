@@ -34,6 +34,8 @@ module Deployment
     ALLOWED_STATUSES = [:online, :busy, :offline, :failed, :successful, :skipped]
     # A node is considered finished with one of these statuses
     FINISHED_STATUSES = [:failed, :successful, :skipped]
+    # A node is considered failed with these statuses
+    FAILED_STATUSES = [:failed]
 
     # @param [String, Symbol] name
     # @param [Deployment::Cluster] cluster
@@ -61,6 +63,8 @@ module Deployment
     attr_accessor :id
     attr_reader :critical
     alias :critical? :critical
+    attr_reader :sync_point
+    alias :sync_point? :sync_point
 
     # Set a new status of this node
     # @param [Symbol, String] value
@@ -83,13 +87,34 @@ module Deployment
     # Set this node to be a critical node
     # @return [true]
     def set_critical
+      debug "Setup #{self} as critical node"
       self.critical = true
     end
 
     # Set this node to be a normal node
     # @return [false]
     def set_normal
+      debug "Setup #{self} as normal node"
       self.critical = false
+    end
+
+    # Set this node as sync point node
+    # @return [true]
+    def set_as_sync_point
+      self.sync_point = true
+    end
+
+    # Set this node as normal point node
+    # @return [false]
+    def unset_as_sync_point
+      self.sync_point = false
+    end
+
+    # Set the sync point property of this node
+    # @param [true, false] value
+    # @return [true, false]
+    def sync_point=(value)
+      @sync_point = !!value
     end
 
     # Set this node's Cluster Object
@@ -169,7 +194,7 @@ module Deployment
     # or has the failed status
     # @return [true, false]
     def failed?
-      status == :failed or tasks_have_failed?
+      FAILED_STATUSES.include? status or tasks_have_failed?
     end
 
     # The node has all tasks successful
@@ -181,7 +206,7 @@ module Deployment
 
     # The node is skipped and will not get any tasks
     def skipped?
-      status == :skipped
+      status == :skipped #or tasks_have_only_dep_failed?
     end
 
     ALLOWED_STATUSES.each do |status|
@@ -235,7 +260,7 @@ module Deployment
     def inspect
       message = "#{self}{Status: #{status}"
       message += " Tasks: #{tasks_finished_count}/#{tasks_total_count}"
-      message += " CurrentTask: #{task.name}" if task
+      message += " CurrentTask: #{task.name}, task status: #{task.status}" if task
       message + '}'
     end
 

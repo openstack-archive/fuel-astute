@@ -25,7 +25,11 @@ describe Astute::Orchestrator do
   end
 
   describe '#task_deployment' do
-    let(:deployment_info) { [] }
+    let(:tasks_metadata) do
+        {
+          'fault_tolerance_groups' => []
+        }
+    end
 
     let(:tasks_graph) do
       {"1"=>
@@ -63,7 +67,7 @@ describe Astute::Orchestrator do
 
     it 'should run task deployment' do
       Astute::TaskDeployment.any_instance.expects(:deploy).with(
-        :deployment_info => deployment_info,
+        :tasks_metadata => tasks_metadata,
         :tasks_graph => tasks_graph,
         :tasks_directory => tasks_directory,
         :dry_run => false
@@ -73,7 +77,7 @@ describe Astute::Orchestrator do
         @reporter,
         'task_id',
         {
-          :deployment_info => deployment_info,
+          :tasks_metadata => tasks_metadata,
           :tasks_graph => tasks_graph,
           :tasks_directory => tasks_directory
         }
@@ -92,7 +96,7 @@ describe Astute::Orchestrator do
         @reporter,
         'task_id',
         {
-          :deployment_info => deployment_info,
+          :tasks_metadata => tasks_metadata,
           :tasks_graph => tasks_graph,
           :tasks_directory => tasks_directory
         }

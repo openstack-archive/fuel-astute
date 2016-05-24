@@ -15,27 +15,43 @@ require 'fuel_deployment'
 
 module Astute
   class TaskCluster < Deployment::Cluster
-    attr_accessor :gracefully_stop_mark
 
-    def stop_condition(&block)
-      self.gracefully_stop_mark = block
-    end
+    attr_reader :fault_tolerance_groups
 
     def hook_post_node_poll(*args)
-      gracefully_stop(args[0])
+      super
+      validate_fault_tolerance(args[0])
     end
 
-    # Check if the deployment process should stop
-    # @return [true, false]
-    def gracefully_stop?
-      gracefully_stop_mark ? gracefully_stop_mark.call : false
+    def hook_post_gracefully_stop(*args)
+      report_new_node_status(args[0])
     end
 
-    def gracefully_stop(node)
-      if gracefully_stop? && node.ready?
-        node.set_status_skipped
-        node.report_node_status
+    def report_new_node_status(node)
+      node.report_node_status
+    end
+
+    def fault_tolerance_groups=(groups=[])
+      @fault_tolerance_groups = groups.select { |group| group['node_ids'].present? }
+    end
+
+    private
+
+    def validate_fault_tolerance(node)
+      if node.failed? && !node.skipped?
+        count_tolerance_fail(node)
+        gracefully_stop! if fault_tolerance_excess?
       end
+    end
+
+    def count_tolerance_fail(node)
+      @fault_tolerance_groups.each do |group|
+        group['fault_tolerance'] -= 1 if group['node_ids'].include?(node.name)
+      end
+    end
+
+    def fault_tolerance_excess?
+      @fault_tolerance_groups.any? { |group| group['fault_tolerance'] < 0 }
     end
 
   end

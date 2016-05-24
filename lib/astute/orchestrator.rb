@@ -75,9 +75,9 @@ module Astute
 
       deployment_engine = TaskDeployment.new(context)
       deployment_engine.deploy(
-        deployment_info: deployment_options[:deployment_info],
         tasks_graph: deployment_options[:tasks_graph],
         tasks_directory: deployment_options[:tasks_directory],
+        tasks_metadata: deployment_options[:tasks_metadata],
         dry_run: deployment_options.fetch(:dry_run, false)
       )
     ensure

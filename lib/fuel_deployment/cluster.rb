@@ -32,12 +32,15 @@ module Deployment
       @id = id
       @node_concurrency = Deployment::Concurrency::Counter.new
       @task_concurrency = Deployment::Concurrency::Group.new
+      @emergency_brake = false
     end
 
     include Enumerable
     include Deployment::Log
 
     attr_accessor :id
+    attr_accessor :gracefully_stop_mark
+    attr_reader :emergency_brake
     attr_reader :nodes
     attr_reader :node_concurrency
     attr_reader :task_concurrency
@@ -252,31 +255,38 @@ module Deployment
       topology_sort
       result = loop do
         if all_nodes_are_successful?
-          status = 'All nodes are deployed successfully. Stopping the deployment process!'
+          status = 'All nodes are deployed successfully.'\
+                   'Stopping the deployment process!'
           result = {
               :success => true,
               :status => status,
           }
           break result
         end
-        if has_failed_critical_nodes?
-          status =  "Critical nodes failed: #{failed_critical_nodes.join ', '}. Stopping the deployment process!"
-          result = {
-              :success => false,
-              :status => status,
-              :failed_nodes => failed_critical_nodes,
-              :failed_tasks => failed_tasks,
-          }
-          break result
-        end
+        gracefully_stop! if has_failed_critical_nodes?
+        info "Current node status: #{@nodes.map { |node| node.inspect }}"
+
         if all_nodes_are_finished?
-          status = "All nodes are finished. Failed tasks: #{failed_tasks.join ', '} Stopping the deployment process!"
-          result = {
+          status = "All nodes are finished. Failed tasks: "\
+                  "#{failed_tasks.join ', '} Stopping the "\
+                  "deployment process!"
+          result = if has_failed_critical_nodes?
+            {
               :success => false,
               :status => status,
               :failed_nodes => failed_nodes,
-              :failed_tasks => failed_tasks,
-          }
+              :skipped_nodes => skipped_nodes,
+              :failed_tasks => failed_tasks
+            }
+          else
+            {
+              :success => true,
+              :status => status,
+              :failed_nodes => failed_nodes,
+              :skipped_nodes => skipped_nodes,
+              :failed_tasks => failed_tasks
+            }
+          end
           break result
         end
         # run loop over all nodes
@@ -300,7 +310,7 @@ module Deployment
     # @return [Array<Deployment::Node>]
     def failed_critical_nodes
       critical_nodes.select do |node|
-        node.failed?
+        node.failed? && !node.skipped?
       end
     end
 
@@ -315,9 +325,16 @@ module Deployment
     # @return [Array<Deployment::Node>]
     def failed_nodes
       select do |node|
-        node.failed?
+        node.failed? && !node.skipped?
       end
     end
+
+    def skipped_nodes
+      select do |node|
+        node.skipped?
+      end
+    end
+
 
     # Get the list of the failed nodes
     # @return [Array<Deployment::Task>]
@@ -474,6 +491,39 @@ digraph "<%= id || 'graph' %>" {
       map do |node|
         node.name
       end.sort
+    end
+
+    def stop_condition(&block)
+      self.gracefully_stop_mark = block
+    end
+
+    def hook_post_node_poll(*args)
+      gracefully_stop(args[0])
+    end
+
+    # Check if the deployment process should stop
+    # @return [true, false]
+    def gracefully_stop?
+      return true if @emergency_brake
+      if gracefully_stop_mark && gracefully_stop_mark.call
+        info "Stop deployment by stop condition (external reason)"
+        @emergency_brake = true
+      end
+      @emergency_brake
+    end
+
+    def gracefully_stop(node)
+      if gracefully_stop? && node.ready?
+        node.set_status_skipped
+        hook 'post_gracefully_stop', node
+      end
+    end
+
+    def gracefully_stop!
+      return if @emergency_brake
+
+      info "Stop deployment by internal reason"
+      @emergency_brake = true
     end
 
     # @return [String]
