@@ -32,12 +32,15 @@ module Deployment
       @id = id
       @node_concurrency = Deployment::Concurrency::Counter.new
       @task_concurrency = Deployment::Concurrency::Group.new
+      @emergency_brake = false
     end
 
     include Enumerable
     include Deployment::Log
 
     attr_accessor :id
+    attr_accessor :gracefully_stop_mark
+    attr_reader :emergency_brake
     attr_reader :nodes
     attr_reader :node_concurrency
     attr_reader :task_concurrency
@@ -259,16 +262,7 @@ module Deployment
           }
           break result
         end
-        if has_failed_critical_nodes?
-          status =  "Critical nodes failed: #{failed_critical_nodes.join ', '}. Stopping the deployment process!"
-          result = {
-              :success => false,
-              :status => status,
-              :failed_nodes => failed_critical_nodes,
-              :failed_tasks => failed_tasks,
-          }
-          break result
-        end
+        gracefully_stop! if has_failed_critical_nodes?
         if all_nodes_are_finished?
           status = "All nodes are finished. Failed tasks: #{failed_tasks.join ', '} Stopping the deployment process!"
           result = {
@@ -474,6 +468,36 @@ digraph "<%= id || 'graph' %>" {
       map do |node|
         node.name
       end.sort
+    end
+
+    def stop_condition(&block)
+      self.gracefully_stop_mark = block
+    end
+
+    def hook_post_node_poll(*args)
+      gracefully_stop(args[0])
+    end
+
+    # Check if the deployment process should stop
+    # @return [true, false]
+    def gracefully_stop?
+      return true if @emergency_brake
+      if gracefully_stop_mark
+        @emergency_brake = gracefully_stop_mark.call
+      else
+        false
+      end
+    end
+
+    def gracefully_stop(node)
+      if gracefully_stop? && node.ready?
+        node.set_status_skipped
+        node.report_node_status
+      end
+    end
+
+    def gracefully_stop!
+      @emergency_brake = true
     end
 
     # @return [String]

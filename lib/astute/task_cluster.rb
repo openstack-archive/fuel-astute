@@ -15,28 +15,6 @@ require 'fuel_deployment'
 
 module Astute
   class TaskCluster < Deployment::Cluster
-    attr_accessor :gracefully_stop_mark
-
-    def stop_condition(&block)
-      self.gracefully_stop_mark = block
-    end
-
-    def hook_post_node_poll(*args)
-      gracefully_stop(args[0])
-    end
-
-    # Check if the deployment process should stop
-    # @return [true, false]
-    def gracefully_stop?
-      gracefully_stop_mark ? gracefully_stop_mark.call : false
-    end
-
-    def gracefully_stop(node)
-      if gracefully_stop? && node.ready?
-        node.set_status_skipped
-        node.report_node_status
-      end
-    end
 
   end
 end
