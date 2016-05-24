@@ -235,7 +235,7 @@ module Deployment
     def inspect
       message = "#{self}{Status: #{status}"
       message += " Tasks: #{tasks_finished_count}/#{tasks_total_count}"
-      message += " CurrentTask: #{task.name}" if task
+      message += " CurrentTask: #{task.name}, task status: #{task.status}" if task
       message + '}'
     end
 
