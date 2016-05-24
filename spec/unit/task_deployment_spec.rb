@@ -24,13 +24,10 @@ describe Astute::TaskDeployment do
     ctx
   end
 
-  let(:deployment_info) do
-    [
+  let(:tasks_metadata) do
       {
-        'uid' => '1',
-        'fail_if_error' => false
+        'fault_tolerance_groups' => []
       }
-    ]
   end
 
   let(:tasks_graph) do
@@ -41,7 +38,7 @@ describe Astute::TaskDeployment do
         "required_for"=>[],
         "requires"=> [],
         "id"=>"ironic_post_swift_key",
-        "parameters"=>{}
+        "parameters"=>{},
       }],
       "null"=> [{
         "skipped"=>true,
@@ -74,21 +71,19 @@ describe Astute::TaskDeployment do
 
   describe '#deploy' do
     it 'should run deploy' do
-      task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
-      Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+      task_deployment.stubs(:fail_offline_nodes).returns([])
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
 
       Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
       task_deployment.deploy(
-        deployment_info: deployment_info,
+        tasks_metadata: tasks_metadata,
         tasks_graph: tasks_graph,
         tasks_directory: tasks_directory)
     end
 
     it 'should not raise error if deployment info not provided' do
-      task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
-      Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+      task_deployment.stubs(:fail_offline_nodes).returns([])
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
 
@@ -106,40 +101,22 @@ describe Astute::TaskDeployment do
       )
     end
 
-    it 'should run pre deployment task' do
-      task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
-      task_deployment.stubs(:write_graph_to_file)
-      ctx.stubs(:report)
-      Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
-
-      pre_deployment = Astute::TaskPreDeploymentActions.new(deployment_info, ctx)
-      Astute::TaskPreDeploymentActions.expects(:new)
-                                      .with(deployment_info, ctx)
-                                      .returns(pre_deployment)
-      Astute::TaskPreDeploymentActions.any_instance.expects(:process)
-      task_deployment.deploy(
-        deployment_info: deployment_info,
-        tasks_graph: tasks_graph,
-        tasks_directory: tasks_directory)
-    end
-
     it 'should support virtual node' do
       d_t = task_deployment.send(:support_virtual_node, tasks_graph)
       expect(d_t.keys).to include 'virtual_sync_node'
       expect(d_t.keys).not_to include 'null'
     end
 
-    it 'should remove failed nodes' do
-      #TODO(vsharshov): improve remove failed nodes check. Check mcollective
+    it 'should fail offline nodes' do
       Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
 
-      task_deployment.expects(:remove_failed_nodes).returns([deployment_info, []])
+      task_deployment.expects(:fail_offline_nodes).returns([])
 
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
       task_deployment.deploy(
-        deployment_info: deployment_info,
+        tasks_metadata: tasks_metadata,
         tasks_graph: tasks_graph,
         tasks_directory: tasks_directory)
     end
@@ -148,12 +125,12 @@ describe Astute::TaskDeployment do
       Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
-      task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+      task_deployment.stubs(:fail_offline_nodes).returns([])
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
       Astute::TaskCluster.any_instance.expects(:stop_condition)
       task_deployment.deploy(
-        deployment_info: deployment_info,
+        tasks_metadata: tasks_metadata,
         tasks_graph: tasks_graph,
         tasks_directory: tasks_directory)
     end
@@ -162,12 +139,12 @@ describe Astute::TaskDeployment do
       Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
-      task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+      task_deployment.stubs(:fail_offline_nodes).returns([])
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
       Deployment::Log.expects(:logger=).with(Astute.logger)
       task_deployment.deploy(
-        deployment_info: deployment_info,
+        tasks_metadata: tasks_metadata,
         tasks_graph: tasks_graph,
         tasks_directory: tasks_directory)
     end
@@ -176,10 +153,9 @@ describe Astute::TaskDeployment do
       let(:task_concurrency) { mock('task_concurrency') }
 
       before(:each) do
-        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
         task_deployment.stubs(:write_graph_to_file)
         ctx.stubs(:report)
-        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+        task_deployment.stubs(:fail_offline_nodes).returns([])
         Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
         Deployment::Concurrency::Counter.any_instance
                                         .stubs(:maximum=).with(
@@ -190,7 +166,7 @@ describe Astute::TaskDeployment do
         Deployment::Concurrency::Counter.any_instance.expects(:maximum=).with(0).times(5)
 
         task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)
       end
@@ -204,7 +180,7 @@ describe Astute::TaskDeployment do
                                                      .with(1)
 
         task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)
       end
@@ -218,7 +194,7 @@ describe Astute::TaskDeployment do
                                                      .with(7)
 
         task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)
       end
@@ -229,7 +205,7 @@ describe Astute::TaskDeployment do
                                         .with(0).times(5)
 
         task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)
       end
@@ -241,7 +217,7 @@ describe Astute::TaskDeployment do
                                         .with(0).times(2)
 
         expect {task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)}.to raise_error(
         Astute::DeploymentEngineError, /expect only non-negative integer, but got -4./
@@ -252,15 +228,14 @@ describe Astute::TaskDeployment do
 
     context 'dry_run' do
       it 'should not run actual deployment if dry_run is set to True' do
-        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
-        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+        task_deployment.stubs(:fail_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.stubs(:report)
 
         Astute::TaskCluster.any_instance.expects(:run).never
 
         task_deployment.deploy(
-            deployment_info: deployment_info,
+            tasks_metadata: tasks_metadata,
             tasks_graph: tasks_graph,
             tasks_directory: tasks_directory,
             dry_run: true)
@@ -277,8 +252,7 @@ describe Astute::TaskDeployment do
       it 'should setup max nodes per call using config' do
         Astute.config.max_nodes_per_call = 33
 
-        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
-        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+        task_deployment.stubs(:fail_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.stubs(:report)
 
@@ -293,7 +267,7 @@ describe Astute::TaskDeployment do
         node_concurrency.expects(:maximum=).with(Astute.config.max_nodes_per_call)
 
         task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)
       end
@@ -302,21 +276,18 @@ describe Astute::TaskDeployment do
     context 'should report final status' do
 
       it 'succeed status' do
-        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
         Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
-        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+        task_deployment.stubs(:fail_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.expects(:report).with({'status' => 'ready', 'progress' => 100})
 
         task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)
       end
 
       it 'failed status' do
-        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
-
         failed_node = mock('node')
         failed_node.expects(:id).returns('1')
 
@@ -330,7 +301,7 @@ describe Astute::TaskDeployment do
           :failed_nodes => [failed_node],
           :failed_tasks => [failed_task],
           :status => 'Failed because of'})
-        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
+        task_deployment.stubs(:fail_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.expects(:report).with('nodes' => [{
           'uid' => '1',
@@ -346,7 +317,7 @@ describe Astute::TaskDeployment do
           'error' => 'Failed because of'})
 
         task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)
       end
@@ -363,8 +334,7 @@ describe Astute::TaskDeployment do
       it 'should write if disable' do
         Astute.config.enable_graph_file = false
 
-        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
-        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+        task_deployment.stubs(:fail_offline_nodes).returns([])
         ctx.stubs(:report)
         Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
@@ -374,7 +344,7 @@ describe Astute::TaskDeployment do
             .yields(file_handle).never
 
         task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)
       end
@@ -382,8 +352,7 @@ describe Astute::TaskDeployment do
       it 'should write graph if enable' do
         Astute.config.enable_graph_file = true
 
-        task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
-        Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+        task_deployment.stubs(:fail_offline_nodes).returns([])
         ctx.stubs(:report)
         Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
@@ -393,7 +362,7 @@ describe Astute::TaskDeployment do
             .yields(file_handle).once
 
         task_deployment.deploy(
-          deployment_info: deployment_info,
+          tasks_metadata: tasks_metadata,
           tasks_graph: tasks_graph,
           tasks_directory: tasks_directory)
       end

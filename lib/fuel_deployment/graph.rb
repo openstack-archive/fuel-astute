@@ -203,7 +203,7 @@ module Deployment
         task.finished?
       end
       if finished
-        debug 'All tasks are finished'
+        debug "All tasks on node #{name} are finished"
         @tasks_are_finished = true
       end
       finished
@@ -220,7 +220,7 @@ module Deployment
         task.successful? || task.skipped?
       end
       if successful
-        debug 'All tasks are successful'
+        debug "All tasks on node #{name} are successful"
         @tasks_are_successful = true
       end
       successful
@@ -236,7 +236,7 @@ module Deployment
         task.failed?
       end
       if failed.any?
-        debug "Found failed tasks: #{failed.map { |t| t.name }.join ', '}"
+        debug "Found failed tasks on node #{name}: #{failed.map { |t| t.name }.join ', '}"
         @tasks_have_failed = true
       end
       failed.any?
@@ -311,7 +311,9 @@ module Deployment
     def inspect
       message = "#{self}{"
       message += "Tasks: #{tasks_finished_count}/#{tasks_total_count}"
-      message += " Finished: #{tasks_are_finished?} Failed: #{tasks_have_failed?} Successful: #{tasks_are_successful?}"
+      message += " Finished: #{tasks_are_finished?}"
+      message += " Failed: #{tasks_have_failed?}"
+      message += " Successful: #{tasks_are_successful?}"
       message + '}'
     end
   end
