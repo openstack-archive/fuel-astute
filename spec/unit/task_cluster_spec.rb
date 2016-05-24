@@ -22,23 +22,27 @@ describe Astute::TaskCluster do
 
   let(:node) { Astute::TaskNode.new('node_name', subject) }
 
-  describe "#hook_post_node_poll" do
+  before(:each) do
+    subject.stubs(:validate_fault_tolerance)
+  end
+
+  describe "#hook_internal_post_node_poll" do
     it 'should call gracefully_stop with node' do
       subject.expects(:gracefully_stop).with(node)
-      subject.hook_post_node_poll(node)
+      subject.hook_internal_post_node_poll(node)
     end
   end
 
   describe "#gracefully_stop" do
     it 'should check if node should be stopped' do
       subject.expects(:gracefully_stop?).returns(false)
-      subject.hook_post_node_poll(node)
+      subject.hook_internal_post_node_poll(node)
     end
 
     it 'should check if node ready' do
       subject.stop_condition { true }
       node.expects(:ready?).returns(false)
-      subject.hook_post_node_poll(node)
+      subject.hook_internal_post_node_poll(node)
     end
 
     it 'should set node status as skipped if stopped' do
@@ -47,7 +51,7 @@ describe Astute::TaskCluster do
       node.stubs(:report_node_status)
 
       node.expects(:set_status_skipped).once
-      subject.hook_post_node_poll(node)
+      subject.hook_internal_post_node_poll(node)
     end
 
     it 'should report new node status if stopped' do
@@ -56,7 +60,7 @@ describe Astute::TaskCluster do
       node.stubs(:set_status_skipped).once
 
       node.expects(:report_node_status)
-      subject.hook_post_node_poll(node)
+      subject.hook_internal_post_node_poll(node)
     end
   end
 
