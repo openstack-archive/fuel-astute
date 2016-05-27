@@ -137,8 +137,9 @@ describe Astute::Network do
       mock_and_verify_check_dhcp(nodes, [res1, res2], expected)
 
       # check case when the check failed for one of the nodes
-      err_res = mock_mc_result({:sender => "1", :data => {:err => 'Test err'}})
-      expected = {"nodes" => [{:uid => "1", :status => "error",
+      err_res = mock_mc_result(
+          {:sender => "1", :data => {:err => 'Test err', :out => json_output}})
+      expected = {"nodes" => [{:uid => "1", :status => "error", :data=>expected_data,
                                :error_msg => "Error in dhcp checker. Check logs for details"}],
                   "status" => "error"}
       mock_and_verify_check_dhcp([nodes[0]], [err_res], expected)
