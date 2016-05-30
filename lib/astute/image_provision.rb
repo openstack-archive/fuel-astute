@@ -15,46 +15,78 @@
 
 module Astute
   module ImageProvision
+
     def self.provision(ctx, nodes)
       failed_uids = []
-      begin
-        # uploading provisioning data "/tmp/provision.json"
-        nodes.each { |node| upload_provision(ctx, node) }
-
-        # running provisioning script
-        results = run_provision(ctx, nodes)
-
-        results.each do |node|
-          unless node.results[:data][:exit_code] == 0
-            failed = node.results[:sender]
-            Astute.logger.error("#{ctx.task_id}: Provision command returned non zero exit code on node: #{failed}")
-            failed_uids << failed
-          end
-        end
-
-      rescue => e
-        msg = "Error while provisioning: message: #{e.message} trace: #{e.format_backtrace}"
-        Astute.logger.error("#{ctx.task_id}: #{msg}")
-        report_error(ctx, msg)
-      end
+      uids_to_provision, failed_uids = upload_provision(ctx, nodes)
+      run_provision(ctx, uids_to_provision, failed_uids)
+    rescue => e
+      msg = "Error while provisioning: message: #{e.message} trace: #{e.format_backtrace}"
+      Astute.logger.error("#{ctx.task_id}: #{msg}")
+      report_error(ctx, msg)
       failed_uids
     end
 
-    def self.upload_provision(ctx, node)
-      Astute.logger.debug "#{ctx.task_id}: uploading provision data: #{node.to_json}"
-      client = MClient.new(ctx, "uploadfile", [node['uid']])
-      client.upload(:path => '/tmp/provision.json',
-                    :content => node.to_json,
-                    :user_owner => 'root',
-                    :group_owner => 'root',
-                    :overwrite => true)
+    def self.upload_provision(ctx, nodes)
+      failed_uids = []
+      nodes.each do |node|
+        succees = upload_provision_data(ctx, node)
+        next if succees
+
+        failed_uids << node['uid']
+        Astute.logger.error("#{ctx.task_id}: Upload provisioning data " \
+          "failed on node #{node['uid']}. Provision on such node will " \
+          "not start")
+      end
+
+      uids_to_provision = nodes.select { |n| !failed_uids.include?(n['uid']) }
+                               .map { |n| n['uid'] }
+      [uids_to_provision, failed_uids]
     end
 
-    def self.run_provision(ctx, nodes)
-      uids = nodes.map { |node| node['uid'] }
+    def self.upload_provision_data(ctx, node)
+      Astute.logger.debug("#{ctx.task_id}: uploading provision " \
+        "data on node #{node['uid']}: #{node.to_json}")
+
+      upload_task = Astute::UploadFile.new(
+        generate_upload_provision_task(node),
+        ctx
+      )
+
+      upload_task.sync_run
+    end
+
+    def self.generate_upload_provision_task(node)
+      {
+        "id" => 'upload_provision_data',
+        "node_id" =>  node['uid'],
+        "parameters" =>  {
+          "path" => '/tmp/provision.json',
+          "data" => node.to_json,
+          "user_owner" => 'root',
+          "group_owner" => 'root',
+          "overwrite" => true
+        }
+      }
+    end
+
+    def self.run_provision(ctx, uids, failed_uids)
       Astute.logger.debug "#{ctx.task_id}: running provision script: #{uids.join(', ')}"
-      shell = MClient.new(ctx, 'execute_shell_command', uids, check_result=true, timeout=3600, retries=1)
-      shell.execute(:cmd => 'flock -n /var/lock/provision.lock /usr/bin/provision')
+
+      results = run_shell_command(
+        ctx,
+        uids,
+        'flock -n /var/lock/provision.lock provision',
+        Astute.config.provisioning_timeout
+      )
+
+      results.select{ |_node_id, result| !result }.keys.each do |node_id|
+        failed_uids << node_id
+        Astute.logger.error("#{ctx.task_id}: Provision command returned " \
+          "non zero exit code on node: #{node_id}")
+      end
+
+      failed_uids
     end
 
     def self.report_error(ctx, msg)
@@ -62,6 +94,12 @@ module Astute
     end
 
     def self.reboot(ctx, node_ids, task_id="reboot_provisioned_nodes")
+      if node_ids.empty?
+        Astute.logger.warn("No nodes were sent to reboot for " \
+          "task: #{task_id}")
+        return
+      end
+
       Astute::NailgunHooks.new(
         [{
           "priority" =>  100,
@@ -76,6 +114,26 @@ module Astute
         ctx,
         'provision'
       ).process
+    end
+
+    def self.run_shell_command(context, node_uids, cmd, timeout=3600)
+      shell = MClient.new(
+        context,
+        'execute_shell_command',
+        node_uids,
+        check_result=true,
+        timeout=timeout,
+        retries=1
+      )
+
+      results = shell.execute(:cmd => cmd)
+      results.inject({}) do |summary, node|
+        summary.merge(node.results[:sender] => node.results[:data][:exit_code] == 0)
+      end
+    rescue MClientTimeout, MClientError => e
+      Astute.logger.error("#{context.task_id}: cmd: #{cmd} " \
+        "mcollective error: #{e.message}")
+      {}
     end
 
   end
