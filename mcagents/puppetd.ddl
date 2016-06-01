@@ -9,9 +9,18 @@ metadata    :name        => "puppetd",
 action "last_run_summary", :description => "Get a summary of the last puppet run" do
     display :always
 
+    input :raw_report,
+          :prompt      => "Enable puppet raw report",
+          :description => "Get raw las run report",
+          :type        => :boolean,
+          :validation  => :typecheck,
+          :default     => false,
+          :optional    => true
+
     output :time,
            :description => "Time per resource type",
            :display_as => "Times"
+
     output :resources,
            :description => "Overall resource counts",
            :display_as => "Resources"
@@ -27,6 +36,10 @@ action "last_run_summary", :description => "Get a summary of the last puppet run
     output :version,
            :description => "Puppet and Catalog versions",
            :display_as => "Versions"
+
+    output :raw_report,
+           :description => "Full last run report",
+           :display_as => "Raw report"
 end
 
 action "stop_and_disable", :description => "Stop and disable puppet" do

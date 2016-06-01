@@ -103,6 +103,7 @@ module Astute
     conf[:bootstrap_profile] = 'ubuntu_bootstrap' # use the Ubuntu based bootstrap by default
     conf[:graph_dot_dir] = "/var/lib/astute/graphs" # default dir patch for debug graph file
     conf[:enable_graph_file] = true  # enable debug graph records to file
+    conf[:puppet_raw_report] = false # enable puppet detailed report
 
     # Server settings
     conf[:broker_host] = 'localhost'
