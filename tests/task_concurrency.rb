@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require File.absolute_path File.join File.dirname(__FILE__), 'test_node.rb'
+require_relative '../lib/fuel_deployment/simulator'
 
+simulator = Astute::Simulator.new
 cluster = Deployment::TestCluster.new
 cluster.id = 'task_concurrency'
-cluster.plot = true if options[:plot]
+cluster.plot = true if simulator.options[:plot]
 
 node1 = Deployment::TestNode.new 'node1', cluster
 node2 = Deployment::TestNode.new 'node2', cluster
@@ -49,11 +50,7 @@ node5['final'].after node5['task1']
 cluster.task_concurrency['task1'].maximum = 3
 cluster.task_concurrency['final'].maximum = 2
 
-if options[:plot]
-  cluster.make_image 'start'
-end
-
-if options[:interactive]
+if simulator.options[:interactive]
   binding.pry
 else
   cluster.run
