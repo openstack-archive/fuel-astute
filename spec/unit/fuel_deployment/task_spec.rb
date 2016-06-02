@@ -121,7 +121,7 @@ describe Deployment::Task do
       expect(task2_2.color).to eq :white
       task2_1.status = :failed
       expect(task2_1.color).to eq :red
-      expect(task2_2.color).to eq :magenta
+      expect(task2_2.color).to eq :orange
       task2_1.status = :running
       task2_2.status = :pending
       expect(task2_1.color).to eq :blue
@@ -132,7 +132,7 @@ describe Deployment::Task do
       expect(task2_2.color).to eq :yellow
       task2_1.status = :skipped
       task2_2.status = :pending
-      expect(task2_1.color).to eq :purple
+      expect(task2_1.color).to eq :violet
       expect(task2_2.color).to eq :yellow
     end
 
