@@ -341,8 +341,13 @@ module Deployment
     # set the pending tasks to dep_failed if the node have failed
     def check_for_node_status
       return unless node
-      if Deployment::Node::FAILED_STATUSES.include? node.status and NOT_RUN_STATUSES.include? status
-        self.status = :dep_failed
+      if NOT_RUN_STATUSES.include? status
+        if Deployment::Node::FAILED_STATUSES.include? node.status
+          self.status = :dep_failed
+        end
+        if node.status == :skipped
+          self.status = :skipped
+        end
       end
     end
 
@@ -483,9 +488,9 @@ module Deployment
         when :failed;
           :red
         when :dep_failed;
-          :magenta
+          :orange
         when :skipped;
-          :purple
+          :violet
         when :running;
           :blue
         else
