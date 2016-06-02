@@ -476,6 +476,7 @@ digraph "<%= id || 'graph' %>" {
         graph_name = id || 'graph'
         file = "#{graph_name}-#{suffix}.#{type}"
       end
+      debug "Making the graph image: #{@plot_number || suffix} to the file: #{file}"
       command = "dot -T#{type} -o#{file}"
       Open3.popen2e(command) do |stdin, out, process|
         stdin.puts to_dot

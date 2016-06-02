@@ -17,3 +17,5 @@ docs/_build
 raemon/
 
 *.svg
+*.yaml
+!examples/example_astute_config.yaml
