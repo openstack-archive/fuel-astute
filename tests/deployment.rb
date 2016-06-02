@@ -13,7 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require File.absolute_path File.join File.dirname(__FILE__), 'test_node.rb'
+require_relative '../lib/fuel_deployment/simulator'
+
+simulator = Astute::Simulator.new
+cluster = Deployment::TestCluster.new
+cluster.id = 'deployment'
 
 node1_data = [
     [0, 1],
@@ -49,12 +53,12 @@ node2_data = [
 
 cluster = Deployment::TestCluster.new
 cluster.id = 'deployment'
-cluster.plot = true if options[:plot]
+cluster.plot = true if simulator.options[:plot]
 
 node1 = cluster.node_create 'node1', Deployment::TestNode
 node2 = cluster.node_create 'node2', Deployment::TestNode
 
-node2.set_critical if options[:critical]
+node2.set_critical if simulator.options[:critical]
 
 node1_data.each do |task_from, task_to|
   task_from = node1.graph.create_task "task#{task_from}"
@@ -68,17 +72,15 @@ node2_data.each do |task_from, task_to|
   node2.graph.add_dependency task_from, task_to
 end
 
-node2.fail_tasks << node2['task4'] if options[:fail]
+if simulator.options[:tasks_to_fail]
+  cluster.tasks_to_fail = simulator.options[:tasks_to_fail]
+end
 
 node2['task4'].depends node1['task3']
 node2['task5'].depends node1['task13']
 node1['task15'].depends node2['task6']
 
-if options[:plot]
-  cluster.make_image 'start'
-end
-
-if options[:interactive]
+if simulator.options[:interactive]
   binding.pry
 else
   cluster.run
