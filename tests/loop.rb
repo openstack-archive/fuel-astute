@@ -13,11 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require File.absolute_path File.join File.dirname(__FILE__), 'test_node.rb'
+require_relative '../lib/fuel_deployment/simulator'
 
-cluster = Deployment::Cluster.new
+simulator = Astute::Simulator.new
+cluster = Deployment::TestCluster.new
 cluster.id = 'loop'
-cluster.plot = true if options[:plot]
+
+cluster.plot = true if simulator.options[:plot]
 node1 = Deployment::TestNode.new 'node1', cluster
 
 task1 = node1.graph.add_new_task 'task1'
@@ -26,14 +28,13 @@ task3 = node1.graph.add_new_task 'task3'
 
 task2.after task1
 task3.after task2
+task1.after task3
 
-task1.after task3 if options[:fail]
-
-if options[:plot]
-  cluster.make_image 'start'
+if simulator.options[:tasks_to_fail]
+  cluster.tasks_to_fail = simulator.options[:tasks_to_fail]
 end
 
-if options[:interactive]
+if simulator.options[:interactive]
   binding.pry
 else
   cluster.run

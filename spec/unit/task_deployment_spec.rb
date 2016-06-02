@@ -72,6 +72,11 @@ describe Astute::TaskDeployment do
 
   let(:task_deployment) { Astute::TaskDeployment.new(ctx) }
 
+  before(:each) do
+    task_deployment.stubs(:write_yaml_to_file)
+    task_deployment.stubs(:write_info_to_file)
+  end
+
   describe '#deploy' do
     it 'should run deploy' do
       task_deployment.stubs(:remove_failed_nodes).returns([deployment_info, []])
