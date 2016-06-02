@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-#    Copyright 2015 Mirantis, Inc.
+#    Copyright 2016 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,7 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require File.absolute_path File.join File.dirname(__FILE__), 'test_node.rb'
+require_relative '../lib/fuel_deployment/simulator'
+
+simulator = Astute::Simulator.new
+simulator.tools
+cluster = Deployment::TestCluster.new
+cluster.id = 'deployment'
 
 node1_data = [
     [0, 1],
@@ -49,12 +54,12 @@ node2_data = [
 
 cluster = Deployment::TestCluster.new
 cluster.id = 'deployment'
-cluster.plot = true if options[:plot]
 
 node1 = cluster.node_create 'node1', Deployment::TestNode
 node2 = cluster.node_create 'node2', Deployment::TestNode
-
-node2.set_critical if options[:critical]
+sync_node = cluster.node_create 'sync_node', Deployment::TestNode
+node2.set_critical
+sync_node.create_task 'sync_task'
 
 node1_data.each do |task_from, task_to|
   task_from = node1.graph.create_task "task#{task_from}"
@@ -68,18 +73,13 @@ node2_data.each do |task_from, task_to|
   node2.graph.add_dependency task_from, task_to
 end
 
-node2.fail_tasks << node2['task4'] if options[:fail]
-
 node2['task4'].depends node1['task3']
 node2['task5'].depends node1['task13']
 node1['task15'].depends node2['task6']
 
-if options[:plot]
-  cluster.make_image 'start'
-end
+sync_node['sync_task'].depends node2['task5']
+sync_node['sync_task'].depends node1['task9']
+node2['task6'].depends sync_node['sync_task']
+node1['task14'].depends sync_node['sync_task']
 
-if options[:interactive]
-  binding.pry
-else
-  cluster.run
-end
+simulator.run cluster
