@@ -113,6 +113,7 @@ install -D -m644 %{_builddir}/%{rbname}-%{version}/%{rbname}.service %{buildroot
 %dir /var/lib/astute
 %dir /var/lib/astute/graphs
 %config(noreplace) %{_bindir}/astuted
+%config(noreplace) %{_bindir}/astute-simulator
 %config(noreplace) %{_sysconfdir}/sysconfig/%{rbname}
 
 %doc %{gem_dir}/doc/%{rbname}-%{version}
