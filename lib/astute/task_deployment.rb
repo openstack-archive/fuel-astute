@@ -11,24 +11,29 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-require 'fuel_deployment'
+require_relative '../fuel_deployment'
+require_relative '../astute'
 
 module Astute
   class TaskDeployment
 
-    def initialize(context)
+    def initialize(context, cluster_class=TaskCluster, node_class=TaskNode)
       @ctx = context
+      @cluster_class = cluster_class
+      @node_class = node_class
     end
 
-    def deploy(tasks_graph: {}, tasks_directory: {} , tasks_metadata: {}, dry_run: false)
-      raise DeploymentEngineError, "Deployment graph was not provided!" if
-        tasks_graph.blank?
+    def create_cluster(deployment_options={})
+      tasks_graph = deployment_options.fetch(:tasks_graph, {})
+      tasks_directory = deployment_options.fetch(:tasks_directory, {})
+      tasks_metadata = deployment_options.fetch(:tasks_metadata, {})
+
+      raise DeploymentEngineError, 'Deployment graph was not provided!' if tasks_graph.blank?
 
       support_virtual_node(tasks_graph)
       unzip_graph(tasks_graph, tasks_directory)
 
-      Deployment::Log.logger = Astute.logger
-      cluster = TaskCluster.new
+      cluster = @cluster_class.new
       cluster.node_concurrency.maximum = Astute.config.max_nodes_per_call
       cluster.stop_condition { Thread.current[:gracefully_stop] }
       cluster.fault_tolerance_groups = tasks_metadata.fetch(
@@ -40,7 +45,7 @@ module Astute
       critical_uids = critical_node_uids(cluster.fault_tolerance_groups)
 
       tasks_graph.keys.each do |node_id|
-        node = TaskNode.new(node_id, cluster)
+        node = @node_class.new(node_id, cluster)
         node.context = @ctx
         node.set_critical if critical_uids.include?(node_id)
         node.set_as_sync_point if sync_point?(node_id)
@@ -50,7 +55,13 @@ module Astute
       setup_tasks(tasks_graph, cluster)
       setup_task_depends(tasks_graph, cluster)
       setup_task_concurrency(tasks_graph, cluster)
+      cluster
+    end
 
+    def deploy(deployment_options={})
+      cluster = create_cluster(deployment_options)
+      dry_run = deployment_options.fetch(:dry_run, false)
+      Deployment::Log.logger = Astute.logger
       write_graph_to_file(cluster)
       if dry_run
         result = Hash.new
@@ -174,7 +185,7 @@ module Astute
       tasks_graph['virtual_sync_node'] = tasks_graph['null']
       tasks_graph.delete('null')
 
-      tasks_graph.each do |node_id, tasks|
+      tasks_graph.each do |_node_id, tasks|
         tasks.each do |task|
           task.fetch('requires',[]).each do |d_t|
             d_t['node_id'] = 'virtual_sync_node' if d_t['node_id'].nil?
