@@ -12,13 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require 'fuel_deployment/error'
-require 'fuel_deployment/log'
-require 'fuel_deployment/version'
+require_relative 'fuel_deployment/error'
+require_relative 'fuel_deployment/log'
+require_relative 'fuel_deployment/version'
 
-require 'fuel_deployment/task'
-require 'fuel_deployment/graph'
-require 'fuel_deployment/node'
-require 'fuel_deployment/cluster'
-require 'fuel_deployment/concurrency/group'
-require 'fuel_deployment/concurrency/counter'
+require_relative 'fuel_deployment/task'
+require_relative 'fuel_deployment/graph'
+require_relative 'fuel_deployment/node'
+require_relative 'fuel_deployment/cluster'
+require_relative 'fuel_deployment/concurrency/group'
+require_relative 'fuel_deployment/concurrency/counter'
