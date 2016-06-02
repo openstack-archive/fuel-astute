@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-#    Copyright 2015 Mirantis, Inc.
+#    Copyright 2016 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,25 +13,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require File.absolute_path File.join File.dirname(__FILE__), 'test_node.rb'
+require 'find'
 
-cluster = Deployment::TestCluster.new 'mini'
-cluster.plot = true if options[:plot]
-node1 = Deployment::TestNode.new 'node1', cluster
-
-node1.graph.add_new_task 'task1'
-node1.graph.add_new_task 'task2'
-node1.graph.add_new_task 'task3'
-
-node1['task1'].before node1['task2']
-node1['task2'].before node1['task3']
-
-if options[:plot]
-  cluster.make_image 'start'
+def root
+  File.expand_path File.join File.dirname(__FILE__), '..'
 end
 
-if options[:interactive]
-  binding.pry
-else
-  cluster.run
+def svg_files
+  return to_enum(:svg_files) unless block_given?
+  Find.find(root) do |file|
+    next unless File.file? file
+    next unless file.end_with? '.svg'
+    yield file
+  end
+end
+
+svg_files do |file|
+  puts "Remove: #{file}"
+  File.unlink file if File.file? file
 end
