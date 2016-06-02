@@ -453,9 +453,9 @@ module Deployment
         when :failed;
           :red
         when :dep_failed;
-          :magenta
+          :orange
         when :skipped;
-          :purple
+          :violet
         when :running;
           :blue
         else

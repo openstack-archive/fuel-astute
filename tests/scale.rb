@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-#    Copyright 2015 Mirantis, Inc.
+#    Copyright 2016 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,14 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require File.absolute_path File.join File.dirname(__FILE__), 'test_node.rb'
+require_relative '../lib/fuel_deployment/simulator'
+
+simulator = Astute::Simulator.new
+simulator.tools
+cluster = Deployment::TestCluster.new
 
 TASK_NUMBER = 100
 NODE_NUMBER = 100
 
-cluster = Deployment::TestCluster.new
 cluster.id = 'scale'
-cluster.plot = true if options[:plot]
+cluster.plot = true if simulator.options[:plot]
 
 def make_nodes(cluster)
   1.upto(NODE_NUMBER).map do |node|
@@ -56,12 +59,4 @@ cluster.each_node do |node|
   node['task10'].depends cluster['node1']['task50']
 end
 
-if options[:plot]
-  cluster.make_image 'start'
-end
-
-if options[:interactive]
-  binding.pry
-else
-  cluster.run
-end
+simulator.run cluster
