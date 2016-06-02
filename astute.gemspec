@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
   # Astute as service
   s.add_dependency 'bunny', '>= 2.0'
   s.add_dependency 'raemon', '>= 0.3'
+  s.add_dependency 'pry'
 
   s.add_development_dependency 'facter'
   s.add_development_dependency 'rake', '10.0.4'
@@ -28,7 +29,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'simplecov-rcov', '~> 0.2.3'
 
   s.files   = Dir.glob("{bin,lib,spec,examples}/**/*")
-  s.executables = ['astuted']
+  s.executables = %w(astuted astute-simulator)
   s.require_path = 'lib'
 end
 

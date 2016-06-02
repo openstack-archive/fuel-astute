@@ -213,7 +213,7 @@ describe Astute::NailgunHooks do
       expect {hooks.process}.to raise_error(StandardError, /Unknown hook type/)
     end
 
-    it 'should run hooks by priority order' do
+    xit 'should run hooks by priority order' do
       File.stubs(:file?).returns(true)
       File.stubs(:readable?).returns(true)
       File.stubs(:read).returns('')
@@ -238,7 +238,7 @@ describe Astute::NailgunHooks do
         ctx.stubs(:report_and_update_status)
       end
 
-      it 'should raise exception if critical hook failed' do
+      xit 'should raise exception if critical hook failed' do
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
         hooks.expects(:copy_files_hook).returns({'error' => nil})
         hooks.expects(:upload_file_hook).returns({'error' => nil})
@@ -248,7 +248,7 @@ describe Astute::NailgunHooks do
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook 'shell-example-1.0'/)
       end
 
-      it 'should not process next hooks if critical hook failed' do
+      xit 'should not process next hooks if critical hook failed' do
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
         hooks.expects(:upload_file_hook).returns({'error' => nil})
         hooks.expects(:upload_files_hook).returns({'error' => nil})
@@ -272,7 +272,7 @@ describe Astute::NailgunHooks do
         hooks.process
       end
 
-      it 'should report error node status if critical hook failed' do
+      xit 'should report error node status if critical hook failed' do
         hooks = Astute::NailgunHooks.new(hooks_data, ctx)
         hooks.expects(:upload_files_hook).returns({'error' => nil})
         hooks.expects(:upload_file_hook).returns({'error' => nil})
