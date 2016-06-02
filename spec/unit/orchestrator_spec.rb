@@ -20,6 +20,7 @@ describe Astute::Orchestrator do
 
   before(:each) do
     @orchestrator = Astute::Orchestrator.new
+    @orchestrator.stubs(:write_input_data_to_file)
     @reporter = mock('reporter')
     @reporter.stub_everything
   end
@@ -62,12 +63,12 @@ describe Astute::Orchestrator do
 
 
     it 'should run task deployment' do
-      Astute::TaskDeployment.any_instance.expects(:deploy).with(
+      Astute::TaskDeployment.any_instance.expects(:deploy).with({
         :deployment_info => deployment_info,
         :tasks_graph => tasks_graph,
         :tasks_directory => tasks_directory,
-        :dry_run => false
-      )
+        :dry_run => false,
+      })
 
       @orchestrator.task_deploy(
         @reporter,
@@ -75,7 +76,8 @@ describe Astute::Orchestrator do
         {
           :deployment_info => deployment_info,
           :tasks_graph => tasks_graph,
-          :tasks_directory => tasks_directory
+          :tasks_directory => tasks_directory,
+          :dry_run => false,
         }
       )
     end
@@ -94,7 +96,8 @@ describe Astute::Orchestrator do
         {
           :deployment_info => deployment_info,
           :tasks_graph => tasks_graph,
-          :tasks_directory => tasks_directory
+          :tasks_directory => tasks_directory,
+          :dry_run => false,
         }
       )
     end
