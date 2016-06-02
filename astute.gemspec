@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'simplecov-rcov', '~> 0.2.3'
 
   s.files   = Dir.glob("{bin,lib,spec,examples}/**/*")
-  s.executables = ['astuted']
+  s.executables = %w(astuted astute-simulator)
   s.require_path = 'lib'
 end
 
