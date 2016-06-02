@@ -11,7 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-require 'fuel_deployment'
+require_relative '../fuel_deployment'
 
 module Astute
   class TaskDeployment
@@ -24,10 +24,14 @@ module Astute
       raise DeploymentEngineError, "Deployment graph was not provided!" if
         tasks_graph.blank?
 
+      write_info_to_file(deployment_info)
+
       deployment_info, offline_uids = pre_deployment_process(deployment_info)
 
       support_virtual_node(tasks_graph)
       unzip_graph(tasks_graph, tasks_directory)
+
+      write_yaml_to_file(tasks_graph)
 
       Deployment::Log.logger = Astute.logger
       cluster = TaskCluster.new
@@ -112,7 +116,7 @@ module Astute
     end
 
     def pre_deployment_process(deployment_info)
-      return [[],[]] if deployment_info.blank?
+      return [[],[]] if deployment_info.empty?
 
       deployment_info, offline_uids = remove_failed_nodes(deployment_info)
       Astute::TaskPreDeploymentActions.new(deployment_info, @ctx).process
@@ -147,15 +151,39 @@ module Astute
       end
     end
 
+    def task_id
+      return 0 unless @ctx
+      @ctx.task_id
+    end
 
     def write_graph_to_file(deployment)
       return unless Astute.config.enable_graph_file
       graph_file = File.join(
         Astute.config.graph_dot_dir,
-        "graph-#{@ctx.task_id}.dot"
+        "graph-#{task_id}.dot"
       )
       File.open(graph_file, 'w') { |f| f.write(deployment.to_dot) }
       Astute.logger.info("Check graph into file #{graph_file}")
+    end
+
+    def write_yaml_to_file(task_graph)
+      return unless Astute.config.enable_graph_file
+      yaml_file = File.join(
+        Astute.config.graph_dot_dir,
+        "graph-tasks-#{task_id}.yaml"
+      )
+      File.open(yaml_file, 'w') { |f| f.write(YAML.dump task_graph) }
+      Astute.logger.info("Dump yaml into file #{yaml_file}")
+    end
+
+    def write_info_to_file(deployment_info)
+      return unless Astute.config.enable_graph_file
+      info_file = File.join(
+          Astute.config.graph_dot_dir,
+          "graph-info-#{task_id}.yaml"
+      )
+      File.open(info_file, 'w') { |f| f.write(YAML.dump deployment_info) }
+      Astute.logger.info("Dump info into file #{info_file}")
     end
 
     # Astute use special virtual node for deployment tasks, because

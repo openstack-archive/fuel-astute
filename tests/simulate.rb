@@ -13,25 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require File.absolute_path File.join File.dirname(__FILE__), 'test_node.rb'
+require_relative '../lib/fuel_deployment/simulator'
 
-cluster = Deployment::TestCluster.new 'mini'
-cluster.plot = true if options[:plot]
-node1 = Deployment::TestNode.new 'node1', cluster
-
-node1.graph.add_new_task 'task1'
-node1.graph.add_new_task 'task2'
-node1.graph.add_new_task 'task3'
-
-node1['task1'].before node1['task2']
-node1['task2'].before node1['task3']
-
-if options[:plot]
-  cluster.make_image 'start'
-end
-
-if options[:interactive]
-  binding.pry
-else
-  cluster.run
-end
+file = ARGV.first
+fail 'You should provide a tasks yaml file as the first parameter!' unless file
+simulator = Astute::Simulator.new
+simulator.from_tasks_yaml file.to_s
