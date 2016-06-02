@@ -63,7 +63,7 @@ module MCollective
         format = request.data[:format] || "json"
         timeout = request.data[:timeout] || 2
         repeat = request.data[:repeat] || 1
-        cmd = "dhcpcheck vlans '#{interfaces}' --timeout=#{timeout} --format=#{format} --repeat=#{repeat} "
+        cmd = "dhcpcheck discover '#{interfaces}' --timeout=#{timeout} --format=#{format} --repeat=#{repeat} "
         reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
       end
 
