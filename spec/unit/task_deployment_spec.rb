@@ -85,6 +85,10 @@ describe Astute::TaskDeployment do
 
   let(:task_deployment) { Astute::TaskDeployment.new(ctx) }
 
+  before(:each) do
+    task_deployment.stubs(:write_input_data_to_file)
+  end
+
   describe '#deploy' do
     it 'should run deploy' do
       task_deployment.stubs(:fail_offline_nodes).returns([])

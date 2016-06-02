@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #    Copyright 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,13 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require_relative 'fuel_deployment/error'
-require_relative 'fuel_deployment/log'
-require_relative 'fuel_deployment/version'
+require 'fuel_deployment/simulator'
 
-require_relative 'fuel_deployment/task'
-require_relative 'fuel_deployment/graph'
-require_relative 'fuel_deployment/node'
-require_relative 'fuel_deployment/cluster'
-require_relative 'fuel_deployment/concurrency/group'
-require_relative 'fuel_deployment/concurrency/counter'
+simulator = Astute::Simulator.new
+simulator.from_tasks_yaml

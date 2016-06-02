@@ -16,8 +16,10 @@ require 'fuel_deployment'
 module Astute
   class TaskDeployment
 
-    def initialize(context)
+    def initialize(context, cluster_class=TaskCluster, node_class=TaskNode)
       @ctx = context
+      @cluster_class = cluster_class
+      @node_class = node_class
     end
 
     def deploy(tasks_graph: {}, tasks_directory: {} , tasks_metadata: {}, dry_run: false)
@@ -26,9 +28,13 @@ module Astute
 
       support_virtual_node(tasks_graph)
       unzip_graph(tasks_graph, tasks_directory)
+      write_input_data_to_file(
+        tasks_graph: tasks_graph,
+        tasks_metadata: tasks_metadata
+      )
 
       Deployment::Log.logger = Astute.logger
-      cluster = TaskCluster.new
+      cluster = @cluster_class.new
       cluster.node_concurrency.maximum = Astute.config.max_nodes_per_call
       cluster.stop_condition { Thread.current[:gracefully_stop] }
       cluster.fault_tolerance_groups = tasks_metadata.fetch(
@@ -40,7 +46,7 @@ module Astute
       critical_uids = critical_node_uids(tasks_metadata['fault_tolerance_groups'])
 
       tasks_graph.keys.each do |node_id|
-        node = TaskNode.new(node_id, cluster)
+        node = @node_class.new(node_id, cluster)
         node.context = @ctx
         node.set_critical if critical_uids.include?(node_id)
         node.set_as_sync_point if sync_point?(node_id)
@@ -165,6 +171,23 @@ module Astute
       )
       File.open(graph_file, 'w') { |f| f.write(deployment.to_dot) }
       Astute.logger.info("Check graph into file #{graph_file}")
+    end
+
+    def write_input_data_to_file(data={})
+      return unless Astute.config.enable_graph_file
+      yaml_file = File.join(
+        Astute.config.graph_dot_dir,
+        "graph-#{@ctx.task_id}.yaml"
+      )
+      filter_sensitive_data(data)
+      File.open(yaml_file, 'w') { |f| f.write(YAML.dump(data)) }
+      Astute.logger.info("Check inpute data file #{yaml_file}")
+    end
+
+    def filter_sensitive_data(data)
+      data[:tasks_graph].each do |_node_id, tasks|
+         tasks.each { |task| task.delete('parameters') }
+      end
     end
 
     # Astute use special virtual node for deployment tasks, because
