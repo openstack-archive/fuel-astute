@@ -16,3 +16,8 @@ docs/_build
 # Local raemon copy
 raemon/
 
+*.svg
+*.png
+
+*.yaml
+!examples/example_astute_config.yaml
