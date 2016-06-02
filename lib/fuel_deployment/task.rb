@@ -335,6 +335,19 @@ module Deployment
       ready
     end
 
+    # set the pending tasks to dep_failed if the node have failed
+    def check_for_node_status
+      return unless node
+      if NOT_RUN_STATUSES.include? status
+        if Deployment::Node::FAILED_STATUSES.include? node.status
+          self.status = :dep_failed
+        end
+        if node.status == :skipped
+          self.status = :skipped
+        end
+      end
+    end
+
     # Poll direct task dependencies if
     # the failed or ready status of this task should change
     def poll_dependencies
@@ -453,9 +466,9 @@ module Deployment
         when :failed;
           :red
         when :dep_failed;
-          :magenta
+          :orange
         when :skipped;
-          :purple
+          :violet
         when :running;
           :blue
         else
