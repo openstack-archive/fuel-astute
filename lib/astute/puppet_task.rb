@@ -47,7 +47,12 @@ module Astute
 
       @summary = puppet_status
       status = node_status(@summary)
-      Astute.logger.debug "Node #{@node['uid']}(#{@node['role']}) status: #{status}"
+      message = "Node #{@node['uid']}(#{@node['role']}) status: #{status}"
+      if status == 'error'
+        Astute.logger.error message
+      else
+        Astute.logger.debug message
+      end
 
       result = case status
         when 'succeed'
