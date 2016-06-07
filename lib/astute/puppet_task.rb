@@ -85,7 +85,15 @@ module Astute
     private
 
     def puppetd
-      puppetd = MClient.new(@ctx, "puppetd", [@node['uid']])
+      puppetd = MClient.new(
+        @ctx,
+        "puppetd",
+        [@node['uid']],
+        _check_result=true,
+        _timeout=nil,
+        _retries=Astute.config.mc_retries,
+        _enable_result_logging=false
+      )
       puppetd.on_respond_timeout do |uids|
         nodes = uids.map do |uid|
           {
