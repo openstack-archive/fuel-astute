@@ -18,7 +18,8 @@ module Astute
       raise "Settings for Cobbler must be set" if engine_attrs.blank?
 
       begin
-        Astute.logger.info("Trying to instantiate cobbler engine:\n#{engine_attrs.pretty_inspect}")
+        Astute.logger.debug("Trying to instantiate cobbler engine:"\
+                            "\n#{engine_attrs.pretty_inspect}")
         @engine = Astute::Provision::Cobbler.new(engine_attrs)
       rescue => e
         Astute.logger.error("Error occured during cobbler initializing")

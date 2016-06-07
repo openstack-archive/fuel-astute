@@ -24,7 +24,7 @@ module Astute
 
     def process
       @nailgun_hooks.sort_by { |f| f['priority'] }.each do |hook|
-        Astute.logger.info "Run hook #{hook.to_yaml}"
+        Astute.logger.debug "Run hook #{hook.to_yaml}"
 
         time_start = Time.now.to_i
 
