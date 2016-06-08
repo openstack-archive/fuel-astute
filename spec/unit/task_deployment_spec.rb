@@ -67,6 +67,20 @@ describe Astute::TaskDeployment do
     }
   end
 
+  let(:tasks_graph_2) do
+    {"master"=>
+         [{
+              "type"=>"noop",
+              "fail_on_error"=>true,
+              "required_for"=>[],
+              "requires"=> [],
+              "id"=>"ironic_post_swift_key",
+              "parameters"=>{},
+          }],
+     "null"=> []
+    }
+  end
+
   let(:tasks_directory) do
     {"ironic_post_swift_key"=>{
       "parameters"=>{
@@ -146,6 +160,20 @@ describe Astute::TaskDeployment do
         tasks_metadata: tasks_metadata,
         tasks_graph: tasks_graph,
         tasks_directory: tasks_directory)
+    end
+
+    it 'should not fail if there are no nodes to check for offline nodes' do
+      Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
+      task_deployment.stubs(:write_graph_to_file)
+      ctx.stubs(:report)
+
+      task_deployment.expects(:fail_offline_nodes).returns([])
+
+      Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
+      task_deployment.deploy(
+          tasks_metadata: tasks_metadata,
+          tasks_graph: tasks_graph_2,
+          tasks_directory: tasks_directory)
     end
 
     it 'should setup stop condition' do
