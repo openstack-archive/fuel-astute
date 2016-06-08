@@ -234,23 +234,25 @@ module Astute
       uids.delete('virtual_sync_node')
       # In case of big amount of nodes we should do several calls to be sure
       # about node status
-      Astute.config.mc_retries.times.each do
-        systemtype = Astute::MClient.new(
-          @ctx,
-          "systemtype",
-          uids,
-          _check_result=false,
-          10
-        )
-        available_nodes = systemtype.get_type.select do |node|
-          node.results[:data][:node_type].chomp == "target"
+      if !uids.empty?
+        Astute.config.mc_retries.times.each do
+          systemtype = Astute::MClient.new(
+              @ctx,
+              "systemtype",
+              uids,
+              _check_result=false,
+              10
+          )
+          available_nodes = systemtype.get_type.select do |node|
+            node.results[:data][:node_type].chomp == "target"
+          end
+
+          available_uids += available_nodes.map { |node| node.results[:sender] }
+          uids -= available_uids
+          break if uids.empty?
+
+          sleep Astute.config.mc_retry_interval
         end
-
-        available_uids += available_nodes.map { |node| node.results[:sender] }
-        uids -= available_uids
-        break if uids.empty?
-
-        sleep Astute.config.mc_retry_interval
       end
 
       Astute.logger.warn "Offline node #{uids}" if uids.present?
