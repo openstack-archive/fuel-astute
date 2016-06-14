@@ -24,8 +24,8 @@ module Astute
       if [ $(hostname) = bootstrap ]; then
          reboot;
       fi;
+      t=0;
       while true; do
-         t=0;
          if [ -f /run/cloud-init/status.json -o $t -gt 60 ]; then
              reboot;
          else
