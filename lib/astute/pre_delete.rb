@@ -127,6 +127,98 @@ module Astute
       answer
     end
 
+    def self.gsub_mongo_out(out)
+      out.gsub!(/\/n/, '')
+      out.gsub!(/\/t/, '')
+      out.gsub!(/ObjectId\(([^)]*)\)/, '\1')
+      out.gsub!(/ISODate\((.+?)\)/, '\1 ')
+      out.gsub!(/^Error\:.+/, '')
+      return out
+    end
+
+    def self.remove_mongo_nodes(ctx, nodes)
+      answer = {"status" => "ready"}
+      mongo_nodes = nodes.select { |n| n["roles"] and (n["roles"].include? "mongo" or n["roles"].include? "primary-mongo") }
+      return answer if mongo_nodes.empty?
+
+      # Collect mongo nodes names
+      cmd_rs_conf = 'mongo --quiet --eval "load(\'/root/.mongorc.js\'); printjson(rs.conf())"'
+      shell = MClient.new(ctx, "execute_shell_command", [mongo_nodes.first["id"]])
+      out = gsub_mongo_out(shell.execute(:cmd => cmd_rs_conf).first.results[:data][:stdout])
+      out = JSON.parse(out)
+
+      mongo_hosts = []
+      out['members'].each do |member|
+        mongo_hosts.push(member['host'])
+      end
+
+      cmd_shutdown_mongo = 'mongo admin --quiet --eval "load(\'/root/.mongorc.js\'); printjson(db.shutdownServer())"'
+      cmd_stepdown_master = 'mongo --quiet --eval "load(\'/root/.mongorc.js\'); printjson(rs.stepDown())"'
+
+      deleted_hosts = []
+      # Collect names of mongo nodes to be deleted
+      cmd_is_master = 'mongo --quiet --eval "load(\'/root/.mongorc.js\'); printjson(db.isMaster())"'
+      mongo_nodes.each do |node|
+        shell = MClient.new(ctx, "execute_shell_command", [node["id"]])
+        out = gsub_mongo_out(shell.execute(:cmd => cmd_is_master).first.results[:data][:stdout])
+        out = JSON.parse(out)
+        deleted_hosts.push(out['me'])
+        if out['ismaster'].to_s == 'true'
+          Astute.logger.debug "Master is going to be deleted: #{out['me']}"
+          shell.execute(:cmd => cmd_stepdown_master)
+          sleep 10
+        end
+        shell.execute(:cmd => cmd_shutdown_mongo)
+      end
+      return answer if deleted_hosts.empty?
+
+      alive_hosts = mongo_hosts - deleted_hosts
+
+      if alive_hosts.length > 0
+        retry_count = 10
+        n = 0
+        primary = false
+        while n < retry_count do
+          n +=1
+          sleep 10
+
+          alive_hosts.each do |host|
+            # Wait till one of the left mongo hosts will become primary
+            cmd_is_master = "mongo #{host} --quiet --eval \"load('/root/.mongorc.js'); printjson(db.isMaster())\""
+            shell = MClient.new(ctx, "execute_shell_command", [mongo_nodes.first["id"]])
+            out = gsub_mongo_out(shell.execute(:cmd => cmd_is_master).first.results[:data][:stdout])
+            if JSON.parse(out)['ismaster'].to_s == 'true'
+            # Get hostname of primary node
+              primary = host
+              Astute.logger.debug "Primary node: #{primary}"
+              break
+            end
+          end
+          if !primary
+            Astute.logger.debug "Can't find Mongo replica set master. Retry: #{n}/#{retry_count}"
+            if n >= retry_count
+              Astute.logger.warn "Can't find Mongo replica set master. Unable to delete Mongo node."
+              return answer
+            end
+          else
+            break
+          end
+        end
+
+        deleted_hosts.each do |deleted|
+          # Run mongo client from first mongo node
+          shell = MClient.new(ctx, "execute_shell_command", [mongo_nodes.first["id"]])
+          cmd = "mongo #{primary} --quiet --eval \"load('/root/.mongorc.js'); printjson(rs.remove('#{deleted}'))\""
+          result = shell.execute(:cmd => cmd).first.results
+          if result[:data][:exit_code] != 0
+            Astute.logger.warn "Something went wrong during Mongo node deletion. It may be required to delete #{deleted} from replica manually."
+          end
+        end
+      end
+
+      return answer
+    end
+
     def self.check_for_offline_nodes(ctx, nodes)
       answer = {"status" => "ready"}
       # FIXME(vsharshov): We send for node/cluster deletion operation
