@@ -68,7 +68,7 @@ module Astute
     conf[:mc_retry_interval] = 1          # MClient sleeps for ## sec between retries
     conf[:puppet_fade_interval] = 30      # retry every ## seconds to check puppet state if it was running
     conf[:provisioning_timeout] = 90 * 60 # timeout for booting target OS in provision
-    conf[:reboot_timeout] = 600           # how long it can take for node to reboot
+    conf[:reboot_timeout] = 900           # how long it can take for node to reboot
     conf[:dump_timeout] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
     conf[:shell_retries] = 2              # default retries for shell task
