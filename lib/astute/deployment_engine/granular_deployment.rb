@@ -71,7 +71,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
         :puppet_modules => task['parameters']['puppet_modules'],
         :cwd => task['parameters']['cwd'],
         :timeout => task['parameters']['timeout'],
-        :debug => @puppet_debug
+        :puppet_debug => @puppet_debug
       }
     )
   end
