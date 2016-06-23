@@ -64,7 +64,7 @@ module Astute
           :puppet_modules => @task['parameters']['puppet_modules'],
           :cwd => @task['parameters']['cwd'],
           :timeout => @task['parameters']['timeout'],
-          :debug => @task['parameters']['debug']
+          :puppet_debug => @task['parameters']['debug']
         }
       )
     end
