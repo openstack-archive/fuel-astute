@@ -65,4 +65,62 @@ describe Astute::Server::Dispatcher do
     end
   end
 
+  describe "#stop_deploy_task" do
+    let (:dispatcher) do
+      dispatcher = Astute::Server::Dispatcher.new(mock)
+
+      dispatcher
+    end
+
+    let (:orchestrator) do
+      orchestrator = Astute::Orchestrator.any_instance
+
+      orchestrator
+    end
+
+    let (:data) {
+      {'args' => {
+        'task_uuid' => '0000-0000',
+        'stop_task_uuid' => '0000-0000',
+        'engine' => 'engine',
+        'nodes' => [{'uid' => 1}]
+        }
+      }
+    }
+
+    let (:service_data) do
+      task_queue = mock()
+      task_queue.stubs(:task_in_queue?).returns(true)
+      task_queue.stubs(:current_task_id).returns('0000-0000')
+
+      {:tasks_queue => task_queue}
+    end
+
+    it 'should stop deployment' do
+      service_data[:tasks_queue].stubs(:current_task_method).returns('deploy')
+      dispatcher.expects(:kill_main_process).with('0000-0000', service_data)
+      orchestrator.expects(:stop_puppet_deploy).with(anything, '0000-0000', [{'uid' => 1}])
+      orchestrator.expects(:remove_nodes).with(anything, '0000-0000', 'engine', [{'uid' => 1}])
+      dispatcher.expects(:report_result).with({'nodes' => [{'uid' => 1}]}, anything)
+      dispatcher.stop_deploy_task(data, service_data)
+    end
+    
+    it 'should stop task deployment' do
+      service_data[:tasks_queue].stubs(:current_task_method).returns('task_deploy')
+      dispatcher.expects(:gracefully_stop_main_process).with('0000-0000', service_data)
+      dispatcher.expects(:wait_while_process_run).with(anything, anything, '0000-0000', service_data)
+      dispatcher.expects(:report_result).with({'nodes' => [{'uid' => 1}]}, anything)
+      dispatcher.stop_deploy_task(data, service_data)
+    end
+    
+    it 'should stop provisioning' do
+      service_data[:tasks_queue].stubs(:current_task_method).returns('provision')
+      dispatcher.expects(:kill_main_process).with('0000-0000', service_data)
+      orchestrator.expects(:stop_provision).with(anything, '0000-0000', 'engine', [{'uid' => 1}])
+      dispatcher.expects(:report_result).with({'nodes' => [{'uid' => 1}]}, anything)
+      dispatcher.stop_deploy_task(data, service_data)
+    end
+    
+  end
+
 end
