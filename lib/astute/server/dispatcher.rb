@@ -287,7 +287,7 @@ module Astute
         task_uuid = data['args']['task_uuid']
         nodes = data['args']['nodes']
 
-        result = if ['deploy', 'granular_deploy'].include? (
+        if ['deploy', 'granular_deploy'].include? (
             service_data[:tasks_queue].current_task_method)
           kill_main_process(target_task_uuid, service_data)
 
@@ -316,6 +316,7 @@ module Astute
             nodes
           )
         end
+        {'nodes' => nodes}
       end
 
       def kill_main_process(target_task_uuid, service_data)
