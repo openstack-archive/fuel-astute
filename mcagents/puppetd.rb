@@ -51,9 +51,9 @@ module MCollective
       end
 
       action "last_run_summary" do
+        set_status
         last_run_summary
         last_run_report
-        set_status
       end
 
       action "enable" do
