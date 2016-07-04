@@ -78,7 +78,7 @@ Astute.logger.formatter = proc do |severity, datetime, progname, msg|
   "#{datetime.strftime("%Y-%m-%d %H:%M:%S")} #{severity_map[severity]} [#{Process.pid}] #{msg}\n"
 end
 
-Astute.logger.info "Starting with settings\n#{Astute.config.to_yaml}"
+Astute.logger.debug "Starting with settings\n#{Astute.config.to_yaml}"
 
 Raemon::Master.start(options.workers, Astute::Server::Worker,
   :detach   => options.daemonize,
