@@ -32,7 +32,7 @@ module Astute
     def poll
       return unless busy?
 
-      debug("Node #{id}: task #{task.name}, task status #{task.status}")
+      debug "Node #{id}: task #{task.name}, task status #{task.status}"
 
       # Please be informed that this code define special method
       # of Deployment::Node class. We use special method `task`
@@ -49,6 +49,7 @@ module Astute
           }]
         })
       else
+        info "#{task} finished with: #{status}"
         setup_node_status
         report_node_status
       end
@@ -90,8 +91,7 @@ module Astute
     # will mark such task as skipped and do not report error
     def setup_task_status
       if !task.data.fetch('fail_on_error', true) && @task_engine.failed?
-        Astute.logger.warn "Task #{task.name} failed, but marked as skipped "\
-                           "because of 'fail on error' behavior"
+        warn "Task #{task.name} have failed, but marked as skipped because of 'fail on error' behavior"
         return :skipped
       end
       @task_engine.status

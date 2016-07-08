@@ -35,7 +35,7 @@ module Deployment
       if busy?
         status = :successful
         status = :failed if cluster.tasks_to_fail.include? "#{task.name}/#{task.node.name}"
-        debug "#{task} finished with: #{status}"
+        info "#{task} finished with: #{status}"
         self.task.status = status
         self.status = :online
       end
@@ -297,10 +297,14 @@ graph much more readable.
         cluster.plot_post_node = true
       end
 
+      cluster.result_image_path = nil
+
       result = cluster.run
+
       if options[:plot_last]
         cluster.make_image(suffix: 'end')
       end
+
       cluster.info "Result: #{result.inspect}"
     end
 

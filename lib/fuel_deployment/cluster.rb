@@ -53,6 +53,7 @@ module Deployment
     attr_accessor :dot_node_filter
     attr_accessor :dot_task_filter
     attr_accessor :dot_plot_number
+    attr_accessor :result_image_path
 
     # Add an existing node object to the cluster
     # @param [Deployment::Node] node a new node object
@@ -259,27 +260,23 @@ module Deployment
     # Actually, it's enough to check only for finished nodes.
     # @return [true, false]
     def run
-      ready_nodes = each_ready_task.to_a.join ', '
-      info "Starting the deployment process. Starting tasks: #{ready_nodes}"
+      info "Starting the deployment process. Starting tasks number: #{each_ready_task.count}"
       hook 'internal_pre_run'
       hook 'pre_run'
       topology_sort
       result = loop do
         if all_nodes_are_successful?
-          status = 'All nodes are deployed successfully. '\
-                   'Stopping the deployment process!'
+          status = 'All nodes are deployed successfully. Stopping the deployment process!'
           result = {
               :success => true,
               :status => status,
           }
           break result
         end
-        gracefully_stop! if has_failed_critical_nodes?
+        gracefully_stop! "critical node failed: #{failed_critical_nodes.join ', '})" if has_failed_critical_nodes?
 
         if all_nodes_are_finished?
-          status = "All nodes are finished. Failed tasks: "\
-                  "#{failed_tasks.join ', '} Stopping the "\
-                  "deployment process!"
+          status = "All nodes are finished. Failed tasks: #{failed_tasks.join ', '} Stopping the deployment process!"
           result = if has_failed_critical_nodes?
             {
               :success => false,
@@ -304,6 +301,7 @@ module Deployment
       end
       info result[:status]
       hook 'post_run', result
+      make_image(suffix: 'result', path: result_image_path) if result_image_path and File.directory? result_image_path
       result
     end
     alias :deploy :run
@@ -479,6 +477,7 @@ digraph "<%= id || 'graph' %>" {
       file = options.fetch :file, nil
       suffix = options.fetch :suffix, nil
       type = options.fetch :type, 'svg'
+      path = options.fetch :path, '.'
 
       unless file
         unless suffix
@@ -490,6 +489,7 @@ digraph "<%= id || 'graph' %>" {
         end
         graph_name = id || 'graph'
         file = "#{graph_name}-#{suffix}.#{type}"
+        file = File.join path, file
       end
       info "Writing the graph image: '#{suffix}' to the file: '#{file}'"
       command = ['dot', '-T', type, '-o', file]
@@ -530,7 +530,7 @@ digraph "<%= id || 'graph' %>" {
     def gracefully_stop?
       return true if @emergency_brake
       if gracefully_stop_mark && gracefully_stop_mark.call
-        info "Stop deployment by stop condition (external reason)"
+        info 'Graceful deployment stop: stop condition code'
         @emergency_brake = true
       end
       @emergency_brake
@@ -543,10 +543,10 @@ digraph "<%= id || 'graph' %>" {
       end
     end
 
-    def gracefully_stop!
+    def gracefully_stop!(comment = 'unknown reason')
       return if @emergency_brake
 
-      info "Stop deployment by internal reason"
+      info "Graceful deployment stop: #{comment}"
       @emergency_brake = true
     end
 
@@ -561,7 +561,7 @@ digraph "<%= id || 'graph' %>" {
 
       if node.failed?
         count_tolerance_fail(node)
-        gracefully_stop! if fault_tolerance_excess?
+        gracefully_stop! 'fault tolerance is exceeded' if fault_tolerance_excess?
       end
     end
 
