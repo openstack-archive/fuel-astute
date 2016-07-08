@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 require 'symboltable'
 require 'singleton'
 
@@ -104,6 +103,7 @@ module Astute
     conf[:graph_dot_dir] = "/var/lib/astute/graphs" # default dir patch for debug graph file
     conf[:enable_graph_file] = true  # enable debug graph records to file
     conf[:puppet_raw_report] = false # enable puppet detailed report
+    conf[:plot_last_state] = true    # plot the final state of the deployment graph after the deployment
 
     # Server settings
     conf[:broker_host] = 'localhost'

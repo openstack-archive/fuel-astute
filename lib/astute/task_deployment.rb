@@ -54,6 +54,7 @@ module Astute
       setup_tasks(tasks_graph, cluster)
       setup_task_depends(tasks_graph, cluster)
       setup_task_concurrency(tasks_graph, cluster)
+      cluster.result_image_path = Astute.config.graph_dot_dir if Astute.config.plot_last_state
       cluster
     end
 
@@ -127,8 +128,8 @@ module Astute
       else 0
       end
       return value if value >= 0
-      raise DeploymentEngineError, "Task concurrency expect only "\
-        "non-negative integer, but got #{value}. Please check task #{task}"
+      raise DeploymentEngineError,
+            "Task concurrency expect only non-negative integer, but got: #{value}. Please check task #{task}"
     end
 
     def report_deploy_result(result)
@@ -213,11 +214,11 @@ module Astute
       offline_uids = detect_offline_nodes(tasks_graph.keys)
       if offline_uids.present?
         nodes = offline_uids.map do |uid|
-          {'uid' => uid,
-           'status' => 'error',
-           'error_type' => 'provision',
-           'error_msg' => 'Node is not ready for deployment: '\
-                          'mcollective has not answered'
+          {
+              'uid' => uid,
+              'status' => 'error',
+              'error_type' => 'provision',
+              'error_msg' => 'Node is not ready for deployment: mcollective has not answered'
           }
         end
 
@@ -228,8 +229,7 @@ module Astute
 
         missing_required = critical_node_uids(tasks_graph) & offline_uids
         if missing_required.present?
-          error_message = "Critical nodes are not available for deployment: " \
-                          "#{missing_required}"
+          error_message = "Critical nodes are not available for deployment: #{missing_required}"
           raise Astute::DeploymentEngineError, error_message
         end
       end
