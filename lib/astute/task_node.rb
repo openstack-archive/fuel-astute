@@ -42,7 +42,6 @@ module Astute
         @ctx.report({
           'nodes' => [{
             'uid' => id,
-            'status' => 'deploying',
             'deployment_graph_task_name' => task.name,
             'progress' => current_progress_bar,
             'task_status' => task.status.to_s,
@@ -55,10 +54,8 @@ module Astute
     end
 
     def report_node_status
-      deploy_status = if !finished?
-        'deploying'
-      elsif successful?
-        'ready'
+      deploy_status = if !finished? || successful?
+        nil
       elsif skipped?
         'stopped'
       else
@@ -67,9 +64,10 @@ module Astute
 
       node_status = {
         'uid' => id,
-        'status' => deploy_status,
         'progress' => current_progress_bar,
       }
+
+      node_status.merge!('status' => deploy_status) if deploy_status
 
       node_status.merge!(
         'deployment_graph_task_name' => task.name,
@@ -111,21 +109,10 @@ module Astute
     end
 
     def select_task_engine(data)
-      # TODO: replace by Object.const_get(type.split('_').collect(&:capitalize).join)
-      case data['type']
-      when 'shell' then Shell.new(data, @ctx)
-      when 'puppet' then Puppet.new(data, @ctx)
-      when 'upload_file' then UploadFile.new(data, @ctx)
-      when 'upload_files' then UploadFiles.new(data, @ctx)
-      when 'reboot' then Reboot.new(data, @ctx)
-      when 'sync' then Sync.new(data, @ctx)
-      when 'cobbler_sync' then CobblerSync.new(data, @ctx)
-      when 'copy_files' then CopyFiles.new(data, @ctx)
-      when 'noop' then Noop.new(data, @ctx)
-      when 'stage' then Noop.new(data, @ctx)
-      when 'skipped' then Noop.new(data, @ctx)
-      else raise TaskValidationError, "Unknown task type '#{data['type']}'"
-      end
+      task_class_name = data['type'].split('_').collect(&:capitalize).join
+      Object.const_get('Astute::' + task_class_name).new(data, @ctx)
+    rescue => e
+      raise TaskValidationError, "Unknown task type '#{data['type']}'. Detailed: #{e.message}"
     end
 
     def report_running?(data)
