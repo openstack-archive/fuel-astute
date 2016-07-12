@@ -39,6 +39,10 @@ module Astute
         'fault_tolerance_groups',
         []
       )
+      cluster.node_statuses_transitions = tasks_metadata.fetch(
+        'node_statuses_transitions',
+        {}
+      )
 
       offline_uids = fail_offline_nodes(tasks_graph)
       critical_uids = critical_node_uids(cluster.fault_tolerance_groups)
@@ -200,7 +204,7 @@ module Astute
     end
 
     def critical_node_uids(fault_tolerance_groups)
-      return [] unless fault_tolerance_groups
+      return [] if fault_tolerance_groups.blank?
       critical_nodes = fault_tolerance_groups.inject([]) do |critical_uids, group|
         critical_uids += group['node_ids'] if group['fault_tolerance'].zero?
         critical_uids
@@ -244,18 +248,16 @@ module Astute
       uids.delete('virtual_sync_node')
       # In case of big amount of nodes we should do several calls to be sure
       # about node status
-      if !uids.empty?
+      if uids.present?
         Astute.config.mc_retries.times.each do
-          systemtype = Astute::MClient.new(
+          systemtype = MClient.new(
               @ctx,
               "systemtype",
               uids,
               _check_result=false,
               10
           )
-          available_nodes = systemtype.get_type.select do |node|
-            node.results[:data][:node_type].chomp == "target"
-          end
+          available_nodes = systemtype.get_type
 
           available_uids += available_nodes.map { |node| node.results[:sender] }
           uids -= available_uids

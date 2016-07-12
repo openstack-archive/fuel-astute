@@ -90,8 +90,7 @@ describe Astute::Orchestrator do
       Astute::TaskDeployment.any_instance.stubs(:deploy)
 
       Astute::ProxyReporter::TaskProxyReporter.expects(:new).with(
-        @reporter,
-        tasks_graph.keys
+        @reporter
       )
 
       @orchestrator.task_deploy(

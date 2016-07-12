@@ -151,6 +151,82 @@ module Astute
       existent_nodes
     end
 
+    def existent_node?(cobbler_name)
+      return false unless @engine.system_exists?(cobbler_name)
+      Astute.logger.info("Node #{cobbler_name} already exists in cobbler")
+      true
+    end
+
+    def edit_node(cobbler_name, data)
+      begin
+        Astute.logger.info("Changing cobbler system #{cobbler_name}")
+        @engine.item_from_hash('system', cobbler_name, data, :item_preremove => false)
+      rescue RuntimeError => e
+        Astute.logger.error("Error occured while changing cobbler system #{cobbler_name}")
+        raise e
+      end
+    ensure
+      sync
+    end
+
+    def netboot_node(cobbler_name, state)
+      begin
+        Astute.logger.info("Changing node netboot state #{cobbler_name}")
+        @engine.netboot(cobbler_name, state)
+      rescue RuntimeError => e
+        Astute.logger.error("Error while changing node netboot state #{cobbler_name}")
+        raise e
+      end
+    ensure
+      sync
+    end
+
+    def remove_node(cobbler_name, retries=3, interval=2)
+      Astute.logger.info("Node to remove: #{cobbler_name}")
+      retries.times do
+        unless @engine.system_exists?(cobbler_name)
+          Astute.logger.info("System is not in cobbler: #{cobbler_name}")
+          return
+        else
+          Astute.logger.info("Trying to remove system from cobbler: #{cobbler_name}")
+          @engine.remove_system(cobbler_name)
+        end
+        return unless @engine.system_exists?(cobbler_name)
+        sleep(interval) if interval > 0
+      end
+    ensure
+      Astute.logger.error("Cannot remove node #{cobbler_name} from cobbler") if @engine.system_exists?(cobbler_name)
+      sync
+    end
+
+    def add_node(node)
+      cobbler_name = node['slave_name']
+      begin
+        Astute.logger.info("Adding #{cobbler_name} into cobbler")
+        @engine.item_from_hash('system', cobbler_name, node, :item_preremove => true)
+      rescue RuntimeError => e
+        Astute.logger.error("Error occured while adding system #{cobbler_name} to cobbler")
+        raise e
+      end
+    ensure
+      sync
+    end
+
+    def node_mac_duplicate_names(node)
+      mac_duplicate_names = []
+      Astute.logger.info("Trying to find MAC duplicates for node #{node['slave_name']}")
+      if node['interfaces']
+        node['interfaces'].each do |iname, ihash|
+          if ihash['mac_address']
+            Astute.logger.info("Trying to find system with MAC: #{ihash['mac_address']}")
+            found_node = @engine.system_by_mac(ihash['mac_address'])
+            mac_duplicate_names << found_node['name'] if found_node
+          end
+        end
+      end
+      mac_duplicate_names.uniq
+    end
+
     def get_mac_duplicate_names(nodes)
       mac_duplicate_names = []
       nodes.each do |node|

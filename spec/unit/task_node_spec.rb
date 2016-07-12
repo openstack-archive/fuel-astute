@@ -19,7 +19,7 @@ describe Astute::TaskNode do
   include SpecHelpers
 
   let(:cluster) do
-    Deployment::Cluster.new
+    Astute::TaskCluster.new
   end
 
   let(:ctx) do
@@ -82,7 +82,6 @@ describe Astute::TaskNode do
       Astute::Puppet.any_instance.stubs(:run)
       ctx.expects(:report).with('nodes' => [{
         'uid' => 'node_id',
-        'status' => 'deploying',
         'progress' => 0,
         'deployment_graph_task_name' => 'openstack-haproxy-mysqld',
         'task_status' => 'running',
@@ -171,13 +170,13 @@ describe Astute::TaskNode do
 
       it 'skipped' do
         task_data['type'] = "skipped"
-        Astute::Noop.any_instance.expects(:run)
+        Astute::Skipped.any_instance.expects(:run)
         task_node.run(task)
       end
 
       it 'stage' do
         task_data['type'] = "stage"
-        Astute::Noop.any_instance.expects(:run)
+        Astute::Stage.any_instance.expects(:run)
         task_node.run(task)
       end
 
@@ -211,7 +210,7 @@ describe Astute::TaskNode do
         task_data['type'] = "unknown"
         expect{task_node.run(task)}.to raise_error(
           Astute::TaskValidationError,
-          "Unknown task type 'unknown'")
+          "Unknown task type 'unknown'. Detailed: uninitialized constant Astute::Unknown")
       end
     end # support task type
   end
@@ -293,7 +292,6 @@ describe Astute::TaskNode do
         ctx.expects(:report).with({
           'nodes' => [{
             'uid' => 'node_id',
-            'status' => 'deploying',
             'deployment_graph_task_name' => task.name,
             'task_status' => 'running',
             'progress' => 0}]
@@ -302,6 +300,10 @@ describe Astute::TaskNode do
       end
 
       it 'should report ready if task successful and no more task' do
+        cluster.node_statuses_transitions['successful'] = {
+          'status' => 'ready'
+        }
+
         Astute::Puppet.any_instance.expects(:status).returns(:successful)
         task_node.run(task)
         ctx.expects(:report).with({
@@ -329,12 +331,15 @@ describe Astute::TaskNode do
         end
 
         it 'should report ready if task skipped and no more task' do
+          cluster.node_statuses_transitions['successful'] = {
+            'status' => 'ready'
+          }
           task_node.run(task)
           ctx.expects(:report).with({
             'nodes' => [{
               'uid' => 'node_id',
-              'status' => 'ready',
               'deployment_graph_task_name' => task.name,
+              'status' => 'ready',
               'custom' => {},
               'task_status' => 'skipped',
               'progress' => 100}]
@@ -352,7 +357,6 @@ describe Astute::TaskNode do
           ctx.expects(:report).with({
             'nodes' => [{
               'uid' => 'node_id',
-              'status' => 'deploying',
               'deployment_graph_task_name' => task.name,
               'custom' => {},
               'task_status' => 'skipped',
@@ -363,7 +367,13 @@ describe Astute::TaskNode do
       end
 
       it 'should report error if task failed and no more task' do
+        cluster.node_statuses_transitions['failed'] = {
+          'status' => 'error',
+          'error_type' => 'deploy'
+        }
+
         Astute::Puppet.any_instance.expects(:status).returns(:failed)
+
         task_node.run(task)
         ctx.expects(:report).with({
           'nodes' => [{
@@ -384,12 +394,10 @@ describe Astute::TaskNode do
           'second_task',
           task_data.merge({'node_id' => 'node_id'})
         )
-
         task_node.run(task)
         ctx.expects(:report).with({
           'nodes' => [{
             'uid' => 'node_id',
-            'status' => 'deploying',
             'deployment_graph_task_name' => task.name,
             'custom' => {},
             'task_status' => 'successful',

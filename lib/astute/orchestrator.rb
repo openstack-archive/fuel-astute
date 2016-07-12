@@ -67,8 +67,7 @@ module Astute
     def task_deploy(up_reporter, task_id, deployment_options = {})
       time_start = Time.now.to_i
       proxy_reporter = ProxyReporter::TaskProxyReporter.new(
-        up_reporter,
-        deployment_options[:tasks_graph].keys
+        up_reporter
       )
       context = Context.new(task_id, proxy_reporter)
       Astute.logger.info "Task based deployment will be used"
