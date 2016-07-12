@@ -16,6 +16,15 @@ require_relative '../fuel_deployment'
 module Astute
   class TaskDeployment
 
+
+    #TODO(vsharshov): remove this default after adding support of node
+    # status transition to Nailgun
+    NODE_STATUSES_TRANSITIONS = {
+      'successful' => {'status' => 'ready'},
+      'stopped' => {'status' => 'stopped'},
+      'failed' => {'status' => 'error', 'error_type' => 'deploy'}
+    }
+
     def initialize(context, cluster_class=TaskCluster, node_class=TaskNode)
       @ctx = context
       @cluster_class = cluster_class
@@ -44,7 +53,15 @@ module Astute
         false
       )
 
-      offline_uids = fail_offline_nodes(tasks_graph)
+      cluster.node_statuses_transitions = tasks_metadata.fetch(
+        'node_statuses_transitions',
+        NODE_STATUSES_TRANSITIONS
+      )
+
+      offline_uids = fail_offline_nodes(
+        tasks_graph,
+        cluster.node_statuses_transitions
+      )
       critical_uids = critical_node_uids(cluster.fault_tolerance_groups)
 
       tasks_graph.keys.each do |node_id|
@@ -67,13 +84,12 @@ module Astute
       dry_run = deployment_options.fetch(:dry_run, false)
       Deployment::Log.logger = Astute.logger if Astute.respond_to? :logger
       write_graph_to_file(cluster)
-      if dry_run
-        result = Hash.new
-        result[:success] = true
+      result = if dry_run
+        {:success => true }
       else
-        result = cluster.run
+        run_result = cluster.run
         # imitate dry_run results for noop run after deployment
-        result = {:success => true } if cluster.noop_run
+        cluster.noop_run ? {:success => true } : run_result
       end
       report_deploy_result(result)
     end
@@ -151,10 +167,8 @@ module Astute
       if result[:success] && result.fetch(:failed_nodes, []).empty?
         @ctx.report('status' => 'ready', 'progress' => 100)
       elsif result[:success] && result.fetch(:failed_nodes, []).present?
-        report_failed_nodes(result)
         @ctx.report('status' => 'ready', 'progress' => 100)
       else
-        report_failed_nodes(result)
         @ctx.report(
           'status' => 'error',
           'progress' => 100,
@@ -162,26 +176,6 @@ module Astute
         )
       end
     end
-
-    def report_failed_nodes(result)
-      result.fetch(:failed_nodes, []).each do |node|
-        node_status = {
-          'uid' => node.id,
-          'status' => 'error',
-          'error_type' => 'deploy',
-          'error_msg' => result[:status]
-        }
-        task = result[:failed_tasks].find{ |t| t.node == node }
-        if task
-          node_status.merge!({
-            'deployment_graph_task_name' => task.name,
-            'task_status' => task.status.to_s
-          })
-        end
-        @ctx.report('nodes' => [node_status])
-      end
-    end
-
 
     def write_graph_to_file(deployment)
       return unless Astute.config.enable_graph_file
@@ -216,7 +210,7 @@ module Astute
     end
 
     def critical_node_uids(fault_tolerance_groups)
-      return [] unless fault_tolerance_groups
+      return [] if fault_tolerance_groups.blank?
       critical_nodes = fault_tolerance_groups.inject([]) do |critical_uids, group|
         critical_uids += group['node_ids'] if group['fault_tolerance'].zero?
         critical_uids
@@ -225,16 +219,14 @@ module Astute
       critical_nodes
     end
 
-    def fail_offline_nodes(tasks_graph)
+    def fail_offline_nodes(tasks_graph, node_statuses_transitions)
       offline_uids = detect_offline_nodes(tasks_graph.keys)
       if offline_uids.present?
         nodes = offline_uids.map do |uid|
           {'uid' => uid,
-           'status' => 'error',
-           'error_type' => 'provision',
            'error_msg' => 'Node is not ready for deployment: '\
                           'mcollective has not answered'
-          }
+          }.merge(node_statuses_transitions.fetch('failed', {}))
         end
 
         @ctx.report_and_update_status(
@@ -260,18 +252,16 @@ module Astute
       uids.delete('virtual_sync_node')
       # In case of big amount of nodes we should do several calls to be sure
       # about node status
-      if !uids.empty?
+      if uids.present?
         Astute.config.mc_retries.times.each do
-          systemtype = Astute::MClient.new(
+          systemtype = MClient.new(
               @ctx,
               "systemtype",
               uids,
               _check_result=false,
               10
           )
-          available_nodes = systemtype.get_type.select do |node|
-            node.results[:data][:node_type].chomp == "target"
-          end
+          available_nodes = systemtype.get_type
 
           available_uids += available_nodes.map { |node| node.results[:sender] }
           uids -= available_uids
