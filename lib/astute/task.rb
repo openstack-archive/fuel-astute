@@ -175,7 +175,7 @@ module Astute
     # use upload file task.
     # Synchronous (blocking) call
     def upload_file(node_uid, mco_params={})
-      upload_mclient = Astute::MClient.new(
+      upload_mclient = MClient.new(
         @ctx,
         "uploadfile",
         Array(node_uid)
