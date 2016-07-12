@@ -53,14 +53,14 @@ module Astute
     end
 
     def setup_default
-      @task['parameters']['timeout'] ||= Astute.config.reboot_timeout
+      @task.fetch('parameters', {})['timeout'] ||= Astute.config.reboot_timeout
     end
 
     def reboot
       run_shell_without_check(
         @task['node_id'],
         RebootCommand::CMD,
-        timeout=2
+        _timeout=2
       )
     rescue Astute::MClientTimeout, Astute::MClientError => e
       Astute.logger.error("#{@ctx.task_id}: #{task_name} mcollective " \
@@ -72,7 +72,7 @@ module Astute
       run_shell_without_check(
         @task['node_id'],
         "stat --printf='%Y' /proc/1",
-        timeout=2
+        _timeout=2
       )[:stdout].to_i
     rescue Astute::MClientTimeout, Astute::MClientError => e
       Astute.logger.debug("#{@ctx.task_id}: #{task_name} mcollective " \
