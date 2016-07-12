@@ -111,21 +111,9 @@ module Astute
     end
 
     def select_task_engine(data)
-      # TODO: replace by Object.const_get(type.split('_').collect(&:capitalize).join)
-      case data['type']
-      when 'shell' then Shell.new(data, @ctx)
-      when 'puppet' then Puppet.new(data, @ctx)
-      when 'upload_file' then UploadFile.new(data, @ctx)
-      when 'upload_files' then UploadFiles.new(data, @ctx)
-      when 'reboot' then Reboot.new(data, @ctx)
-      when 'sync' then Sync.new(data, @ctx)
-      when 'cobbler_sync' then CobblerSync.new(data, @ctx)
-      when 'copy_files' then CopyFiles.new(data, @ctx)
-      when 'noop' then Noop.new(data, @ctx)
-      when 'stage' then Noop.new(data, @ctx)
-      when 'skipped' then Noop.new(data, @ctx)
-      else raise TaskValidationError, "Unknown task type '#{data['type']}'"
-      end
+      Object.const_get(data['type'].split('_').collect(&:capitalize).join).new(data, @ctx)
+    rescue => e
+      raise TaskValidationError, "Unknown task type '#{data['type']}'. Detailed: #{e.message}"
     end
 
     def report_running?(data)
