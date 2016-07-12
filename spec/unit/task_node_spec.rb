@@ -171,13 +171,13 @@ describe Astute::TaskNode do
 
       it 'skipped' do
         task_data['type'] = "skipped"
-        Astute::Noop.any_instance.expects(:run)
+        Astute::Skipped.any_instance.expects(:run)
         task_node.run(task)
       end
 
       it 'stage' do
         task_data['type'] = "stage"
-        Astute::Noop.any_instance.expects(:run)
+        Astute::Stage.any_instance.expects(:run)
         task_node.run(task)
       end
 
@@ -211,7 +211,7 @@ describe Astute::TaskNode do
         task_data['type'] = "unknown"
         expect{task_node.run(task)}.to raise_error(
           Astute::TaskValidationError,
-          "Unknown task type 'unknown'")
+          "Unknown task type 'unknown'. Detailed: uninitialized constant Astute::Unknown")
       end
     end # support task type
   end
