@@ -90,11 +90,6 @@ module Astute
       # Validate of basic fields in message about node
       def are_node_basic_fields_valid?(node)
         err = []
-
-        err << "Status provided '#{node['status']}' is not supported" if
-          node['status'] && !valid_status?(node['status'])
-        err << "progress value provided, but no status" if
-          !node['status'] && node['progress']
         err << "Node uid is not provided" unless node['uid']
 
         err.any? ? fail_validation(node, err) : true
