@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+require "astute/ext/hash"
+
 module Astute
   module Server
     class Producer
@@ -27,6 +29,7 @@ module Astute
       end
 
       def publish_from_queue(message)
+        message[:message].force_encoding!("utf-8")
         Astute.logger.info "Casting message to Nailgun:\n"\
                           "#{message[:message].pretty_inspect}"
         @exchange.publish(message[:message].to_json, message[:options])
