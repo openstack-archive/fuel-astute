@@ -14,9 +14,23 @@
 
 
 class Hash
-    
+
   def absent_keys(array)
     array.select { |key| self[key].blank? }
   end
-   
+
+  def force_encoding!(encoding, &block)
+    each do |key, value|
+      case value
+        when String
+          if block_given?
+            self[key] = yield(value.force_encoding(encoding))
+          else
+            self[key] = value.force_encoding(encoding)
+          end
+        when Hash then value.force_encoding!(encoding, &block)
+      end
+    end
+  end
+
 end
