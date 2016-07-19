@@ -187,14 +187,6 @@ module Astute
         report_result(result, reporter)
       end
 
-      def dump_environment(data)
-        @orchestrator.dump_environment(
-          create_reporter(data),
-          data['args']['task_uuid'],
-          data['args']['settings']
-        )
-      end
-
       def remove_nodes(data, reset=false)
         task_uuid = data['args']['task_uuid']
         reporter = create_reporter(data)
