@@ -175,10 +175,6 @@ module Astute
       provisioner.stop_provision(reporter, task_id, engine_attrs, nodes)
     end
 
-    def dump_environment(reporter, task_id, settings)
-      Dump.dump_environment(Context.new(task_id, reporter), settings)
-    end
-
     def verify_networks(reporter, task_id, nodes)
       ctx = Context.new(task_id, reporter)
       validate_nodes_access(ctx, nodes)
