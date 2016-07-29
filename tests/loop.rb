@@ -17,7 +17,7 @@ require_relative '../lib/fuel_deployment/simulator'
 
 simulator = Astute::Simulator.new
 cluster = Deployment::TestCluster.new
-cluster.id = 'loop'
+cluster.uid = 'loop'
 
 cluster.plot = true if simulator.options[:plot]
 node1 = Deployment::TestNode.new 'node1', cluster

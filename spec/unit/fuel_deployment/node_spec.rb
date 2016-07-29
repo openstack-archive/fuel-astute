@@ -52,7 +52,7 @@ describe Deployment::Node do
     end
 
     it 'should have an id' do
-      expect(subject.id).to eq 'node1'
+      expect(subject.uid).to eq 'node1'
     end
 
     it 'should have critical' do
@@ -115,7 +115,7 @@ describe Deployment::Node do
 
     it 'can set an id' do
       subject.id = 2
-      expect(subject.id).to eq 2
+      expect(subject.uid).to eq 2
     end
 
     it 'will not set task to an invalid object' do

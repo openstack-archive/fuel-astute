@@ -67,12 +67,12 @@ describe Deployment::Cluster do
 
   context '#attributes' do
     it 'has an id' do
-      expect(subject.id).to eq 'test'
+      expect(subject.uid).to eq 'test'
     end
 
     it 'can set an id' do
       subject.id = 1
-      expect(subject.id).to eq 1
+      expect(subject.uid).to eq 1
     end
 
     it 'has nodes' do
@@ -328,13 +328,19 @@ describe Deployment::Cluster do
       end
 
       it 'can walk forward' do
-        visited = task1_1.dfs_forward.to_a
-        expect(visited).to eq [task1_1, task1_2, task1_4, task2_1, task2_2, task1_3, task1_4, task2_1, task2_2]
+        visited = Set.new
+        cluster.visit(task1_1).each do |t|
+          visited.add t
+        end
+        expect(visited).to eq [task1_1, task1_2, task1_4, task2_1, task2_2, task1_3].to_set
       end
 
       it 'can walk backward' do
-        visited = task2_2.dfs_backward.to_a
-        expect(visited).to eq [task2_2, task2_1, task1_4, task1_2, task1_1, task1_3, task1_1]
+        visited = Set.new
+        cluster.visit(task2_2, direction: :backward).each do |t|
+          visited.add t
+        end
+        expect(visited).to eq [task2_2, task2_1, task1_4, task1_2, task1_1, task1_3].to_set
       end
 
       it 'can topology sort' do
@@ -361,16 +367,16 @@ describe Deployment::Cluster do
       end
 
       it 'can walk forward' do
-        message = 'Task[task1/node1]: Loop detected! Path: Task[task1/node1], Task[task2/node1], Task[task3/node1], Task[task4/node1], Task[task1/node1]'
+        message = 'Cluster[test]: Loop detected! Path: Task[task1/node1], Task[task2/node1], Task[task3/node1], Task[task4/node1], Task[task1/node1]'
         expect do
-          task1_1.dfs_forward.to_a
+          cluster.visit(task1_1).to_a
         end.to raise_error Deployment::LoopDetected, message
       end
 
       it 'can walk backward' do
-        message = 'Task[task1/node1]: Loop detected! Path: Task[task1/node1], Task[task4/node1], Task[task3/node1], Task[task2/node1], Task[task1/node1]'
+        message = 'Cluster[test]: Loop detected! Path: Task[task1/node1], Task[task4/node1], Task[task3/node1], Task[task2/node1], Task[task1/node1]'
         expect do
-          task1_1.dfs_backward.to_a
+          cluster.visit(task1_1, direction: :backward).to_a
         end.to raise_error Deployment::LoopDetected, message
       end
 

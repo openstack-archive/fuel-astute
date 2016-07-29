@@ -92,7 +92,7 @@ module Deployment
     # @param [Object] data The task data payload
     # @param [Class] task_class Optional custom task class
     # @return [Deployment::Task]
-    def task_create(task, data=nil, task_class=Deployment::Task)
+    def task_create(task, data={}, task_class=Deployment::Task)
       if task_present? task
         task = task_get task
       elsif task.is_a? Deployment::Task

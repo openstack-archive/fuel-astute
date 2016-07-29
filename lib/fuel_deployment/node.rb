@@ -45,7 +45,7 @@ module Deployment
       @status = :online
       @task = nil
       @critical = false
-      @id = id || self.name
+      @uid = id || self.name
       self.cluster = cluster
       cluster.node_add self
       create_new_graph
@@ -60,7 +60,7 @@ module Deployment
     attr_reader :cluster
     alias :current_task :task
     attr_reader :graph
-    attr_accessor :id
+    attr_accessor :uid
     attr_reader :critical
     alias :critical? :critical
     attr_reader :sync_point
@@ -252,8 +252,8 @@ module Deployment
 
     # @return [String]
     def to_s
-      return "Node[#{id}]" if id == name
-      "Node[#{id}/#{name}]"
+      return "Node[#{uid}]" if uid == name
+      "Node[#{uid}/#{name}]"
     end
 
     # @return [String]
