@@ -17,7 +17,7 @@ require_relative '../lib/fuel_deployment/simulator'
 
 simulator = Astute::Simulator.new
 cluster = Deployment::TestCluster.new
-cluster.id = 'node_concurrency'
+cluster.uid = 'node_concurrency'
 
 node1 = Deployment::TestNode.new 'node1', cluster
 node2 = Deployment::TestNode.new 'node2', cluster

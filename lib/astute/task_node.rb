@@ -32,7 +32,7 @@ module Astute
     def poll
       return unless busy?
 
-      debug("Node #{id}: task #{task.name}, task status #{task.status}")
+      debug("Node #{uid}: task #{task.name}, task status #{task.status}")
 
       # Please be informed that this code define special method
       # of Deployment::Node class. We use special method `task`
@@ -41,7 +41,7 @@ module Astute
       if @task.running?
         @ctx.report({
           'nodes' => [{
-            'uid' => id,
+            'uid' => uid,
             'deployment_graph_task_name' => task.name,
             'progress' => current_progress_bar,
             'task_status' => task.status.to_s,
@@ -55,7 +55,7 @@ module Astute
 
     def report_node_status
       node_status = {
-        'uid' => id,
+        'uid' => uid,
         'progress' => current_progress_bar,
       }
       node_status.merge!(node_report_status)
