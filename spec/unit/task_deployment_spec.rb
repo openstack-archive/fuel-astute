@@ -80,6 +80,47 @@ describe Astute::TaskDeployment do
      "null"=> []
     }
   end
+  let(:tasks_graph_3) do
+    {
+        "null" =>
+            [
+                {"id" => "sync_task",
+                 "requires" =>[]
+                }
+            ],
+        "1" =>
+            [
+                {"id" => "14", "requires" => [{"node_id" => nil, "name" => "sync_task"}], "required_for" => [{"name" => 15, "node_id" => "1"}]},
+                {"id" => "15", "requires" => [{"node_id" => "2", "name" => "6"}]},
+                {"id" => "0", "required_for" => [{"name" => 1, "node_id" => "1"}]},
+                {"id" => "1", "required_for" => [{"name" => 2, "node_id" => "1"}, {"name" => 3, "node_id" => "1"}]},
+                {"id" => "2", "required_for" => [{"name" => 4, "node_id" => "1"}, {"name" => 5, "node_id" => "1"}]},
+                {"id" => "3", "required_for" => [{"name" => 6, "node_id" => "1"}, {"name" => 7, "node_id" => "1"}]},
+                {"id" => "4", "required_for" => [{"name" => 8, "node_id" => "1"}]},
+                {"id" => "5", "required_for" => [{"name" => 10, "node_id" => "1"}]},
+                {"id" => "6", "required_for" => [{"name" => 11, "node_id" => "1"}]},
+                {"id" => "7", "required_for" => [{"name" => 12, "node_id" => "1"}]},
+                {"id" => "8", "required_for" => [{"name" => 9, "node_id" => "1"}]},
+                {"id" => "9"},
+                {"id" => "10", "required_for" => [{"name" => 9, "node_id" => "1"}]},
+                {"id" => "11", "required_for" => [{"name" => 13, "node_id" => "1"}]},
+                {"id" => "12", "required_for" => [{"name" => 13, "node_id" => "1"}]},
+                {"id" => "13", "required_for" => [{"name" => 9, "node_id" => "1"}]}],
+        "2" => [
+            {"id" => "0", "required_for" => [{"name" => 1, "node_id" => "2"},
+                                             {"name" => 3, "node_id" => "2"}]},
+            {"id" => "1", "required_for" => [{"name" => 2, "node_id" => "2"}]},
+            {"id" => "2"},
+            {"id" => "3", "required_for" => [{"name" => 4, "node_id" => "2"}]},
+            {"id" => "4", "requires" => [{"node_id" => 1, "name" => "3"}], "required_for" => [{"name" => 5, "node_id" => "2"}]},
+            {"id" => "5", "requires" => [{"node_id" => 1, "name" => "13"}], "required_for" => [{"name" => 7, "node_id" => "2"}]},
+            {"id" => "6", "requires" => [{"node_id" => nil, "name" => "sync_task"}], "required_for" => [{"name" => 8, "node_id" => "2"}]},
+            {"id" => "7"},
+            {"id" => "8"}
+        ]
+    }
+  end
+
 
   let(:tasks_directory) do
     {"ironic_post_swift_key"=>{
@@ -341,6 +382,59 @@ describe Astute::TaskDeployment do
           tasks_directory: tasks_directory)
       end
     end
+
+    context 'subgraphs' do
+      it 'should call subgraph set up if subgraphs are present' do
+        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:write_graph_to_file)
+        Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
+
+
+        ctx.stubs(:report)
+        Astute::TaskCluster.any_instance.expects(:setup_start_end).once
+
+      subgraphs = [
+          {
+              'start' => [
+                  "3",
+              ],
+              'end' => [
+                  "9"
+              ]
+          },
+          {
+              'start' => [ "4" ]
+          }
+      ]
+      tasks_metadata.merge!("subgraphs" => subgraphs)
+      task_deployment.deploy(
+          tasks_metadata: tasks_metadata,
+          tasks_graph: tasks_graph_3,
+          tasks_directory: tasks_directory)
+      end
+      it 'should not call subgraph setup if subgraphs are not present' do
+        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:write_graph_to_file)
+        ctx.stubs(:report)
+        Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
+        Astute::TaskCluster.any_instance.expects(:setup_start_end).never
+
+        subgraphs = [
+            {
+                'start' => [],
+                'end' => nil
+            },
+            {'start'=>['task99']}
+        ]
+        tasks_metadata.merge!("subgraphs" => subgraphs)
+        task_deployment.deploy(
+            tasks_metadata: tasks_metadata,
+            tasks_graph: tasks_graph,
+            tasks_directory: tasks_directory)
+      end
+    end
+
+
 
     context 'should report final status' do
 

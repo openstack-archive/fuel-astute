@@ -68,7 +68,7 @@ describe Astute::TaskNode do
 
     it 'should run noop puppet task' do
       cluster_new = Astute::TaskCluster.new
-      cluster_new.id = 'test2'
+      cluster_new.uid = 'test2'
       cluster_new.noop_run = true
       task_node_new = Astute::TaskNode.new('node_id', cluster_new)
       task_node_new.context = ctx

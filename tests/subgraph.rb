@@ -14,6 +14,7 @@
 #    under the License.
 
 require_relative '../lib/fuel_deployment/simulator'
+require 'astute'
 
 simulator = Astute::Simulator.new
 cluster = Deployment::TestCluster.new
@@ -54,23 +55,22 @@ node2_data = [
 cluster = Deployment::TestCluster.new
 cluster.uid = 'deployment'
 
-node1 = cluster.node_create 'node1', Deployment::TestNode
-node2 = cluster.node_create 'node2', Deployment::TestNode
+node1 = cluster.node_create '1', Deployment::TestNode
+node2 = cluster.node_create '2', Deployment::TestNode
 sync_node = cluster.node_create 'sync_node', Deployment::TestNode
 node2.set_critical
 sync_node.set_as_sync_point
-sync_node.create_task 'sync_task'
-
+sync_node.create_task('sync_task', data={})
 
 node1_data.each do |task_from, task_to|
-  task_from = node1.graph.create_task "task#{task_from}"
-  task_to = node1.graph.create_task "task#{task_to}"
+  task_from = node1.graph.create_task("task#{task_from}", data={})
+  task_to = node1.graph.create_task("task#{task_to}", data={})
   node1.graph.add_dependency task_from, task_to
 end
 
 node2_data.each do |task_from, task_to|
-  task_from = node2.graph.create_task "task#{task_from}"
-  task_to = node2.graph.create_task "task#{task_to}"
+  task_from = node2.graph.create_task("task#{task_from}", data={})
+  task_to = node2.graph.create_task("task#{task_to}", data={})
   node2.graph.add_dependency task_from, task_to
 end
 
@@ -82,5 +82,19 @@ sync_node['sync_task'].depends node2['task5']
 sync_node['sync_task'].depends node1['task9']
 node2['task6'].depends sync_node['sync_task']
 node1['task14'].depends sync_node['sync_task']
-
+subgraphs = [
+  {
+   'start' => [
+     "task3",
+    ],
+   'end' => [
+    "task9"
+   ]
+  },
+  {
+    'start' => [ "task4" ]
+  }
+]
+cluster.subgraphs = Astute::TaskDeployment.munge_list_of_start_end(cluster, subgraphs)
+cluster.setup_start_end
 simulator.run cluster
