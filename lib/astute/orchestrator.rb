@@ -74,12 +74,8 @@ module Astute
       Astute.logger.info "Task based deployment will be used"
 
       deployment_engine = TaskDeployment.new(context)
-      deployment_engine.deploy(
-        tasks_graph: deployment_options[:tasks_graph],
-        tasks_directory: deployment_options[:tasks_directory],
-        tasks_metadata: deployment_options[:tasks_metadata],
-        dry_run: deployment_options.fetch(:dry_run, false)
-      )
+      write_input_data_to_file(context, deployment_options) if Astute.config.enable_graph_file
+      deployment_engine.deploy(deployment_options)
     ensure
       Astute.logger.info "Deployment summary: time was spent " \
         "#{time_summary(time_start)}"
@@ -285,6 +281,31 @@ module Astute
     def time_summary(time)
       amount_time = (Time.now.to_i - time).to_i
       Time.at(amount_time).utc.strftime("%H:%M:%S")
+    end
+
+    # Dump the task graph data to a file
+    # @param [Astute::Context] context
+    # @param [Hash] data
+    def write_input_data_to_file(context, data={})
+      yaml_file = File.join(
+        Astute.config.graph_dot_dir,
+        "graph-#{context.task_id}.yaml"
+      )
+      data = filter_sensitive_data(data)
+      File.open(yaml_file, 'w') { |f| f.write(YAML.dump(data)) }
+      Astute.logger.info("Check inpute data file #{yaml_file}")
+    end
+
+    # Remove the potentially sensitive data
+    # from the task parameters before dumping the graph
+    # @param [Hash] data
+    # @return [Hash]
+    def filter_sensitive_data(data)
+      data = data.deep_dup
+      data[:tasks_graph].each do |_node_id, tasks|
+        tasks.each { |task| task.delete('parameters') }
+      end
+      data
     end
 
   end # class
