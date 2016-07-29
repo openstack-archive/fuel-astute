@@ -18,7 +18,7 @@ describe Deployment::Task do
 
   let(:cluster) do
     cluster = Deployment::Cluster.new
-    cluster.id = 'test'
+    cluster.uid = 'test'
     node1 = cluster.create_node 'node1'
     node2 = cluster.create_node 'node2'
     node1.create_task 'task1'
@@ -77,7 +77,7 @@ describe Deployment::Task do
     end
 
     it 'should have a data' do
-      expect(subject.data).to eq nil
+      expect(subject.data).to eq Hash.new
     end
 
     it 'should set name as a string' do

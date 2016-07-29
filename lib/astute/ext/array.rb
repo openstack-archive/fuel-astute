@@ -13,14 +13,10 @@
 #    under the License.
 
 
-class Hash
-    
-  def absent_keys(array)
-    array.select { |key| self[key].blank? }
-  end
+class Array
 
   def compact_blank
-    delete_if do |_key, val|
+    reject do |val|
       case val
         when Hash   then val.compact_blank.blank?
         when Array  then val.map { |v| v.respond_to?(:compact_blank) ? v.compact_blank : v }.blank?
