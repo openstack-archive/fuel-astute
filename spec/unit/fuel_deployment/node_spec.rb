@@ -18,7 +18,7 @@ describe Deployment::Node do
 
   let(:cluster) do
     cluster = Deployment::Cluster.new
-    cluster.id = 'test'
+    cluster.uid = 'test'
     node1 = cluster.create_node 'node1'
     node1.create_task 'task1'
     cluster
@@ -52,7 +52,7 @@ describe Deployment::Node do
     end
 
     it 'should have an id' do
-      expect(subject.id).to eq 'node1'
+      expect(subject.uid).to eq 'node1'
     end
 
     it 'should have critical' do
@@ -114,8 +114,8 @@ describe Deployment::Node do
     end
 
     it 'can set an id' do
-      subject.id = 2
-      expect(subject.id).to eq 2
+      subject.uid = 2
+      expect(subject.uid).to eq 2
     end
 
     it 'will not set task to an invalid object' do
@@ -236,7 +236,7 @@ describe Deployment::Node do
 
     it 'can to_s' do
       expect(subject.to_s).to eq 'Node[node1]'
-      subject.id = 1
+      subject.uid = 1
       expect(subject.to_s).to eq 'Node[1/node1]'
     end
 

@@ -31,6 +31,60 @@ module Astute
       @node_class = node_class
     end
 
+    def self.munge_task(tasks_names, tasks_graph)
+      result = Set.new
+      tasks_names.each do |task|
+        if task.is_a? Deployment::Task
+          result.add task
+          next
+        end
+        Astute.logger.debug("munging task #{task}")
+        parts = task.split('/')
+        task_name = parts[0]
+        task_range = parts[1]
+        if task_range
+          Astute.logger.debug("expanding task #{task} range to specific nodes #{task_range}")
+          node_ids = expand_node_ids(task_range).flatten
+          Astute.logger.debug("expanded task #{task} range to  #{node_ids.to_a}")
+        else
+          Astute.logger.debug("expanding task #{task} range to all_nodes")
+          node_ids = tasks_graph.each_node.collect {|node| node.uid}
+        end
+        exp_t = tasks_graph.each_task.select do |_task|
+          #Astute.logger.debug("task node id comparison is #{_task.node in? node_ids}")
+          rv = (_task.name == task_name and _task.node.uid.in? node_ids)
+          rv
+        end
+        exp_t.each do |t|
+          result.add t
+        end
+      end
+      result
+    end
+
+    def self.expand_node_ids(interval)
+      interval.split(',').collect do |part|
+        if part =~ /^(\d+)-(\d+)$/
+          ($1.to_i .. $2.to_i).to_a
+        else
+          part
+        end
+      end
+    end
+
+    def self.munge_list_of_start_end(tasks_graph, subgraphs)
+      subgraphs.each do |subgraph|
+        subgraph['start'] ||= []
+        subgraph['end'] ||= []
+        Astute.logger.debug("munging start tasks #{subgraph['start'].to_a} ")
+        subgraph['start'] = munge_task(subgraph['start'], tasks_graph) unless subgraph['start'].blank?
+        Astute.logger.debug("munged start tasks to #{subgraph['start'].to_a}")
+        Astute.logger.debug("munging end tasks #{subgraph['end'].to_a} ")
+        subgraph['end'] = munge_task(subgraph['end'], tasks_graph) unless subgraph['end'].blank?
+        Astute.logger.debug("munged end tasks to #{subgraph['end'].to_a}  ")
+      end
+    end
+
     def create_cluster(deployment_options={})
       tasks_graph = deployment_options.fetch(:tasks_graph, {})
       tasks_directory = deployment_options.fetch(:tasks_directory, {})
@@ -75,6 +129,10 @@ module Astute
       setup_tasks(tasks_graph, cluster)
       setup_task_depends(tasks_graph, cluster)
       setup_task_concurrency(tasks_graph, cluster)
+      subgraphs = self.class.munge_list_of_start_end(cluster, tasks_metadata.fetch('subgraphs', []))
+      cluster.subgraphs = subgraphs unless subgraphs.compact_blank.blank?
+      Astute.logger.debug(cluster.subgraphs)
+      cluster.setup_start_end unless cluster.subgraphs.blank?
       cluster
     end
 

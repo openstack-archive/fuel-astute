@@ -14,6 +14,7 @@
 #    under the License.
 
 require 'fuel_deployment/simulator'
+require 'astute'
 
 simulator = Astute::Simulator.new
 simulator.run
