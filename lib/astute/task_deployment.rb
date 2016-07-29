@@ -22,6 +22,10 @@ module Astute
       @node_class = node_class
     end
 
+    def munge_list_of_start_end(tasks_graph, task_list)
+      task_list
+    end
+
     def create_cluster(deployment_options={})
       tasks_graph = deployment_options.fetch(:tasks_graph, {})
       tasks_directory = deployment_options.fetch(:tasks_directory, {})
@@ -39,6 +43,8 @@ module Astute
         'fault_tolerance_groups',
         []
       )
+      cluster.task_start = munge_list_of_start_end(tasks_graph, tasks_metadata.fetch('start', []))
+      cluster.task_end = munge_list_of_start_end(tasks_graph, tasks_metadata.fetch('end', []))
 
       offline_uids = fail_offline_nodes(tasks_graph)
       critical_uids = critical_node_uids(cluster.fault_tolerance_groups)
@@ -54,6 +60,7 @@ module Astute
       setup_tasks(tasks_graph, cluster)
       setup_task_depends(tasks_graph, cluster)
       setup_task_concurrency(tasks_graph, cluster)
+      cluster.setup_start_end
       cluster
     end
 

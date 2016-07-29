@@ -34,6 +34,8 @@ module Deployment
       @task_concurrency = Deployment::Concurrency::Group.new
       @emergency_brake = false
       @fault_tolerance_groups = []
+      @task_start = []
+      @task_end = []
 
       @dot_task_filter = nil
       @dot_node_filter = nil
@@ -45,6 +47,8 @@ module Deployment
 
     attr_accessor :id
     attr_accessor :gracefully_stop_mark
+    attr_accessor :task_start
+    attr_accessor :task_end
     attr_reader :emergency_brake
     attr_reader :nodes
     attr_reader :node_concurrency
@@ -138,6 +142,35 @@ module Deployment
         end
       end
     end
+
+    def setup_start_end(fetch_deps = false)
+      cluster_tasks_set = Set.new each_task
+      start_tasks = Set.new
+      end_tasks = Set.new
+      require 'pry-byebug'
+      binding.pry
+      self.task_start.each do |task|
+        start_tasks += task.dfs_forward.to_set
+      end
+      self.task_end.each do |task|
+        end_tasks += task.dfs_backward.to_set
+      end
+      #start_tasks = cluster_tasks_set - start_parents_graph
+      #end_tasks = cluster_tasks_set - end_children_graph
+      simple_intersection = start_tasks & end_tasks
+      if !fetch_deps
+        to_skip_tasks = cluster_tasks_set - simple_intersection
+      else
+        start_complex_part = (cluster_tasks_set - simple_intersection) & start_tasks
+        end_complex_part = (cluster_tasks_set - simple_intersection) & end_tasks
+        to_skip_tasks = cluster_tasks_set - (simple_intersection + start_complex_part + end_complex_part)
+      end
+      to_skip_tasks.each do |task|
+        task.skip!
+      end
+    end
+
+
 
     # Iterates through the task that are ready to be run
     # @yield Deployment::Task

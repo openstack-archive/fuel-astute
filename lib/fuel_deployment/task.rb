@@ -119,6 +119,10 @@ module Deployment
       @name = name.to_s
     end
 
+    def skip!
+      @data['type'] = 'skipped'
+    end
+
     # Set the new task status. The task status can influence the dependency
     # status of the tasks that depend on this task then they should be reset to allow them to update
     # their status too.
@@ -431,6 +435,10 @@ module Deployment
       status == :dep_failed
     end
 
+    def is_skipped?
+      @data['type'] == 'skipped'
+    end
+
     # # This task failed
     # # @return [true, false]
     # def abortive?
@@ -481,6 +489,7 @@ module Deployment
       case status
         when :pending;
           sync_point? ? :cyan : :white
+          is_skipped? ? :magenta : :white
         when :ready
           :yellow
         when :successful;
