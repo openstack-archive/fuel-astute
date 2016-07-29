@@ -49,7 +49,7 @@ module Deployment
     # @param [Deployment::Node] node The task will be assigned to this node
     # @param [Object] data The data payload. It can be any object and contain any
     # information that will be required to actually run the task.
-    def initialize(name, node, data=nil)
+    def initialize(name, node, data={})
       self.name = name
       @status = :pending
       @backward_dependencies = Set.new
@@ -69,40 +69,6 @@ module Deployment
     attr_reader :forward_dependencies
     attr_accessor :data
 
-    # Walk the task graph forward using DFS algorithm
-    # @param [Array<Deployment::Task>] visited The list of visited tasks for loop detection
-    # @yield [Deployment::Task]
-    def dfs_forward(visited = [], &block)
-      return to_enum(:dfs_forward) unless block_given?
-      if visited.include? self
-        visited << self
-        raise Deployment::LoopDetected.new self, 'Loop detected!', visited
-      end
-      visited << self
-      yield self
-      each_forward_dependency do |task|
-        task.dfs_forward visited, &block
-      end
-      visited.delete self
-    end
-
-    # Walk the task graph backward using DFS algorithm
-    # @param [Array<Deployment::Task>] visited The list of visited tasks for loop detection
-    # @yield [Deployment::Task]
-    def dfs_backward(visited = [], &block)
-      return to_enum(:dfs_backward) unless block_given?
-      if visited.include? self
-        visited << self
-        raise Deployment::LoopDetected.new self, 'Loop detected!', visited
-      end
-      visited << self
-      yield self
-      each_backward_dependency do |task|
-        task.dfs_backward visited, &block
-      end
-      visited.delete self
-    end
-
     # Set this task's Node object
     # @param [Deployment::Node] node The new node object
     # @raise [Deployment::InvalidArgument] if the object is not a Node
@@ -117,6 +83,10 @@ module Deployment
     # @return [String]
     def name=(name)
       @name = name.to_s
+    end
+
+    def skip!
+      @data['type'] = 'skipped'
     end
 
     # Set the new task status. The task status can influence the dependency
@@ -431,6 +401,10 @@ module Deployment
       status == :dep_failed
     end
 
+    def is_skipped?
+      @data.fetch('type', nil) == 'skipped'
+    end
+
     # # This task failed
     # # @return [true, false]
     # def abortive?
@@ -481,6 +455,7 @@ module Deployment
       case status
         when :pending;
           sync_point? ? :cyan : :white
+          is_skipped? ? :magenta : :white
         when :ready
           :yellow
         when :successful;
