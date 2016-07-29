@@ -29,12 +29,12 @@ module Deployment
     # @param [String] id Cluster name
     def initialize(id=nil)
       @nodes = {}
-      @id = id
+      @uid = id
       @node_concurrency = Deployment::Concurrency::Counter.new
       @task_concurrency = Deployment::Concurrency::Group.new
       @emergency_brake = false
       @fault_tolerance_groups = []
-
+      @subgraphs = []
       @dot_task_filter = nil
       @dot_node_filter = nil
       @dot_plot_number = 0
@@ -43,8 +43,9 @@ module Deployment
     include Enumerable
     include Deployment::Log
 
-    attr_accessor :id
+    attr_accessor :uid
     attr_accessor :gracefully_stop_mark
+    attr_accessor :subgraphs
     attr_reader :emergency_brake
     attr_reader :nodes
     attr_reader :node_concurrency
@@ -139,6 +140,47 @@ module Deployment
       end
     end
 
+    # Sets up subgraphs for execution
+    # e.g. user might want to run only a subset
+    # of tasks: in this case he sends
+    # an array of subgraphs to be executed.
+    # Each array consists of starting vertices
+    # and ending vertices. These vertices are then
+    # traversed forward or backward
+
+    def setup_start_end
+      cluster_tasks_set = Set.new each_task
+      tasks_to_include = Set.new
+      def setup_start_end_piece(subgraph, cluster)
+        start_tasks = Set.new
+        end_tasks = Set.new
+        subgraph.fetch('start', []).each do |task|
+          visit(task).each do |t|
+            start_tasks.add t
+          end
+        end
+        subgraph.fetch('end', []).each do |task|
+          visit(task, direction: :backward).each do |t|
+            end_tasks.add t
+          end
+        end
+        start_tasks = start_tasks.empty? ? cluster : start_tasks
+        end_tasks = end_tasks.empty? ? cluster : end_tasks
+        start_tasks & end_tasks
+      end
+      self.subgraphs.each do |subgraph|
+        setup_start_end_piece(subgraph, cluster_tasks_set).each do |piece|
+          tasks_to_include.add piece
+        end
+      end
+      to_skip_tasks = cluster_tasks_set - tasks_to_include
+      to_skip_tasks.each do |task|
+        warn "Skipping task #{task} due to subgraph evaluation"
+        task.skip!
+      end
+    end
+
+
     # Iterates through the task that are ready to be run
     # @yield Deployment::Task
     def each_ready_task
@@ -172,7 +214,9 @@ module Deployment
           not (permanently_visited.include? task or temporary_visited.include? task)
         end
         return topology unless next_task
-        visit next_task, topology, permanently_visited, temporary_visited
+        visit(next_task, permanently_visited, temporary_visited).each do |task|
+          topology.insert 0, task
+        end
       end
       topology
     end
@@ -184,7 +228,12 @@ module Deployment
     # @param [Array<Deployment::Task>] topology A list of topologically sorted tasks
     # @param [Set<Deployment::Task>] permanently_visited Set of permanently visited tasks
     # @param [Array<Deployment::Task>] temporary_visited List of temporary visited tasks
-    def visit(task, topology = [], permanently_visited = Set.new, temporary_visited = [])
+    # @param [Symbol direction] direction Which direction to traverse things: :forward or :backward
+    # @yield [Deployment::Task]
+    def visit(task, permanently_visited = Set.new, temporary_visited = [], direction: :forward, &block)
+      unless block_given?
+        return to_enum(method=:visit, task, permanently_visited, temporary_visited, direction: direction)
+      end
       if temporary_visited.include? task
         # This node have already been visited in this small iteration and
         # it means that there is a loop.
@@ -200,8 +249,9 @@ module Deployment
       # add this node to the last iteration visit list and run recursion
       # on the forward dependencies
       temporary_visited << task
-      task.each_forward_dependency do |forward_task|
-        visit forward_task, topology, permanently_visited, temporary_visited
+      task_method = "each_#{direction}_dependency"
+      task.send(task_method.to_sym) do |_task|
+        visit(_task, permanently_visited, temporary_visited, direction: direction, &block)
       end
       # Small iteration have completed without loops.
       # We add this node to the list of permanently marked nodes and
@@ -209,7 +259,7 @@ module Deployment
       permanently_visited.add task
       temporary_visited.delete task
       # Insert this node to the head of topology sort list and return it.
-      topology.insert 0, task
+      yield task
     end
 
     # Process a single node when it's visited.
@@ -448,7 +498,7 @@ module Deployment
     # @return [String]
     def to_dot
       template = <<-eos
-digraph "<%= id || 'graph' %>" {
+digraph "<%= uid || 'graph' %>" {
   node[ style = "filled, solid"];
 <% each_task do |task| -%>
 <% next unless task.name =~ dot_task_filter if dot_task_filter -%>
@@ -488,7 +538,7 @@ digraph "<%= id || 'graph' %>" {
         if suffix.is_a? Integer
           suffix = suffix.to_s.rjust 5, '0'
         end
-        graph_name = id || 'graph'
+        graph_name = uid || 'graph'
         file = "#{graph_name}-#{suffix}.#{type}"
       end
       info "Writing the graph image: '#{suffix}' to the file: '#{file}'"
@@ -586,7 +636,7 @@ digraph "<%= id || 'graph' %>" {
 
     # @return [String]
     def to_s
-      "Cluster[#{id}]"
+      "Cluster[#{uid}]"
     end
 
     # @return [String]

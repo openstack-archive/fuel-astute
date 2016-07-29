@@ -317,7 +317,7 @@ graph much more readable.
       deployment = Astute::TaskDeployment.new context, Deployment::TestCluster, Deployment::TestNode
       cluster = deployment.create_cluster yaml_file_data
       Deployment::Log.logger.level = Logger::INFO
-      cluster.id = 'simulator'
+      cluster.uid = 'simulator'
       cluster
     end
 
