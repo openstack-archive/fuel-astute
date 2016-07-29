@@ -97,7 +97,7 @@ describe Deployment::Graph do
 
     it 'creating an existing task will return it and update the data payload' do
       task1 = subject.task_create 'new_task'
-      expect(task1.data).to be_nil
+      expect(task1.data).to eq Hash.new
       task2 = subject.task_create 'new_task', 'my_data'
       expect(task2.data).to eq 'my_data'
       expect(task1).to eq task2
