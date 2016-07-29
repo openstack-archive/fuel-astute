@@ -34,7 +34,7 @@ module Deployment
       @task_concurrency = Deployment::Concurrency::Group.new
       @emergency_brake = false
       @fault_tolerance_groups = []
-
+      @subgraphs = []
       @dot_task_filter = nil
       @dot_node_filter = nil
       @dot_plot_number = 0
@@ -45,6 +45,7 @@ module Deployment
 
     attr_accessor :id
     attr_accessor :gracefully_stop_mark
+    attr_accessor :subgraphs
     attr_reader :emergency_brake
     attr_reader :nodes
     attr_reader :node_concurrency
@@ -138,6 +139,49 @@ module Deployment
         end
       end
     end
+
+    # Sets up subgraphs for execution
+    # e.g. user might want to run only a subset
+    # of tasks: in this case he sends
+    # an array of subgraphs to be executed.
+    # Each array consists of starting vertices
+    # and ending vertices. These vertices are then
+    # traversed forward or backward
+
+    def setup_start_end
+      require 'pry-byebug'
+      cluster_tasks_set = Set.new each_task
+      tasks_to_include = Set.new
+      def setup_start_end_piece(subgraph, cluster)
+        start_tasks = Set.new
+        end_tasks = Set.new
+        binding.pry
+        subgraph.fetch('start', []).each do |task|
+          task.dfs_forward.each do |fw|
+            start_tasks.add fw
+          end
+        end
+        subgraph.fetch('end', []).each do |task|
+          task.dfs_backward.each do |bw|
+            end_tasks.add bw
+          end
+        end
+        start_tasks = start_tasks.empty? ? cluster : start_tasks
+        end_tasks = end_tasks.empty? ? cluster : end_tasks
+        start_tasks & end_tasks
+      end
+      self.subgraphs.each do |subgraph|
+        setup_start_end_piece(subgraph, cluster_tasks_set).each do |piece|
+          tasks_to_include.add piece
+        end
+      end
+
+      to_skip_tasks = cluster_tasks_set - tasks_to_include
+      to_skip_tasks.each do |task|
+        task.skip!
+      end
+    end
+
 
     # Iterates through the task that are ready to be run
     # @yield Deployment::Task
