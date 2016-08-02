@@ -215,7 +215,7 @@ module Astute
         nodes = offline_uids.map do |uid|
           {'uid' => uid,
            'status' => 'error',
-           'error_type' => 'provision',
+           'error_type' => 'deploy',
            'error_msg' => 'Node is not ready for deployment: '\
                           'mcollective has not answered'
           }
