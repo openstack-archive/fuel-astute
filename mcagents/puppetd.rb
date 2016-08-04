@@ -211,8 +211,11 @@ module MCollective
           end
         end
 
-        cmd << '--debug' if request[:puppet_debug]
-        cmd << '--evaltrace' if request[:puppet_debug]
+        if request[:puppet_noop]
+          cmd << '--noop'
+        else
+          cmd << '--debug' << '--evaltrace' if request[:puppet_debug]
+        end
         cmd << "--logdest #{@log}" if @log
 
         cmd = cmd.join(" ")

@@ -39,6 +39,10 @@ module Astute
         'fault_tolerance_groups',
         []
       )
+      cluster.noop_run = tasks_metadata.fetch(
+        'noop',
+        false
+      )
 
       offline_uids = fail_offline_nodes(tasks_graph)
       critical_uids = critical_node_uids(cluster.fault_tolerance_groups)
@@ -67,6 +71,8 @@ module Astute
         result[:success] = true
       else
         result = cluster.run
+        # imitate dry_run results for noop run after deployment
+        result = {:success => true } if cluster.noop_run
       end
       report_deploy_result(result)
     end
