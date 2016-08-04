@@ -297,6 +297,20 @@ describe Astute::TaskDeployment do
       end
     end
 
+    context 'noop_run' do
+      it 'should run noop deployment without error states' do
+        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:write_graph_to_file)
+        ctx.stubs(:report)
+
+        Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
+        task_deployment.deploy(
+            tasks_metadata: tasks_metadata.merge({'noop' => true}),
+            tasks_graph: tasks_graph,
+            tasks_directory: tasks_directory)
+      end
+    end
+
     context 'config' do
       around(:each) do |example|
         max_nodes_old_value = Astute.config.max_nodes_per_call
