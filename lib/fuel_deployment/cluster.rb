@@ -45,11 +45,13 @@ module Deployment
 
     attr_accessor :id
     attr_accessor :gracefully_stop_mark
+    attr_accessor :noop_run
     attr_reader :emergency_brake
     attr_reader :nodes
     attr_reader :node_concurrency
     attr_reader :task_concurrency
     attr_reader :fault_tolerance_groups
+    attr_reader :noop_run
     attr_accessor :dot_node_filter
     attr_accessor :dot_task_filter
     attr_accessor :dot_plot_number
