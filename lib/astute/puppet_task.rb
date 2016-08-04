@@ -27,7 +27,8 @@ module Astute
         :timeout => Astute.config.puppet_timeout,
         :puppet_debug => false,
         :succeed_retries => Astute.config.puppet_succeed_retries,
-        :raw_report => Astute.config.puppet_raw_report
+        :raw_report => Astute.config.puppet_raw_report,
+        :puppet_noop_run => Astute.config.puppet_noop_run,
       }
       @options = options.compact.reverse_merge(default_options)
       @options.freeze
@@ -125,7 +126,8 @@ module Astute
         :puppet_debug => @options[:puppet_debug],
         :manifest => @options[:puppet_manifest],
         :modules  => @options[:puppet_modules],
-        :cwd => @options[:cwd]
+        :cwd => @options[:cwd],
+        :puppet_noop_run => @options[:puppet_noop_run],
       )
     end
 

@@ -11,18 +11,25 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-require 'fuel_deployment'
+require 'astute/tasks/shell'
 
 module Astute
-  class TaskCluster < Deployment::Cluster
-    attr_accessor :noop_run
+  class NoopShell < Shell
 
-    def hook_post_gracefully_stop(*args)
-      report_new_node_status(args[0])
-    end
+    private
 
-    def report_new_node_status(node)
-      node.report_node_status
+    def process
+      run_shell_without_check(
+        @task['node_id'],
+        "mkdir -p #{SHELL_MANIFEST_DIR}",
+        timeout=2
+      )
+      upload_shell_manifest
+      @puppet_task = NoopPuppet.new(
+        generate_puppet_hook,
+        @ctx
+      )
+      @puppet_task.run
     end
 
   end
