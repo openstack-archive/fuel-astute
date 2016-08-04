@@ -22,7 +22,7 @@ module Astute
 
     def run(inbox_task)
       self.task = inbox_task
-      @task_engine = select_task_engine(task.data)
+      @task_engine = select_task_engine(task.data, noop_run?)
       @task_engine.run
       task.set_status_running
       set_status_busy
@@ -110,11 +110,16 @@ module Astute
       100 * tasks_finished_count / tasks_total_count
     end
 
-    def select_task_engine(data)
+    def select_task_engine(data, noop)
       # TODO: replace by Object.const_get(type.split('_').collect(&:capitalize).join)
       case data['type']
       when 'shell' then Shell.new(data, @ctx)
-      when 'puppet' then Puppet.new(data, @ctx)
+      when 'puppet'
+        if noop
+          NoopPuppet.new(data, @ctx)
+        else
+          Puppet.new(data, @ctx)
+        end
       when 'upload_file' then UploadFile.new(data, @ctx)
       when 'upload_files' then UploadFiles.new(data, @ctx)
       when 'reboot' then Reboot.new(data, @ctx)
