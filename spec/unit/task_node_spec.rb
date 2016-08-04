@@ -66,6 +66,12 @@ describe Astute::TaskNode do
       task_node.run(task)
     end
 
+    it 'should run noop puppet task' do
+      task_node.stubs(:noop_run?).returns(true)
+      Astute::NoopPuppet.any_instance.expects(:run)
+      task_node.run(task)
+    end
+
     it 'should mark node as busy' do
       Astute::Puppet.any_instance.stubs(:run)
       task_node.run(task)
