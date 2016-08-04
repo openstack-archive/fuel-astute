@@ -142,6 +142,13 @@ module Deployment
       cluster.node_concurrency.available?
     end
 
+    # check if current run should be executed in noop mode
+    # @return [true,false]
+    def noop_run?
+      return false unless cluster.is_a? Deployment::Cluster
+      return cluster.noop_run
+    end
+
     # Increase or decrease the node concurrency value
     # when the node's status is changed.
     # @param [Symbol] status_from
