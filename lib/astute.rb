@@ -69,11 +69,6 @@ require 'fuel_deployment'
   Dir[File.dirname(__FILE__) + path].each{ |f| require f }
 end
 
-require 'astute/ssh'
-require 'astute/ssh_actions/ssh_erase_nodes'
-require 'astute/ssh_actions/ssh_hard_reboot'
-
-
 # Server
 require 'astute/server/worker'
 require 'astute/server/server'

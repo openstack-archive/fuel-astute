@@ -21,7 +21,13 @@ module Astute
 
     def node_type(reporter, task_id, nodes_uids, timeout=nil)
       context = Context.new(task_id, reporter)
-      systemtype = MClient.new(context, "systemtype", nodes_uids, check_result=false, timeout)
+      systemtype = MClient.new(
+        context,
+        "systemtype",
+        nodes_uids,
+        _check_result=false,
+        timeout
+      )
       systems = systemtype.get_type
       systems.map do |n|
         {
@@ -136,7 +142,7 @@ module Astute
             if reject_uids.present?
               ctx ||= Context.new(task_id, reporter)
               reject_nodes = reject_uids.map { |uid| {'uid' => uid } }
-              NodesRemover.new(ctx, reject_nodes, reboot=true).remove
+              NodesRemover.new(ctx, reject_nodes, _reboot=true).remove
             end
 
             #check timouted nodes
@@ -197,18 +203,8 @@ module Astute
 
     def stop_provision(reporter, task_id, engine_attrs, nodes)
       ctx = Context.new(task_id, reporter)
+      _provisioned_nodes, result = stop_provision_via_mcollective(ctx, nodes)
 
-      ssh_result = stop_provision_via_ssh(ctx, nodes, engine_attrs)
-
-      # Remove already provisioned node. Possible erasing nodes twice
-      provisioned_nodes, mco_result = stop_provision_via_mcollective(ctx, nodes)
-
-      # For nodes responded via mcollective use mcollective result instead of ssh
-      ['nodes', 'error_nodes', 'inaccessible_nodes'].each do |node_status|
-        ssh_result[node_status] = ssh_result.fetch(node_status, []) - provisioned_nodes
-      end
-
-      result = merge_rm_nodes_result(ssh_result, mco_result)
       result['status'] = 'error' if result['error_nodes'].present?
 
       Rsyslogd.send_sighup(
@@ -222,55 +218,32 @@ module Astute
     def provision_piece(reporter, task_id, engine_attrs, nodes, provision_method)
       cobbler = CobblerManager.new(engine_attrs, reporter)
       failed_uids = []
-
-      # if provision_method is 'image', we do not need to immediately
-      # reboot nodes. instead, we need to run image based provisioning
-      # process and then reboot nodes
-
       # TODO(kozhukalov): do not forget about execute_shell_command timeout which is 3600
       # provision_and_watch_progress has provisioning_timeout + 3600 is much longer than provisioning_timeout
-      if provision_method == 'image'
-        # IBP is implemented in terms of Fuel Agent installed into bootstrap ramdisk
-        # we don't want nodes to be rebooted into OS installer ramdisk
-        cobbler.edit_nodes(nodes, {'profile' => Astute.config.bootstrap_profile})
 
-        # change node type to prevent unexpected erase
-        change_nodes_type(reporter, task_id, nodes)
-        # Run parallel reporter
-        report_image_provision(reporter, task_id, nodes) do
-          failed_uids |= image_provision(reporter, task_id, nodes)
-        end
-        provisioned_nodes = nodes.reject { |n| failed_uids.include? n['uid'] }
+      # IBP is implemented in terms of Fuel Agent installed into bootstrap ramdisk
+      # we don't want nodes to be rebooted into OS installer ramdisk
+      cobbler.edit_nodes(nodes, {'profile' => Astute.config.bootstrap_profile})
 
-        # disabling pxe boot (chain loader) for nodes which succeeded
-        cobbler.netboot_nodes(provisioned_nodes, false)
-
-        # in case of IBP we reboot only those nodes which we managed to provision
-        soft_reboot(
-          reporter,
-          task_id,
-          provisioned_nodes.map{ |n| n['uid'] },
-          'reboot_provisioned_nodes'
-        )
-      else
-        reboot_events = cobbler.reboot_nodes(nodes)
-        not_rebooted = cobbler.check_reboot_nodes(reboot_events)
-        not_rebooted = nodes.select { |n| not_rebooted.include?(n['slave_name'])}
-        failed_uids |= not_rebooted.map { |n| n['uid']}
+      # change node type to prevent unexpected erase
+      change_nodes_type(reporter, task_id, nodes)
+      # Run parallel reporter
+      report_image_provision(reporter, task_id, nodes) do
+        failed_uids |= image_provision(reporter, task_id, nodes)
       end
+      provisioned_nodes = nodes.reject { |n| failed_uids.include? n['uid'] }
 
-      # control reboot for nodes which still in bootstrap state
-      # Note: if the image based provisioning is used nodes are already
-      # provisioned and rebooting is not necessary. In fact the forced
-      # reboot can corrupt a node if it manages to reboot fast enough
-      # (see LP #1394599)
-      # XXX: actually there's a tiny probability to reboot a node being
-      # provisioned in a traditional way (by Debian installer or anaconda),
-      # however such a double reboot is not dangerous since cobbler will
-      # boot such a node into installer once again.
-      if provision_method != 'image'
-        control_reboot_using_ssh(reporter, task_id, nodes)
-      end
+      # disabling pxe boot (chain loader) for nodes which succeeded
+      cobbler.netboot_nodes(provisioned_nodes, false)
+
+      # in case of IBP we reboot only those nodes which we managed to provision
+      soft_reboot(
+        reporter,
+        task_id,
+        provisioned_nodes.map{ |n| n['uid'] },
+        'reboot_provisioned_nodes'
+      )
+
       return failed_uids
     end
 
@@ -370,7 +343,7 @@ module Astute
 
         provisioned = nodes_types.select{ |n| ['target', 'bootstrap', 'image'].include? n['node_type'] }
                                  .map{ |n| {'uid' => n['uid']} }
-        current_mco_result = NodesRemover.new(ctx, provisioned, reboot=true).remove
+        current_mco_result = NodesRemover.new(ctx, provisioned, _reboot=true).remove
         Astute.logger.debug "Retry result #{i}: "\
           "mco success nodes: #{current_mco_result['nodes']}, "\
           "mco error nodes: #{current_mco_result['error_nodes']}, "\
@@ -393,25 +366,14 @@ module Astute
       return provisioned_nodes, mco_result
     end
 
-    def stop_provision_via_ssh(ctx, nodes, engine_attrs)
-      ssh_result = Ssh.execute(ctx, nodes, SshEraseNodes.command)
-      CobblerManager.new(engine_attrs, ctx.reporter).remove_nodes(nodes)
-      Ssh.execute(ctx,
-                  nodes,
-                  SshHardReboot.command,
-                  timeout=5,
-                  retries=1)
-      ssh_result
-    end
-
     def unlock_nodes_discovery(reporter, task_id="", failed_uids, nodes)
       nodes_uids = nodes.select{ |n| failed_uids.include?(n['uid']) }
                         .map{ |n| n['uid'] }
       shell = MClient.new(Context.new(task_id, reporter),
                           'execute_shell_command',
                           nodes_uids,
-                          check_result=false,
-                          timeout=2)
+                          _check_result=false,
+                          _timeout=2)
       mco_result = shell.execute(:cmd => "rm -f #{Astute.config.agent_nodiscover_file}")
       result = mco_result.map do |n|
         {
@@ -420,17 +382,6 @@ module Astute
         }
       end
       Astute.logger.debug "Unlock discovery for failed nodes. Result: #{result}"
-    end
-
-
-    def control_reboot_using_ssh(reporter, task_id="", nodes)
-      ctx = Context.new(task_id, reporter)
-      nodes.each { |n| n['admin_ip'] = n['power_address'] }
-      Ssh.execute(ctx,
-                  nodes,
-                  SshHardReboot.command,
-                  timeout=5,
-                  retries=1)
     end
 
     def merge_rm_nodes_result(res1, res2)
@@ -445,8 +396,8 @@ module Astute
       shell = MClient.new(Context.new(task_id, reporter),
                           'execute_shell_command',
                           nodes_uids,
-                          check_result=false,
-                          timeout=5)
+                          _check_result=false,
+                          _timeout=5)
       mco_result = shell.execute(:cmd => "echo '#{type}' > /etc/nailgun_systemtype")
       result = mco_result.map do |n|
         {
