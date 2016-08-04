@@ -148,6 +148,11 @@ describe Deployment::Cluster do
       expect(cluster.node_remove 'node3').to be_nil
     end
 
+    it 'can set cluster noop mode' do
+      subject.noop_run = true
+      expect(subject.noop_run).to eq true
+    end
+
     it 'can iterate through all nodes' do
       expect(subject.each_node.to_set).to eq Set.new([node1, node2])
     end
