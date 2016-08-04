@@ -66,6 +66,20 @@ describe Astute::TaskNode do
       task_node.run(task)
     end
 
+    it 'should run noop puppet task' do
+      cluster_new = Deployment::Cluster.new
+      cluster_new.id = 'test2'
+      cluster_new.noop_run = true
+      task_node_new = Astute::TaskNode.new('node_id', cluster_new)
+      task_node_new.context = ctx
+      task_node_new.graph.create_task(
+        task_data['id'],
+        task_data.merge({'node_id' => 'node_id'})
+      )
+      Astute::NoopPuppet.any_instance.expects(:run)
+      task_node_new.run(task)
+    end
+
     it 'should mark node as busy' do
       Astute::Puppet.any_instance.stubs(:run)
       task_node.run(task)

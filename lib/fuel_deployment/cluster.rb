@@ -45,6 +45,7 @@ module Deployment
 
     attr_accessor :id
     attr_accessor :gracefully_stop_mark
+    attr_accessor :noop_run
     attr_reader :emergency_brake
     attr_reader :nodes
     attr_reader :node_concurrency
