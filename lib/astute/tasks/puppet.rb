@@ -48,6 +48,8 @@ module Astute
       @task['parameters']['retries'] ||= Astute.config.puppet_retries
       @task['parameters']['debug'] = false unless @task['parameters']['debug'].present?
       @task['parameters']['puppet_modules'] ||= Astute.config.puppet_module_path
+      @task['parameters']['puppet_noop'] ||= Astute.config.puppet_noop
+      @task['parameters']['puppet_noop_report'] ||= Astute.config.puppet_noop_report + task_name + '.json'
     end
 
     def create_puppet_task
@@ -65,6 +67,8 @@ module Astute
           :cwd => @task['parameters']['cwd'],
           :timeout => @task['parameters']['timeout'],
           :puppet_debug => @task['parameters']['debug']
+          :puppet_noop => @task['parameters']['puppet_noop'],
+          :puppet_noop_report => @task['parameters']['puppet_noop_report']
         }
       )
     end
