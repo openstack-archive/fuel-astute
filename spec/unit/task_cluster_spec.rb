@@ -33,6 +33,13 @@ describe Astute::TaskCluster do
     end
   end
 
+  describe "#noop_run" do
+    it 'should set cluster noop mode' do
+      subject.noop_run = true
+      expect(subject.noop_run).to eq true
+    end
+  end
+
   describe "#gracefully_stop" do
     it 'should check if node should be stopped' do
       subject.expects(:gracefully_stop?).returns(false)
