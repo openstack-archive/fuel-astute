@@ -118,6 +118,15 @@ describe Deployment::Node do
       expect(subject.id).to eq 2
     end
 
+    it 'will run noop' do
+      cluster_new = Deployment::Cluster.new
+      cluster_new.id = 'test2'
+      cluster_new.noop_run = true
+      node1 = cluster_new.create_node 'node_new'
+      node_new = cluster_new['node_new']
+      expect(node_new.noop_run?).to eq true
+    end
+
     it 'will not set task to an invalid object' do
       expect do
         subject.task = 'task1'

@@ -113,8 +113,8 @@ module Astute
     def select_task_engine(data)
       # TODO: replace by Object.const_get(type.split('_').collect(&:capitalize).join)
       case data['type']
-      when 'shell' then Shell.new(data, @ctx)
-      when 'puppet' then Puppet.new(data, @ctx)
+      when 'shell' then noop_run? ? NoopShell.new(data, @ctx) : Shell.new(data, @ctx)
+      when 'puppet' then noop_run? ? NoopPuppet.new(data, @ctx) : Puppet.new(data, @ctx)
       when 'upload_file' then UploadFile.new(data, @ctx)
       when 'upload_files' then UploadFiles.new(data, @ctx)
       when 'reboot' then Reboot.new(data, @ctx)
