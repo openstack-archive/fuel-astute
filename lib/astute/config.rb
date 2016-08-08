@@ -85,7 +85,6 @@ module Astute
     conf[:keys_dst_dir] = '/var/lib/astute' # folder where keys will be uploaded. Warning!
     conf[:max_nodes_per_call] = 50        # how many nodes to deploy simultaneously
     conf[:max_nodes_to_provision] = 50    # how many nodes to provision simultaneously
-    conf[:ssh_retries] = 5                # SSH tries to call ssh client before failure
     conf[:ssh_retry_timeout] = 30         # SSH sleeps for ## sec between retries
 
     conf[:max_nodes_per_remove_call] = 10 # how many nodes to remove in one call

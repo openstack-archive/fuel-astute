@@ -70,7 +70,7 @@ describe Astute::Provisioner do
       Astute::Rsyslogd.expects(:send_sighup).once
       @provisioner.remove_nodes(
         @reporter,
-        task_id="task_id",
+        _task_id="task_id",
         engine_attrs,
         nodes,
         {:reboot => true}
@@ -82,7 +82,7 @@ describe Astute::Provisioner do
       Astute::Rsyslogd.stubs(:send_sighup).once
       expect(@provisioner.remove_nodes(
         @reporter,
-        task_id="task_id",
+        _task_id="task_id",
         engine_attrs,
         nodes,
         {:reboot => true}
@@ -98,7 +98,7 @@ describe Astute::Provisioner do
         Astute::Rsyslogd.stubs(:send_sighup).never
         expect {@provisioner.remove_nodes(
           @reporter,
-          task_id="task_id",
+          _task_id="task_id",
           engine_attrs,
           nodes,
           {
@@ -115,7 +115,7 @@ describe Astute::Provisioner do
         Astute::Rsyslogd.stubs(:send_sighup).never
         expect {@provisioner.remove_nodes(
           @reporter,
-          task_id="task_id",
+          _task_id="task_id",
           engine_attrs,
           nodes,
           {
@@ -337,20 +337,6 @@ describe Astute::Provisioner do
           @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
           @provisioner.expects(:unlock_nodes_discovery).never
           @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
-        end
-
-        it 'should try to reboot nodes using ssh(insurance for cobbler)' do
-          Astute::Provision::Cobbler.any_instance.stubs(:event_status)
-            .returns([Time.now.to_f, 'controller-1', 'complete'])
-          @provisioner.expects(:control_reboot_using_ssh)
-            .with(@reporter, data['task_uuid'], data['nodes']).once
-          @provisioner.provision_piece(
-            @reporter,
-            data['task_uuid'],
-            data['engine'],
-            data['nodes'],
-            'native'
-          )
         end
       end
 
@@ -854,80 +840,16 @@ describe Astute::Provisioner do
 
   describe '#stop_provision' do
     around(:each) do |example|
-      old_ssh_retries = Astute.config.ssh_retries
       old_mc_retries = Astute.config.mc_retries
       old_nodes_rm_interal = Astute.config.nodes_remove_interval
       example.run
-      Astute.config.ssh_retries = old_ssh_retries
       Astute.config.mc_retries = old_mc_retries
       Astute.config.nodes_remove_interval = old_nodes_rm_interal
     end
 
     before(:each) do
-      Astute.config.ssh_retries = 1
       Astute.config.mc_retries = 1
       Astute.config.nodes_remove_interval = 0
-    end
-
-    it 'erase nodes using ssh' do
-      Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
-      Astute::Rsyslogd.stubs(:send_sighup).once
-      @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
-      Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => '1'}]}).once
-
-      Astute::Ssh.expects(:execute).with(instance_of(Astute::Context),
-                                        data['nodes'],
-                                        Astute::SshEraseNodes.command)
-                                   .returns({'nodes' => [{'uid' => '1'}]})
-
-      expect(@provisioner.stop_provision(@reporter,
-                                   data['task_uuid'],
-                                   data['engine'],
-                                   data['nodes']))
-            .to eql({
-                     "error_nodes" => [],
-                     "inaccessible_nodes" => [],
-                     "nodes" => [{"uid"=>'1'}]
-                    })
-    end
-
-    it 'always remove nodes from Cobbler' do
-      Astute::Rsyslogd.stubs(:send_sighup).once
-      Astute::Ssh.stubs(:execute).twice.returns({'inaccessible_nodes' => [{'uid' => '1'}]})
-      @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
-
-      Astute::CobblerManager.any_instance.expects(:remove_nodes)
-                                         .with(data['nodes'])
-                                         .returns([])
-
-      @provisioner.stop_provision(@reporter,
-                                   data['task_uuid'],
-                                   data['engine'],
-                                   data['nodes'])
-    end
-
-    it 'reboot nodes using using ssh' do
-      Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
-      Astute::Rsyslogd.stubs(:send_sighup).once
-      @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
-      Astute::Ssh.stubs(:execute).returns({'nodes' => [{'uid' => '1'}]}).once
-
-      Astute::Ssh.expects(:execute).with(instance_of(Astute::Context),
-                                       data['nodes'],
-                                       Astute::SshHardReboot.command,
-                                       timeout=5,
-                                       retries=1)
-                                 .returns({'inaccessible_nodes' => [{'uid' => '1'}]})
-
-      expect(@provisioner.stop_provision(@reporter,
-                                   data['task_uuid'],
-                                   data['engine'],
-                                   data['nodes']))
-            .to eql({
-                     "error_nodes" => [],
-                     "inaccessible_nodes" => [],
-                     "nodes" => [{"uid"=>'1'}]
-                    })
     end
 
     it 'stop provision if provision operation stop immediately' do
@@ -970,29 +892,8 @@ describe Astute::Provisioner do
                     })
     end
 
-    it 'inform about inaccessible nodes' do
-      Astute::Rsyslogd.stubs(:send_sighup).once
-      Astute::Ssh.stubs(:execute).returns({'inaccessible_nodes' => [{'uid' => '1'}]}).twice
-      Astute::CobblerManager.any_instance.stubs(:remove_nodes).returns([])
-      @provisioner.stubs(:node_type).returns([])
-
-      Astute::NodesRemover.any_instance.expects(:remove).never
-
-      expect(@provisioner.stop_provision(@reporter,
-                             data['task_uuid'],
-                             data['engine'],
-                             data['nodes']))
-            .to eql({
-                     "error_nodes" => [],
-                     "inaccessible_nodes" => [{"uid"=>'1'}],
-                     "nodes" => []
-                    })
-    end
-
     it 'sleep between attempts to find and erase nodes using mcollective' do
       Astute::Rsyslogd.stubs(:send_sighup).once
-      @provisioner.stubs(:stop_provision_via_ssh)
-                   .returns({'inaccessible_nodes' => [{'uid' => '1'}]})
       @provisioner.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'bootstrap'}])
       Astute::NodesRemover.any_instance.stubs(:remove)
                           .once.returns({"nodes"=>[{"uid"=>"1", }]})
@@ -1009,10 +910,6 @@ describe Astute::Provisioner do
       Astute::Rsyslogd.stubs(:send_sighup).once
       Astute.config.mc_retries = 2
       Astute.config.nodes_remove_interval = 0
-
-      @provisioner.stubs(:stop_provision_via_ssh)
-                   .returns({'nodes' => [{'uid' => "1"}],
-                             'inaccessible_nodes' => [{'uid' => '2'}]})
 
       @provisioner.stubs(:node_type).twice
                    .returns([{'uid' => '1', 'node_type' => 'bootstrap'}])
@@ -1043,8 +940,6 @@ describe Astute::Provisioner do
 
     it 'should send sighup for Rsyslogd' do
       Astute::Rsyslogd.expects(:send_sighup).once
-
-      Astute::Ssh.stubs(:execute).twice.returns({'inaccessible_nodes' => [{'uid' => '1'}]})
       @provisioner.stubs(:stop_provision_via_mcollective).returns([[], {}])
 
       Astute::CobblerManager.any_instance.stubs(:remove_nodes)

@@ -37,7 +37,6 @@ Requires: ruby21-rubygem-bunny
 Requires: ruby21-rubygem-raemon = 0.3.0
 Requires: ruby21-rubygem-net-ssh = 2.8.0
 Requires: ruby21-rubygem-net-ssh-gateway = 1.2.0
-Requires: ruby21-rubygem-net-ssh-multi = 1.2.0
 BuildRequires: ruby21 >= 2.1
 BuildRequires: rubygems21
 %else
@@ -50,7 +49,6 @@ Requires: rubygem-bunny
 Requires: rubygem-raemon
 Requires: rubygem-net-ssh
 Requires: rubygem-net-ssh-gateway
-Requires: rubygem-net-ssh-multi
 BuildRequires: ruby
 BuildRequires: rubygems-devel
 %endif
