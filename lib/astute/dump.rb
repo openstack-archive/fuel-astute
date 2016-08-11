@@ -28,15 +28,19 @@ module Astute
 
       upload_file = MClient.new(ctx, 'uploadfile', ['master'])
       begin
-        config_path = '/tmp/dump_config'
-        upload_file.upload(
-          :path => config_path,
-          :content => settings.to_json,
-          :user_owner => 'root',
-          :group_owner => 'root',
-          :overwrite => true)
-
-        dump_cmd = "shotgun -c #{config_path} > /dev/null 2>&1 && cat #{settings['lastdump']}"
+        log_file = "/var/log/timmy.log"
+        snapshot = File.basename(settings['target'])
+        if settings['timestamp']
+          snapshot = DateTime.now.strftime("#{snapshot}-%Y-%m-%d_%H-%M-%S")
+        end
+        base_dir = File.dirname(settings['target'])
+        dest_dir = File.join(base_dir, snapshot)
+        dest_file = File.join(dest_dir, "config.tar.gz")
+        dump_cmd = "mkdir -p #{dest_dir} && "\
+                   "timmy --logs --days 3 --dest-file #{dest_file} --log-file #{log_file} && "\
+                   "tar --directory=#{base_dir} -cf #{dest_dir}.tar #{snapshot} && "\
+                   "echo #{dest_dir}.tar > #{settings['lastdump']} && "\
+                   "rm -rf #{dest_dir}"
         Astute.logger.debug("Try to execute command: #{dump_cmd}")
         result = shell.execute(:cmd => dump_cmd).first.results
 
@@ -44,13 +48,13 @@ module Astute
 
         if result[:data][:exit_code] == 0
           Astute.logger.info("#{ctx.task_id}: Snapshot is done.")
-          report_success(ctx, result[:data][:stdout].force_encoding(Encoding.default_external).rstrip)
+          report_success(ctx, "#{dest_dir}.tar")
         elsif result[:data][:exit_code] == 28
           Astute.logger.error("#{ctx.task_id}: Disk space for creating snapshot exceeded.")
-          report_error(ctx, "Shotgun exit code: #{result[:data][:exit_code]}. Disk space for creating snapshot exceeded.")
+          report_error(ctx, "Timmy exit code: #{result[:data][:exit_code]}. Disk space for creating snapshot exceeded.")
         else
-          Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code. For details see /var/log/shotgun.log")
-          report_error(ctx, "Shotgun exit code: #{result[:data][:exit_code]}")
+          Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code. For details see #{log_file}")
+          report_error(ctx, "Timmy exit code: #{result[:data][:exit_code]}")
         end
       rescue Timeout::Error
         msg = "Dump is timed out"
