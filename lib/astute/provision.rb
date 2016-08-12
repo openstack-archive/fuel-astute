@@ -37,7 +37,7 @@ module Astute
       end
     end
 
-    def provision(reporter, task_id, provisioning_info, provision_method)
+    def provision(reporter, task_id, provisioning_info)
       engine_attrs = provisioning_info['engine']
       nodes = provisioning_info['nodes']
 
@@ -53,7 +53,6 @@ module Astute
                                                                     task_id,
                                                                     Array.new(nodes),
                                                                     engine_attrs,
-                                                                    provision_method,
                                                                     fault_tolerance)
       rescue => e
         Astute.logger.error("Error occured while provisioning:\n#{e.pretty_inspect}")
@@ -102,7 +101,6 @@ module Astute
                                      task_id,
                                      nodes_to_provision,
                                      engine_attrs,
-                                     provision_method,
                                      fault_tolerance)
       raise "Nodes to provision are not provided!" if nodes_to_provision.empty?
 
@@ -125,7 +123,7 @@ module Astute
               new_nodes = nodes_to_provision.shift(max_nodes - nodes_not_booted.count)
 
               Astute.logger.debug("Provisioning nodes: #{new_nodes}")
-              failed_uids += provision_piece(reporter, task_id, engine_attrs, new_nodes, provision_method)
+              failed_uids += provision_piece(reporter, task_id, engine_attrs, new_nodes)
               Astute.logger.info "Nodes failed to reboot: #{failed_uids} "
 
               nodes_not_booted += new_nodes.map{ |n| n['uid'] }
@@ -215,7 +213,7 @@ module Astute
       result
     end
 
-    def provision_piece(reporter, task_id, engine_attrs, nodes, provision_method)
+    def provision_piece(reporter, task_id, engine_attrs, nodes)
       cobbler = CobblerManager.new(engine_attrs, reporter)
       failed_uids = []
       # TODO(kozhukalov): do not forget about execute_shell_command timeout which is 3600

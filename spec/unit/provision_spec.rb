@@ -192,7 +192,7 @@ describe Astute::Provisioner do
         @provisioner.stubs(:provision_and_watch_progress).returns([[],[]])
         data['engine'] = {}
         Astute::Rsyslogd.stubs(:send_sighup).once
-        expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'image')}.
+        expect {@provisioner.provision(@reporter, data['task_uuid'], data)}.
                               to raise_error(/Settings for Cobbler must be set/)
       end
 
@@ -200,7 +200,7 @@ describe Astute::Provisioner do
         @provisioner.stubs(:provision_and_watch_progress).returns([[],[]])
         data['engine'] = {}
         Astute::Rsyslogd.expects(:send_sighup).once
-        expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'image')}.
+        expect {@provisioner.provision(@reporter, data['task_uuid'], data)}.
                               to raise_error(/Settings for Cobbler must be set/)
       end
     end
@@ -226,14 +226,14 @@ describe Astute::Provisioner do
       it "raises error if nodes list is empty" do
         Astute::Rsyslogd.stubs(:send_sighup).once
         data['nodes'] = []
-        expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'image')}.
+        expect {@provisioner.provision(@reporter, data['task_uuid'], data)}.
                               to raise_error(/Nodes to provision are not provided!/)
       end
 
       it "raises error if nodes list is empty and send sighup for Rsyslogd" do
         Astute::Rsyslogd.expects(:send_sighup).once
         data['nodes'] = []
-        expect {@provisioner.provision(@reporter, data['task_uuid'], data, 'image')}.
+        expect {@provisioner.provision(@reporter, data['task_uuid'], data)}.
                               to raise_error(/Nodes to provision are not provided!/)
       end
 
@@ -249,7 +249,7 @@ describe Astute::Provisioner do
         Astute::CobblerManager.any_instance.expects(:check_reboot_nodes).never
         @provisioner.expects(:soft_reboot).returns()
 
-        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
+        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'])
       end
 
       it "does not reboot nodes which failed during provisioning" do
@@ -259,7 +259,7 @@ describe Astute::Provisioner do
         @provisioner.stubs(:image_provision).returns(['1'])
         @provisioner.stubs(:soft_reboot).returns()
 
-        expect(@provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')).to eql(['1'])
+        expect(@provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'])).to eql(['1'])
       end
 
       it "changes profile into bootstrap for all nodes in case of IBP" do
@@ -275,7 +275,7 @@ describe Astute::Provisioner do
         @provisioner.stubs(:image_provision).returns([])
         @provisioner.stubs(:soft_reboot).returns()
 
-        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
+        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'])
       end
 
       it "does not change netboot setting for failed nodes in case of IBP" do
@@ -288,7 +288,7 @@ describe Astute::Provisioner do
         @provisioner.stubs(:soft_reboot).returns()
         @provisioner.stubs(:image_provision).returns([1])
 
-        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
+        @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'])
 
       end
 
@@ -304,7 +304,7 @@ describe Astute::Provisioner do
           @provisioner.stubs(:soft_reboot).returns()
           @provisioner.stubs(:image_provision).returns([])
 
-          @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'], 'image')
+          @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'])
         end
 
         it "should erase mbr for nodes" do
@@ -329,31 +329,14 @@ describe Astute::Provisioner do
             }
           ).returns([])
 
-          @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
+          @provisioner.provision(@reporter, data['task_uuid'], data)
         end
 
         it 'should not try to unlock node discovery' do
           @provisioner.stubs(:prepare_nodes)
           @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
           @provisioner.expects(:unlock_nodes_discovery).never
-          @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
-        end
-      end
-
-      context 'node reboot fail' do
-        before(:each) do
-          Astute::Provision::Cobbler.any_instance
-                                    .stubs(:event_status)
-                                    .returns([Time.now.to_f, 'controller-1', 'failed'])
-          @provisioner.stubs(:unlock_nodes_discovery)
-        end
-
-        it 'should not try to reboot nodes using ssh(insurance for cobbler)' do
-          @provisioner.expects(:control_reboot_using_ssh).never
-          begin
-            @provisioner.provision_piece(@reporter, data['task_uuid'], data['engine'], data['nodes'])
-          rescue
-          end
+          @provisioner.provision(@reporter, data['task_uuid'], data)
         end
       end
 
@@ -370,7 +353,7 @@ describe Astute::Provisioner do
             'progress' => 100}]}
 
         @reporter.expects(:report).with(success_msg).once
-        @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
+        @provisioner.provision(@reporter, data['task_uuid'], data)
       end
 
       it "fail if timeout of provisioning is exceeded" do
@@ -394,7 +377,7 @@ describe Astute::Provisioner do
         provision_info["fault_tolerance"] = [{'uids'=>['1'], 'percentage' => 0}]
 
         @reporter.expects(:report).with(error_msg).once
-        @provisioner.provision(@reporter, data['task_uuid'], provision_info, 'image')
+        @provisioner.provision(@reporter, data['task_uuid'], provision_info)
       end
 
       it 'success report if all nodes report about success at least once' do
@@ -410,7 +393,7 @@ describe Astute::Provisioner do
           'progress' => 100
         }
         @reporter.expects(:report).with(success_msg).once
-        @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
+        @provisioner.provision(@reporter, data['task_uuid'], data)
       end
     end
 
@@ -438,7 +421,7 @@ describe Astute::Provisioner do
         )
         @provisioner.stubs(:provision_and_watch_progress).returns([[], []])
 
-        @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
+        @provisioner.provision(@reporter, data['task_uuid'], data)
       end
 
       it 'should not reboot and boostrap new nodes' do
@@ -459,7 +442,7 @@ describe Astute::Provisioner do
         @provisioner.expects(:change_nodes_type).never
         Astute::NailgunHooks.any_instance.expects(:process).never
 
-        @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
+        @provisioner.provision(@reporter, data['task_uuid'], data)
       end
 
     end
@@ -475,7 +458,7 @@ describe Astute::Provisioner do
     end
 
     it "raises error if nodes list is empty" do
-      expect {@provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], {}, data['engine'], 'image', [])}.
+      expect {@provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], {}, data['engine'],  [])}.
                             to raise_error(/Nodes to provision are not provided!/)
     end
 
@@ -488,7 +471,7 @@ describe Astute::Provisioner do
           'error' => '',
           'progress' => 100,
         }
-        @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'], 'image', [])
+        @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'],  [])
         @reporter.expects(:report).with(error_msg).once
       end.to raise_error(Astute::AstuteError)
     end
@@ -507,7 +490,7 @@ describe Astute::Provisioner do
       )
       Astute::Rsyslogd.stubs(:send_sighup)
       begin
-        @provisioner.provision(@reporter, data['task_uuid'], data, 'image')
+        @provisioner.provision(@reporter, data['task_uuid'], data)
       rescue
       end
     end
@@ -520,7 +503,7 @@ describe Astute::Provisioner do
       @provisioner.stubs(:report_about_progress).returns()
       @provisioner.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
 
-      @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'], 'image', [])
+      @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'], [])
     end
 
     it "ignore problem with parsing provision log" do
@@ -532,7 +515,7 @@ describe Astute::Provisioner do
       @provisioner.stubs(:provision_piece).returns([])
       @provisioner.stubs(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
 
-      @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'], 'image', [])
+      @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'], [])
     end
 
     it 'provision nodes using mclient' do
@@ -540,7 +523,7 @@ describe Astute::Provisioner do
       @provisioner.stubs(:provision_piece).returns([])
       @provisioner.expects(:node_type).returns([{'uid' => '1', 'node_type' => 'target' }])
 
-      @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'], 'image', [])
+      @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], data['nodes'], data['engine'], [])
     end
 
     it "unexpecting bootstrap nodes should be ereased and rebooted" do
@@ -581,7 +564,7 @@ describe Astute::Provisioner do
                         'fault_tolerance' => []}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info)
     end
 
     it 'should provision nodes in chunks' do
@@ -598,7 +581,7 @@ describe Astute::Provisioner do
         .then.returns([{'uid' => '3', 'node_type' => 'target' }])
 
       @provisioner.expects(:provision_piece).returns([]).twice
-      @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], nodes, data['engine'], 'image', [])
+      @provisioner.provision_and_watch_progress(@reporter, data['task_uuid'], nodes, data['engine'],  [])
     end
 
     it 'should success if only one node fails' do
@@ -644,7 +627,7 @@ describe Astute::Provisioner do
                         'fault_tolerance' => [{'uids'=> ['2', '3'], 'percentage' => 50}]}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info)
     end
 
     it 'should fail if node without fault tolerance rule fails' do
@@ -691,7 +674,7 @@ describe Astute::Provisioner do
                         'fault_tolerance' => [{'uids'=> ['1', '2'], 'percentage' => 50}]}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info)
     end
 
     it 'should fail if node has two roles and fails for one' do
@@ -739,7 +722,7 @@ describe Astute::Provisioner do
                                               {'uids'=> ['3'], 'percentage' => 0}]}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info)
     end
 
     it 'should fail if one node fails' do
@@ -786,7 +769,7 @@ describe Astute::Provisioner do
                         'fault_tolerance' => [{'uids'=> ['2', '3'], 'percentage' => 0}]}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.provision(@reporter, data['task_uuid'], provision_info,  'image')
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info)
     end
 
     it 'fail on any node if no faul_tolerance rules are provided' do
@@ -833,7 +816,7 @@ describe Astute::Provisioner do
                         'fault_tolerance' => []}
 
       @reporter.expects(:report).with(success_msg).once
-      @provisioner.provision(@reporter, data['task_uuid'], provision_info, 'image')
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info)
 
     end
   end
@@ -971,7 +954,7 @@ describe Astute::Provisioner do
       @provisioner.stubs(:change_nodes_type)
       @provisioner.stubs(:control_reboot_using_ssh)
       Astute::ImageProvision.stubs(:provision).returns(['1'])
-      result = @provisioner.provision_piece(@reporter, 'task_uuid', engine_attrs, nodes, 'image')
+      result = @provisioner.provision_piece(@reporter, 'task_uuid', engine_attrs, nodes)
       result.should eql(['1'])
     end
   end

@@ -684,7 +684,7 @@ describe Astute::NailgunHooks do
 
         expect {
           hooks.process
-        }.not_to raise_error(Astute::DeploymentEngineError)
+        }.not_to raise_error
       end
 
       it 'should fail if it still raise error after retries' do

@@ -34,15 +34,10 @@ module Astute
       #
 
       def image_provision(data)
-        provision(data, 'image')
+        provision(data)
       end
 
-      def native_provision(data)
-        provision(data, 'native')
-      end
-
-      def provision(data, provision_method)
-
+      def provision(data)
         Astute.logger.debug("'provision' method called with data:\n"\
                            "#{data.pretty_inspect}")
 
@@ -51,8 +46,7 @@ module Astute
           result = @orchestrator.provision(
             reporter,
             data['args']['task_uuid'],
-            data['args']['provisioning_info'],
-            provision_method
+            data['args']['provisioning_info']
           )
         rescue => e
           Astute.logger.error("Error running provisioning: #{e.message}, "\
@@ -60,27 +54,6 @@ module Astute
           raise StopIteration
         end
         raise StopIteration if result && result['status'] == 'error'
-      end
-
-      def deploy(data)
-        Astute.logger.debug("'deploy' method called with data:\n"\
-                           "#{data.pretty_inspect}")
-
-        reporter = create_reporter(data)
-        begin
-          @orchestrator.deploy(
-            reporter,
-            data['args']['task_uuid'],
-            data['args']['deployment_info'],
-            data['args']['pre_deployment'] || [],
-            data['args']['post_deployment'] || []
-          )
-          reporter.report('status' => 'ready', 'progress' => 100)
-        rescue Timeout::Error
-          msg = "Timeout of deployment is exceeded."
-          Astute.logger.error(msg)
-          reporter.report('status' => 'error', 'error' => msg)
-        end
       end
 
       def granular_deploy(data)

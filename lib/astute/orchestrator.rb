@@ -30,22 +30,8 @@ module Astute
       report_result({}, up_reporter)
     end
 
-
-    # Deprecated deploy method. Use monolitic site.pp. Do not use from 7.1.
-    # Report progress based on puppet logs
-    def deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
-      deploy_cluster(
-        up_reporter,
-        task_id,
-        deployment_info,
-        Astute::DeploymentEngine::NailyFact,
-        pre_deployment,
-        post_deployment
-       )
-    end
-
     # Deploy method which use small tasks, but run block of tasks for role
-    # instead of run it using full graph. Use from 7.1 to 8.0. Report progress
+    # instead of run it using full graph. Use from 6.1 to 8.0. Report progress
     # based on puppet logs
     def granular_deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])
       time_start = Time.now.to_i
@@ -81,7 +67,7 @@ module Astute
         "#{time_summary(time_start)}"
     end
 
-    def provision(up_reporter, task_id, provisioning_info, provision_method)
+    def provision(up_reporter, task_id, provisioning_info)
       time_start = Time.now.to_i
       proxy_reporter = ProxyReporter::ProvisiningProxyReporter.new(
         up_reporter,
@@ -124,8 +110,7 @@ module Astute
       provisioner.provision(
         proxy_reporter,
         task_id,
-        provisioning_info,
-        provision_method
+        provisioning_info
       )
     ensure
       Astute.logger.info "Provision summary: time was spent " \

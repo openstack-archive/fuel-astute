@@ -133,29 +133,6 @@ describe Astute::Orchestrator do
     end
   end
 
-  describe '#deploy' do
-    it "calls with valid arguments without nailgun hooks" do
-      nodes = [{'uid' => 1, 'role' => 'controller'}]
-      Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
-                                                       with(nodes, [], [])
-      @orchestrator.deploy(@reporter, 'task_uuid', nodes)
-    end
-
-    it "calls with valid arguments including nailgun hooks" do
-      nodes = [{'uid' => 1, 'role' => 'controller'}]
-      pre_deployment = [{'type' => 'upload_file', 'uids' =>['1', '2', '3' ]}]
-      post_deployment = [{'type' => 'sync', 'uids' =>['3', '2', '1' ]}]
-      Astute::DeploymentEngine::NailyFact.any_instance.expects(:deploy).
-                                                       with(nodes, pre_deployment, post_deployment)
-      @orchestrator.deploy(@reporter, 'task_uuid', nodes, pre_deployment, post_deployment)
-    end
-
-    it "deploy method raises error if nodes list is empty" do
-      expect {@orchestrator.deploy(@reporter, 'task_uuid', [])}.
-                            to raise_error(/Deployment info are not provided!/)
-    end
-  end
-
   let(:data) do
     {
       "engine"=>{
@@ -422,15 +399,14 @@ describe Astute::Orchestrator do
       Astute::Provisioner.any_instance.expects(:provision).with(
         instance_of(Astute::ProxyReporter::ProvisiningProxyReporter),
         'task_id',
-        provisioning_info,
-        'image'
+        provisioning_info
       )
 
       @orchestrator.provision(
         @reporter,
         'task_id',
-        provisioning_info,
-        'image')
+        provisioning_info
+      )
     end
 
     it 'should pre provision if pre provision tasks present' do
@@ -445,7 +421,7 @@ describe Astute::Orchestrator do
         @reporter,
         'task_id',
         provisioning_info,
-        'image')
+      )
     end
 
     it 'should not pre provision if no pre provision tasks present' do
@@ -461,7 +437,7 @@ describe Astute::Orchestrator do
         @reporter,
         'task_id',
         provisioning_info,
-        'image')
+      )
     end
 
     it 'should raise informative error if pre provision tasks failed' do
@@ -477,7 +453,7 @@ describe Astute::Orchestrator do
         @reporter,
         'task_id',
         provisioning_info,
-        'image')}.to raise_error(Astute::DeploymentEngineError,
+      )}.to raise_error(Astute::DeploymentEngineError,
           /Image build task failed/)
     end
 
