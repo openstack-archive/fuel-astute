@@ -104,7 +104,8 @@ module Astute
               'respond_to' => 'task_in_orchestrator',
               'args' => {'task_uuid' => task_uuid}})
           rescue => ex
-            Astute.logger.error "Error on sending message 'task in orchestrator': #{ex.message}"
+            Astute.logger.error "Error on sending message 'task in orchestrator': #{ex.message}"\
+                                "trace: #{ex.format_backtrace}"
           end
         end
       end
