@@ -31,17 +31,13 @@ maintainers:
     email:  vsharshov@mirantis.com
     IRC:    warpc
 
-  - name:   Evgeny Li
-    email:  eli@mirantis.com
-    IRC:    evgenyl
-
-  - name:   Dmytro Shuliak
-    email:  dshulyak@mirantis.com
-    IRC:    dshulyak
-
   - name:   Vladimir Kozhukalov
     email:  vkozhukalov@mirantis.com
     IRC:    kozhukalov
+
+  - name:   Ivan Ponomarev
+    email:  iponomarev@mirantis.com
+    IRC:    iponomarev
 
 - debian/: &packaging_team
   - name:   Mikhail Ivanov
