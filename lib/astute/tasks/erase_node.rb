@@ -15,6 +15,11 @@
 module Astute
   class EraseNode < Task
 
+    def summary
+      {'task_summary' => "Node #{@task['node_id']} was erased without reboot"\
+                         " with result #{@status}"}
+    end
+
     private
 
     def process

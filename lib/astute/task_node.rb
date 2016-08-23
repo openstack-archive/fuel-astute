@@ -100,7 +100,7 @@ module Astute
     end
 
     def select_task_engine(data)
-      noop_prefix = noop_run? ? "Noop" : ""
+      noop_prefix = noop_run? && not_noop_type?(data) ? "Noop" : ""
       task_class_name = noop_prefix + data['type'].split('_').collect(&:capitalize).join
       Object.const_get('Astute::' + task_class_name).new(data, @ctx)
     rescue => e
@@ -125,6 +125,10 @@ module Astute
       else
         cluster.node_statuses_transitions.fetch('failed', {})
       end
+    end
+
+    def not_noop_type?(data)
+      !['noop', 'stage', 'skipped'].include?(data['type'])
     end
 
   end
