@@ -11,13 +11,19 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-require 'astute/tasks/noop'
+require 'astute/tasks/noop_shell'
 
 module Astute
-  class NoopReboot < Noop
+  class NoopMasterShell < MasterShell
 
-    def summary
-      {'task_summary' => "Node #{@task['node_id']} was rebooted (noop mode)"}
+    private
+
+    def process
+      @shell_task = NoopShell.new(
+        generate_master_shell,
+        @ctx
+      )
+      @shell_task.run
     end
 
   end

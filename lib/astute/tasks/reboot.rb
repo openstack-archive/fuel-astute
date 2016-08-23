@@ -22,6 +22,11 @@ module Astute
       @already_rebooted = false
     end
 
+    def summary
+      {'task_summary' => "Node #{@task['node_id']} was rebooted with "\
+                         "result: #{@status}"}
+    end
+
     private
 
     def process
