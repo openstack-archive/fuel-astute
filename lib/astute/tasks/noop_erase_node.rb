@@ -14,10 +14,10 @@
 require 'astute/tasks/noop'
 
 module Astute
-  class NoopReboot < Noop
+  class NoopEraseNode < Noop
 
     def summary
-      {'task_summary' => "Node #{@task['node_id']} was rebooted (noop mode)"}
+      {'task_summary' => "Node #{@task['node_id']} was erased without reboot (noop mode)"}
     end
 
   end

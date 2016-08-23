@@ -20,6 +20,11 @@ module Astute
       @work_thread = nil
     end
 
+    def summary
+      {'task_summary' => "Node #{@task['node_id']} was move to bootstrap with"\
+                         " result #{@status}"}
+    end
+
     private
 
     def process

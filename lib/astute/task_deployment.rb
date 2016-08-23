@@ -85,7 +85,8 @@ module Astute
       Deployment::Log.logger = Astute.logger if Astute.respond_to? :logger
       write_graph_to_file(cluster)
       result = if dry_run
-        {:success => true }
+        report_final_node_progress(cluster)
+        {:success => true}
       else
         run_result = cluster.run
         # imitate dry_run results for noop run after deployment
@@ -273,6 +274,13 @@ module Astute
 
       Astute.logger.warn "Offline node #{uids}" if uids.present?
       uids
+    end
+
+    def report_final_node_progress(cluster)
+      node_report = cluster.nodes.inject([]) do |node_progress, node|
+        node_progress += [{'uid' => node[0].to_s, 'progress' => 100}]
+      end
+      @ctx.report('nodes' => node_report)
     end
 
   end
