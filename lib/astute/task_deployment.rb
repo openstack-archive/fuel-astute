@@ -48,10 +48,7 @@ module Astute
         'fault_tolerance_groups',
         []
       )
-      cluster.noop_run = tasks_metadata.fetch(
-        'noop_run',
-        false
-      )
+      cluster.noop_run = deployment_options.fetch(:noop_run, false)
 
       cluster.node_statuses_transitions = tasks_metadata.fetch(
         'node_statuses_transitions',

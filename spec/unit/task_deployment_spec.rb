@@ -305,9 +305,10 @@ describe Astute::TaskDeployment do
 
         Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
         task_deployment.deploy(
-            tasks_metadata: tasks_metadata.merge({'noop_run' => true}),
+            tasks_metadata: tasks_metadata,
             tasks_graph: tasks_graph,
-            tasks_directory: tasks_directory)
+            tasks_directory: tasks_directory,
+            noop_run: true)
       end
     end
 
