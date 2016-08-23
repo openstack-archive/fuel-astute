@@ -39,6 +39,10 @@ module Astute
         'fault_tolerance_groups',
         []
       )
+      cluster.noop_run = tasks_metadata.fetch(
+        'noop_run',
+        false
+      )
 
       offline_uids = fail_offline_nodes(tasks_graph)
       critical_uids = critical_node_uids(cluster.fault_tolerance_groups)
@@ -51,6 +55,7 @@ module Astute
         node.set_status_failed if offline_uids.include?(node_id)
       end
 
+      setup_fail_behavior(tasks_graph, cluster)
       setup_tasks(tasks_graph, cluster)
       setup_task_depends(tasks_graph, cluster)
       setup_task_concurrency(tasks_graph, cluster)
@@ -67,6 +72,8 @@ module Astute
         result[:success] = true
       else
         result = cluster.run
+        # imitate dry_run results for noop run after deployment
+        result = {:success => true } if cluster.noop_run
       end
       report_deploy_result(result)
     end
@@ -85,6 +92,15 @@ module Astute
         end
       end
       tasks_graph
+    end
+
+    def setup_fail_behavior(tasks_graph, cluster)
+      return unless cluster.noop_run
+      tasks_graph.each do |node_id, tasks|
+        tasks.each do |task|
+          task['fail_on_error'] = false
+        end
+      end
     end
 
     def setup_tasks(tasks_graph, cluster)

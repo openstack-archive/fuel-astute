@@ -11,19 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-require 'fuel_deployment'
+require 'astute/tasks/noop'
 
 module Astute
-  class TaskCluster < Deployment::Cluster
-    attr_accessor :noop_run
-
-    def hook_post_gracefully_stop(*args)
-      report_new_node_status(args[0])
-    end
-
-    def report_new_node_status(node)
-      node.report_node_status
-    end
-
+  class NoopCopyFiles < Noop
   end
 end

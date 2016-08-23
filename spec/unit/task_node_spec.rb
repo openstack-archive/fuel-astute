@@ -19,7 +19,7 @@ describe Astute::TaskNode do
   include SpecHelpers
 
   let(:cluster) do
-    Deployment::Cluster.new
+    Astute::TaskCluster.new
   end
 
   let(:ctx) do
@@ -64,6 +64,20 @@ describe Astute::TaskNode do
     it 'should run task' do
       Astute::Puppet.any_instance.expects(:run)
       task_node.run(task)
+    end
+
+    it 'should run noop puppet task' do
+      cluster_new = Astute::TaskCluster.new
+      cluster_new.id = 'test2'
+      cluster_new.noop_run = true
+      task_node_new = Astute::TaskNode.new('node_id', cluster_new)
+      task_node_new.context = ctx
+      task_node_new.graph.create_task(
+        task_data['id'],
+        task_data.merge({'node_id' => 'node_id'})
+      )
+      Astute::NoopPuppet.any_instance.expects(:run)
+      task_node_new.run(task)
     end
 
     it 'should mark node as busy' do
