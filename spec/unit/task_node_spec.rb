@@ -99,7 +99,7 @@ describe Astute::TaskNode do
         'progress' => 0,
         'deployment_graph_task_name' => 'openstack-haproxy-mysqld',
         'task_status' => 'running',
-        'custom' => {}
+        'summary' => {}
       }])
       task_node.run(task)
     end
@@ -325,7 +325,7 @@ describe Astute::TaskNode do
             'uid' => 'node_id',
             'status' => 'ready',
             'deployment_graph_task_name' => task.name,
-            'custom' => {},
+            'summary' => {},
             'task_status' => 'successful',
             'progress' => 100}]
         })
@@ -354,7 +354,7 @@ describe Astute::TaskNode do
               'uid' => 'node_id',
               'deployment_graph_task_name' => task.name,
               'status' => 'ready',
-              'custom' => {},
+              'summary' => {},
               'task_status' => 'skipped',
               'progress' => 100}]
           })
@@ -372,7 +372,7 @@ describe Astute::TaskNode do
             'nodes' => [{
               'uid' => 'node_id',
               'deployment_graph_task_name' => task.name,
-              'custom' => {},
+              'summary' => {},
               'task_status' => 'skipped',
               'progress' => 50}]
           })
@@ -394,7 +394,7 @@ describe Astute::TaskNode do
             'uid' => 'node_id',
             'status' => 'error',
             'deployment_graph_task_name' => task.name,
-            'custom' => {},
+            'summary' => {},
             'task_status' => 'failed',
             'error_type' => 'deploy',
             'error_msg' => "Task #{task.name} failed on node node_id",
@@ -414,7 +414,7 @@ describe Astute::TaskNode do
           'nodes' => [{
             'uid' => 'node_id',
             'deployment_graph_task_name' => task.name,
-            'custom' => {},
+            'summary' => {},
             'task_status' => 'successful',
             'progress' => 50}]
         })
