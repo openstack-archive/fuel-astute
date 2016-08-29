@@ -62,7 +62,7 @@ module Astute
       node_status.merge!(
         'deployment_graph_task_name' => task.name,
         'task_status' => task.status.to_s,
-        'custom' => @task_engine.summary
+        'summary' => @task_engine.summary
       ) if task
 
       node_status.merge!(
