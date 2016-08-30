@@ -56,6 +56,7 @@ BuildRequires: rubygems-devel
 %endif
 BuildArch: noarch
 Requires: openssh-clients
+Requires: python-timmy
 
 %if 0%{?fedora} > 16 || 0%{?rhel} > 6
 Requires(post): systemd-units
