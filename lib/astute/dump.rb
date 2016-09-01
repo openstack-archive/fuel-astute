@@ -25,8 +25,26 @@ module Astute
         retries=0,
         enable_result_logging=false
       )
-
+      upload_file = MClient.new(ctx, 'uploadfile', ['master'])
       begin
+        conf_file = '/tmp/nodes_to_dump'
+        nodes = []
+        for role in ['master', 'controller', 'slave']
+          for host in settings['dump'][role]['hosts']
+            nodes.push(
+              {'id' => (/node-(?<id>[0-9]+)/.match(host['hostname']){|m| m[:id].to_i} or 0),
+               'name' => host['hostname'],
+               'ip' => host['address'],
+               'roles' => [role]})
+          end
+        end
+        upload_file.upload(
+          :path => conf_file,
+          :content => nodes.to_json,
+          :user_owner => 'root',
+          :group_owner => 'root',
+          :overwrite => true)
+
         log_file = "/var/log/timmy.log"
         snapshot = File.basename(settings['target'])
         if settings['timestamp']
