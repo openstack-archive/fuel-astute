@@ -35,6 +35,7 @@ module Astute
           :timeout => @task['parameters']['timeout'],
           :puppet_debug => @task['parameters']['debug'],
           :puppet_noop_run => true,
+          :raw_report => true
         }
       )
     end
