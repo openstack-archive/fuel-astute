@@ -24,6 +24,7 @@ describe 'dump_environment' do
       'lastdump' => '/last/dump/path',
       'target' => '/var/dump/path',
       'timeout' => 300,
+      'dump' => {'slave' => {'hosts' => [{'hostname' => 'node', 'address' => '0.0.0.0'}]}}
     }
   end
   let(:rpc_mock) { mock_rpcclient }
@@ -40,34 +41,44 @@ describe 'dump_environment' do
   it "should upload the config and call execute method with shotgun as cmd" do
     target = settings['target']
     dump_cmd = "mkdir -p #{target} && "\
-               "timmy --logs --days 3 --dest-file #{target}/config.tar.gz "\
+               "timmy --logs --days 3 --nodes-json /tmp/nodes_to_dump "\
+               "--dest-file #{target}/config.tar.gz "\
                "--log-file /var/log/timmy.log && "\
                "tar --directory=/var/dump -cf #{target}.tar path && "\
                "echo #{target}.tar > #{settings['lastdump']} && "\
                "rm -rf #{target}"
+    rpc_mock.expects(:upload).with({path: '/tmp/nodes_to_dump',
+                                    content: [{'name' => 'node', 'ip' => '0.0.0.0'}].to_json,
+                                    user_owner: 'root',
+                                    group_owner: 'root',
+                                    overwrite: true}).returns(exec_result)
     rpc_mock.expects(:execute).with({:cmd => dump_cmd}).returns(exec_result)
 
     Astute::Dump.dump_environment(ctx, settings)
   end
   it "should report success if shell agent returns 0" do
+    rpc_mock.expects(:upload).returns(exec_result)
     rpc_mock.expects(:execute).returns(exec_result)
     Astute::Dump.expects(:report_success)
     Astute::Dump.dump_environment(ctx, settings)
   end
 
   it "should report error if shell agent returns not 0" do
+    rpc_mock.expects(:upload).returns(exec_result)
     rpc_mock.expects(:execute).returns(exec_result(1, '', ''))
     Astute::Dump.expects(:report_error).with(ctx, "Timmy exit code: 1")
     Astute::Dump.dump_environment(ctx, settings)
   end
 
   it "should report disk space error if shell agent returns 28" do
+    rpc_mock.expects(:upload).returns(exec_result)
     rpc_mock.expects(:execute).returns(exec_result(28, '', ''))
     Astute::Dump.expects(:report_error).with(ctx, "Timmy exit code: 28. Disk space for creating snapshot exceeded.")
     Astute::Dump.dump_environment(ctx, settings)
   end
 
   it "non default timeout should be used" do
+    Astute::MClient.stubs(:new).with(ctx, 'uploadfile', ['master'])
     Astute::MClient.stubs(:new).with(ctx, 'execute_shell_command', ['master'], true, 300, 0, false)
     Astute::Dump.dump_environment(ctx, settings)
   end

@@ -25,8 +25,20 @@ module Astute
         retries=0,
         enable_result_logging=false
       )
-
+      upload_file = MClient.new(ctx, 'uploadfile', ['master'])
       begin
+        conf_file = '/tmp/nodes_to_dump'
+        nodes = []
+        for host in settings['dump']['slave']['hosts']
+            nodes.push({'name' => host['hostname'], 'ip' => host['address']})
+        end
+        upload_file.upload(
+          :path => conf_file,
+          :content => nodes.to_json,
+          :user_owner => 'root',
+          :group_owner => 'root',
+          :overwrite => true)
+
         log_file = "/var/log/timmy.log"
         snapshot = File.basename(settings['target'])
         if settings['timestamp']
@@ -36,7 +48,8 @@ module Astute
         dest_dir = File.join(base_dir, snapshot)
         dest_file = File.join(dest_dir, "config.tar.gz")
         dump_cmd = "mkdir -p #{dest_dir} && "\
-                   "timmy --logs --days 3 --dest-file #{dest_file} --log-file #{log_file} && "\
+                   "timmy --logs --days 3 --nodes-json #{conf_file}"\
+                   " --dest-file #{dest_file} --log-file #{log_file} && "\
                    "tar --directory=#{base_dir} -cf #{dest_dir}.tar #{snapshot} && "\
                    "echo #{dest_dir}.tar > #{settings['lastdump']} && "\
                    "rm -rf #{dest_dir}"
