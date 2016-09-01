@@ -127,7 +127,11 @@ module MCollective
         }.merge(reply[:resources])
 
         if valid_report?(report) && request.fetch(:raw_report, false)
-          reply[:raw_report] = File.read(@last_report)
+          if request[:puppet_noop_run]
+            reply[:raw_report] = get_noop_report_only(report)
+          else
+            reply[:raw_report] = File.read(@last_report)
+          end
         end
       end
 
@@ -275,6 +279,21 @@ module MCollective
 
       def valid_report?(report)
         report.is_a?(Puppet::Transaction::Report) && report.resource_statuses
+      end
+
+      def get_noop_report_only(report)
+        noop_report = []
+        report.logs.each do |log|
+          # skip info level reports
+          next if log.level == :info
+          resource_report = {}
+          resource_report['source'] = log.source
+          resource_report['message'] = log.message
+          resource_report['file'] = log.file unless log.file.nil?
+          resource_report['line'] = log.line unless log.line.nil?
+          noop_report.push(resource_report)
+        end
+        noop_report
       end
 
       def kill_process
