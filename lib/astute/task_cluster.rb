@@ -15,7 +15,7 @@ require 'fuel_deployment'
 
 module Astute
   class TaskCluster < Deployment::Cluster
-    attr_accessor :noop_run
+    attr_accessor :noop_run, :debug_run
 
     def initialize(id=nil)
       super
