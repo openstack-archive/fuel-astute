@@ -49,6 +49,7 @@ module Astute
         []
       )
       cluster.noop_run = deployment_options.fetch(:noop_run, false)
+      cluster.debug_run = deployment_options.fetch(:debug, false)
 
       cluster.node_statuses_transitions = tasks_metadata.fetch(
         'node_statuses_transitions',
@@ -70,6 +71,7 @@ module Astute
       end
 
       setup_fail_behavior(tasks_graph, cluster)
+      setup_debug_behavior(tasks_graph, cluster)
       setup_tasks(tasks_graph, cluster)
       setup_task_depends(tasks_graph, cluster)
       setup_task_concurrency(tasks_graph, cluster)
@@ -113,6 +115,19 @@ module Astute
       tasks_graph.each do |node_id, tasks|
         tasks.each do |task|
           task['fail_on_error'] = false
+        end
+      end
+    end
+
+    def setup_debug_behavior(tasks_graph, cluster)
+      return unless cluster.debug_run
+      tasks_graph.each do |node_id, tasks|
+        tasks.each do |task|
+          if task['parameters'].present?
+            task['parameters']['debug'] = true
+          else
+            task['parameters'] = { 'debug' => true }
+          end
         end
       end
     end
