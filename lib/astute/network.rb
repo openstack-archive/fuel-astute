@@ -223,8 +223,7 @@ module Astute
       if response.results[:data][:out].present?
         Astute.logger.debug("DHCP checker received:\n#{response.pretty_inspect}")
         node_result[:data] = JSON.parse(response.results[:data][:out])
-      end
-      if response.results[:data][:err].present?
+      elsif response.results[:data][:err].present?
         Astute.logger.debug("DHCP checker errred with:\n#{response.pretty_inspect}")
         node_result[:status] = 'error'
         node_result[:error_msg] = 'Error in dhcp checker. Check logs for details'
