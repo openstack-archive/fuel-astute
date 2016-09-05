@@ -35,8 +35,10 @@ module Astute
         base_dir = File.dirname(settings['target'])
         dest_dir = File.join(base_dir, snapshot)
         dest_file = File.join(dest_dir, "config.tar.gz")
+        token = settings['auth-token']
         dump_cmd = "mkdir -p #{dest_dir} && "\
-                   "timmy --logs --days 3 --dest-file #{dest_file} --log-file #{log_file} && "\
+                   "timmy --logs --days 3 --dest-file #{dest_file}"\
+                   " --fuel-token #{token} --log-file #{log_file} && "\
                    "tar --directory=#{base_dir} -cf #{dest_dir}.tar #{snapshot} && "\
                    "echo #{dest_dir}.tar > #{settings['lastdump']} && "\
                    "rm -rf #{dest_dir}"
