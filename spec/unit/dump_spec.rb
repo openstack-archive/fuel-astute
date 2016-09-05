@@ -24,6 +24,7 @@ describe 'dump_environment' do
       'lastdump' => '/last/dump/path',
       'target' => '/var/dump/path',
       'timeout' => 300,
+      'auth-token' => '42'
     }
   end
   let(:rpc_mock) { mock_rpcclient }
@@ -41,7 +42,7 @@ describe 'dump_environment' do
     target = settings['target']
     dump_cmd = "mkdir -p #{target} && "\
                "timmy --logs --days 3 --dest-file #{target}/config.tar.gz "\
-               "--log-file /var/log/timmy.log && "\
+               "--fuel token 42 --log-file /var/log/timmy.log && "\
                "tar --directory=/var/dump -cf #{target}.tar path && "\
                "echo #{target}.tar > #{settings['lastdump']} && "\
                "rm -rf #{target}"
