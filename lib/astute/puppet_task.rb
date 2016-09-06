@@ -117,6 +117,7 @@ module Astute
 
     def puppet_status
       puppetd.last_run_summary(
+        :puppet_noop_run => @options[:puppet_noop_run],
         :raw_report => @options[:raw_report]
       ).first[:data]
     end
