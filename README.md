@@ -5,6 +5,7 @@ Astute is orchestrator, which is using data about nodes and deployment settings 
 - provision
 - deploy
 
+
 Provision
 -----
 
