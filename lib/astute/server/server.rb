@@ -95,20 +95,6 @@ module Astute
         end
       end
 
-      def send_message_task_in_orchestrator(data)
-        data.each do |message|
-          begin
-            task_uuid = message['args']['task_uuid']
-            Astute.logger.debug "Sending message: task #{task_uuid} in orchestrator"
-            return_results({
-              'respond_to' => 'task_in_orchestrator',
-              'args' => {'task_uuid' => task_uuid}})
-          rescue => ex
-            Astute.logger.error "Error on sending message 'task in orchestrator': #{ex.message}"
-          end
-        end
-      end
-
       def perform_main_job(payload, properties)
         @main_work_thread = Thread.new do
           data = parse_data(payload, properties)
@@ -117,7 +103,6 @@ module Astute
           @tasks_queue = Astute::Server::TaskQueue.new
 
           @tasks_queue.add_task(data)
-          send_message_task_in_orchestrator(data)
           dispatch(@tasks_queue)
 
           # Clean up tasks queue to prevent wrong service job work flow for
@@ -135,7 +120,6 @@ module Astute
           data = parse_data(payload, properties)
           Astute.logger.debug("Process message from service queue:\n"\
             "#{data.pretty_inspect}")
-          send_message_task_in_orchestrator(data)
           dispatch(data, service_data)
         end
       end
@@ -143,6 +127,7 @@ module Astute
       def dispatch(data, service_data=nil)
         data.each_with_index do |message, i|
           begin
+            send_running_task_status(message)
             dispatch_message message, service_data
           rescue StopIteration
             Astute.logger.debug "Dispatching aborted by #{message['method']}"
@@ -188,6 +173,10 @@ module Astute
         else
           @delegate.send(data['method'], data, service_data)
         end
+      end
+
+      def send_running_task_status(message)
+        return_results(message, {'status' => 'running'})
       end
 
       def return_results(message, results={})
