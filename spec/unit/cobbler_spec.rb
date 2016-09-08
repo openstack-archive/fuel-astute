@@ -28,6 +28,7 @@ describe Cobbler do
     password = 'pass'
 
     remote = mock()
+    remote.expects(:timeout=)
     tmp = XMLRPC::Client
     XMLRPC::Client = mock() do
       expects(:new).with(host, path, port).returns(remote)
@@ -47,6 +48,7 @@ describe Cobbler do
     path = "/api"
     port = "1234"
     remote = mock()
+    remote.expects(:timeout=)
     tmp = XMLRPC::Client
     XMLRPC::Client = mock() do
       expects(:new).with(host, path, port).returns(remote)
@@ -64,6 +66,7 @@ describe Cobbler do
   context "cobbler methods" do
     before(:each) do
       remote = mock() do
+        stubs(:timeout=)
         stubs(:call)
         stubs(:call).with('login', 'cobbler', 'cobbler').returns('remotetoken')
       end
@@ -173,6 +176,7 @@ describe Cobbler do
 
     it 'should generate token in every cobbler call where token need' do
       remote = mock() do
+        stubs(:timeout=)
         stubs(:call).twice.with('sync', 'remotetoken')
         expects(:call).twice.with('login', 'cobbler', 'cobbler').returns('remotetoken')
       end
@@ -200,6 +204,7 @@ describe Cobbler do
 
     it 'should try sync several time before raise a exception (Net)' do
       remote = mock() do
+        stubs(:timeout=)
         stubs(:call).with('sync', 'remotetoken')
           .raises(Net::ReadTimeout)
           .then.returns(nil)
@@ -216,6 +221,7 @@ describe Cobbler do
 
     it 'should try sync several time before raise a exception (XMLRPC)' do
       remote = mock() do
+        stubs(:timeout=)
         stubs(:call).with('sync', 'remotetoken')
           .raises(XMLRPC::FaultException.new("", ""))
           .then.returns(nil)
@@ -232,6 +238,7 @@ describe Cobbler do
 
     it 'should raise a exception if sync do not succeed after several(3) tries' do
       remote = mock() do
+        stubs(:timeout=)
         stubs(:call).with('sync', 'remotetoken')
           .raises(Net::ReadTimeout)
           .then.raises(Net::ReadTimeout)

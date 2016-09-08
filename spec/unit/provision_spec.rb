@@ -56,6 +56,7 @@ describe Astute::Provisioner do
 
     before(:each) do
       remote = mock() do
+        stubs(:timeout=)
         stubs(:call)
         stubs(:call).with('login', 'cobbler', 'cobbler').returns('remotetoken')
       end
@@ -208,6 +209,7 @@ describe Astute::Provisioner do
     context 'node state cases' do
       before(:each) do
         remote = mock() do
+          stubs(:timeout=)
           stubs(:call)
           stubs(:call).with('login', 'cobbler', 'cobbler').returns('remotetoken')
         end
