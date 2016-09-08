@@ -39,6 +39,7 @@ module Astute
 
         Astute.logger.debug("Connecting to cobbler with: host: #{host} port: #{port} path: #{path}")
         @remote = XMLRPC::Client.new(host, path, port)
+        @remote.timeout = 120
         Astute.logger.debug("Cobbler initialize with username: #{@username}, password: #{@password}")
       end
 
