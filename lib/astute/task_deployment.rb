@@ -82,13 +82,13 @@ module Astute
       Deployment::Log.logger = Astute.logger if Astute.respond_to? :logger
       write_graph_to_file(cluster)
       result = if dry_run
-        report_final_node_progress(cluster)
         {:success => true}
       else
         run_result = cluster.run
         # imitate dry_run results for noop run after deployment
         cluster.noop_run ? {:success => true } : run_result
       end
+      report_final_node_progress(cluster)
       report_deploy_result(result)
     end
 

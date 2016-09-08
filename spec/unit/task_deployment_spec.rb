@@ -345,10 +345,14 @@ describe Astute::TaskDeployment do
 
     context 'should report final status' do
 
-      it 'succeed status' do
+      it 'succeed status and 100 progress for all nodes' do
         Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
         task_deployment.stubs(:fail_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
+        ctx.expects(:report).with('nodes' => [
+          {'uid' => '1', 'progress' => 100},
+          {'uid' => 'virtual_sync_node', 'progress' => 100}]
+        )
         ctx.expects(:report).with({'status' => 'ready', 'progress' => 100})
 
         task_deployment.deploy(
@@ -357,7 +361,7 @@ describe Astute::TaskDeployment do
           tasks_directory: tasks_directory)
       end
 
-      it 'failed status' do
+      it 'failed status and 100 progress for all nodes' do
         failed_node = mock('node')
         failed_task = mock('task')
 
@@ -368,6 +372,10 @@ describe Astute::TaskDeployment do
           :status => 'Failed because of'})
         task_deployment.stubs(:fail_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
+        ctx.expects(:report).with('nodes' => [
+          {'uid' => '1', 'progress' => 100},
+          {'uid' => 'virtual_sync_node', 'progress' => 100}]
+        )
         ctx.expects(:report).with({
           'status' => 'error',
           'progress' => 100,
