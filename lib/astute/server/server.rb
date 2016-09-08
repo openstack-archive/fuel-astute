@@ -144,6 +144,7 @@ module Astute
       def dispatch(data, service_data=nil)
         data.each_with_index do |message, i|
           begin
+            send_running_task_status(message)
             dispatch_message message, service_data
           rescue StopIteration
             Astute.logger.debug "Dispatching aborted by #{message['method']}"
@@ -189,6 +190,10 @@ module Astute
         else
           @delegate.send(data['method'], data, service_data)
         end
+      end
+
+      def send_running_task_status(message)
+        return_results(message, {'status' => 'running'})
       end
 
       def return_results(message, results={})
