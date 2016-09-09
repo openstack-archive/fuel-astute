@@ -21,3 +21,5 @@ raemon/
 
 *.yaml
 !examples/example_astute_config.yaml
+
+*.log

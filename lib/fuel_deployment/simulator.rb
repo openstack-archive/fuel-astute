@@ -24,10 +24,28 @@ require 'find'
 
 module Deployment
   class TestNode < Node
+    attr_accessor :enable_task_reports
+
     def run(task)
       debug "Run task: #{task}"
       self.task = task
       self.status = :busy
+      log_task_run task if enable_task_reports
+    end
+
+    def task_log_file
+      "tasks-for-node-#{name}.log"
+    end
+
+    def task_log_file_remove
+      File.unlink task_log_file if File.exists? task_log_file
+    end
+
+    def log_task_run(task)
+      type = task.data['type']
+      File.open(task_log_file, 'a') do |file|
+        file.puts "#{type.ljust 12}: #{task.name}"
+      end
     end
 
     def poll
@@ -65,6 +83,9 @@ module Deployment
     def hook_pre_node(*args)
       return unless plot_pre_node
       make_image
+    end
+
+    def method_missing(*args)
     end
   end
 end
@@ -143,6 +164,9 @@ module Astute
         end
         opts.on('-G', '--graph-node-filter REGEXP', 'Plot only tasks with matching node name.') do |value|
           options[:graph_node_filter] = Regexp.new value
+        end
+        opts.on('-t', '--save-tasks', 'Save launched task to list files') do |value|
+          options[:save_tasks] = value
         end
       end
       parser.banner = <<-eof
@@ -297,6 +321,13 @@ graph much more readable.
         cluster.plot_post_node = true
       end
 
+      if options[:save_tasks]
+        cluster.each_node do |node|
+          node.enable_task_reports = true
+          node.task_log_file_remove
+        end
+      end
+
       result = cluster.run
       if options[:plot_last]
         cluster.make_image(suffix: 'end')
@@ -315,6 +346,15 @@ graph much more readable.
       raise Astute::DeploymentEngineError, 'Wrong data! YAML should contain Hash!' unless yaml_file_data.is_a? Hash
       context = Astute::SimulatorContext.new 'simulator'
       deployment = Astute::TaskDeployment.new context, Deployment::TestCluster, Deployment::TestNode
+
+      unless Astute.respond_to? :logger
+        class << Astute
+          def logger
+            Deployment::Log.logger
+          end
+        end
+      end
+
       cluster = deployment.create_cluster yaml_file_data
       Deployment::Log.logger.level = Logger::INFO
       cluster.id = 'simulator'

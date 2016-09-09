@@ -277,7 +277,7 @@ module Astute
       )
       data = filter_sensitive_data(data)
       File.open(yaml_file, 'w') { |f| f.write(YAML.dump(data)) }
-      Astute.logger.info("Check inpute data file #{yaml_file}")
+      Astute.logger.info("Check input data file #{yaml_file}")
     end
 
     # Remove the potentially sensitive data
