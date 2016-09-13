@@ -14,12 +14,13 @@
 #    under the License.
 
 require_relative '../lib/fuel_deployment/simulator'
+require 'astute'
 
 simulator = Astute::Simulator.new
 cluster = Deployment::TestCluster.new
 
 TASK_NUMBER = 100
-NODE_NUMBER = 100
+NODE_NUMBER = 1000
 
 cluster.uid = 'scale'
 cluster.plot = true if simulator.options[:plot]
@@ -57,5 +58,19 @@ cluster.each_node do |node|
   next if node.name == 'node1'
   node['task10'].depends cluster['node1']['task50']
 end
-
+subgraphs = [
+  {
+   'start' => [
+     "task3",
+    ],
+   'end' => [
+    "task29"
+   ]
+  },
+  {
+    'start' => [ "task4" ]
+  }
+]
+cluster.subgraphs = Astute::TaskDeployment.munge_list_of_start_end(cluster, subgraphs)
+cluster.setup_start_end
 simulator.run cluster
