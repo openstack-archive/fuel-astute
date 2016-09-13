@@ -120,7 +120,6 @@ module Astute
           data = parse_data(payload, properties)
           Astute.logger.debug("Process message from service queue:\n"\
             "#{data.pretty_inspect}")
-          send_message_task_in_orchestrator(data)
           dispatch(data, service_data)
         end
       end
