@@ -148,6 +148,35 @@ describe Astute::TaskDeployment do
       expect(critical_nodes.size).to eql(3)
     end
 
+    it 'should support default zero tolerance policy for error on nodes' do
+      cluster = mock('cluster')
+      cluster.stubs(:nodes).returns([
+        ['1', mock('node_1')],
+        ['2', mock('node_2')],
+        ['3', mock('node_3')],
+        ['virtual_sync_node', mock('null')]
+      ])
+
+      cluster.expects(:fault_tolerance_groups=).with(
+        [
+          {'fault_tolerance'=>0, 'name'=>'primary-controller', 'node_ids'=>['1']},
+          {'fault_tolerance'=>1, 'name'=>'ceph', 'node_ids'=>['1', '3']},
+          {'fault_tolerance'=>1, 'name'=>'ignored_group', 'node_ids'=>[]},
+          {'fault_tolerance'=>0, 'name'=>'zero_tolerance_as_default_for_nodes', 'node_ids'=>['2']}
+        ]
+      )
+
+      task_deployment.send(
+        :setup_fault_tolerance_behavior,
+        [
+          {'fault_tolerance'=>0, 'name'=>'primary-controller', 'node_ids'=>['1']},
+          {'fault_tolerance'=>1, 'name'=>'ceph', 'node_ids'=>['1', '3']},
+          {'fault_tolerance'=>1, 'name'=>'ignored_group', 'node_ids'=>[]}
+        ],
+        cluster
+      )
+    end
+
     it 'should fail offline nodes' do
       Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
       task_deployment.stubs(:write_graph_to_file)
@@ -184,20 +213,6 @@ describe Astute::TaskDeployment do
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
       Astute::TaskCluster.any_instance.expects(:stop_condition)
-      task_deployment.deploy(
-        tasks_metadata: tasks_metadata,
-        tasks_graph: tasks_graph,
-        tasks_directory: tasks_directory)
-    end
-
-    it 'should setup deployment logger' do
-      Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
-      task_deployment.stubs(:write_graph_to_file)
-      ctx.stubs(:report)
-      task_deployment.stubs(:fail_offline_nodes).returns([])
-      Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
-
-      Deployment::Log.expects(:logger=).with(Astute.logger)
       task_deployment.deploy(
         tasks_metadata: tasks_metadata,
         tasks_graph: tasks_graph,

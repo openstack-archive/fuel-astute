@@ -44,10 +44,7 @@ module Astute
       cluster = @cluster_class.new
       cluster.node_concurrency.maximum = Astute.config.max_nodes_per_call
       cluster.stop_condition { Thread.current[:gracefully_stop] }
-      cluster.fault_tolerance_groups = tasks_metadata.fetch(
-        'fault_tolerance_groups',
-        []
-      )
+
       cluster.noop_run = deployment_options.fetch(:noop_run, false)
       cluster.debug_run = deployment_options.fetch(:debug, false)
 
@@ -59,6 +56,11 @@ module Astute
       offline_uids = fail_offline_nodes(
         tasks_graph,
         cluster.node_statuses_transitions
+      )
+
+      setup_fault_tolerance_behavior(
+        tasks_metadata['fault_tolerance_groups'],
+        cluster
       )
       critical_uids = critical_node_uids(cluster.fault_tolerance_groups)
 
@@ -81,7 +83,6 @@ module Astute
     def deploy(deployment_options={})
       cluster = create_cluster(deployment_options)
       dry_run = deployment_options.fetch(:dry_run, false)
-      Deployment::Log.logger = Astute.logger if Astute.respond_to? :logger
       write_graph_to_file(cluster)
       result = if dry_run
         {:success => true}
@@ -108,6 +109,22 @@ module Astute
         end
       end
       tasks_graph
+    end
+
+    def setup_fault_tolerance_behavior(fault_tolerance_groups, cluster)
+      fault_tolerance_groups = [] if fault_tolerance_groups.nil?
+
+      defined_nodes = fault_tolerance_groups.map { |g| g['node_ids'] }.flatten.uniq
+      all_nodes = cluster.nodes.map{ |n| n[0].to_s }.select{ |n| !sync_point?(n) }
+      undefined_nodes = all_nodes - defined_nodes
+
+      fault_tolerance_groups << {
+        'fault_tolerance' => 0,
+        'name' => 'zero_tolerance_as_default_for_nodes',
+        'node_ids' => undefined_nodes
+      }
+
+      cluster.fault_tolerance_groups = fault_tolerance_groups
     end
 
     def setup_fail_behavior(tasks_graph, cluster)
