@@ -77,6 +77,7 @@ Astute.logger.formatter = proc do |severity, datetime, progname, msg|
   severity_map = {'DEBUG' => 'DEBUG', 'INFO' => 'INFO', 'WARN' => 'WARNING', 'ERROR' => 'ERROR', 'FATAL' => 'CRITICAL'}
   "#{datetime.strftime("%Y-%m-%d %H:%M:%S")} #{severity_map[severity]} [#{Process.pid}] #{msg}\n"
 end
+Deployment::Log.logger = Astute.logger
 
 Astute.logger.debug "Starting with settings\n#{Astute.config.to_yaml}"
 
