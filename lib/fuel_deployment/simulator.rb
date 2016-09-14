@@ -17,6 +17,7 @@ require_relative '../astute/exceptions'
 require_relative '../astute/config'
 require_relative '../fuel_deployment'
 require_relative '../astute/task_deployment'
+require_relative '../astute/task_cluster'
 require 'active_support/all'
 require 'yaml'
 require 'optparse'
@@ -44,7 +45,7 @@ module Deployment
     attr_accessor :context
   end
 
-  class TestCluster < Cluster
+  class TestCluster < Astute::TaskCluster
     def tasks_to_fail
       return @tasks_to_fail if @tasks_to_fail
       @tasks_to_fail = []
@@ -317,7 +318,7 @@ graph much more readable.
       deployment = Astute::TaskDeployment.new context, Deployment::TestCluster, Deployment::TestNode
       cluster = deployment.create_cluster yaml_file_data
       Deployment::Log.logger.level = Logger::INFO
-      cluster.id = 'simulator'
+      cluster.uid = 'simulator'
       cluster
     end
 
