@@ -115,6 +115,7 @@ module Astute
 
   def self.logger=(logger)
     @logger = logger
+    Deployment::Log.logger = @logger
   end
 
   config_file = '/opt/astute/astute.conf'
