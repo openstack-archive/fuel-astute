@@ -53,35 +53,44 @@ module Astute
 
     # expect to run this method with respect of Astute.config.puppet_fade_interval
     def status
-      raise Timeout::Error unless @time_observer.enough_time?
+      retry_count = 5
+      begin
+        raise Timeout::Error unless @time_observer.enough_time?
 
-      @summary = puppet_status
-      status = node_status(@summary)
-      message = "Node #{@node['uid']}(#{@node['role']}) status: #{status}"
-      if status == 'error'
-        Astute.logger.error message
-      else
-        Astute.logger.debug message
-      end
-
-      result = case status
-        when 'succeed'
-          processing_succeed_node(@summary)
-        when 'running'
-          processing_running_node
-        when 'error'
-          processing_error_node(@summary)
+        @summary = puppet_status
+        status = node_status(@summary)
+        message = "Node #{@node['uid']}(#{@node['role']}) status: #{status}"
+        if status == 'error'
+          Astute.logger.error message
+        else
+          Astute.logger.debug message
         end
 
-      #TODO(vsharshov): Should we move it to control module?
-      @ctx.report_and_update_status('nodes' => [result]) if result
+        result = case status
+                   when 'succeed'
+                     processing_succeed_node(@summary)
+                   when 'running'
+                     processing_running_node
+                   when 'error'
+                     processing_error_node(@summary)
+                 end
 
-      # ready, error or deploying
-      result.fetch('status', 'deploying')
-    rescue MClientTimeout, Timeout::Error
-      Astute.logger.warn "Puppet agent #{@node['uid']} " \
-        "didn't respond within the allotted time"
-      'error'
+        #TODO(vsharshov): Should we move it to control module?
+        @ctx.report_and_update_status('nodes' => [result]) if result
+
+        # ready, error or deploying
+        result.fetch('status', 'deploying')
+      rescue Astute::MClientTimeout
+        Astute.logger.warn "Puppet agent #{@node['uid']} didn't respond within the allotted time!"
+        if retry_count > 0
+          retry_count -= 1
+          retry
+        end
+        'error'
+      rescue Timeout::Error
+        Astute.logger.warn "Puppet agent #{@node['uid']} took too much time to run a Puppet task!"
+        'error'
+      end
     end
 
     def summary
