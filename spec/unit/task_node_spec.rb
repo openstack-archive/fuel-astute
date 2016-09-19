@@ -100,7 +100,8 @@ describe Astute::TaskNode do
         'deployment_graph_task_name' => 'openstack-haproxy-mysqld',
         'task_status' => 'running',
         'summary' => {}
-      }])
+      }],
+        'progress' => 0)
       task_node.run(task)
     end
 
@@ -327,7 +328,8 @@ describe Astute::TaskNode do
             'deployment_graph_task_name' => task.name,
             'summary' => {},
             'task_status' => 'successful',
-            'progress' => 100}]
+            'progress' => 100}],
+          'progress' => 100
         })
         task_node.poll
       end
@@ -356,7 +358,8 @@ describe Astute::TaskNode do
               'status' => 'ready',
               'summary' => {},
               'task_status' => 'skipped',
-              'progress' => 100}]
+              'progress' => 100}],
+            'progress' => 100
           })
           task_node.poll
         end
@@ -374,7 +377,8 @@ describe Astute::TaskNode do
               'deployment_graph_task_name' => task.name,
               'summary' => {},
               'task_status' => 'skipped',
-              'progress' => 50}]
+              'progress' => 50}],
+            'progress' => 50
           })
           task_node.poll
         end
@@ -388,6 +392,14 @@ describe Astute::TaskNode do
 
         Astute::Puppet.any_instance.expects(:status).returns(:failed)
 
+        ctx.expects(:report).with(
+          'nodes' => [{
+            'uid' => 'node_id',
+            'progress' => 0,
+            'deployment_graph_task_name' => 'test-task',
+            'task_status' => 'running',
+            'summary' => {}}],
+          'progress' => 0)
         task_node.run(task)
         ctx.expects(:report).with({
           'nodes' => [{
@@ -398,7 +410,8 @@ describe Astute::TaskNode do
             'task_status' => 'failed',
             'error_type' => 'deploy',
             'error_msg' => "Task #{task.name} failed on node node_id",
-            'progress' => 100}]
+            'progress' => 100}],
+          'progress' => 100
         })
         task_node.poll
       end
@@ -416,7 +429,8 @@ describe Astute::TaskNode do
             'deployment_graph_task_name' => task.name,
             'summary' => {},
             'task_status' => 'successful',
-            'progress' => 50}]
+            'progress' => 50}],
+          'progress' => 50
         })
         task_node.poll
       end
