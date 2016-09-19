@@ -70,7 +70,7 @@ module Astute
         'error_msg' => "Task #{task.name} failed on node #{name}"
       ) if task.failed?
 
-      @ctx.report('nodes' => [node_status])
+      @ctx.report('nodes' => [node_status], 'progress' => cluster_progress)
     end
 
     private
@@ -98,6 +98,10 @@ module Astute
 
     def current_progress_bar
       100 * tasks_finished_count / tasks_total_count
+    end
+
+    def cluster_progress
+      100 * cluster.tasks_finished_count / cluster.tasks_total_count
     end
 
     def select_task_engine(data)
