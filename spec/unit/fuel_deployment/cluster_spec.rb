@@ -20,6 +20,8 @@ describe Deployment::Cluster do
   let(:cluster) do
     cluster = Deployment::Cluster.new
     cluster.uid = 'test'
+    cluster.fault_tolerance_feature = true
+    cluster.critical_nodes_feature = true
     node1 = cluster.create_node 'node1'
     node2 = cluster.create_node 'node2'
     node1.create_task 'task1'

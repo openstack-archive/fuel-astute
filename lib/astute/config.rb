@@ -117,6 +117,9 @@ module Astute
     conf[:broker_publisher_queue] = 'nailgun'
     conf[:broker_exchange] = 'nailgun'
 
+    conf[:fault_tolerance_feature] = true
+    conf[:critical_nodes_feature] = true
+
     conf
   end
 end
