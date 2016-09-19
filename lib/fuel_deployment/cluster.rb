@@ -324,7 +324,7 @@ module Deployment
           }
           break result
         end
-        gracefully_stop! if has_failed_critical_nodes?
+        gracefully_stop! "failed_critical_nodes: #{failed_critical_nodes.inspect}" if has_failed_critical_nodes?
 
         if all_nodes_are_finished?
           status = "All nodes are finished. Failed tasks: "\
@@ -585,11 +585,17 @@ digraph "<%= uid || 'graph' %>" {
     # @return [true, false]
     def gracefully_stop?
       return true if @emergency_brake
-      if gracefully_stop_mark && gracefully_stop_mark.call
-        info "Stop deployment by stop condition (external reason)"
-        @emergency_brake = true
-      end
+      gracefully_stop_mark_check
       @emergency_brake
+    end
+
+    # Run the gracefully_stop_mark condition block
+    # and set the deployment to stop if the condition is met.
+    def gracefully_stop_mark_check
+      return unless gracefully_stop_mark
+      if gracefully_stop_mark.call
+        gracefully_stop! 'gracefully_stop_mark'
+      end
     end
 
     # If the deployment is being gracefully stopped
@@ -602,10 +608,13 @@ digraph "<%= uid || 'graph' %>" {
       end
     end
 
-    def gracefully_stop!
+    # Set this deployment to gracefully stop
+    # by marking all nodes to the skipped state instead of running
+    # new tasks. Optionally, the reason of the stop can be provided.
+    # @param [String] reason
+    def gracefully_stop!(reason='unknown reason')
       return if @emergency_brake
-
-      info "Stop deployment by internal reason"
+      warn "Setting the deployment to gracefully stop. Reason: #{reason}"
       @emergency_brake = true
     end
 
@@ -625,7 +634,7 @@ digraph "<%= uid || 'graph' %>" {
       return if gracefully_stop?
       if node.failed?
         count_tolerance_fail(node)
-        gracefully_stop! if fault_tolerance_excess?
+        gracefully_stop! "fault_tolerance: #{node.inspect}" if fault_tolerance_excess?
       end
     end
 
