@@ -273,7 +273,7 @@ module Deployment
     # @param [Deployment::Task] task
     # @abstract Should be implemented in a subclass
     def run(task)
-      debug "Run task: #{task}"
+      info "Run task: #{task}"
       raise Deployment::NotImplemented, 'This method is abstract and should be implemented in a subclass'
     end
 
