@@ -98,6 +98,8 @@ module Astute
       cluster = @cluster_class.new
       cluster.node_concurrency.maximum = Astute.config.max_nodes_per_call
       cluster.stop_condition { Thread.current[:gracefully_stop] }
+      cluster.fault_tolerance_feature = Astute.config.fault_tolerance_feature
+      cluster.critical_nodes_feature = Astute.config.critical_nodes_feature
 
       cluster.noop_run = deployment_options.fetch(:noop_run, false)
       cluster.debug_run = deployment_options.fetch(:debug, false)

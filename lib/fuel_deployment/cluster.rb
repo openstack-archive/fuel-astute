@@ -54,6 +54,10 @@ module Deployment
     attr_accessor :dot_node_filter
     attr_accessor :dot_task_filter
     attr_accessor :dot_plot_number
+    attr_accessor :critical_nodes_feature
+    alias :critical_nodes_enabled? :critical_nodes_feature
+    attr_accessor :fault_tolerance_feature
+    alias :fault_tolerance_enabled? :fault_tolerance_feature
 
     # Add an existing node object to the cluster
     # @param [Deployment::Node] node a new node object
@@ -359,8 +363,12 @@ module Deployment
     alias :deploy :run
 
     # Get the list of critical nodes
+    # if the critical nodes support is node enabled
+    # the list will be empty and critical nodes will
+    # not be enforced during the deployment
     # @return [Array<Deployment::Node>]
     def critical_nodes
+      return [] unless critical_nodes_enabled?
       select do |node|
         node.critical?
       end
@@ -389,12 +397,13 @@ module Deployment
       end
     end
 
+    # Get the list of the skipped nodes
+    # @return [Array<Deployment::Node>]
     def skipped_nodes
       select do |node|
         node.skipped?
       end
     end
-
 
     # Get the list of the failed nodes
     # @return [Array<Deployment::Task>]
@@ -561,6 +570,11 @@ digraph "<%= uid || 'graph' %>" {
       end.sort
     end
 
+    # Set the gracefully_stop condition for this cluster
+    # If the provided block returns "true" the cluster will
+    # stop the deployment process. This block will be validated
+    # on every node visit.
+    # @param [Proc] block
     def stop_condition(&block)
       self.gracefully_stop_mark = block
     end
@@ -593,7 +607,8 @@ digraph "<%= uid || 'graph' %>" {
     end
 
     # If the deployment is being gracefully stopped
-    # set the node to the skipped state
+    # set the node to the skipped state so it will
+    # excluded from the deployment process.
     def gracefully_stop(node)
       if gracefully_stop? && node.ready?
         node.set_status_skipped
@@ -611,36 +626,49 @@ digraph "<%= uid || 'graph' %>" {
       @emergency_brake = true
     end
 
+    # Set the fault tolerance group setting for the cluster
+    # @param [Array<Hash>] groups
     def fault_tolerance_groups=(groups=[])
+      unless fault_tolerance_enabled?
+        warn 'Fault tolerance feature is disabled and the groups will not be set up!'
+        return
+      end
       @fault_tolerance_groups = groups.select { |group| group['node_ids'].present? }
       @fault_tolerance_groups.each { |group| group['failed_node_ids'] = [] }
       debug "Setup fault tolerance groups: #{@fault_tolerance_groups}"
     end
 
+    # Check if this node if failed for the fault tolerance group
+    # and stop the deployment if the node is failed and it sets the
+    # fault tolerance count off the limit.
+    # @param [Node] node
     def validate_fault_tolerance(node)
       return if gracefully_stop?
-
+      return unless fault_tolerance_enabled?
       if node.failed?
         count_tolerance_fail(node)
         gracefully_stop! "fault_tolerance: #{node.inspect}" if fault_tolerance_excess?
       end
     end
 
+    # Set this node to be failed in the fault tolerance groups
+    # @param [Node] node
     def count_tolerance_fail(node)
-      fault_tolerance_groups.select do |g|
-        g['node_ids'].include?(node.name)
+      fault_tolerance_groups.select do |group|
+        group['node_ids'].include?(node.name)
       end.each do |group|
-        debug "Count failed node #{node.name} for group #{group['name']}"
+        debug "Count failed node: #{node.name} for group: #{group['name']}"
         group['fault_tolerance'] -= 1
         group['node_ids'].delete(node.name)
         group['failed_node_ids'] << node.name
       end
     end
 
+    # Check if there are fault tolerance groups with the fault limit exceeded.
+    # @return [TrueClass,FalseClass]
     def fault_tolerance_excess?
       is_failed = fault_tolerance_groups.select { |group| group['fault_tolerance'] < 0 }
       return false if is_failed.empty?
-
       warn "Fault tolerance exceeded the stop conditions #{is_failed}"
       true
     end
