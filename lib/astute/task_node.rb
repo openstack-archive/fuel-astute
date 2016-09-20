@@ -67,7 +67,7 @@ module Astute
 
       node_status.merge!(
         'error_msg' => "Task #{task.name} failed on node #{name}"
-      ) if task.failed?
+      ) if task && task.failed?
 
       @ctx.report('nodes' => [node_status], 'progress' => cluster_progress)
     end
@@ -96,7 +96,7 @@ module Astute
     end
 
     def current_progress_bar
-      100 * tasks_finished_count / tasks_total_count
+      tasks_total_count != 0 ? 100 * tasks_finished_count / tasks_total_count : 100
     end
 
     def cluster_progress
