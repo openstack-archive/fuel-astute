@@ -78,10 +78,12 @@ module Astute
 
       # ready, error or deploying
       result.fetch('status', 'deploying')
-    rescue MClientTimeout, Timeout::Error
-      Astute.logger.warn "Puppet agent #{@node['uid']} " \
-        "didn't respond within the allotted time"
+    rescue Timeout::Error
+      Astute.logger.warn "Puppet agent #{@node['uid']} took too long to run a Puppet task. Setting the task to error."
       'error'
+    rescue MClientTimeout
+      Astute.logger.warn "Puppet agent #{@node['uid']} didn't respond. Skipping this agent until the next round."
+      'processing'
     end
 
     def summary
