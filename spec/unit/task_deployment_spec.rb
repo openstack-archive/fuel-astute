@@ -192,13 +192,6 @@ describe Astute::TaskDeployment do
 
     it 'should support default zero tolerance policy for error on nodes' do
       cluster = mock('cluster')
-      cluster.stubs(:nodes).returns([
-        ['1', mock('node_1')],
-        ['2', mock('node_2')],
-        ['3', mock('node_3')],
-        ['virtual_sync_node', mock('null')]
-      ])
-
       cluster.expects(:fault_tolerance_groups=).with(
         [
           {'fault_tolerance'=>0, 'name'=>'primary-controller', 'node_ids'=>['1']},
@@ -215,7 +208,8 @@ describe Astute::TaskDeployment do
           {'fault_tolerance'=>1, 'name'=>'ceph', 'node_ids'=>['1', '3']},
           {'fault_tolerance'=>1, 'name'=>'ignored_group', 'node_ids'=>[]}
         ],
-        cluster
+        cluster,
+        ['1', '2', '3', 'virtual_sync_node']
       )
     end
 

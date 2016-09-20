@@ -114,7 +114,8 @@ module Astute
 
       setup_fault_tolerance_behavior(
         tasks_metadata['fault_tolerance_groups'],
-        cluster
+        cluster,
+        tasks_graph.keys
       )
       critical_uids = critical_node_uids(cluster.fault_tolerance_groups)
 
@@ -169,11 +170,11 @@ module Astute
       tasks_graph
     end
 
-    def setup_fault_tolerance_behavior(fault_tolerance_groups, cluster)
+    def setup_fault_tolerance_behavior(fault_tolerance_groups, cluster, nodes)
       fault_tolerance_groups = [] if fault_tolerance_groups.nil?
 
       defined_nodes = fault_tolerance_groups.map { |g| g['node_ids'] }.flatten.uniq
-      all_nodes = cluster.nodes.map{ |n| n[0].to_s }.select{ |n| !sync_point?(n) }
+      all_nodes = nodes.select{ |n| !sync_point?(n) }
       undefined_nodes = all_nodes - defined_nodes
 
       fault_tolerance_groups << {
