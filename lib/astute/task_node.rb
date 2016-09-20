@@ -59,15 +59,17 @@ module Astute
         'progress' => current_progress_bar,
       }
       node_status.merge!(node_report_status)
-      node_status.merge!(
-        'deployment_graph_task_name' => task.name,
-        'task_status' => task.status.to_s,
-        'summary' => @task_engine.summary
-      ) if task
 
-      node_status.merge!(
-        'error_msg' => "Task #{task.name} failed on node #{name}"
-      ) if task.failed?
+      if task
+        node_status.merge!(
+          'deployment_graph_task_name' => task.name,
+          'task_status' => task.status.to_s,
+          'summary' => @task_engine.summary
+        )
+        node_status.merge!(
+          'error_msg' => "Task #{task.name} failed on node #{name}"
+        ) if task.failed?
+      end
 
       @ctx.report('nodes' => [node_status], 'progress' => cluster_progress)
     end
@@ -96,11 +98,19 @@ module Astute
     end
 
     def current_progress_bar
-      100 * tasks_finished_count / tasks_total_count
+      if tasks_total_count != 0
+        100 * tasks_finished_count / tasks_total_count
+      else
+        100
+      end
     end
 
     def cluster_progress
-      100 * cluster.tasks_finished_count / cluster.tasks_total_count
+      if cluster.tasks_total_count != 0
+        100 * cluster.tasks_finished_count / cluster.tasks_total_count
+      else
+        100
+      end
     end
 
     def select_task_engine(data)
