@@ -37,7 +37,6 @@ module Astute
       @node = node
       @retries = @options[:retries]
       @time_observer = TimeObserver.new(@options[:timeout])
-      @prev_summary = nil
       @is_hung = false
       @succeed_retries = @options[:succeed_retries]
       @summary = {}
@@ -47,7 +46,6 @@ module Astute
       Astute.logger.debug "Waiting for puppet to finish deployment on " \
         "node #{@node['uid']} (timeout = #{@time_observer.time_limit} sec)..."
       @time_observer.start
-      @prev_summary ||= puppet_status
       puppetd_runonce
     end
 
@@ -147,8 +145,7 @@ module Astute
     def succeed?(status)
       status[:status] == 'stopped' &&
       status[:resources]['failed'].to_i == 0 &&
-      status[:resources]['failed_to_restart'].to_i == 0 &&
-      status[:time]['last_run'] != (@prev_summary && @prev_summary[:time]['last_run'])
+      status[:resources]['failed_to_restart'].to_i == 0
     end
 
     # Runs puppetd.runonce only if puppet is stopped on the host at the time
@@ -207,8 +204,6 @@ module Astute
         Astute.logger.info "Retrying to run puppet for following succeed " \
           "node: #{@node['uid']}"
         puppetd_runonce
-        # We need this magic with prev_summary to reflect new puppetd run statuses..
-        @prev_summary = last_run
         node_report_format('status' => 'deploying')
       else
         Astute.logger.debug "Node #{@node['uid']} has succeed to deploy. " \
@@ -225,8 +220,6 @@ module Astute
         Astute.logger.info "Retrying to run puppet for following error " \
           "nodes: #{@node['uid']}"
         puppetd_runonce
-        # We need this magic with prev_summary to reflect new puppetd run statuses..
-        @prev_summary = last_run
         node_report_format('status' => 'deploying')
       else
         Astute.logger.debug "Node #{@node['uid']} has failed to deploy. " \

@@ -197,6 +197,8 @@ module MCollective
       end
 
       def runonce_background
+        rm_file(@last_report)
+        rm_file(@last_summary)
         cwd = request.fetch(:cwd, '/')
         cmd = [
           @puppetd,

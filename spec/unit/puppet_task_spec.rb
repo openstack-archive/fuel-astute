@@ -118,7 +118,7 @@ describe Astute::PuppetTask do
 
   describe "#run" do
     it 'run puppet using mcollective' do
-      puppet_task.expects(:puppet_status).returns(mco_puppet_stopped).times(2)
+      puppet_task.expects(:puppet_status).returns(mco_puppet_stopped)
       puppet_task.expects(:puppet_run)
       puppet_task.run
     end
@@ -131,7 +131,6 @@ describe Astute::PuppetTask do
 
     it 'check puppet using mcollective' do
       puppet_task.stubs(:puppet_status).returns(mco_puppet_stopped)
-        .then.returns(mco_puppet_stopped)
         .then.returns(mco_puppet_running)
         .then.returns(mco_puppet_finished)
 
@@ -141,7 +140,6 @@ describe Astute::PuppetTask do
 
     it 'return error for node if puppet failed (a cycle w/o any transitional states)' do
       puppet_task_wo_retries.stubs(:puppet_status).returns(mco_puppet_stopped)
-        .then.returns(mco_puppet_stopped)
         .then.returns(mco_puppet_failed)
 
       puppet_task_wo_retries.expects(:puppet_run)
@@ -151,7 +149,6 @@ describe Astute::PuppetTask do
 
     it 'retries to run puppet if it fails and return middle status' do
       puppet_task.stubs(:puppet_status).returns(mco_puppet_stopped)
-        .then.returns(mco_puppet_stopped)
         .then.returns(mco_puppet_failed)
         .then.returns(mco_puppet_failed)
         .then.returns(mco_puppet_finished)
@@ -164,7 +161,6 @@ describe Astute::PuppetTask do
 
     it "return error for node if puppet failed (a cycle with one running state only)" do
       puppet_task_wo_retries.stubs(:puppet_status).returns(mco_puppet_stopped)
-        .then.returns(mco_puppet_stopped)
         .then.returns(mco_puppet_running)
         .then.returns(mco_puppet_running)
         .then.returns(mco_puppet_fail)
@@ -181,7 +177,6 @@ describe Astute::PuppetTask do
 
     it "error status for node if puppet failed (a cycle w/o idle and finishing states)" do
       puppet_task_wo_retries.stubs(:puppet_status).returns(mco_puppet_stopped)
-        .then.returns(mco_puppet_stopped)
         .then.returns(mco_puppet_running)
         .then.returns(mco_puppet_failed)
 
@@ -198,15 +193,14 @@ describe Astute::PuppetTask do
         .then.returns(mco_puppet_running)
         .then.returns(mco_puppet_finished)
 
-      puppet_task.expects(:puppet_run).times(2)
+      puppet_task.expects(:puppet_run)
       puppet_task.run
       expect(puppet_task.status).to eql('deploying')
       expect(puppet_task.status).to eql('ready')
     end
 
     it "error status for node if puppet failed (mcollective retries)" do
-      puppet_task.stubs(:puppet_status).returns(mco_puppet_stopped)
-         .then.raises(Astute::MClientTimeout)
+      puppet_task.stubs(:puppet_status).raises(Astute::MClientTimeout)
 
       puppet_task.stubs(:puppetd_runonce)
       puppet_task.run
