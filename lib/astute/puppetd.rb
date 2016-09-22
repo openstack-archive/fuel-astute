@@ -52,7 +52,7 @@ module Astute
     end
 
     def self.puppet_task(n)
-      PuppetTask.new(
+      GranularPuppetTask.new(
         @ctx,
         n,
         {
