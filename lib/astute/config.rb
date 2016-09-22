@@ -57,14 +57,14 @@ module Astute
     # Library settings
     conf[:puppet_timeout] = 90 * 60       # maximum time it waits for single puppet run
     conf[:puppet_deploy_interval] = 2     # sleep for ## sec, then check puppet status again
-    conf[:puppet_fade_timeout] = 120      # how long it can take for puppet to exit after dumping to last_run_summary
+    conf[:puppet_fade_timeout] = 10       # how long it can take for puppet to exit after dumping to last_run_summary
     conf[:puppet_retries] = 2             # how many times astute will try to run puppet
     conf[:puppet_succeed_retries] = 0     # use this to rerun a puppet task again if it was successful (idempotency)
     conf[:puppet_module_path] = '/etc/puppet/modules' # where we should find basic modules for puppet
     conf[:puppet_noop_run] = false        # enable Puppet noop run
     conf[:mc_retries] = 10                # MClient tries to call mcagent before failure
     conf[:mc_retry_interval] = 1          # MClient sleeps for ## sec between retries
-    conf[:puppet_fade_interval] = 30      # retry every ## seconds to check puppet state if it was running
+    conf[:puppet_fade_interval] = 2      # retry every ## seconds to check puppet state if it was running
     conf[:provisioning_timeout] = 90 * 60 # timeout for booting target OS in provision
     conf[:reboot_timeout] = 240           # how long it can take for node to reboot
     conf[:dump_timeout] = 3600            # maximum time it waits for the dump (meaningles to be larger
