@@ -12,11 +12,32 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require 'timeout'
-
 module Astute
-
   class PuppetTask
+
+    FINAL_TASK_STATUSES = [
+      'successful', 'failed'
+    ]
+
+    TASK_STATUSES = [
+      'successful', 'failed', 'running'
+    ]
+
+    PUPPET_STATUSES = [
+      'running', 'stopped', 'disabled'
+    ]
+
+    ALLOWING_STATUSES_TO_RUN = [
+      'stopped'
+    ]
+
+    BUSY_STATUSES = [
+      'running'
+    ]
+
+    STOPPED_STATUSES = [
+      'stopped', 'disabled'
+    ]
 
     def initialize(ctx, node, options={})
       default_options = {
@@ -37,57 +58,227 @@ module Astute
       @node = node
       @retries = @options[:retries]
       @time_observer = TimeObserver.new(@options[:timeout])
-      @is_hung = false
       @succeed_retries = @options[:succeed_retries]
       @summary = {}
+      self.task_status = 'running'
     end
 
+    # Run selected puppet manifest on node
+    # @return [void]
     def run
-      Astute.logger.debug "Waiting for puppet to finish deployment on " \
-        "node #{@node['uid']} (timeout = #{@time_observer.time_limit} sec)..."
+      Astute.logger.info "Start puppet with timeout #{@time_observer.time_limit}"\
+                         " sec. #{task_details_for_log}"
+      Astute.logger.debug "Puppet task options: #{@options.pretty_inspect}"
+
       @time_observer.start
-      puppetd_runonce
+      self.task_status = puppetd_runonce
     end
 
-    # expect to run this method with respect of Astute.config.puppet_fade_interval
+    # Return actual status of puppet run
+    # @return [String] Task status: successful, failed or running
     def status
-      raise Timeout::Error unless @time_observer.enough_time?
+      return @task_status if FINAL_TASK_STATUSES.include?(@task_status) &&
+                             @retries < 1
 
-      @summary = puppet_status
-      status = node_status(@summary)
-      message = "Node #{@node['uid']}(#{@node['role']}) status: #{status}"
-      if status == 'error'
-        Astute.logger.error message
-      else
-        Astute.logger.debug message
+      unless @time_observer.enough_time?
+        Astute.logger.error "Puppet agent took too long to run puppet task. "\
+                            "Mark task as error. #{task_details_for_log}"
+        self.task_status = 'failed'
+        @retries = 0
+        return @task_status
       end
 
-      result = case status
-        when 'succeed'
-          processing_succeed_node(@summary)
+      current_status, summary = puppet_status
+      log_current_status(current_status)
+
+      self.task_status = case puppet_to_task_status(current_status, summary)
+        when 'successful'
+          processing_succeed_task
         when 'running'
-          processing_running_node
-        when 'error'
-          processing_error_node(@summary)
+          processing_running_task
+        when 'failed'
+          processing_error_task
         end
-
-      #TODO(vsharshov): Should we move it to control module?
-      @ctx.report_and_update_status('nodes' => [result]) if result
-
-      # ready, error or deploying
-      result.fetch('status', 'deploying')
-    rescue MClientTimeout, Timeout::Error
-      Astute.logger.warn "Puppet agent #{@node['uid']} " \
-        "didn't respond within the allotted time"
-      'error'
     end
 
+    # Return actual last run summary for puppet run
+    # @return [Hash] Puppet summary
     def summary
       @summary
     end
 
     private
 
+    # Setup task status
+    # @param [String] status The task status
+    # @return [void]
+    # @raise [StandardError] Unknown status
+    def task_status=(status)
+      if TASK_STATUSES.include?(status)
+        @task_status = status
+      else
+        raise "Unknow status: #{status}. Expected: #{TASK_STATUSES}"
+      end
+    end
+
+    # Return actual status of puppet using mcollective puppet agent
+    # @return [String, Hash]: Puppet status (check PUPPET_STATUSES), summary
+    def puppet_status
+      @summary = puppet_last_run_summary
+      validate_status(@summary[:status])
+      return status, @summary
+    rescue MClientError, MClientTimeout => e
+      Astute.logger.warn "Error to get puppet status. #{task_details_for_log}."\
+                         "Reason: #{e.message}"
+      @summary = {}
+      return 'error', {}
+    end
+
+    # Validate puppet status
+    # @param [String] status The puppet status
+    # @return [void]
+    # @raise [StandardError] Unknown status
+    def validate_status(status)
+      unless PUPPET_STATUSES.include?(status)
+        raise MClientError, "Unknow status #{status} from mcollective agent"
+      end
+    end
+
+    # Detect succeed of puppet task using summary
+    # @param [Hash] summary The puppet summary
+    # @return [true, false]
+    def succeed?(summary)
+      return false if summary.blank?
+
+      summary[:status] == 'stopped' &&
+      summary[:resources]['failed'].to_i == 0 &&
+      summary[:resources]['failed_to_restart'].to_i == 0
+    end
+
+    # Run puppet manifest using mcollective puppet agent
+    # @return [String] Task status: running or failed
+    def puppetd_runonce
+      if allow_to_start?
+        puppet_run
+        'running'
+      else
+        Astute.logger.error "Unable to start puppet, because it is busy "\
+                            "by other task. #{task_details_for_log}"
+        'failed'
+      end
+    rescue MClientError, MClientTimeout => e
+      Astute.logger.error "Problem with puppet start. #{task_details_for_log}"\
+                         " Reason: #{e.message}"
+      'failed'
+    end
+
+    # Clarifiy ability to run puppet on node
+    # @return [true, false] Task status
+    # TODO(vsharshov): Prepare to support async call
+    def allow_to_start?
+      fade_timeout = TimeObserver.new(Astute.config.puppet_fade_timeout)
+      fade_timeout.start
+
+      while fade_timeout.enough_time?
+        status, _summary = puppet_status
+        case
+        when BUSY_STATUSES.include?(status)
+          Astute.logger.debug "Detecting unexpected puppet process "\
+                              "#{task_details_for_log}. Waiting "\
+                              "#{fade_timeout.left_time} sec"
+        when STOPPED_STATUSES.include?(status)
+          break
+        end
+
+        sleep Astute.config.puppet_fade_interval
+      end
+
+      ALLOWING_STATUSES_TO_RUN.include?(status)
+    end
+
+    # Convert puppet status to task status
+    # @param [String] puppet_status The puppet status of task
+    # @param [Hash] summary Optional last run summary from mco puppet agent
+    # @return [String] Task status
+    # @raise [StandardError] Unknown status
+    def puppet_to_task_status(puppet_status, summary={})
+      case
+      when succeed?(summary)
+        'successful'
+      when BUSY_STATUSES.include?(puppet_status)
+        'running'
+      when STOPPED_STATUSES.include?(puppet_status)
+        'failed'
+      else
+        msg = "Unknow status: #{puppet_status}. Summary #{summary}"
+        raise msg
+      end
+    end
+
+    # Return short useful info about node and puppet task
+    # @return [String]
+    def task_details_for_log
+      "Node #{@node['uid']}, task #{@node['task']}), manifest: "\
+      "#{@options[:puppet_manifest]}, cwd #{@options[:cwd]}"
+    end
+
+    # Write to log with needed message level actual task status
+    # @param [String] status Actual puppet status of task
+    # @return [void]
+    def log_current_status(status)
+      message = "#{task_details_for_log}, status: #{status}"
+      if current_status == 'error'
+        Astute.logger.error message
+      else
+        Astute.logger.debug message
+      end
+    end
+
+    # Process additional action in case of puppet succeed
+    # @return [String] Task status: successful, failed or running
+    def processing_succeed_task
+      Astute.logger.debug "Puppet completed within #{@time_observer.stop} seconds"
+      if @succeed_retries > 0
+        @succeed_retries -= 1
+        Astute.logger.debug "Succeed puppet on node will be "\
+          "restarted. #{@succeed_retries} retries remained. "\
+          "#{task_details_for_log}"
+        Astute.logger.info "Retrying to run puppet for following succeed "\
+          "node: #{@node['uid']}"
+        puppetd_runonce
+      else
+        Astute.logger.info "Node #{@node['uid']} has succeed to deploy. "\
+          "There is no more retries for puppet run. #{puppet_to_task_status}"
+        'successful'
+      end
+    end
+
+    # Process additional action in case of puppet failed
+    # @return [String] Task status: successful, failed or running
+    def processing_error_task
+      if @retries > 0
+        @retries -= 1
+        Astute.logger.debug "Puppet on node will be "\
+          "restarted because of fail. #{@retries} retries remained."\
+          "#{puppet_to_task_status}"
+        Astute.logger.info "Retrying to run puppet for following error "\
+          "nodes: #{@node['uid']}"
+        puppetd_runonce
+      else
+        Astute.logger.error "Node has failed to deploy. There is"\
+          " no more retries for puppet run. #{puppet_to_task_status}"
+        'failed'
+      end
+    end
+
+    # Process additional action in case of puppet running
+    # @return [String]: Task status: successful, failed or running
+    def processing_running_task
+      'running'
+    end
+
+    # Create configured mcollective agent
+    # @return [Astute::MClient]
     def puppetd
       puppetd = MClient.new(
         @ctx,
@@ -99,27 +290,25 @@ module Astute
         _enable_result_logging=false
       )
       puppetd.on_respond_timeout do |uids|
-        nodes = uids.map do |uid|
-          {
-            'uid' => uid,
-            'status' => 'error',
-            'error_type' => 'deploy',
-            'role' => @node['role']
-          }
-        end
-        @ctx.report_and_update_status('nodes' => nodes)
+        Astute.logger.error "Nodes #{uids} reached the response timeout"
         raise MClientTimeout
       end
       puppetd
     end
 
-    def puppet_status
+    # Run last_run_summary action using mcollective puppet agent
+    # @return [Hash] return hash with status and resources
+    # @raise [MClientTimeout, MClientError]
+    def puppet_last_run_summary
       puppetd.last_run_summary(
         :puppet_noop_run => @options[:puppet_noop_run],
         :raw_report => @options[:raw_report]
       ).first[:data]
     end
 
+    # Run runonce action using mcollective puppet agent
+    # @return [void]
+    # @raise [MClientTimeout, MClientError]
     def puppet_run
       puppetd.runonce(
         :puppet_debug => @options[:puppet_debug],
@@ -130,150 +319,5 @@ module Astute
       )
     end
 
-    def running?(status)
-      ['running'].include? status[:status]
-    end
-
-    def idling?(status)
-      ['idling'].include? status[:status]
-    end
-
-    def stopped?(status)
-      ['stopped', 'disabled'].include? status[:status]
-    end
-
-    def succeed?(status)
-      status[:status] == 'stopped' &&
-      status[:resources]['failed'].to_i == 0 &&
-      status[:resources]['failed_to_restart'].to_i == 0
-    end
-
-    # Runs puppetd.runonce only if puppet is stopped on the host at the time
-    # If it isn't stopped, we wait a bit and try again.
-    # Returns list of nodes uids which appear to be with hung puppet.
-    def puppetd_runonce
-      started = Time.now.to_i
-      while Time.now.to_i - started < Astute.config.puppet_fade_timeout
-        status = puppet_status
-
-        is_stopped = stopped?(status)
-        is_idling = idling?(status)
-        is_running = running?(status)
-
-        #Try to kill 'idling' process and run again by 'runonce' call
-        puppet_run if is_stopped || is_idling
-
-        break if !is_running && !is_idling
-        sleep Astute.config.puppet_fade_interval
-      end
-
-      if is_running || is_idling
-        Astute.logger.warn "Following nodes have puppet hung " \
-          "(#{is_running ? 'running' : 'idling'}): '#{@node['uid']}'"
-        @is_hung = true
-      else
-        @is_hung = false
-      end
-    end
-
-    def node_status(last_run)
-      case
-      when @is_hung
-        'error'
-      when succeed?(last_run) && !@is_hung
-        'succeed'
-      when (running?(last_run) || idling?(last_run)) && !@is_hung
-        'running'
-      when stopped?(last_run) && !succeed?(last_run) && !@is_hung
-        'error'
-      else
-        msg = "Unknow status: " \
-          "is_hung #{@is_hung}, succeed? #{succeed?(last_run)}, " \
-          "running? #{running?(last_run)}, stopped? #{stopped?(last_run)}, " \
-          "idling? #{idling?(last_run)}"
-        raise msg
-      end
-    end
-
-    def processing_succeed_node(last_run)
-      Astute.logger.debug "Puppet completed within #{@time_observer.stop} seconds"
-      if @succeed_retries > 0
-        @succeed_retries -= 1
-        Astute.logger.debug "Succeed puppet on node #{@node['uid']} will be "\
-          "restarted. #{@succeed_retries} retries remained."
-        Astute.logger.info "Retrying to run puppet for following succeed " \
-          "node: #{@node['uid']}"
-        puppetd_runonce
-        node_report_format('status' => 'deploying')
-      else
-        Astute.logger.debug "Node #{@node['uid']} has succeed to deploy. " \
-          "There is no more retries for puppet run."
-        { 'uid' => @node['uid'], 'status' => 'ready', 'role' => @node['role'] }
-      end
-    end
-
-    def processing_error_node(last_run)
-      if @retries > 0
-        @retries -= 1
-        Astute.logger.debug "Puppet on node #{@node['uid']} will be "\
-          "restarted. #{@retries} retries remained."
-        Astute.logger.info "Retrying to run puppet for following error " \
-          "nodes: #{@node['uid']}"
-        puppetd_runonce
-        node_report_format('status' => 'deploying')
-      else
-        Astute.logger.debug "Node #{@node['uid']} has failed to deploy. " \
-          "There is no more retries for puppet run."
-        node_report_format('status' => 'error', 'error_type' => 'deploy')
-      end
-    end
-
-    def processing_running_node
-      nodes_to_report = []
-      begin
-        # Pass nodes because logs calculation needs IP address of node, not just uid
-        nodes_progress = @ctx.deploy_log_parser.progress_calculate([@node['uid']], [@node])
-        if nodes_progress.present?
-          Astute.logger.debug "Got progress for nodes:\n#{nodes_progress.pretty_inspect}"
-
-          # Nodes with progress are running, so they are not included in nodes_to_report yet
-          nodes_progress.map! { |x| x.merge!('status' => 'deploying', 'role' => @node['role']) }
-          nodes_to_report = nodes_progress
-        end
-      rescue => e
-        Astute.logger.warn "Some error occurred when parse logs for " \
-          "nodes progress: #{e.message}, trace: #{e.format_backtrace}"
-      end
-      nodes_to_report.first || node_report_format('status' => 'deploying')
-    end
-
-    def node_report_format(add_info={})
-      add_info.merge('uid' => @node['uid'], 'role' => @node['role'])
-    end
-
   end #PuppetTask
-
-  class TimeObserver
-
-    def initialize(timeout)
-      @timeout = timeout
-    end
-
-    def start
-      @time_before = Time.now
-    end
-
-    def stop
-      (Time.now - @time_before).to_i
-    end
-
-    def enough_time?
-      Time.now - @time_before < time_limit
-    end
-
-    def time_limit
-      @timeout
-    end
-  end #TimeObserver
-
 end
