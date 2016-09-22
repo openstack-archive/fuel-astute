@@ -21,12 +21,8 @@ module Astute
 
     def create_puppet_task
       PuppetTask.new(
-        Context.new(
-          @ctx.task_id,
-          PuppetLoggerReporter.new,
-          LogParser::NoParsing.new
-        ),
-        {'uid' => @task['node_id'].to_s, 'role' => task_name},
+        @ctx,
+        {'uid' => @task['node_id'].to_s, 'task' => task_name},
         {
           :retries => @task['parameters']['retries'],
           :puppet_manifest => @task['parameters']['puppet_manifest'],
