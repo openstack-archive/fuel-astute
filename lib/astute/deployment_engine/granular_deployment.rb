@@ -62,7 +62,7 @@ class Astute::DeploymentEngine::GranularDeployment < Astute::DeploymentEngine
 
   def puppet_task(node_id, task)
     # Use fake reporter because of logic. We need to handle report here
-    Astute::PuppetTask.new(
+    Astute::GranularPuppetTask.new(
       @hook_context,
       @nodes_by_uid[node_id], # Use single node uid instead of task['uids']
       {
