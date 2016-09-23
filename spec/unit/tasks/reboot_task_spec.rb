@@ -167,6 +167,7 @@ describe Astute::Reboot do
 
     it 'it should succeed if boot time before and after is different' do
       subject.stubs(:reboot)
+      subject.stubs(:update_online_node_status)
       subject.expects(:boot_time).twice.returns(12).then.returns(13)
 
       subject.run
@@ -175,6 +176,7 @@ describe Astute::Reboot do
 
     it 'it should succeed if boot time before and after are different' do
       subject.stubs(:reboot)
+      subject.stubs(:update_online_node_status)
       subject.expects(:boot_time).twice.returns(12).then.returns(11)
 
       subject.run
@@ -183,7 +185,17 @@ describe Astute::Reboot do
 
     it 'it should succeed if boot time before and after is different' do
       subject.stubs(:reboot)
+      subject.stubs(:update_online_node_status)
       subject.expects(:boot_time).twice.returns(12).then.returns(11)
+
+      subject.run
+      expect(subject.status).to eql(:successful)
+    end
+
+    it 'it should update node online status' do
+      subject.stubs(:reboot)
+      subject.expects(:update_online_node_status).once
+      subject.stubs(:boot_time).twice.returns(12).then.returns(11)
 
       subject.run
       expect(subject.status).to eql(:successful)
@@ -198,8 +210,19 @@ describe Astute::Reboot do
       expect(subject.status).to eql(:failed)
     end
 
+    it 'it not update node online status if task failed' do
+      subject.stubs(:reboot)
+      subject.stubs(:boot_time).once.returns(12)
+      subject.expects(:update_online_node_status).never
+      task['parameters']['timeout'] = -1
+
+      subject.run
+      expect(subject.status).to eql(:failed)
+    end
+
     it 'it should succeed after several tries' do
       subject.stubs(:reboot)
+      subject.stubs(:update_online_node_status)
       subject.expects(:boot_time).times(4).returns(12)
                                           .then.returns(12)
                                           .then.returns(0)
@@ -219,6 +242,7 @@ describe Astute::Reboot do
                 .then.raises(Astute::MClientTimeout)
                 .then.returns({:stdout => "13"})
       subject.stubs(:reboot)
+      subject.stubs(:update_online_node_status)
 
       subject.run
       expect(subject.status).to eql(:running)
