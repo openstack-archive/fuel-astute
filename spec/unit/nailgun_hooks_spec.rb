@@ -934,7 +934,7 @@ describe Astute::NailgunHooks do
           {'uid' => '1', 'role' => 'hook'},
           {'uid' => '3', 'role' => 'hook'}
         ],
-        retries=puppet_hook['parameters']['retries'],
+        _retries=puppet_hook['parameters']['retries'],
         puppet_hook['parameters']['puppet_manifest'],
         puppet_hook['parameters']['puppet_modules'],
         puppet_hook['parameters']['cwd']
@@ -1112,6 +1112,14 @@ describe Astute::NailgunHooks do
       )
       .returns('2' => '', '3' => '')
 
+      hooks.expects(:run_shell_without_check).once.with(
+        ctx,
+        ['2','3'],
+        regexp_matches(/nailgun-agent/),
+        60,
+      )
+      .returns('2' => '', '3' => '')
+
       hooks.stubs(:sleep)
 
       hooks.process
@@ -1138,6 +1146,7 @@ describe Astute::NailgunHooks do
       )
       .returns('2' => '', '3' => '')
 
+      hooks.stubs(:update_node_status).once
       hooks.stubs(:sleep)
 
       hooks.process
@@ -1163,6 +1172,8 @@ describe Astute::NailgunHooks do
         60,
       )
       .returns('2' => '', '3' => '')
+
+      hooks.stubs(:update_node_status).once
 
       hooks.expects(:sleep).with(reboot_hook['parameters']['timeout']/10)
 
@@ -1190,6 +1201,7 @@ describe Astute::NailgunHooks do
         60,
       )
       .returns('2' => '', '3' => '')
+      hooks.stubs(:update_node_status).once
 
       hooks.expects(:sleep).with(300/10)
 
@@ -1235,6 +1247,7 @@ describe Astute::NailgunHooks do
       .returns('3' => '')
 
       hooks.stubs(:sleep)
+      hooks.stubs(:update_node_status).once
 
       time = Time.now.to_i + 100
       hooks.stubs(:run_shell_without_check).once.with(
@@ -1283,6 +1296,7 @@ describe Astute::NailgunHooks do
         )
         .returns('2' => (time - 5).to_s, '3' => (time - 5).to_s).then
         .returns('2' => time.to_s, '3' => time.to_s)
+        hooks.stubs(:update_node_status).once
         expect {hooks.process}.to_not raise_error
       end
 
@@ -1304,6 +1318,7 @@ describe Astute::NailgunHooks do
           10,
         )
         .returns('2' => (time - 5).to_s, '3' => time.to_s)
+        hooks.expects(:update_node_status).with([])
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
@@ -1318,6 +1333,7 @@ describe Astute::NailgunHooks do
         )
         .returns('2' => time.to_s, '3' => time.to_s).then
         .returns('2' => (time - 1).to_s, '3' => (time - 2).to_s)
+        hooks.expects(:update_node_status).with(['2', '3'])
         expect {hooks.process}.to_not raise_error
       end
 
@@ -1338,6 +1354,7 @@ describe Astute::NailgunHooks do
           regexp_matches(/stat/),
           10,
         ).returns({})
+        hooks.stubs(:update_node_status)
 
         expect {hooks.process}.to raise_error(Astute::DeploymentEngineError, /Failed to execute hook/)
       end
