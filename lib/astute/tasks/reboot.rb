@@ -50,7 +50,10 @@ module Astute
       end
 
       current_bt = boot_time
-      succeed! if current_bt != @control_time && current_bt != 0
+      if current_bt != @control_time && current_bt != 0
+        update_online_node_status
+        succeed!
+      end
     end
 
     def validation
@@ -83,6 +86,14 @@ module Astute
       Astute.logger.debug("#{@ctx.task_id}: #{task_name} mcollective " \
         "boot time command failed with error #{e.message}")
       0
+    end
+
+    def update_online_node_status
+      run_shell_without_check(
+        @task['node_id'],
+        "nailgun-agent > /dev/null 2>&1",
+        _timeout=60 # nailgun-agent start with random (30) delay
+      )[:exit_code]
     end
 
   end
