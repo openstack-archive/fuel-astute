@@ -39,7 +39,7 @@ module Astute
       run_shell_without_check(
         @task['node_id'],
         "mkdir -p #{SHELL_MANIFEST_DIR}",
-        timeout=2
+        _timeout=2
       )
       upload_shell_manifest
       @puppet_task = Puppet.new(
