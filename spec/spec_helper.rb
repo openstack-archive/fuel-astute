@@ -23,8 +23,6 @@ require 'fileutils'
 require 'date'
 require 'yaml'
 require 'rspec'
-# Following require is needed for rcov to provide valid results
-require 'rspec/autorun'
 
 lib_dir = File.join File.dirname(__FILE__), '../lib'
 lib_dir = File.absolute_path File.expand_path lib_dir

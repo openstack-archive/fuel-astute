@@ -44,6 +44,7 @@ require 'astute/dump'
 require 'astute/deploy_actions'
 require 'astute/nailgun_hooks'
 require 'astute/puppet_task'
+require 'astute/puppet_job'
 require 'astute/task_manager'
 require 'astute/pre_delete'
 require 'astute/version'
@@ -57,7 +58,8 @@ require 'astute/task_deployment'
 require 'astute/task_node'
 require 'astute/task_proxy_reporter'
 require 'astute/task_cluster'
-require 'astute/common/reboot.rb'
+require 'astute/common/reboot'
+require 'astute/time_obsorver'
 require 'fuel_deployment'
 
 ['/astute/pre_deployment_actions/*.rb',
@@ -66,7 +68,8 @@ require 'fuel_deployment'
  '/astute/post_deploy_actions/*.rb',
  '/astute/post_deployment_actions/*.rb',
  '/astute/common_actions/*.rb',
- '/astute/tasks/*.rb'
+ '/astute/tasks/*.rb',
+ '/astute/mclients/*.rb'
  ].each do |path|
   Dir[File.dirname(__FILE__) + path].each{ |f| require f }
 end
