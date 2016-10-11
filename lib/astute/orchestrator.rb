@@ -30,7 +30,6 @@ module Astute
       report_result({}, up_reporter)
     end
 
-
     # Deprecated deploy method. Use monolitic site.pp. Do not use from 7.1.
     # Report progress based on puppet logs
     def deploy(up_reporter, task_id, deployment_info, pre_deployment=[], post_deployment=[])

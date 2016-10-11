@@ -30,5 +30,7 @@ module Astute
   class MClientTimeout < Timeout::Error; end
   # Task validation error
   class TaskValidationError < AstuteError; end
+  # Status error
+  class StatusValidationError < AstuteError; end
 
 end
