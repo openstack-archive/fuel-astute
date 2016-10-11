@@ -12,13 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require 'timeout'
-
 module Astute
   class Puppet < Task
 
     def summary
-      @puppet_task.summary
+      puppet_task.summary
     rescue
       {}
     end
@@ -26,15 +24,13 @@ module Astute
     private
 
     def process
-      @puppet_task = create_puppet_task
-      @puppet_task.run
+      Astute.logger.debug "Puppet task options: "\
+        "#{@task['parameters'].pretty_inspect}"
+      puppet_task.run
     end
 
     def calculate_status
-      case @puppet_task.status
-      when 'ready' then succeed!
-      when 'error' then failed!
-      end
+      self.status = puppet_task.status.to_sym
     end
 
     def validation
@@ -43,38 +39,40 @@ module Astute
     end
 
     def setup_default
-      @task['parameters']['cwd'] ||= '/'
-      @task['parameters']['timeout'] ||= Astute.config.puppet_timeout
-      @task['parameters']['retries'] ||= Astute.config.puppet_retries
-      @task['parameters']['debug'] = false unless @task['parameters']['debug'].present?
-      @task['parameters']['puppet_modules'] ||= Astute.config.puppet_module_path
+      default_options = {
+        'retries' => Astute.config.puppet_retries,
+        'puppet_manifest' => '/etc/puppet/manifests/site.pp',
+        'puppet_modules' => Astute.config.puppet_module_path,
+        'cwd' => Astute.config.shell_cwd,
+        'timeout' => Astute.config.puppet_timeout,
+        'puppet_debug' => false,
+        'succeed_retries' => Astute.config.puppet_succeed_retries,
+        'raw_report' => Astute.config.puppet_raw_report,
+        'puppet_noop_run' => Astute.config.puppet_noop_run,
+        'puppet_start_timeout' => Astute.config.puppet_start_timeout,
+        'puppet_start_interval' => Astute.config.puppet_start_interval
+      }
+      @task['parameters'].compact!
+      @task['parameters'].reverse_merge!(default_options)
     end
 
-    def create_puppet_task
-      PuppetTask.new(
-        Context.new(
-          @ctx.task_id,
-          PuppetLoggerReporter.new,
-          LogParser::NoParsing.new
+    def puppet_task
+      @puppet_task ||= PuppetJob.new(
+        task_name,
+        PuppetMClient.new(
+          @ctx,
+          @task['node_id'],
+          @task['parameters'],
+          ShellMClient.new(@ctx, @task['node_id'])
         ),
-        {'uid' => @task['node_id'].to_s, 'role' => task_name},
         {
-          :retries => @task['parameters']['retries'],
-          :puppet_manifest => @task['parameters']['puppet_manifest'],
-          :puppet_modules => @task['parameters']['puppet_modules'],
-          :cwd => @task['parameters']['cwd'],
-          :timeout => @task['parameters']['timeout'],
-          :puppet_debug => @task['parameters']['debug']
+          'retries' => @task['parameters']['retries'],
+          'succeed_retries' => @task['parameters']['succeed_retries'],
+          'timeout' => @task['parameters']['timeout'],
+          'fade_timeout' => @task['parameters']['fade_timeout']
         }
       )
     end
 
   end # class
-
-  class PuppetLoggerReporter
-    def report(msg)
-      Astute.logger.debug msg
-    end
-  end
-
 end

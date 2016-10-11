@@ -58,6 +58,8 @@ module Astute
     conf[:puppet_timeout] = 90 * 60       # maximum time it waits for single puppet run
     conf[:puppet_deploy_interval] = 2     # sleep for ## sec, then check puppet status again
     conf[:puppet_fade_timeout] = 120      # how long it can take for puppet to exit after dumping to last_run_summary
+    conf[:puppet_start_timeout] = 10      # how long it can take for puppet to start
+    conf[:puppet_start_interval] = 2      # interval between attemps to start puppet
     conf[:puppet_retries] = 2             # how many times astute will try to run puppet
     conf[:puppet_succeed_retries] = 0     # use this to rerun a puppet task again if it was successful (idempotency)
     conf[:puppet_module_path] = '/etc/puppet/modules' # where we should find basic modules for puppet

@@ -137,37 +137,8 @@ module Astute
     # In other case please use shell task
     # Synchronous (blocking) call
     def run_shell_without_check(node_uid, cmd, timeout=2)
-      Astute.logger.debug("Executing shell command without check: #{cmd} " \
-          "on node #{node_uid} with timeout #{timeout}.")
-      shell = MClient.new(
-        @ctx,
-        'execute_shell_command',
-        Array(node_uid),
-        check_result=false,
-        timeout=timeout
-      )
-      results = shell.execute(:cmd => cmd)
-      Astute.logger.debug("Mcollective shell result: #{results}")
-      if results.present?
-        result = results.first
-        Astute.logger.debug(
-          "#{@ctx.task_id}: cmd: #{cmd}\n" \
-          "stdout: #{result.results[:data][:stdout]}\n" \
-          "stderr: #{result.results[:data][:stderr]}\n" \
-          "exit code: #{result.results[:data][:exit_code]}")
-        {
-          :stdout =>result.results[:data][:stdout].chomp,
-          :stderr => result.results[:data][:stderr].chomp,
-          :exit_code => result.results[:data][:exit_code]
-        }
-      else
-        Astute.logger.warn("#{@ctx.task_id}: Failed to run shell #{cmd} on " \
-          "node #{node_uid}. Error will not raise because shell was run " \
-          "without check")
-        {}
-      end
+      ShellMClient.new(@ctx, node_uid).run_without_check(cmd, timeout)
     end
-
 
     # Create file with content on selected node
     # should use only for small file
