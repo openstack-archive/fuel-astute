@@ -12,18 +12,38 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-require 'astute/tasks/puppet'
+require 'timeout'
 
 module Astute
-  class NoopPuppet < Puppet
+  class TimeObserver
 
-    private
-
-    def setup_default
-      super
-      @task['parameters']['puppet_noop_run'] = true
-      @task['parameters']['raw_report'] = true
+    def initialize(timeout)
+      @timeout = timeout
     end
 
-  end
+    def start
+      @time_before = Time.now
+    end
+
+    def stop
+      (Time.now - @time_before).to_i
+    end
+
+    def enough_time?
+      Time.now - @time_before < time_limit
+    end
+
+    def time_is_up?
+      !enough_time?
+    end
+
+    def left_time
+      time_limit - (Time.now - @time_before)
+    end
+
+    def time_limit
+      @timeout
+    end
+
+  end #TimeObserver
 end

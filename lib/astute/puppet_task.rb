@@ -16,6 +16,8 @@ require 'timeout'
 
 module Astute
 
+  # @deprecated Please use {#Astute::PuppetJob} instead. This code is
+  # useful only for Granular or older deployment engines.
   class PuppetTask
 
     def initialize(ctx, node, options={})
@@ -51,7 +53,7 @@ module Astute
 
     # expect to run this method with respect of Astute.config.puppet_fade_interval
     def status
-      raise Timeout::Error unless @time_observer.enough_time?
+      raise Timeout::Error if @time_observer.time_is_up?
 
       @summary = puppet_status
       status = node_status(@summary)
@@ -252,28 +254,4 @@ module Astute
     end
 
   end #PuppetTask
-
-  class TimeObserver
-
-    def initialize(timeout)
-      @timeout = timeout
-    end
-
-    def start
-      @time_before = Time.now
-    end
-
-    def stop
-      (Time.now - @time_before).to_i
-    end
-
-    def enough_time?
-      Time.now - @time_before < time_limit
-    end
-
-    def time_limit
-      @timeout
-    end
-  end #TimeObserver
-
 end
