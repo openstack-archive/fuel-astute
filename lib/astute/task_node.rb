@@ -72,7 +72,7 @@ module Astute
         ) if task.failed?
       end
 
-      @ctx.report('nodes' => [node_status], 'progress' => cluster_progress)
+      @ctx.report('nodes' => [node_status])
     end
 
     private
@@ -101,14 +101,6 @@ module Astute
     def current_progress_bar
       if tasks_total_count != 0
         100 * tasks_finished_count / tasks_total_count
-      else
-        100
-      end
-    end
-
-    def cluster_progress
-      if cluster.tasks_total_count != 0
-        100 * cluster.tasks_finished_count / cluster.tasks_total_count
       else
         100
       end
