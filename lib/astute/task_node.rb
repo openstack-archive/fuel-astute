@@ -71,7 +71,7 @@ module Astute
         ) if task.failed?
       end
 
-      @ctx.report('nodes' => [node_status], 'progress' => cluster_progress)
+      @ctx.report('nodes' => [node_status])
     end
 
     private
@@ -98,19 +98,33 @@ module Astute
     end
 
     def current_progress_bar
-      if tasks_total_count != 0
-        100 * tasks_finished_count / tasks_total_count
-      else
-        100
-      end
     end
 
-    def cluster_progress
-      if cluster.tasks_total_count != 0
-        100 * cluster.tasks_finished_count / cluster.tasks_total_count
-      else
-        100
+    private
+
+    # This method support special task behavior. If task failed
+    # and we do not think that deployment should be stopped, Astute
+    # will mark such task as skipped and do not report error
+    def setup_task_status
+      if !task.data.fetch('fail_on_error', true) && @task_engine.failed?
+        Astute.logger.warn "Task #{task.name} failed, but marked as skipped "\
+                           "because of 'fail on error' behavior"
+        return :skipped
       end
+      @task_engine.status
+    end
+
+    def setup_node_status
+      if task
+        set_status_failed && return if task.failed?
+        set_status_skipped && return if task.dep_failed?
+      end
+
+      set_status_online
+    end
+
+    def current_progress_bar
+      100 * tasks_finished_count / tasks_total_count
     end
 
     def select_task_engine(data)
