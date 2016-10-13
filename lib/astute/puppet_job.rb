@@ -128,6 +128,7 @@ module Astute
     # Return actual status of puppet using mcollective puppet agent
     # @return [String]: puppet status
     def puppet_status
+      Astute.logger.warn "PROFILE Status start #{task_details_for_log}"
       actual_status = @puppet_mclient.status
       log_current_status(actual_status)
 
@@ -135,6 +136,7 @@ module Astute
         Astute.logger.warn "Error to get puppet status. "\
           "#{task_details_for_log}."
       end
+      Astute.logger.warn "PROFILE Status stop #{task_details_for_log}"
 
       actual_status
     end
@@ -143,19 +145,24 @@ module Astute
     # @return [true, false] Is puppet run has started or not
     # TODO(vsharshov): need refactoring to make this be async call
     def puppetd_run
+      Astute.logger.warn "PROFILE puppetd_run start #{task_details_for_log}"
       puppet_run_obsorver = TimeObserver.new(@puppet_start_timeout)
       puppet_run_obsorver.start
 
       while puppet_run_obsorver.enough_time?
         is_running = @puppet_mclient.run
-        return true if is_running
+        if is_running
+          Astute.logger.warn "PROFILE puppetd_run positive stop #{task_details_for_log}"
+          return true
+        end
 
         Astute.logger.debug "Could not run puppet process "\
           "#{task_details_for_log}. Left #{puppet_run_obsorver.left_time} sec"
         sleep @puppet_start_interval
       end
       Astute.logger.error "Problem with puppet start. Time "\
-        "(#{@puppet_start_timeout} sec) is over. #{task_details_for_log}"
+      "(#{@puppet_start_timeout} sec) is over. #{task_details_for_log}"
+      Astute.logger.warn "PROFILE puppetd_run negative stop #{task_details_for_log}"
       false
     end
 
