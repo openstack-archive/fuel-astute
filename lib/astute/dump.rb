@@ -39,7 +39,8 @@ module Astute
 
         if result[:data][:exit_code] == 0
           Astute.logger.info("#{ctx.task_id}: Snapshot is done.")
-          report_success(ctx, result[:data][:stdout].rstrip)
+          report_success(ctx, result[:data][:stdout].force_encoding(Encoding.default_external).rstrip)
+
         else
           Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code. For details see /var/log/docker-logs/shotgun.log")
           report_error(ctx, "exit code: #{result[:data][:exit_code]} stderr: #{result[:data][:stderr]}")
