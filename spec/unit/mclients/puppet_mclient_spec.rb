@@ -31,11 +31,6 @@ describe Astute::PuppetMClient do
 
   let(:node_id) { 'test_id' }
   let(:puppetd) { mock('puppet_mclient') }
-  let(:shell_mclient) do
-    shell_mclient = mock('shell_mclient')
-    shell_mclient.stubs(:run_without_check)
-    shell_mclient
-  end
 
   let(:options) do
     {
@@ -116,7 +111,7 @@ describe Astute::PuppetMClient do
   end
 
   subject do
-    Astute::PuppetMClient.new(ctx, node_id, options, shell_mclient)
+    Astute::PuppetMClient.new(ctx, node_id, options)
   end
 
   describe '#summary' do
@@ -200,68 +195,50 @@ describe Astute::PuppetMClient do
     end
 
     it 'should return true if happened to start' do
-      subject.expects(:status).returns('stopped')
       puppetd.expects(:runonce).with(
         :puppet_debug => options['puppet_debug'],
         :manifest => options['puppet_manifest'],
         :modules  => options['puppet_modules'],
         :cwd => options['cwd'],
         :puppet_noop_run => options['puppet_noop_run'],
-      )
+      ).returns([:statuscode => 0])
 
       expect(subject.run).to be true
     end
 
     context 'should return false if could not start' do
       it 'if another puppet still running' do
-        subject.expects(:status).returns('running')
-        puppetd.expects(:runonce).never
+        puppetd.expects(:runonce).returns([
+          :statuscode => 1,
+          :statusmsg => 'Lock file and PID file exist; puppet is running.'
+        ])
 
         expect(subject.run).to be false
       end
 
       it 'if puppet was disabled' do
-        subject.expects(:status).returns('disabled')
-        puppetd.expects(:runonce).never
+        puppetd.expects(:runonce).returns([
+          :statuscode => 1,
+          :statusmsg => 'Empty Lock file exists; puppet is disabled.'
+        ])
 
         expect(subject.run).to be false
       end
 
-      it 'if puppet status unknow' do
-        subject.expects(:status).returns('undefined')
-        puppetd.expects(:runonce).never
+      it 'if puppet status unknown' do
+        puppetd.expects(:runonce).returns([
+          :statuscode => 1,
+          :statusmsg => 'Unknown puppet status: unknown'
+        ])
 
         expect(subject.run).to be false
       end
     end
 
     it 'should return false if magent raise error' do
-      subject.expects(:status).returns('stopped')
       puppetd.expects(:runonce).raises(Astute::MClientError, "Custom error")
 
       expect(subject.run).to be false
-    end
-
-    context 'should cleanup puppet report files before start' do
-      it 'if puppet was stopped' do
-        subject.stubs(:status).returns('stopped')
-        subject.stubs(:runonce)
-        shell_mclient.unstub(:run_without_check)
-        shell_mclient.expects(:run_without_check)
-          .with('rm -f /var/lib/puppet/state/last_run_summary.yaml'\
-                ' && rm -f /var/lib/puppet/state/last_run_report.yaml').once
-        expect(subject.run).to be true
-      end
-
-      it 'if puppet was succeed' do
-        subject.stubs(:status).returns('succeed')
-        subject.stubs(:runonce)
-        shell_mclient.unstub(:run_without_check)
-        shell_mclient.expects(:run_without_check)
-          .with('rm -f /var/lib/puppet/state/last_run_summary.yaml'\
-                ' && rm -f /var/lib/puppet/state/last_run_report.yaml').once
-        expect(subject.run).to be true
-      end
     end
   end # run
 

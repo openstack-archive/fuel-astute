@@ -115,7 +115,7 @@ module Astute
     # Setup task status
     # @param [String] status The task status
     # @return [void]
-    # @raise [StandardError] Unknown status
+    # @raise [StatusValidationError] Unknown job status
     def task_status=(status)
       if JOB_TASK_STATUSES.include?(status)
         @task_status = status
@@ -162,7 +162,7 @@ module Astute
     # Convert puppet status to task status
     # @param [String] puppet_status The puppet status of task
     # @return [String] Task status
-    # @raise [StandardError] Unknown status
+    # @raise [StatusValidationError] Unknown puppet status
     def puppet_to_task_status(mco_puppet_status)
       case
       when SUCCEED_STATUSES.include?(mco_puppet_status)
