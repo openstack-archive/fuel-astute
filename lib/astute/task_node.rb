@@ -43,7 +43,6 @@ module Astute
           'nodes' => [{
             'uid' => uid,
             'deployment_graph_task_name' => task.name,
-            'progress' => current_progress_bar,
             'task_status' => task.status.to_s,
           }]
         })

@@ -19,22 +19,12 @@ module Astute
       'running', 'stopped', 'disabled'
     ]
 
-    ALLOWING_STATUSES_TO_RUN = [
-      'stopped', 'succeed'
-    ]
-
-    PUPPET_FILES_TO_CLEANUP = [
-      "/var/lib/puppet/state/last_run_summary.yaml",
-      "/var/lib/puppet/state/last_run_report.yaml"
-    ]
-
     attr_reader :summary, :node_id
 
-    def initialize(ctx, node_id, options, shell_mclient)
+    def initialize(ctx, node_id, options)
       @ctx = ctx
       @node_id = node_id
       @options = options
-      @shell_mclient = shell_mclient
       @summary = {}
     end
 
@@ -48,20 +38,11 @@ module Astute
     # Run puppet on node if available
     # @return [true, false]
     def run
-      actual_status = status
-      if ALLOWING_STATUSES_TO_RUN.include?(actual_status)
-        cleanup!
-        runonce
-        return true
-      end
+      is_succeed, err_msg = runonce
+      return true if is_succeed
 
-      Astute.logger.warn "Unable to start puppet on node #{@node_id}"\
-        " because of status: '#{actual_status}'. Expected: "\
-        "#{ALLOWING_STATUSES_TO_RUN}"
-      false
-    rescue MClientError, MClientTimeout => e
-      Astute.logger.warn "Unable to start puppet on node #{@node_id}. "\
-        "Reason: #{e.message}"
+      Astute.logger.warn "Fail to start puppet on node #{@node_id}. "\
+        "Reason: #{err_msg}"
       false
     end
 
@@ -109,22 +90,24 @@ module Astute
     end
 
     # Run runonce action using mcollective puppet agent
-    # @return [void]
-    # @raise [MClientTimeout, MClientError]
+    # @return [[true, false], String] boolean status of run and error message
     def runonce
-      puppetd.runonce(
+      result = puppetd.runonce(
         :puppet_debug => @options['puppet_debug'],
         :manifest => @options['puppet_manifest'],
         :modules  => @options['puppet_modules'],
         :cwd => @options['cwd'],
         :puppet_noop_run => @options['puppet_noop_run'],
-      )
+      ).first
+      return result[:statuscode] == 0, result[:statusmsg]
+    rescue MClientError, MClientTimeout => e
+      return false, e.message
     end
 
     # Validate puppet status
     # @param [String] status The puppet status
     # @return [void]
-    # @raise [StandardError] Unknown status
+    # @raise [MClientError] Unknown status
     def validate_status!(status)
       unless PUPPET_STATUSES.include?(status)
         raise MClientError, "Unknow status '#{status}' from mcollective agent"
