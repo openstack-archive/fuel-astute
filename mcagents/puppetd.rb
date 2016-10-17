@@ -228,6 +228,7 @@ module MCollective
 
         output = reply[:output] || ''
         run(cmd, :stdout => :output, :chomp => true, :cwd => cwd, :environment => { 'LC_ALL' => 'en_US.UTF-8' })
+        Log.debug("Puppet stdout: #{output}")
         reply[:output] = "Called #{cmd}, " + output + (reply[:output] || '')
       end
 
