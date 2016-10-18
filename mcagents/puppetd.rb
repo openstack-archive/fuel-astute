@@ -204,10 +204,9 @@ module MCollective
           @puppetd_agent,
           request.fetch(:manifest, '/etc/puppet/manifests/site.pp'),
           "--modulepath=#{request.fetch(:modules, '/etc/puppet/modules')}",
-          '--logdest',
-          'syslog',
+          '--logdest', 'syslog',
           '--trace',
-          '--report'
+          '--reports', 'none',
         ]
         unless request[:forcerun]
           if @splaytime && @splaytime > 0
