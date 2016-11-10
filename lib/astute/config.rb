@@ -69,9 +69,11 @@ module Astute
     conf[:reboot_timeout] = 900           # how long it can take for node to reboot
     conf[:dump_timeout] = 3600            # maximum time it waits for the dump (meaningles to be larger
                                           # than the specified in timeout of execute_shell_command mcagent
+    conf[:shell_retries] = 2              # default retries for shell task
+    conf[:shell_interval] = 2             # default interval for shell task
     conf[:shell_timeout] = 300            # default timeout for shell task
-    conf[:stop_timeout] = 600             # how long it can take for stop
     conf[:shell_cwd] = '/'                # default cwd for shell task
+    conf[:stop_timeout] = 600             # how long it can take for stop
     conf[:rsync_options] = '-c -r --delete -l' # default rsync options
     conf[:keys_src_dir] = '/var/lib/fuel/keys' # path where ssh and openssl keys will be created
     conf[:puppet_ssh_keys] = [
