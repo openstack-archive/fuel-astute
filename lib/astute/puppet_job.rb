@@ -212,8 +212,7 @@ module Astute
         'running'
       else
         Astute.logger.info "Node #{@puppet_mclient.node_id} has succeed "\
-          "to deploy. There is no more retries for puppet run. "\
-          "#{task_details_for_log}"
+          "to deploy. #{task_details_for_log}"
         'successful'
       end
     end
