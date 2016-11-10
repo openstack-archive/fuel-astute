@@ -50,8 +50,8 @@ module Astute
     def setup_default
       @task['parameters']['timeout'] ||= Astute.config.shell_timeout
       @task['parameters']['cwd'] ||= Astute.config.shell_cwd
-      @task['parameters']['retries'] ||= Astute.config.mc_retries
-      @task['parameters']['interval'] ||= Astute.config.mc_retry_interval
+      @task['parameters']['retries'] ||= Astute.config.shell_retries
+      @task['parameters']['interval'] ||= Astute.config.shell_interval
     end
 
     def generate_master_shell
