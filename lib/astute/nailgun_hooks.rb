@@ -310,6 +310,8 @@ module Astute
         Astute.logger.warn(ret['error'])
       end
 
+      update_node_status(already_rebooted.select { |node, rebooted| rebooted }.keys)
+
       ret
     end # reboot_hook
 
@@ -440,6 +442,17 @@ module Astute
         uids,
         "stat --printf='%Y' /proc/1",
         timeout=10
+      )
+    end
+
+    def update_node_status(uids)
+      run_shell_without_check(
+        @ctx,
+        uids,
+        "flock -w 0 -o /var/lock/nailgun-agent.lock -c '/usr/bin/nailgun-agent"\
+        " 2>&1 | tee -a /var/log/nailgun-agent.log  | "\
+        "/usr/bin/logger -t nailgun-agent'",
+        _timeout=60 # nailgun-agent start with random (30) delay
       )
     end
 
