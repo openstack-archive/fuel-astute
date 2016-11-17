@@ -37,6 +37,7 @@ module Astute
         when 'puppet' then puppet_hook(hook)
         when 'reboot' then reboot_hook(hook)
         when 'cobbler_sync' then cobbler_sync_hook(hook)
+        when 'cobbler_sync_nodes' then cobbler_sync_nodes_hook(hook)
         else raise "Unknown hook type #{hook['type']}"
         end
 
@@ -238,6 +239,25 @@ module Astute
 
       ret
     end # cobbler_sync_hook
+
+    def cobbler_sync_nodes_hook(hook)
+      validate_presence(hook['parameters'], 'provisioning_info')
+      validate_presence(hook['parameters'], 'nodes')
+
+      ret = {'error' => nil}
+      cobbler = CobblerManager.new(
+        hook['parameters']['provisioning_info']['engine'],
+        @ctx.reporter
+      )
+      nodes = hook['parameters']['provisioning_info']['nodes']
+      existent_nodes = cobbler.get_existent_nodes(nodes)
+      if existent_nodes.present?
+        cobbler.edit_nodes(existent_nodes)
+      end
+      cobbler.add_nodes(nodes)
+
+      ret
+    end # cobbler_sync_nodes_hook
 
     def sync_hook(hook)
       validate_presence(hook, 'uids')

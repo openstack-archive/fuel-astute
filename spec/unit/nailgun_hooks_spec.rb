@@ -160,6 +160,48 @@ describe Astute::NailgunHooks do
     }
   end
 
+  let (:cobbler_sync_nodes_hook) do
+    {
+      "priority" => 900,
+      "type" => "cobbler_sync_nodes",
+      "fail_on_error" => false,
+      "diagnostic_name" => "copy-example-1.0",
+      "uids" => ['master'],
+      "parameters" => {
+        "provisioning_info" => {
+          "engine" => {
+            "url" => "http://10.20.0.2:80/cobbler_api",
+            "username" => "cobbler",
+            "password" => "cobblerpassword",
+            "master_ip" => "10.20.0.2"
+          },
+          "nodes"=>
+            [{"profile"=>"ubuntu_1404_x86_64",
+              "name_servers_search"=>"\"domain.tld\"",
+              "uid"=>"2",
+              "interfaces"=>
+               {
+                "eno1"=>
+                 {"ip_address"=>"10.10.0.12",
+                  "dns_name"=>"node-2.domain.tld",
+                  "netmask"=>"255.255.0.0",
+                  "static"=>"0",
+                  "mac_address"=>"f8:cb:11:2a:92:90"},
+                "eno2"=>{"static"=>"0", "mac_address"=>"f8:cb:11:2a:92:92"},
+                "eno3"=>{"static"=>"0", "mac_address"=>"f8:cb:11:2a:92:b0"},
+                "eno4"=>{"static"=>"0", "mac_address"=>"f8:cb:11:2a:92:b1"}},
+              "interfaces_extra"=>
+               {
+                "eno1"=>{"onboot"=>"yes", "peerdns"=>"no"},
+                "eno2"=>{"onboot"=>"no", "peerdns"=>"no"},
+                "eno3"=>{"onboot"=>"no", "peerdns"=>"no"},
+                "eno4"=>{"onboot"=>"no", "peerdns"=>"no"}},
+            }]
+        }
+      }
+    }
+  end
+
   let(:hooks_data) do
     [
       upload_file_hook,
@@ -1374,6 +1416,32 @@ describe Astute::NailgunHooks do
     it 'should call Astute::CobblerManager sync method ' do
       hooks = Astute::NailgunHooks.new([cobbler_sync_hook], ctx)
       Astute::CobblerManager.any_instance.expects(:sync).once
+
+      hooks.process
+    end
+
+  end #cobbler_sync_hook
+
+  context '#cobbler_sync_nodes_hook' do
+
+    it 'should validate presence of provisioning_info' do
+      cobbler_sync_hook['parameters']['provisioning_info'] = {}
+      hooks = Astute::NailgunHooks.new([cobbler_sync_hook], ctx)
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+
+    it 'should validate presence of nodes' do
+      cobbler_sync_hook['parameters']['nodes'] = []
+      hooks = Astute::NailgunHooks.new([cobbler_sync_hook], ctx)
+
+      expect {hooks.process}.to raise_error(StandardError, /Missing a required parameter/)
+    end
+
+    it 'should call Astute::CobblerManager add_nodes and get_existent_nodes methods' do
+      hooks = Astute::NailgunHooks.new([cobbler_sync_hook], ctx)
+      Astute::CobblerManager.any_instance.expects(:add_nodes).once
+      Astute::CobblerManager.any_instance.expects(:get_existent_nodes).once
 
       hooks.process
     end

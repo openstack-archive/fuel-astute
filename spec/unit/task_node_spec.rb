@@ -177,6 +177,12 @@ describe Astute::TaskNode do
         task_node.run(task)
       end
 
+      it 'cobbler_sync_nodes' do
+        task_data['type'] = "cobbler_sync_nodes"
+        Astute::CobblerSync.any_instance.expects(:run)
+        task_node.run(task)
+      end
+
       it 'noop' do
         task_data['type'] = "noop"
         Astute::Noop.any_instance.expects(:run)
