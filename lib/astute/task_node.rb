@@ -48,6 +48,7 @@ module Astute
           }]
         })
       else
+        info "Finished task: #{task} with status: #{status}"
         setup_node_status
         report_node_status
       end
