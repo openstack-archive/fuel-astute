@@ -74,6 +74,7 @@ module Astute
       path      => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
       command   => '/bin/bash "<%= shell_exec_file_path %>"',
       logoutput => true,
+      timeout   => <%= timeout %>,
     }
       eos
       ERB.new(template, nil, '-').result(binding)
@@ -121,6 +122,9 @@ module Astute
       upload_shell_file
     end
 
+    def timeout
+      @task['parameters']['timeout']
+    end
 
     def manifest_name
       "#{task_name}_manifest.pp"
