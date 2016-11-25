@@ -1,5 +1,6 @@
-Astute
-======
+#Astute
+[![Team and repository tags](http://governance.openstack.org/badges/fuel-astute.svg)](http://governance.openstack.org/reference/tags/index.html)
+<!-- Change things from this point on -->
 
 Astute is orchestrator, which is using data about nodes and deployment settings performs two things:
 - provision
