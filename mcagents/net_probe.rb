@@ -27,18 +27,18 @@ module MCollective
       action "multicast_listen" do
         config = JSON.parse(request[:nodes])[get_uid]
         cmd = "fuel-netcheck multicast serve listen --config='#{config.to_json}'"
-        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+        reply[:status] = run_shell(cmd, :stdout => :out, :stderr => :err)
       end
 
       action "multicast_send" do
         cmd = "fuel-netcheck multicast send"
-        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+        reply[:status] = run_shell(cmd, :stdout => :out, :stderr => :err)
       end
 
       action "multicast_info" do
-        reply[:status] = run("fuel-netcheck multicast info",
+        reply[:status] = run_shell("fuel-netcheck multicast info",
                               :stdout => :out, :stderr => :err)
-        run("fuel-netcheck multicast clean")
+        run_shell("fuel-netcheck multicast clean")
       end
 
       action "start_frame_listeners" do
@@ -64,14 +64,14 @@ module MCollective
         timeout = request.data[:timeout] || 2
         repeat = request.data[:repeat] || 1
         cmd = "dhcpcheck discover '#{interfaces}' --timeout=#{timeout} --format=#{format} --repeat=#{repeat} "
-        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+        reply[:status] = run_shell(cmd, :stdout => :out, :stderr => :err)
       end
 
       action "check_url_retrieval" do
         urls = request.data[:urls] || []
 
         cmd = "urlaccesscheck check --timeout 5 '#{urls.join("' '")}'"
-        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+        reply[:status] = run_shell(cmd, :stdout => :out, :stderr => :err)
         reply[:out] = reply[:out] && reply[:out].length >= 2 ? JSON.parse(reply[:out]) : ""
       end
 
@@ -87,7 +87,7 @@ module MCollective
           '#{config['urls'].join("' '")}'"
         Log.debug("about to execute: #{cmd}")
 
-        reply[:status] = run(cmd, :stdout => :out, :stderr => :err)
+        reply[:status] = run_shell(cmd, :stdout => :out, :stderr => :err)
         reply[:out] = reply[:out] && reply[:out].length >= 2 ? JSON.parse(reply[:out]) : ""
       end
 
@@ -173,7 +173,7 @@ module MCollective
         config_file = net_probe_config(config)
 
         cmd = "net_probe.py -c #{config_file.path}"
-        status = run(cmd, :stdout => :out, :stderr => :error)
+        status = run_shell(cmd, :stdout => :out, :stderr => :error)
         config_file.unlink
 
         reply.fail "Failed to send probing frames, cmd='#{cmd}' failed, config: #{config.inspect}" if status != 0
@@ -200,11 +200,11 @@ module MCollective
       def terminate_frame_listeners
         interval = 2
         5.times do |_|
-            if run("pkill -TERM -f net_probe.py") == 1
+            if run_shell("pkill -TERM -f net_probe.py") == 1
               return
             end
             sleep interval
-            if run("pgrep -f net_probe.py") == 1
+            if run_shell("pgrep -f net_probe.py") == 1
               return
             end
         end
@@ -238,6 +238,12 @@ module MCollective
           pidfiles = Dir.glob(File.join(piddir, '*'))
         end
       end
+
+      def run_shell(*args, **kwargs)
+        Log.debug("Run shell command with parameters #{args} #{kwargs}")
+        run(*args, **kwargs)
+      end
+
     end
   end
 end
