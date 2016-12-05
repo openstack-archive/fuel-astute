@@ -1,0 +1,9 @@
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+2: Alexey Shtokolov <ashtokolov@gmail.com>
+Workflow+1: Alexey Shtokolov <ashtokolov@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 05 Dec 2016 14:15:55 +0000
+Reviewed-on: https://review.openstack.org/403368
+Project: openstack/fuel-astute
+Branch: refs/heads/master
