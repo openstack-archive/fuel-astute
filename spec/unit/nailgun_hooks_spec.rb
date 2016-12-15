@@ -304,7 +304,7 @@ describe Astute::NailgunHooks do
                 'error_msg' => error_msg
               },
             ],
-            'error' => "Failed to execute hook 'shell-example-1.0' #{error_msg}"
+            'error' => "Failed to execute hook 'shell-example-1.0'\n\n#{error_msg}"
           }
         )
 
@@ -478,7 +478,7 @@ describe Astute::NailgunHooks do
                 'error_msg' => error_msg
               },
             ],
-            'error' => "Failed to execute hook 'copy-example-1.0' #{error_msg}"
+            'error' => "Failed to execute hook 'copy-example-1.0'\n\n#{error_msg}"
           }
         )
 
@@ -1073,7 +1073,7 @@ describe Astute::NailgunHooks do
                 'error_msg' => error_msg
               },
             ],
-            'error' => "Failed to execute hook 'puppet-example-1.0' #{error_msg}"
+            'error' => "Failed to execute hook 'puppet-example-1.0'\n\n#{error_msg}"
           }
         )
 
