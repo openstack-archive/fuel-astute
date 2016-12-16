@@ -63,7 +63,6 @@ module Astute
           @ctx,
           @task['node_id'],
           @task['parameters'],
-          ShellMClient.new(@ctx, @task['node_id'])
         ),
         {
           'retries' => @task['parameters']['retries'],

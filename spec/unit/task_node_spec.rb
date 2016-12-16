@@ -300,15 +300,15 @@ describe Astute::TaskNode do
         end
       end
 
-      it 'should report progress if task running' do
+      it 'should report task status if task running' do
         Astute::Puppet.any_instance.expects(:status).returns(:running)
         task_node.run(task)
         ctx.expects(:report).with({
           'nodes' => [{
             'uid' => 'node_id',
             'deployment_graph_task_name' => task.name,
-            'task_status' => 'running',
-            'progress' => 0}]
+            'task_status' => 'running'
+          }]
         })
         task_node.poll
       end
