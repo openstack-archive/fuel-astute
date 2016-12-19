@@ -80,9 +80,14 @@ module Astute
     # and we do not think that deployment should be stopped, Astute
     # will mark such task as skipped and do not report error
     def setup_task_status
-      if !task.data.fetch('fail_on_error', true) && @task_engine.failed?
-        Astute.logger.warn "Task #{task.name} failed, but marked as skipped "\
-                           "because of 'fail on error' behavior"
+      if @task_engine.failed?
+        if noop_run?
+          message = "Task #{task.name} failed, but marked as skipped because we are running in noop mode"
+          Astute.logger.info message
+        elsif !task.data.fetch('fail_on_error', true)
+          message = "Task #{task.name} failed, but marked as skipped because of 'fail on error' behavior"
+          Astute.logger.warn message
+        end
         return :skipped
       end
       @task_engine.status
