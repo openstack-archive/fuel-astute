@@ -75,18 +75,12 @@ module Astute
       Astute.logger.debug("#{ctx.task_id}: running provision script: " \
         "#{uids.join(', ')}")
 
-      results = run_shell_command(
+      failed_uids += run_shell_task(
         ctx,
         uids,
         'flock -n /var/lock/provision.lock provision',
         Astute.config.provisioning_timeout
       )
-
-      results.select{ |_node_id, result| !result }.keys.each do |node_id|
-        failed_uids << node_id
-        Astute.logger.error("#{ctx.task_id}: Provision command returned " \
-          "non zero exit code on node: #{node_id}")
-      end
 
       failed_uids
     end
@@ -122,24 +116,42 @@ module Astute
       ).process
     end
 
-    def self.run_shell_command(context, node_uids, cmd, timeout=3600)
-      shell = MClient.new(
-        context,
-        'execute_shell_command',
-        node_uids,
-        check_result=true,
-        timeout=timeout,
-        retries=1
-      )
-
-      results = shell.execute(:cmd => cmd)
-      results.inject({}) do |summary, node|
-        summary.merge(node.results[:sender] => node.results[:data][:exit_code] == 0)
+    def self.run_shell_task(ctx, node_uids, cmd, timeout=3600)
+      shell_tasks = node_uids.inject([]) do |tasks, node_id|
+        tasks << Shell.new(generate_shell_hook(node_id, cmd, timeout), ctx)
       end
-    rescue MClientTimeout, MClientError => e
-      Astute.logger.error("#{context.task_id}: cmd: #{cmd} " \
-        "mcollective error: #{e.message}")
-      {}
+
+      shell_tasks.each(&:run)
+
+      while shell_tasks.any? { |t| !t.finished? } do
+        shell_tasks.select { |t| !t.finished? }.each(&:status)
+        sleep 1
+      end
+
+      failed_uids = shell_tasks.select{ |t| t.failed? }.inject([]) do |task|
+        Astute.logger.error("#{ctx.task_id}: Provision command returned " \
+          "non zero exit code on node: #{task.node_id}")
+        failed_uids << task.node_id
+      end
+
+      failed_uids
+    rescue => e
+      Astute.logger.error("#{ctx.task_id}: cmd: #{cmd} " \
+        "error: #{e.message}, trace #{e.backtrace}")
+      node_uids
+    end
+
+    def self.generate_shell_hook(node_id, cmd, timeout)
+      {
+        "node_id" => node_id,
+        "id" => "provision_#{node_id}",
+        "parameters" =>  {
+          "cmd" =>  cmd,
+          "cwd" =>  "/",
+          "timeout" => timeout,
+          "retries" => 0
+        }
+      }
     end
 
   end
