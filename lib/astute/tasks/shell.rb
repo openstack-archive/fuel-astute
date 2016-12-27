@@ -31,6 +31,10 @@ module Astute
       {}
     end
 
+    def node_id
+      @task['node_id']
+    end
+
     private
 
     SHELL_MANIFEST_DIR = '/etc/puppet/shell_manifests'
