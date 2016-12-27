@@ -145,37 +145,8 @@ module Astute
     # In other case please use separate thread or
     # use upload file task.
     # Synchronous (blocking) call
-    def upload_file(node_uid, mco_params={})
-      upload_mclient = MClient.new(
-        @ctx,
-        "uploadfile",
-        Array(node_uid)
-      )
-
-      mco_params['overwrite'] = true if mco_params['overwrite'].nil?
-      mco_params['parents'] = true if mco_params['parents'].nil?
-      mco_params['permissions'] ||= '0644'
-      mco_params['user_owner']  ||= 'root'
-      mco_params['group_owner'] ||= 'root'
-      mco_params['dir_permissions'] ||= '0755'
-
-      upload_mclient.upload(
-        :path => mco_params['path'],
-        :content => mco_params['content'],
-        :overwrite => mco_params['overwrite'],
-        :parents => mco_params['parents'],
-        :permissions => mco_params['permissions'],
-        :user_owner => mco_params['user_owner'],
-        :group_owner => mco_params['group_owner'],
-        :dir_permissions => mco_params['dir_permissions']
-      )
-      Astute.logger.debug("#{@ctx.task_id}: file was uploaded  " \
-        "#{mco_params['path']} on node #{node_uid} successfully")
-      true
-    rescue MClientTimeout, MClientError => e
-      Astute.logger.error("#{@ctx.task_id}: file was not uploaded  "\
-        "#{mco_params['path']} on node #{node_uid}: #{e.message}")
-      false
+    def upload_file(node_uid, mco_params)
+      UploadFileMClient.new(@ctx, node_uid).upload_without_check(mco_params)
     end
 
     def failed!
