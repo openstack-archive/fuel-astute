@@ -41,6 +41,7 @@ module Astute
 
     def setup_default
       @task['parameters']['content'] = @task['parameters']['data']
+      @task['parameters']['timeout'] ||= Astute.config.upload_timeout
     end
 
   end
