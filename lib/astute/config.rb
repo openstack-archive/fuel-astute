@@ -109,6 +109,7 @@ module Astute
     conf[:graph_dot_dir] = "/var/lib/astute/graphs" # default dir patch for debug graph file
     conf[:enable_graph_file] = true  # enable debug graph records to file
     conf[:puppet_raw_report] = false # enable puppet detailed report
+    conf[:task_poll_delay] = 1            # sleeps for ## sec between task status calls
 
     # Server settings
     conf[:broker_host] = 'localhost'

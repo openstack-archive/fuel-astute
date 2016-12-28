@@ -102,12 +102,12 @@ describe Astute::ImageProvision do
                           .with([reboot_hook], ctx, 'provision')
                           .returns(nailgun_hook)
       nailgun_hook.expects(:process).once
-      provisioner.reboot(ctx, node_ids, task_id="reboot_provisioned_nodes")
+      provisioner.reboot(ctx, node_ids, _task_id="reboot_provisioned_nodes")
     end
 
     it 'should not run hook if no nodes present' do
       Astute::NailgunHooks.expects(:new).never
-      provisioner.reboot(ctx, [], task_id="reboot_provisioned_nodes")
+      provisioner.reboot(ctx, [], _task_id="reboot_provisioned_nodes")
     end
   end
 
@@ -185,24 +185,28 @@ describe Astute::ImageProvision do
   end
 
   describe ".run_provision" do
-    it 'should run provision on nodes using shell magent' do
-      provisioner.expects(:run_shell_command).once.with(
-        ctx,
-        nodes.map { |n| n['uid'] },
-        'flock -n /var/lock/provision.lock provision',
-        Astute.config.provisioning_timeout
-      ).returns({5 => true, 6 => true})
+    before do
+      provisioner.stubs(:sleep)
+    end
 
-      provisioner.run_provision(ctx, nodes.map { |n| n['uid'] }, [])
+    it 'should run provision on nodes using shell magent' do
+      Astute::Shell.any_instance.stubs(:process)
+      Astute::Shell.any_instance.expects(:run).once
+      Astute::Shell.any_instance.expects(:finished?).times(3)
+        .returns(false).
+        then.returns(true)
+      Astute::Shell.any_instance.expects(:failed?).once.returns(false)
+
+      provisioner.run_provision(ctx, [5], [])
     end
 
     it 'should run return failed nodes' do
-      provisioner.stubs(:run_shell_command).once.returns({5 => true, 6 => false})
+      provisioner.stubs(:run_shell_task).once.returns([6])
       expect(provisioner.run_provision(ctx, nodes.map { |n| n['uid'] }, [])).to eql([6])
     end
 
     it 'should not erase info about alread failed nodes' do
-      provisioner.stubs(:run_shell_command).once.returns({5 => true, 6 => false})
+      provisioner.stubs(:run_shell_task).once.returns([6])
       failed_uids = [3]
       expect(provisioner.run_provision(
         ctx,

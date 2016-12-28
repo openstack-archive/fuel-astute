@@ -61,7 +61,7 @@ module Astute
     def sync_run
       run
       loop do
-        sleep 1
+        sleep Astute.config.task_poll_delay
         status
         break if finished?
       end
