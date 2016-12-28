@@ -66,7 +66,8 @@ module Astute
           "data" => node.to_json,
           "user_owner" => 'root',
           "group_owner" => 'root',
-          "overwrite" => true
+          "overwrite" => true,
+          "timeout" => Astute.config.upload_timeout
         }
       }
     end
