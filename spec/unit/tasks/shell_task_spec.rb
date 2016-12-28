@@ -37,7 +37,6 @@ describe Astute::Shell do
 
   describe '#run' do
     it 'should create puppet wrapper' do
-      mclient = mock_rpcclient
       Astute::Shell.any_instance.stubs(:run_shell_without_check)
       Astute::Puppet.any_instance.stubs(:run)
 
@@ -53,18 +52,27 @@ describe Astute::Shell do
     }
       eos
 
-      mclient.expects(:upload).with({
-        :path => '/etc/puppet/shell_manifests/shell_task_id_manifest.pp',
-        :content => content,
-        :overwrite => true,
-        :parents => true,
-        :permissions => '0755',
-        :user_owner => 'root',
-        :group_owner => 'root',
-        :dir_permissions => '0755'})
+      manifest_content = <<-eos
+    #!/bin/bash
+    # Puppet shell wrapper for task: shell_task_id
+    # Manifest: /etc/puppet/shell_manifests/shell_task_id_manifest.pp
+
+    cd / && sh some_command
+      eos
+
+      Astute::UploadFileMClient.any_instance.expects(:upload_without_check).with({
+        'path' => '/etc/puppet/shell_manifests/shell_task_id_manifest.pp',
+        'content' => content,
+        'permissions' => '0755'
+      })
+      Astute::UploadFileMClient.any_instance.expects(:upload_without_check).with({
+        'path' => '/etc/puppet/shell_manifests/shell_task_id_command.sh',
+        'content' => manifest_content,
+        'permissions' => '0755'
+      })
+
       subject.run
     end
   end
 
 end
-

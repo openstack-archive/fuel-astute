@@ -74,6 +74,7 @@ module Astute
     conf[:shell_retries] = 2              # default retries for shell task
     conf[:shell_interval] = 2             # default interval for shell task
     conf[:shell_timeout] = 300            # default timeout for shell task
+    conf[:upload_timeout] = 60            # default timeout for upload task
     conf[:shell_cwd] = '/'                # default cwd for shell task
     conf[:stop_timeout] = 600             # how long it can take for stop
     conf[:rsync_options] = '-c -r --delete -l' # default rsync options
