@@ -39,8 +39,6 @@ module Astute
       'stopped', 'disabled'
     ]
 
-    FAILED_STATUSES = UNDEFINED_STATUSES + STOPED_STATUSES
-
     def initialize(task, puppet_mclient, options)
       @task = task
       @retries = options['retries']
@@ -48,6 +46,8 @@ module Astute
       @puppet_start_interval =  options['puppet_start_interval']
       @time_observer = TimeObserver.new(options['timeout'])
       @succeed_retries = options['succeed_retries']
+      @undefined_retries = options['undefined_retries']
+      @original_undefined_retries = options['undefined_retries']
       @puppet_mclient = puppet_mclient
     end
 
@@ -76,6 +76,8 @@ module Astute
           processing_running_task
         when 'failed'
           processing_error_task
+        when 'undefined'
+          processing_undefined_task
         end
 
       time_is_up! if should_stop?
@@ -169,8 +171,10 @@ module Astute
         'successful'
       when BUSY_STATUSES.include?(mco_puppet_status)
         'running'
-      when FAILED_STATUSES.include?(mco_puppet_status)
+      when STOPED_STATUSES.include?(mco_puppet_status)
         'failed'
+      when UNDEFINED_STATUSES.include?(mco_puppet_status)
+        'undefined'
       else
         raise StatusValidationError,
           "Unknow puppet status: #{mco_puppet_status}"
@@ -189,7 +193,7 @@ module Astute
     # @return [void]
     def log_current_status(status)
       message = "#{task_details_for_log}, status: #{status}"
-      if FAILED_STATUSES.include?(status)
+      if (UNDEFINED_STATUSES + STOPED_STATUSES).include?(status)
         Astute.logger.error message
       else
         Astute.logger.debug message
@@ -197,8 +201,9 @@ module Astute
     end
 
     # Process additional action in case of puppet succeed
-    # @return [String] Task status: successful, failed or running
+    # @return [String] Task status: successful or running
     def processing_succeed_task
+      reset_undefined_retries!
       Astute.logger.debug "Puppet completed within "\
         "#{@time_observer.since_start} seconds"
       if @succeed_retries > 0
@@ -218,8 +223,9 @@ module Astute
     end
 
     # Process additional action in case of puppet failed
-    # @return [String] Task status: successful, failed or running
+    # @return [String] Task status: failed or running
     def processing_error_task
+      reset_undefined_retries!
       if @retries > 0
         @retries -= 1
         Astute.logger.debug "Puppet on node will be "\
@@ -236,10 +242,37 @@ module Astute
       end
     end
 
+    # Process additional action in case of undefined puppet status
+    # @return [String] Task status: failed or running
+    def processing_undefined_task
+      if @undefined_retries > 0
+        @undefined_retries -= 1
+        Astute.logger.debug "Puppet on node has undefined status. "\
+          "#{@undefined_retries} retries remained. "\
+          "#{task_details_for_log}"
+        Astute.logger.info "Retrying to check status for following "\
+          "nodes: #{@puppet_mclient.node_id}"
+        'running'
+      else
+        Astute.logger.error "Node has failed to get status. There is"\
+          " no more retries for status check. #{task_details_for_log}"
+        'failed'
+      end
+    end
+
     # Process additional action in case of puppet running
     # @return [String]: Task status: successful, failed or running
     def processing_running_task
+      reset_undefined_retries!
       'running'
+    end
+
+    # Reset undefined retries to original value
+    # @return [void]
+    def reset_undefined_retries!
+      Astute.logger.debug "Reset undefined retries to original "\
+        "value: #{@original_undefined_retries}"
+      @undefined_retries = @original_undefined_retries
     end
 
   end #PuppetJob

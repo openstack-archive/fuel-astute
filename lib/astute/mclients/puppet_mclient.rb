@@ -75,14 +75,14 @@ module Astute
 
     # Create configured puppet mcollective agent
     # @return [Astute::MClient]
-    def puppetd
+    def puppetd(timeout=nil, retries=1)
       puppetd = MClient.new(
         @ctx,
         "puppetd",
         [@node_id],
         _check_result=true,
-        _timeout=nil,
-        _retries=1,
+        _timeout=timeout,
+        _retries=retries,
         _enable_result_logging=false
       )
       puppetd.on_respond_timeout do |uids|
@@ -96,7 +96,7 @@ module Astute
     # Run last_run_summary action using mcollective puppet agent
     # @return [Hash] return hash with status and resources
     def last_run_summary
-      @summary = puppetd.last_run_summary(
+      @summary = puppetd(_timeout=10, _retries=6).last_run_summary(
         :puppet_noop_run => @options['puppet_noop_run'],
         :raw_report => @options['raw_report']
       ).first[:data]

@@ -47,6 +47,7 @@ module Astute
         'timeout' => Astute.config.puppet_timeout,
         'puppet_debug' => false,
         'succeed_retries' => Astute.config.puppet_succeed_retries,
+        'undefined_retries' => Astute.config.puppet_undefined_retries,
         'raw_report' => Astute.config.puppet_raw_report,
         'puppet_noop_run' => Astute.config.puppet_noop_run,
         'puppet_start_timeout' => Astute.config.puppet_start_timeout,
@@ -68,6 +69,7 @@ module Astute
         {
           'retries' => @task['parameters']['retries'],
           'succeed_retries' => @task['parameters']['succeed_retries'],
+          'undefined_retries' => @task['parameters']['undefined_retries'],
           'timeout' => @task['parameters']['timeout'],
           'puppet_start_timeout' => @task['parameters'][
             'puppet_start_timeout'],

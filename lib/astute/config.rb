@@ -62,6 +62,7 @@ module Astute
     conf[:puppet_start_interval] = 2      # interval between attemps to start puppet
     conf[:puppet_retries] = 2             # how many times astute will try to run puppet
     conf[:puppet_succeed_retries] = 0     # use this to rerun a puppet task again if it was successful (idempotency)
+    conf[:puppet_undefined_retries] = 3   # how many times astute will try to get actual status of node before fail
     conf[:puppet_module_path] = '/etc/puppet/modules' # where we should find basic modules for puppet
     conf[:puppet_noop_run] = false        # enable Puppet noop run
     conf[:mc_retries] = 10                # MClient tries to call mcagent before failure
