@@ -129,10 +129,11 @@ module Astute
         sleep Astute.config.task_poll_delay
       end
 
-      failed_uids = shell_tasks.select{ |t| t.failed? }.inject([]) do |task|
+      failed_uids = shell_tasks.select{ |t| t.failed? }
+                               .inject([]) do |failed_nodes, task|
         Astute.logger.error("#{ctx.task_id}: Provision command returned " \
           "non zero exit code on node: #{task.node_id}")
-        failed_uids << task.node_id
+        failed_nodes << task.node_id
       end
 
       failed_uids
