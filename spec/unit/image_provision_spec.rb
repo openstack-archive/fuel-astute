@@ -201,8 +201,14 @@ describe Astute::ImageProvision do
     end
 
     it 'should run return failed nodes' do
-      provisioner.stubs(:run_shell_task).once.returns([6])
-      expect(provisioner.run_provision(ctx, nodes.map { |n| n['uid'] }, [])).to eql([6])
+      Astute::Shell.any_instance.stubs(:process)
+      Astute::Shell.any_instance.expects(:run).twice
+      Astute::Shell.any_instance.stubs(:finished?).returns(true)
+      Astute::Shell.any_instance.expects(:failed?).times(2)
+        .returns(false)
+        .then.returns(true)
+
+      expect(provisioner.run_provision(ctx, [5, 6], [])).to eql([6])
     end
 
     it 'should not erase info about alread failed nodes' do
