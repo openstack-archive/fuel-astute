@@ -31,6 +31,7 @@ describe Astute::PuppetJob do
     {
       'retries' => 1,
       'succeed_retries' => 0,
+      'undefined_retries' => 1,
       'timeout' => 1,
       'puppet_start_timeout' => 1,
       'puppet_start_interval' => 0
@@ -71,7 +72,7 @@ describe Astute::PuppetJob do
   describe '#task_status=' do
     it 'should raise error if status do not support' do
       expect {subject.send(:task_status=, 'unknow_status')}.to \
-        raise_error(StatusValidationError, /unknow_status/)
+        raise_error(Astute::StatusValidationError, /unknow_status/)
     end
   end
 
@@ -84,7 +85,7 @@ describe Astute::PuppetJob do
 
         puppet_mclient.expects(:status).returns('unknow_status')
         expect {subject.status}.to raise_error(
-          StatusValidationError, /unknow_status/
+          Astute::StatusValidationError, /unknow_status/
         )
       end
     end
@@ -124,7 +125,7 @@ describe Astute::PuppetJob do
       end
 
       it 'should return runing when magent failed but can retry' do
-        puppet_mclient.expects(:run).twice.returns(true)
+        puppet_mclient.expects(:run).once.returns(true)
         subject.run
 
         puppet_mclient.stubs(:status)
@@ -149,13 +150,45 @@ describe Astute::PuppetJob do
         expect(subject.status).to eq('successful')
       end
 
+      it 'should successful if undefined/failed but retry succeed' do
+        puppet_mclient.stubs(:run).returns(true)
+        options['undefined_retries'] = 1
+        options['retries'] = 1
+        subject.run
+
+        puppet_mclient.stubs(:status)
+          .then.returns('undefined')
+          .returns('stopped')
+          .then.returns('undefined')
+          .then.returns('succeed')
+
+        3.times { expect(subject.status).to eq('running') }
+        expect(subject.status). to eq('successful')
+      end
+
       it 'should successful if failed but retry succeed' do
         puppet_mclient.stubs(:run).returns(true)
+        options['undefined_retries'] = 0
         options['retries'] = 2
         subject.run
 
         puppet_mclient.stubs(:status)
           .returns('stopped')
+          .then.returns('stopped')
+          .then.returns('succeed')
+
+        2.times { expect(subject.status).to eq('running') }
+        expect(subject.status). to eq('successful')
+      end
+
+      it 'should successful if undefined but retry succeed' do
+        puppet_mclient.stubs(:run).returns(true)
+        options['undefined_retries'] = 2
+        options['retries'] = 0
+        subject.run
+
+        puppet_mclient.stubs(:status)
+          .returns('undefined')
           .then.returns('undefined')
           .then.returns('succeed')
 
@@ -188,7 +221,7 @@ describe Astute::PuppetJob do
         subject.run
 
         puppet_mclient.stubs(:status)
-          .returns('undefined')
+          .returns('stopped')
           .then.returns('stopped')
 
         expect(subject.status).to eq('running')
@@ -210,13 +243,67 @@ describe Astute::PuppetJob do
         subject.run
 
         puppet_mclient.stubs(:status)
-          .returns('undefined')
+          .returns('stopped')
           .then.returns('stopped')
 
         expect(subject.status).to eq('running')
         3.times { expect(subject.status). to eq('failed') }
       end
     end
+
+    context 'undefined' do
+      it 'should return failed if undefined and no more retries' do
+        puppet_mclient.stubs(:run).returns(true)
+        subject.run
+
+        puppet_mclient.stubs(:status)
+          .returns('undefined')
+          .then.returns('undefined')
+
+        expect(subject.status).to eq('running')
+        expect(subject.status).to eq('failed')
+      end
+
+      it 'should return failed if time is over and no result' do
+        puppet_mclient.stubs(:run).returns(true)
+        options['timeout'] = 0
+        subject.run
+
+        puppet_mclient.stubs(:status).returns('undefined')
+        expect(subject.status).to eq('failed')
+      end
+
+      it 'should do nothing if final status set and retries end' do
+        puppet_mclient.stubs(:run).returns(true)
+        options['undefined'] = 0
+        subject.run
+
+        puppet_mclient.stubs(:status)
+          .returns('undefined')
+          .then.returns('undefined')
+
+        expect(subject.status).to eq('running')
+        3.times { expect(subject.status). to eq('failed') }
+      end
+
+      it 'should reset retries if answer was received' do
+        puppet_mclient.stubs(:run).returns(true)
+        options['undefined_retries'] = 1
+        options['retries'] = 0
+        subject.run
+
+        puppet_mclient.stubs(:status)
+          .then.returns('undefined')
+          .returns('running')
+          .then.returns('undefined')
+          .then.returns('succeed')
+
+        3.times { expect(subject.status).to eq('running') }
+        expect(subject.status). to eq('successful')
+      end
+    end
+
+
   end
 
 end
