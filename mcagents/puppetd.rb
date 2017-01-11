@@ -200,12 +200,15 @@ module MCollective
         rm_file(@last_report)
         rm_file(@last_summary)
         cwd = request.fetch(:cwd, '/')
+        manifest =  request.fetch(:manifest, '/etc/puppet/manifests/site.pp')
+        module_path = request.fetch(:modules, '/etc/puppet/modules')
         cmd = [
           @puppetd,
           "-c #{cwd}",
           @puppetd_agent,
-          request.fetch(:manifest, '/etc/puppet/manifests/site.pp'),
-          "--modulepath=#{request.fetch(:modules, '/etc/puppet/modules')}",
+          manifest,
+          '--modulepath', module_path,
+          '--basemodulepath', module_path,
           '--logdest', 'syslog',
           '--trace',
           '--reports', 'none',
