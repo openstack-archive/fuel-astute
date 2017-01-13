@@ -50,10 +50,10 @@ module Astute
       begin
         prepare_nodes(reporter, task_id, engine_attrs, nodes, cobbler)
         failed_uids, timeouted_uids = provision_and_watch_progress(reporter,
-                                                                    task_id,
-                                                                    Array.new(nodes),
-                                                                    engine_attrs,
-                                                                    fault_tolerance)
+                                                                   task_id,
+                                                                   Array.new(nodes),
+                                                                   engine_attrs,
+                                                                   fault_tolerance)
       rescue => e
         Astute.logger.error("Error occured while provisioning:\n#{e.pretty_inspect}")
         reporter.report({
@@ -155,6 +155,8 @@ module Astute
 
             if should_fail(failed_uids + timeouted_uids, fault_tolerance)
               Astute.logger.debug("Aborting provision. To many nodes failed: #{failed_uids + timeouted_uids}")
+              Astute.logger.debug("Those nodes where we not yet started provision will be set to error mode")
+              failed_uids += nodes_to_provision.map{ |n| n['uid'] }
               return failed_uids, timeouted_uids
             end
 
