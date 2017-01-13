@@ -821,6 +821,58 @@ describe Astute::Provisioner do
       @provisioner.provision(@reporter, data['task_uuid'], provision_info)
 
     end
+
+    it 'it should append those nodes where provision not yet started to failed nodes if provision is aborted in the middle' do
+      Astute::CobblerManager.any_instance.stubs(:add_nodes).returns([])
+      @provisioner.stubs(:remove_nodes).returns([])
+      @provisioner.stubs(:prepare_nodes).returns([])
+      @provisioner.stubs(:unlock_nodes_discovery)
+      Astute.config.provisioning_timeout = 5
+      Astute.config.max_nodes_to_provision = 2
+      nodes = [
+        { 'uid' => '1'},
+        { 'uid' => '2'},
+        { 'uid' => '3'}
+      ]
+      @provisioner.stubs(:report_about_progress).returns()
+      @provisioner.stubs(:unlock_nodes_discovery)
+      @provisioner.stubs(:node_type)
+        .returns([{'uid' => '1', 'node_type' => 'target' }])
+
+      success_msg = {
+        'status' => 'error',
+        "error"=>"Too many nodes failed to provision",
+        'progress' => 100,
+        'nodes' => [
+          {
+            'uid' => '2',
+            'status' => 'error',
+            'progress' => 100,
+            'error_msg' => 'Failed to provision',
+            'error_type' => 'provision'
+          },
+          {
+            'uid' => '3',
+            'status' => 'error',
+            'error_msg' => 'Failed to provision',
+            'progress' => 100,
+            'error_type' => 'provision'
+          },
+          {
+            'uid' => '1',
+            'status' => 'provisioned',
+            'progress' => 100
+          },
+
+        ]}
+
+      @provisioner.stubs(:provision_piece).returns(['2'])
+      provision_info = {'nodes' => nodes,
+                        'engine' => data['engine']}
+
+      @reporter.expects(:report).with(success_msg).once
+      @provisioner.provision(@reporter, data['task_uuid'], provision_info)
+    end
   end
 
   describe '#stop_provision' do
