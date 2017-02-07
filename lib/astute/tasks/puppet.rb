@@ -25,7 +25,7 @@ module Astute
 
     def process
       Astute.logger.debug "Puppet task options: "\
-        "#{@task['parameters'].pretty_inspect}"
+        "#{task['parameters'].pretty_inspect}"
       puppet_task.run
     end
 
@@ -34,8 +34,8 @@ module Astute
     end
 
     def validation
-      validate_presence(@task, 'node_id')
-      validate_presence(@task['parameters'], 'puppet_manifest')
+      validate_presence(task, 'node_id')
+      validate_presence(task['parameters'], 'puppet_manifest')
     end
 
     def setup_default
@@ -45,7 +45,7 @@ module Astute
         'puppet_modules' => Astute.config.puppet_module_path,
         'cwd' => Astute.config.shell_cwd,
         'timeout' => Astute.config.puppet_timeout,
-        'puppet_debug' => false,
+        'debug' => false,
         'succeed_retries' => Astute.config.puppet_succeed_retries,
         'undefined_retries' => Astute.config.puppet_undefined_retries,
         'raw_report' => Astute.config.puppet_raw_report,
@@ -53,8 +53,9 @@ module Astute
         'puppet_start_timeout' => Astute.config.puppet_start_timeout,
         'puppet_start_interval' => Astute.config.puppet_start_interval
       }
-      @task['parameters'].compact!
-      @task['parameters'].reverse_merge!(default_options)
+      task['parameters'].compact!
+      task['parameters'].reverse_merge!(default_options)
+      task['parameters']['puppet_debug'] = task['parameters']['debug']
     end
 
     def puppet_task
@@ -62,18 +63,18 @@ module Astute
         task_name,
         PuppetMClient.new(
           @ctx,
-          @task['node_id'],
-          @task['parameters'],
-          ShellMClient.new(@ctx, @task['node_id'])
+          task['node_id'],
+          task['parameters'],
+          ShellMClient.new(@ctx, task['node_id'])
         ),
         {
-          'retries' => @task['parameters']['retries'],
-          'succeed_retries' => @task['parameters']['succeed_retries'],
-          'undefined_retries' => @task['parameters']['undefined_retries'],
-          'timeout' => @task['parameters']['timeout'],
-          'puppet_start_timeout' => @task['parameters'][
+          'retries' => task['parameters']['retries'],
+          'succeed_retries' => task['parameters']['succeed_retries'],
+          'undefined_retries' => task['parameters']['undefined_retries'],
+          'timeout' => task['parameters']['timeout'],
+          'puppet_start_timeout' => task['parameters'][
             'puppet_start_timeout'],
-          'puppet_start_interval' => @task['parameters'][
+          'puppet_start_interval' => task['parameters'][
             'puppet_start_interval']
         }
       )
