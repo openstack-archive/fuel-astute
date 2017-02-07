@@ -16,7 +16,7 @@ module Astute
   class Task
 
     ALLOWED_STATUSES = [:successful, :failed, :running, :pending, :skipped]
-
+    attr_reader :task
     def initialize(task, context)
       # WARNING: this code expect that only one node will be send
       # on one hook.
@@ -33,7 +33,7 @@ module Astute
       running!
       process
     rescue => e
-      Astute.logger.warn("Fail to run task #{@task['type']} #{task_name}" \
+      Astute.logger.warn("Fail to run task #{task['type']} #{task_name}" \
         " with error #{e.message} trace: #{e.format_backtrace}")
       failed!
     end
@@ -43,7 +43,7 @@ module Astute
       calculate_status unless finished?
       @status
     rescue => e
-      Astute.logger.warn("Fail to detect status of the task #{@task['type']}" \
+      Astute.logger.warn("Fail to detect status of the task #{task['type']}" \
         " #{task_name} with error #{e.message} trace: #{e.format_backtrace}")
       failed!
     end
@@ -169,14 +169,14 @@ module Astute
     end
 
     def task_name
-      @task['id'] || @task['diagnostic_name']
+      task['id'] || task['diagnostic_name']
     end
 
     def time_summary
       amount_time = (Time.now.to_i - @time_start).to_i
       wasted_time = Time.at(amount_time).utc.strftime("%H:%M:%S")
       Astute.logger.debug("Task time summary: #{task_name} with status" \
-        " #{@status.to_s} on node #{@task['node_id']} took #{wasted_time}")
+        " #{@status.to_s} on node #{task['node_id']} took #{wasted_time}")
     end
 
   end
