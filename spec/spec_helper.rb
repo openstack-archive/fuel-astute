@@ -33,8 +33,6 @@ require 'fuel_deployment'
 
 Deployment::Log.logger.level = Logger::DEBUG
 
-Dir[File.join(File.dirname(__FILE__), 'unit/fixtures/*.rb')].each { |file| require file }
-
 # NOTE(mihgen): I hate to wait for unit tests to complete,
 #               resetting time to sleep significantly increases tests speed
 Astute.config.puppet_deploy_interval = 0
@@ -91,11 +89,6 @@ module SpecHelpers
     ctx.stubs(:reporter).returns(reporter)
 
     ctx
-  end
-
-  # Transform fixtures from nailgun format node['roles'] array to node['role'] string
-  def nodes_with_role(data, role)
-    data.select { |n| n['role'] == role }
   end
 
 end

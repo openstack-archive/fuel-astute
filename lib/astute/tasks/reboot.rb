@@ -15,8 +15,7 @@
 module Astute
   class Reboot < Task
 
-    def initialize(task, context)
-      super
+    def post_initialize(task, context)
       @control_time = nil
       @time_start = nil
       @already_rebooted = false

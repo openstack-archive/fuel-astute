@@ -20,8 +20,7 @@ module Astute
     # mechanism. It create and upload 2 files: shell script and
     # puppet manifest. Then run puppet manifest
 
-    def initialize(task, context)
-      super
+    def post_initialize(task, context)
       @puppet_task = nil
     end
 

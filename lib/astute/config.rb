@@ -61,6 +61,7 @@ module Astute
     conf[:puppet_start_timeout] = 10      # how long it can take for puppet to start
     conf[:puppet_start_interval] = 2      # interval between attemps to start puppet
     conf[:puppet_retries] = 2             # how many times astute will try to run puppet
+    conf[:upload_retries] = 3             # how many times astute will try to run upload task
     conf[:puppet_succeed_retries] = 0     # use this to rerun a puppet task again if it was successful (idempotency)
     conf[:puppet_undefined_retries] = 3   # how many times astute will try to get actual status of node before fail
     conf[:puppet_module_path] = '/etc/puppet/modules' # where we should find basic modules for puppet
