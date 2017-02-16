@@ -17,7 +17,7 @@ module Astute
   class NoopMoveToBootstrap < Noop
 
     def summary
-      {'task_summary' => "Node #{@task['node_id']} was move to bootstrap (noop mode)"}
+      {'task_summary' => "Node #{task['node_id']} was move to bootstrap (noop mode)"}
     end
 
   end

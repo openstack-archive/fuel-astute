@@ -15,9 +15,8 @@
 module Astute
   class UploadFiles < Task
 
-    def initialize(task, context)
-      super
-      @nodes_status = @task['parameters']['nodes'].inject({}) do |n_s, n|
+    def post_initialize(task, context)
+      @nodes_status = task['parameters']['nodes'].inject({}) do |n_s, n|
         n_s.merge({ n['uid'] => :pending })
       end
     end
@@ -25,7 +24,7 @@ module Astute
     private
 
     def process
-      hook['parameters']['nodes'].each do |node|
+      task['parameters']['nodes'].each do |node|
         node['files'].each do |file|
           parameters = {
             'content' => file['data'],
@@ -34,7 +33,7 @@ module Astute
             'dir_permissions' => file['dir_permissions'] || '0755',
           }
           if @nodes_status[node['uid']]
-            @nodes_status[node['uid']] = upload_file(node['uid'], parameters)
+            @nodes_status[node['uid']] = upload_file_with_check(node['uid'], parameters)
           end
         end
       end
@@ -49,7 +48,7 @@ module Astute
     end
 
     def validation
-      validate_presence(@task['parameters'], 'nodes')
+      validate_presence(task['parameters'], 'nodes')
     end
 
   end

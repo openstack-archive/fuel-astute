@@ -21,8 +21,8 @@ module Astute
 
     def setup_default
       super
-      @task['parameters']['puppet_noop_run'] = true
-      @task['parameters']['raw_report'] = true
+      task['parameters']['puppet_noop_run'] = true
+      task['parameters']['raw_report'] = true
     end
 
   end

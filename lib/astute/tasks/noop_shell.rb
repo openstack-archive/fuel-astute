@@ -20,14 +20,14 @@ module Astute
 
     def process
       run_shell_without_check(
-        @task['node_id'],
+        task['node_id'],
         "mkdir -p #{SHELL_MANIFEST_DIR}",
         timeout=2
       )
       upload_shell_manifest
       @puppet_task = NoopPuppet.new(
         generate_puppet_hook,
-        @ctx
+        ctx
       )
       @puppet_task.run
     end

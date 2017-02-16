@@ -15,10 +15,9 @@
 module Astute
   class CopyFiles < Task
 
-    def initialize(task, context)
-      super
+    def post_initialize(task, context)
       @work_thread = nil
-      @files_status = @task['parameters']['files'].inject({}) do |f_s, n|
+      @files_status = task['parameters']['files'].inject({}) do |f_s, n|
         f_s.merge({ n['src']+n['dst'] => :pending })
       end
     end
@@ -26,16 +25,16 @@ module Astute
     private
 
     def process
-      @task['parameters']['files'].each do |file|
+      task['parameters']['files'].each do |file|
         if File.file?(file['src']) && File.readable?(file['src'])
           parameters = {
             'content' => File.binread(file['src']),
             'path' => file['dst'],
-            'permissions' => file['permissions'] || @task['parameters']['permissions'],
-            'dir_permissions' => file['dir_permissions'] || @task['parameters']['dir_permissions'],
+            'permissions' => file['permissions'] || task['parameters']['permissions'],
+            'dir_permissions' => file['dir_permissions'] || task['parameters']['dir_permissions'],
           }
           @files_status[file['src']+file['dst']] =
-            upload_file(@task['node_id'], parameters)
+            upload_file(task['node_id'], parameters)
         else
           @files_status[file['src']+file['dst']] = false
         end
@@ -51,8 +50,8 @@ module Astute
     end
 
     def validation
-      validate_presence(@task, 'node_id')
-      validate_presence(@task['parameters'], 'files')
+      validate_presence(task, 'node_id')
+      validate_presence(task['parameters'], 'files')
     end
 
   end

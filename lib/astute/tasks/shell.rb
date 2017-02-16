@@ -20,8 +20,7 @@ module Astute
     # mechanism. It create and upload 2 files: shell script and
     # puppet manifest. Then run puppet manifest
 
-    def initialize(task, context)
-      super
+    def post_initialize(task, context)
       @puppet_task = nil
     end
 
@@ -32,7 +31,7 @@ module Astute
     end
 
     def node_id
-      @task['node_id']
+      task['node_id']
     end
 
     private
@@ -41,14 +40,14 @@ module Astute
 
     def process
       run_shell_without_check(
-        @task['node_id'],
+        task['node_id'],
         "mkdir -p #{SHELL_MANIFEST_DIR}",
         _timeout=2
       )
       upload_shell_manifest
       @puppet_task = Puppet.new(
         generate_puppet_hook,
-        @ctx
+        ctx
       )
       @puppet_task.run
     end
@@ -58,15 +57,15 @@ module Astute
     end
 
     def validation
-      validate_presence(@task, 'node_id')
-      validate_presence(@task['parameters'], 'cmd')
+      validate_presence(task, 'node_id')
+      validate_presence(task['parameters'], 'cmd')
     end
 
     def setup_default
-      @task['parameters']['timeout'] ||= Astute.config.shell_timeout
-      @task['parameters']['cwd'] ||= Astute.config.shell_cwd
-      @task['parameters']['retries'] ||= Astute.config.shell_retries
-      @task['parameters']['interval'] ||= Astute.config.shell_interval
+      task['parameters']['timeout'] ||= Astute.config.shell_timeout
+      task['parameters']['cwd'] ||= Astute.config.shell_cwd
+      task['parameters']['retries'] ||= Astute.config.shell_retries
+      task['parameters']['interval'] ||= Astute.config.shell_interval
     end
 
     def puppet_exec_template
@@ -85,8 +84,8 @@ module Astute
     end
 
     def shell_exec_template
-      command = "cd #{@task['parameters']['cwd']} &&" \
-                " #{@task['parameters']['cmd']}"
+      command = "cd #{task['parameters']['cwd']} &&" \
+                " #{task['parameters']['cmd']}"
       template = <<-eos
     #!/bin/bash
     # Puppet shell wrapper for task: <%= task_name %>
@@ -106,7 +105,7 @@ module Astute
     end
 
     def upload_puppet_manifest
-      upload_file(@task['node_id'], {
+      upload_file(task['node_id'], {
         'path' => puppet_exec_file_path,
         'content' => puppet_exec_template,
         'permissions' => '0755'
@@ -114,7 +113,7 @@ module Astute
     end
 
     def upload_shell_file
-      upload_file(@task['node_id'], {
+      upload_file(task['node_id'], {
         'path' => shell_exec_file_path,
         'content' => shell_exec_template,
         'permissions' => '0755'
@@ -127,7 +126,7 @@ module Astute
     end
 
     def timeout
-      @task['parameters']['timeout']
+      task['parameters']['timeout']
     end
 
     def manifest_name
@@ -136,13 +135,13 @@ module Astute
 
     def generate_puppet_hook
       {
-        'node_id' => @task['node_id'],
-        'id' => @task['id'],
+        'node_id' => task['node_id'],
+        'id' => task['id'],
         'parameters' =>  {
           "puppet_manifest" =>  manifest_name,
           "cwd" => SHELL_MANIFEST_DIR,
-          "timeout" =>  @task['parameters']['timeout'],
-          "retries" => @task['parameters']['retries']
+          "timeout" =>  task['parameters']['timeout'],
+          "retries" => task['parameters']['retries']
         }
       }
     end

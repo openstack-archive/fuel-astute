@@ -17,7 +17,7 @@ module Astute
   class NoopReboot < Noop
 
     def summary
-      {'task_summary' => "Node #{@task['node_id']} was rebooted (noop mode)"}
+      {'task_summary' => "Node #{task['node_id']} was rebooted (noop mode)"}
     end
 
   end

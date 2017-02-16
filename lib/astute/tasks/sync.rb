@@ -20,7 +20,7 @@ module Astute
     def process
       @shell_task = Shell.new(
         generate_shell_hook,
-        @ctx
+        ctx
       )
       @shell_task.run
     end
@@ -30,28 +30,28 @@ module Astute
     end
 
     def validation
-      validate_presence(@task, 'node_id')
-      validate_presence(@task['parameters'], 'dst')
-      validate_presence(@task['parameters'], 'src')
+      validate_presence(task, 'node_id')
+      validate_presence(task['parameters'], 'dst')
+      validate_presence(task['parameters'], 'src')
     end
 
     def setup_default
-      @task['parameters']['timeout'] ||= 300
-      @task['parameters']['retries'] ||= 10
+      task['parameters']['timeout'] ||= 300
+      task['parameters']['retries'] ||= 10
     end
 
     def generate_shell_hook
-      path = @task['parameters']['dst']
+      path = task['parameters']['dst']
       rsync_cmd = "mkdir -p #{path} && rsync #{Astute.config.rsync_options}" \
-                  " #{@task['parameters']['src']} #{path}"
+                  " #{task['parameters']['src']} #{path}"
       {
-        "node_id" => @task['node_id'],
-        "id" => @task['id'],
+        "node_id" => task['node_id'],
+        "id" => task['id'],
         "parameters" =>  {
           "cmd" =>  rsync_cmd,
           "cwd" =>  "/",
-          "timeout" => @task['parameters']['timeout'],
-          "retries" => @task['parameters']['retries']
+          "timeout" => task['parameters']['timeout'],
+          "retries" => task['parameters']['retries']
         }
       }
     end
