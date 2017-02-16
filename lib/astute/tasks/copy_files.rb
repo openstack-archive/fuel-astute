@@ -15,8 +15,7 @@
 module Astute
   class CopyFiles < Task
 
-    def initialize(task, context)
-      super
+    def post_initialize(task, context)
       @work_thread = nil
       @files_status = @task['parameters']['files'].inject({}) do |f_s, n|
         f_s.merge({ n['src']+n['dst'] => :pending })

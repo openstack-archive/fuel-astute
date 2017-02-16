@@ -22,13 +22,34 @@ module Astute
 
     # Run upload without check using mcollective agent
     # @param [Hash] mco_params Upload file options
-    # @param [Integer] timeout Timeout for upload command
     # @return [true, false] upload result
     def upload_without_check(mco_params)
+      upload_mclient = upload_mclient(
+        :check_result => false,
+        :timeout => mco_params['timeout']
+      )
+      upload(mco_params, upload_mclient)
+    end
+
+    # Run upload with check using mcollective agent
+    # @param [Hash] mco_params Upload file options
+    # @return [true, false] upload result
+    def upload_with_check(mco_params)
+      upload_mclient = upload_mclient(
+        :check_result => true,
+        :timeout => mco_params['timeout'],
+        :retries => mco_params['retries']
+      )
+      upload(mco_params, upload_mclient)
+    end
+
+    private
+
+
+    def upload(mco_params, magent)
       mco_params = setup_default(mco_params)
 
-      results = upload_file(_check_result=false, mco_params['timeout'])
-        .upload(
+      results = magent.upload(
           :path => mco_params['path'],
           :content => mco_params['content'],
           :overwrite => mco_params['overwrite'],
@@ -55,17 +76,16 @@ module Astute
       false
     end
 
-    private
-
     # Create configured shell mcollective agent
     # @return [Astute::MClient]
-    def upload_file(check_result=false, timeout=2)
+    def upload_mclient(args={})
       MClient.new(
         @ctx,
         "uploadfile",
         [@node_id],
-        check_result,
-        timeout
+        args.fetch(:check_result, false),
+        args.fetch(:timeout, 2),
+        args.fetch(:retries, Astute.config.mc_retries)
       )
     end
 
@@ -73,6 +93,7 @@ module Astute
     # @param [Hash] mco_params Upload file options
     # @return [Hash] mco_params
     def setup_default(mco_params)
+      mco_params['retries'] ||= Astute.config.upload_retries
       mco_params['timeout'] ||= Astute.config.upload_timeout
       mco_params['overwrite'] = true if mco_params['overwrite'].nil?
       mco_params['parents'] = true if mco_params['parents'].nil?

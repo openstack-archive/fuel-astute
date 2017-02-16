@@ -15,8 +15,7 @@
 module Astute
   class CobblerSync < Task
 
-    def initialize(task, context)
-      super
+    def post_initialize(task, context)
       @work_thread = nil
     end
 
