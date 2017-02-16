@@ -16,7 +16,7 @@ module Astute
   class Task
 
     ALLOWED_STATUSES = [:successful, :failed, :running, :pending, :skipped]
-    attr_reader :task
+    attr_reader :task, :ctx
     def initialize(task, context)
       # WARNING: this code expect that only one node will be send
       # on one hook.
@@ -24,6 +24,7 @@ module Astute
       @status = :pending
       @ctx = context
       @time_start = Time.now.to_i
+      post_initialize(task, context)
     end
 
     # Run current task on node, specified in task
@@ -98,6 +99,10 @@ module Astute
       @status == :failed
     end
 
+    def post_initialize(task, context)
+      nil
+    end
+
     private
 
     # Run current task on node, specified in task
@@ -147,6 +152,13 @@ module Astute
     # Synchronous (blocking) call
     def upload_file(node_uid, mco_params)
       UploadFileMClient.new(@ctx, node_uid).upload_without_check(mco_params)
+    end
+
+    # Create file with content on selected node
+    # should use only for small file
+    # Synchronous (blocking) call
+    def upload_file_with_check(node_uid, mco_params)
+      UploadFileMClient.new(@ctx, node_uid).upload_with_check(mco_params)
     end
 
     def failed!

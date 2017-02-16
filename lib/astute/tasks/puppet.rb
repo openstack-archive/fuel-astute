@@ -62,7 +62,7 @@ module Astute
       @puppet_task ||= PuppetJob.new(
         task_name,
         PuppetMClient.new(
-          @ctx,
+          ctx,
           task['node_id'],
           task['parameters'],
         ),

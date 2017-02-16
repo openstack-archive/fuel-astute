@@ -22,7 +22,7 @@ module Astute
     def process
       @shell_task = NoopShell.new(
         generate_master_shell,
-        @ctx
+        ctx
       )
       @shell_task.run
     end

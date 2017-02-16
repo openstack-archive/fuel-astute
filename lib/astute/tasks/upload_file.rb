@@ -15,15 +15,14 @@
 module Astute
   class UploadFile < Task
 
-    def initialize(task, context)
-      super
+    def post_initialize(task, context)
       @upload_status = :pending
     end
 
     private
 
     def process
-      @upload_status = upload_file(@task['node_id'], @task['parameters'])
+      @upload_status = upload_file_with_check(task['node_id'], task['parameters'])
     end
 
     def calculate_status
@@ -34,14 +33,15 @@ module Astute
     end
 
     def validation
-      validate_presence(@task, 'node_id')
-      validate_presence(@task['parameters'], 'path')
-      validate_presence(@task['parameters'], 'data')
+      validate_presence(task, 'node_id')
+      validate_presence(task['parameters'], 'path')
+      validate_presence(task['parameters'], 'data')
     end
 
     def setup_default
-      @task['parameters']['content'] = @task['parameters']['data']
-      @task['parameters']['timeout'] ||= Astute.config.upload_timeout
+      task['parameters']['content'] = task['parameters']['data']
+      task['parameters']['timeout'] ||= Astute.config.upload_timeout
+      task['parameters']['retries'] ||= Astute.config.upload_retries
     end
 
   end

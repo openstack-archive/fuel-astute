@@ -15,8 +15,7 @@
 module Astute
   class CobblerSync < Task
 
-    def initialize(task, context)
-      super
+    def post_initialize(task, context)
       @work_thread = nil
     end
 
@@ -24,8 +23,8 @@ module Astute
 
     def process
       cobbler = CobblerManager.new(
-        @task['parameters']['provisioning_info']['engine'],
-        @ctx.reporter
+        task['parameters']['provisioning_info']['engine'],
+        ctx.reporter
       )
       @work_thread = Thread.new { cobbler.sync }
     end
@@ -35,7 +34,7 @@ module Astute
     end
 
     def validation
-      validate_presence(@task['parameters'], 'provisioning_info')
+      validate_presence(task['parameters'], 'provisioning_info')
     end
 
   end

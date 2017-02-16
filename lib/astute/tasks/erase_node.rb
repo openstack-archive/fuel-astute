@@ -16,7 +16,7 @@ module Astute
   class EraseNode < Task
 
     def summary
-      {'task_summary' => "Node #{@task['node_id']} was erased without reboot"\
+      {'task_summary' => "Node #{task['node_id']} was erased without reboot"\
                          " with result #{@status}"}
     end
 
@@ -31,20 +31,20 @@ module Astute
     end
 
     def validation
-      validate_presence(@task, 'node_id')
+      validate_presence(task, 'node_id')
     end
 
     def erase_node
       remover = MClient.new(
-        @ctx,
+        ctx,
         "erase_node",
-        Array(@task['node_id']),
+        Array(task['node_id']),
         _check_result=false)
       response = remover.erase_node(:reboot => false)
-      Astute.logger.debug "#{@ctx.task_id}: Data received from node "\
-                          "#{@task['node_id']} :\n#{response.pretty_inspect}"
+      Astute.logger.debug "#{ctx.task_id}: Data received from node "\
+                          "#{task['node_id']} :\n#{response.pretty_inspect}"
     rescue Astute::MClientTimeout, Astute::MClientError => e
-      Astute.logger.error("#{@ctx.task_id}: #{task_name} mcollective " \
+      Astute.logger.error("#{ctx.task_id}: #{task_name} mcollective " \
         "erase node command failed with error #{e.message}")
         failed!
     end

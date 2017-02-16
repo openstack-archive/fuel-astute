@@ -17,7 +17,7 @@ module Astute
   class NoopEraseNode < Noop
 
     def summary
-      {'task_summary' => "Node #{@task['node_id']} was erased without reboot (noop mode)"}
+      {'task_summary' => "Node #{task['node_id']} was erased without reboot (noop mode)"}
     end
 
   end

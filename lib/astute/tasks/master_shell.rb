@@ -18,8 +18,7 @@ module Astute
     # Accept to run shell tasks using existing shell asynchronous
     # mechanism. It will run task on master node.
 
-    def initialize(task, context)
-      super
+    def post_initialize(task, context)
       @shell_task = nil
     end
 
@@ -34,7 +33,7 @@ module Astute
     def process
       @shell_task = Shell.new(
         generate_master_shell,
-        @ctx
+        ctx
       )
       @shell_task.run
     end
@@ -44,18 +43,18 @@ module Astute
     end
 
     def validation
-      validate_presence(@task['parameters'], 'cmd')
+      validate_presence(task['parameters'], 'cmd')
     end
 
     def setup_default
-      @task['parameters']['timeout'] ||= Astute.config.shell_timeout
-      @task['parameters']['cwd'] ||= Astute.config.shell_cwd
-      @task['parameters']['retries'] ||= Astute.config.shell_retries
-      @task['parameters']['interval'] ||= Astute.config.shell_interval
+      task['parameters']['timeout'] ||= Astute.config.shell_timeout
+      task['parameters']['cwd'] ||= Astute.config.shell_cwd
+      task['parameters']['retries'] ||= Astute.config.shell_retries
+      task['parameters']['interval'] ||= Astute.config.shell_interval
     end
 
     def generate_master_shell
-      @task.merge('node_id' => 'master')
+      task.merge('node_id' => 'master')
     end
   end
 end
