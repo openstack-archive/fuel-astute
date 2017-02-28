@@ -270,6 +270,8 @@ module Astute
     # Reset undefined retries to original value
     # @return [void]
     def reset_undefined_retries!
+      return if @undefined_retries == @original_undefined_retries
+
       Astute.logger.debug "Reset undefined retries to original "\
         "value: #{@original_undefined_retries}"
       @undefined_retries = @original_undefined_retries
