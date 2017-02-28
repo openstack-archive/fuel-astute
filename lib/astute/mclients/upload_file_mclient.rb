@@ -15,6 +15,7 @@
 module Astute
   class UploadFileMClient
 
+    attr_reader :ctx, :node_id
     def initialize(ctx, node_id)
       @ctx = ctx
       @node_id = node_id
@@ -36,11 +37,13 @@ module Astute
     # @return [true, false] upload result
     def upload_with_check(mco_params)
       upload_mclient = upload_mclient(
-        :check_result => true,
+        :check_result => false,
         :timeout => mco_params['timeout'],
         :retries => mco_params['retries']
       )
-      upload(mco_params, upload_mclient)
+      process_with_retries(:retries => mco_params['retries']) do
+        upload(mco_params, upload_mclient)
+      end
     end
 
     private
@@ -61,17 +64,17 @@ module Astute
       )
 
       if results.present? && results.first[:statuscode] == 0
-        Astute.logger.debug("#{@ctx.task_id}: file was uploaded "\
+        Astute.logger.debug("#{ctx.task_id}: file was uploaded "\
           "#{details_for_log(mco_params)} successfully")
         true
       else
-        Astute.logger.error("#{@ctx.task_id}: file was not uploaded "\
+        Astute.logger.error("#{ctx.task_id}: file was not uploaded "\
           "#{details_for_log(mco_params)}: "\
-          "#{results.first[:msg] if results.present? }")
+          "#{results.present? ? results.first[:msg] : "node has not answered"  }")
         false
       end
     rescue MClientTimeout, MClientError => e
-      Astute.logger.error("#{@ctx.task_id}: file was not uploaded "\
+      Astute.logger.error("#{ctx.task_id}: file was not uploaded "\
         "#{details_for_log(mco_params)}: #{e.message}")
       false
     end
@@ -80,9 +83,9 @@ module Astute
     # @return [Astute::MClient]
     def upload_mclient(args={})
       MClient.new(
-        @ctx,
+        ctx,
         "uploadfile",
-        [@node_id],
+        [node_id],
         args.fetch(:check_result, false),
         args.fetch(:timeout, 2),
         args.fetch(:retries, Astute.config.upload_retries)
@@ -108,8 +111,22 @@ module Astute
     # Return short useful info about node and shell task
     # @return [String] detail info about upload task
     def details_for_log(mco_params)
-      "#{mco_params['path']} on node #{@node_id} "\
+      "#{mco_params['path']} on node #{node_id} "\
       "with timeout #{mco_params['timeout']}"
+    end
+
+    def process_with_retries(args={}, &block)
+      retries = args.fetch(:retries, 1) + 1
+      result = false
+
+      retries.times do |attempt|
+        result = block.call
+        break if result
+
+        Astute.logger.warn("#{ctx.task_id} Upload retry for node "\
+          "#{node_id}: attempt № #{attempt + 1}/#{retries}")
+      end
+      result
     end
 
   end
