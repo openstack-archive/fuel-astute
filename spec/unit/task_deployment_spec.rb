@@ -142,7 +142,7 @@ describe Astute::TaskDeployment do
 
   describe '#deploy' do
     it 'should run deploy' do
-      task_deployment.stubs(:fail_offline_nodes).returns([])
+      task_deployment.stubs(:detect_offline_nodes).returns([])
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
 
@@ -154,7 +154,7 @@ describe Astute::TaskDeployment do
     end
 
     it 'should not raise error if deployment info not provided' do
-      task_deployment.stubs(:fail_offline_nodes).returns([])
+      task_deployment.stubs(:detect_offline_nodes).returns([])
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
 
@@ -217,7 +217,7 @@ describe Astute::TaskDeployment do
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
 
-      task_deployment.expects(:fail_offline_nodes).returns([])
+      task_deployment.expects(:detect_offline_nodes).returns([])
 
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
       task_deployment.deploy(
@@ -231,7 +231,7 @@ describe Astute::TaskDeployment do
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
 
-      task_deployment.expects(:fail_offline_nodes).returns([])
+      task_deployment.expects(:detect_offline_nodes).returns([])
 
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
       task_deployment.deploy(
@@ -244,7 +244,7 @@ describe Astute::TaskDeployment do
       Astute::TaskPreDeploymentActions.any_instance.stubs(:process)
       task_deployment.stubs(:write_graph_to_file)
       ctx.stubs(:report)
-      task_deployment.stubs(:fail_offline_nodes).returns([])
+      task_deployment.stubs(:detect_offline_nodes).returns([])
       Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
       Astute::TaskCluster.any_instance.expects(:stop_condition)
@@ -260,7 +260,7 @@ describe Astute::TaskDeployment do
       before(:each) do
         task_deployment.stubs(:write_graph_to_file)
         ctx.stubs(:report)
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
         Deployment::Concurrency::Counter.any_instance
                                         .stubs(:maximum=).with(
@@ -333,7 +333,7 @@ describe Astute::TaskDeployment do
 
     context 'dry_run' do
       it 'should not run actual deployment if dry_run is set to True' do
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.stubs(:report)
 
@@ -349,7 +349,7 @@ describe Astute::TaskDeployment do
 
     context 'noop_run' do
       it 'should run noop deployment without error states' do
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.stubs(:report)
 
@@ -372,7 +372,7 @@ describe Astute::TaskDeployment do
       it 'should setup max nodes per call using config' do
         Astute.config.max_nodes_per_call = 33
 
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.stubs(:report)
 
@@ -395,7 +395,7 @@ describe Astute::TaskDeployment do
 
     context 'subgraphs' do
       it 'should call subgraph set up if subgraphs are present' do
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
 
@@ -423,7 +423,7 @@ describe Astute::TaskDeployment do
           tasks_directory: tasks_directory)
       end
       it 'should not call subgraph setup if subgraphs are not present' do
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.stubs(:report)
         Astute::TaskCluster.any_instance.expects(:run).returns({:success => true})
@@ -450,7 +450,7 @@ describe Astute::TaskDeployment do
 
       it 'succeed status and 100 progress for all nodes' do
         Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.expects(:report).with('nodes' => [
           {'uid' => '1', 'progress' => 100},
@@ -473,7 +473,7 @@ describe Astute::TaskDeployment do
           :failed_nodes => [failed_node],
           :failed_tasks => [failed_task],
           :status => 'Failed because of'})
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         task_deployment.stubs(:write_graph_to_file)
         ctx.expects(:report).with('nodes' => [
           {'uid' => '1', 'progress' => 100},
@@ -502,7 +502,7 @@ describe Astute::TaskDeployment do
       it 'should write if disable' do
         Astute.config.enable_graph_file = false
 
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         ctx.stubs(:report)
         Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
@@ -520,7 +520,7 @@ describe Astute::TaskDeployment do
       it 'should write graph if enable' do
         Astute.config.enable_graph_file = true
 
-        task_deployment.stubs(:fail_offline_nodes).returns([])
+        task_deployment.stubs(:detect_offline_nodes).returns([])
         ctx.stubs(:report)
         Astute::TaskCluster.any_instance.stubs(:run).returns({:success => true})
 
