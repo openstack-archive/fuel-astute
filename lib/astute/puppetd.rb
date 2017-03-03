@@ -61,7 +61,7 @@ module Astute
           :puppet_modules => @puppet_modules,
           :cwd => @cwd,
           :timeout => Astute.config.puppet_timeout,
-          :puppet_debug => @puppet_debug
+          :puppet_debug => false
         })
     end
 
