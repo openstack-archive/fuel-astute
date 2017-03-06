@@ -43,6 +43,7 @@ module Astute
         'retries' => Astute.config.puppet_retries,
         'puppet_manifest' => '/etc/puppet/manifests/site.pp',
         'puppet_modules' => Astute.config.puppet_module_path,
+        'command_prefix' => '',
         'cwd' => Astute.config.shell_cwd,
         'timeout' => Astute.config.puppet_timeout,
         'debug' => false,

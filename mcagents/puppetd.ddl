@@ -97,6 +97,15 @@ action "runonce", :description => "Invoke a single puppet run" do
           :default     => true,
           :optional    => true
 
+    input :command_prefix,
+          :prompt      => "Puppet command prefix (allows to run puppet with variables)",
+          :description => "Allows to run puppet with variables (e.g. FACTER_foo=bar)",
+          :type        => :string,
+          :validation  => :shellsafe,
+          :default     => '',
+          :optional    => true,
+          :maxlength   => 0
+
     output :output,
            :description => "Output from puppet",
            :display_as => "Output"
