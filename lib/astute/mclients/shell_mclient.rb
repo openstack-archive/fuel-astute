@@ -41,7 +41,7 @@ module Astute
         }
       else
         Astute.logger.warn("#{@ctx.task_id}: Failed to run shell "\
-          "#{details_for_log(cmd, timeout)} Error will not raise "\
+          "#{details_for_log(cmd, timeout)}. Error will not raise "\
           "because shell was run without check")
         {}
       end
