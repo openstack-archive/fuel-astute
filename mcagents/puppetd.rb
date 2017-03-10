@@ -202,7 +202,9 @@ module MCollective
         cwd = request.fetch(:cwd, '/')
         manifest =  request.fetch(:manifest, '/etc/puppet/manifests/site.pp')
         module_path = request.fetch(:modules, '/etc/puppet/modules')
+        command_prefix = request.fetch(:command_prefix, '')
         cmd = [
+          command_prefix,
           @puppetd,
           "-c #{cwd}",
           @puppetd_agent,
