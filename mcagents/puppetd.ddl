@@ -103,7 +103,8 @@ action "runonce", :description => "Invoke a single puppet run" do
           :type        => :string,
           :validation  => :shellsafe,
           :default     => '',
-          :optional    => true
+          :optional    => true,
+          :maxlength   => 0
 
     output :output,
            :description => "Output from puppet",
