@@ -35,6 +35,7 @@ describe Astute::PuppetMClient do
   let(:options) do
     {
       'cwd' => '/etc/puppet/mainfest/test',
+      'command_prefix' => '',
       'puppet_manifest' => 'test_manifest.pp',
       'puppet_noop_run' => false,
       'raw_report' => true,
@@ -200,6 +201,7 @@ describe Astute::PuppetMClient do
         :manifest => options['puppet_manifest'],
         :modules  => options['puppet_modules'],
         :cwd => options['cwd'],
+        :command_prefix => options['command_prefix'],
         :puppet_noop_run => options['puppet_noop_run'],
       ).returns([:statuscode => 0])
 
