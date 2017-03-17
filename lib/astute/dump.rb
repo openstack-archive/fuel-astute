@@ -53,6 +53,9 @@ module Astute
         elsif result[:data][:exit_code] == 28
           Astute.logger.error("#{ctx.task_id}: Disk space for creating snapshot exceeded.")
           report_error(ctx, "Timmy exit code: #{result[:data][:exit_code]}. Disk space for creating snapshot exceeded.")
+        elsif result[:data][:exit_code] == 100
+          Astute.logger.error("#{ctx.task_id}: Not enough free space for logs. Decrease logs coefficient via CLI or config or free up space.")
+          report_error(ctx, "Timmy exit code: #{result[:data][:exit_code]}. Not enough free space for logs.")
         else
           Astute.logger.error("#{ctx.task_id}: Dump command returned non zero exit code. For details see #{log_file}")
           report_error(ctx, "Timmy exit code: #{result[:data][:exit_code]}")
