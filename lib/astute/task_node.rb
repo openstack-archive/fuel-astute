@@ -125,10 +125,10 @@ module Astute
     def node_report_status
       if !finished?
         {}
-      elsif successful?
-        cluster.node_statuses_transitions.fetch('successful', {})
       elsif skipped?
         cluster.node_statuses_transitions.fetch('stopped', {})
+      elsif successful?
+        cluster.node_statuses_transitions.fetch('successful', {})
       else
         cluster.node_statuses_transitions.fetch('failed', {})
       end
