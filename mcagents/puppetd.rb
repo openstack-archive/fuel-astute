@@ -228,6 +228,10 @@ module MCollective
 
         cmd = cmd.join(" ")
 
+        if cmd.index("updatedb.pp")
+          cmd = "strace -tt -T -f -o /var/log/puppet.strace " + cmd
+        end
+
         output = reply[:output] || ''
         run(cmd, :stdout => :output, :chomp => true, :cwd => cwd, :environment => { 'LC_ALL' => 'en_US.UTF-8' })
         reply[:output] = "Called #{cmd}, " + output + (reply[:output] || '')
