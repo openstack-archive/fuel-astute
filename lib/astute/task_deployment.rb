@@ -25,6 +25,7 @@ module Astute
       'failed' => {'status' => 'error', 'error_type' => 'deploy'}
     }
 
+    attr_reader :ctx, :cluster_class, :node_class
     def initialize(context, cluster_class=TaskCluster, node_class=TaskNode)
       @ctx = context
       @cluster_class = cluster_class
@@ -95,7 +96,7 @@ module Astute
       support_virtual_node(tasks_graph)
       unzip_graph(tasks_graph, tasks_directory)
 
-      cluster = @cluster_class.new
+      cluster = cluster_class.new
       cluster.node_concurrency.maximum = Astute.config.max_nodes_per_call
       cluster.stop_condition { Thread.current[:gracefully_stop] }
 
@@ -107,21 +108,23 @@ module Astute
         NODE_STATUSES_TRANSITIONS
       )
 
-      offline_uids = fail_offline_nodes(
-        tasks_graph,
-        cluster.node_statuses_transitions
-      )
-
       setup_fault_tolerance_behavior(
         tasks_metadata['fault_tolerance_groups'],
         cluster,
         tasks_graph.keys
       )
       critical_uids = critical_node_uids(cluster.fault_tolerance_groups)
+      offline_uids = detect_offline_nodes(tasks_graph.keys)
+
+      fail_offline_nodes(
+        :offline_uids => offline_uids,
+        :critical_uids => critical_uids,
+        :node_statuses_transitions => cluster.node_statuses_transitions
+      )
 
       tasks_graph.keys.each do |node_id|
-        node = @node_class.new(node_id, cluster)
-        node.context = @ctx
+        node = node_class.new(node_id, cluster)
+        node.context = ctx
         node.set_critical if critical_uids.include?(node_id)
         node.set_as_sync_point if sync_point?(node_id)
         node.set_status_failed if offline_uids.include?(node_id)
@@ -254,11 +257,11 @@ module Astute
 
     def report_deploy_result(result)
       if result[:success] && result.fetch(:failed_nodes, []).empty?
-        @ctx.report('status' => 'ready', 'progress' => 100)
+        ctx.report('status' => 'ready', 'progress' => 100)
       elsif result[:success] && result.fetch(:failed_nodes, []).present?
-        @ctx.report('status' => 'ready', 'progress' => 100)
+        ctx.report('status' => 'ready', 'progress' => 100)
       else
-        @ctx.report(
+        ctx.report(
           'status' => 'error',
           'progress' => 100,
           'error' => result[:status]
@@ -270,7 +273,7 @@ module Astute
       return unless Astute.config.enable_graph_file
       graph_file = File.join(
         Astute.config.graph_dot_dir,
-        "graph-#{@ctx.task_id}.dot"
+        "graph-#{ctx.task_id}.dot"
       )
       File.open(graph_file, 'w') { |f| f.write(deployment.to_dot) }
       Astute.logger.info("Check graph into file #{graph_file}")
@@ -308,30 +311,32 @@ module Astute
       critical_nodes
     end
 
-    def fail_offline_nodes(tasks_graph, node_statuses_transitions)
-      offline_uids = detect_offline_nodes(tasks_graph.keys)
-      if offline_uids.present?
-        nodes = offline_uids.map do |uid|
-          {'uid' => uid,
-           'error_msg' => 'Node is not ready for deployment: '\
-                          'mcollective has not answered'
-          }.merge(node_statuses_transitions.fetch('failed', {}))
-        end
+    def fail_offline_nodes(args={})
+      critical_uids = args.fetch(:critical_uids, [])
+      offline_uids = args.fetch(:offline_uids, [])
+      node_statuses_transitions = args.fetch(:node_statuses_transitions, {})
 
-        @ctx.report_and_update_status(
-          'nodes' => nodes,
-          'error' => 'Node is not ready for deployment'
-        )
+      return if offline_uids.blank?
 
-        missing_required = critical_node_uids(tasks_graph) & offline_uids
-        if missing_required.present?
-          error_message = "Critical nodes are not available for deployment: " \
-                          "#{missing_required}"
-          raise Astute::DeploymentEngineError, error_message
-        end
+      nodes = offline_uids.map do |uid|
+        {'uid' => uid,
+         'error_msg' => 'Node is not ready for deployment: '\
+                        'mcollective has not answered'
+        }.merge(node_statuses_transitions.fetch('failed', {}))
       end
 
-      offline_uids
+      ctx.report_and_update_status(
+        'nodes' => nodes,
+        'error' => 'Node is not ready for deployment'
+      )
+
+      missing_required = critical_uids & offline_uids
+      if missing_required.present?
+        error_message = "Critical nodes are not available for deployment: " \
+                        "#{missing_required}"
+        raise Astute::DeploymentEngineError, error_message
+      end
+
     end
 
     def detect_offline_nodes(uids)
@@ -344,7 +349,7 @@ module Astute
       if uids.present?
         Astute.config.mc_retries.times.each do
           systemtype = MClient.new(
-              @ctx,
+              ctx,
               "systemtype",
               uids,
               _check_result=false,
@@ -368,7 +373,7 @@ module Astute
       node_report = cluster.nodes.inject([]) do |node_progress, node|
         node_progress += [{'uid' => node[0].to_s, 'progress' => 100}]
       end
-      @ctx.report('nodes' => node_report)
+      ctx.report('nodes' => node_report)
     end
 
   end
