@@ -378,6 +378,27 @@ describe Astute::TaskNode do
           })
           task_node.poll
         end
+
+        it 'should report stopped if node skipped' do
+          cluster.node_statuses_transitions['stopped'] = {
+            'status' => 'stopped'
+          }
+          cluster.node_statuses_transitions['successful'] = {
+            'status' => 'ready'
+          }
+
+          task_node.set_status_skipped
+          task_node.stubs(:finished?).returns(true)
+          task_node.stubs(:successful?).returns(true)
+
+          ctx.expects(:report).with({
+            'nodes' => [{
+              'uid' => 'node_id',
+              'status' => 'stopped',
+              'progress' => 100}]
+          })
+          task_node.report_node_status
+        end
       end
 
       it 'should report error if task failed and no more task' do
