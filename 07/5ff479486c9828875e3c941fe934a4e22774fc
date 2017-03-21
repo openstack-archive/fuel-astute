@@ -1,0 +1,9 @@
+Code-Review+2: Vladimir Kozhukalov <vkozhukalov@mirantis.com>
+Code-Review+2: Vladimir Sharshov <vsharshov@mirantis.com>
+Workflow+1: Vladimir Kozhukalov <vkozhukalov@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 21 Mar 2017 15:26:20 +0000
+Reviewed-on: https://review.openstack.org/448102
+Project: openstack/fuel-astute
+Branch: refs/heads/stable/ocata
