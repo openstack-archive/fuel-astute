@@ -97,6 +97,7 @@ module Astute
         :manifest => @options['puppet_manifest'],
         :modules  => @options['puppet_modules'],
         :cwd => @options['cwd'],
+        :command_prefix => @options['command_prefix'],
         :puppet_noop_run => @options['puppet_noop_run'],
       ).first
       return result[:statuscode] == 0, result[:statusmsg]
