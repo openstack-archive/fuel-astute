@@ -281,7 +281,7 @@ module Astute
             Astute.config.stop_timeout,
             target_task_uuid,
             service_data
-          ).merge({'nodes' => nodes})
+          )
         else
           kill_main_process(target_task_uuid, service_data)
           @orchestrator.stop_provision(

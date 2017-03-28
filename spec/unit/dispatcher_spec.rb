@@ -111,7 +111,7 @@ describe Astute::Server::Dispatcher do
       dispatcher.expects(:gracefully_stop_main_process).with('0000-0000', service_data)
       dispatcher.expects(:wait_while_process_run).with(anything, anything, '0000-0000', service_data)
         .returns({})
-      dispatcher.expects(:report_result).with({'nodes' => [{'uid' => 1}]}, anything)
+      dispatcher.expects(:report_result).with({}, anything)
       dispatcher.stop_deploy_task(data, service_data)
     end
 
