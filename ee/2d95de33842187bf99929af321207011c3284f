@@ -1,0 +1,11 @@
+Code-Review+2: Vladimir Sharshov <vsharshov@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Workflow+1: Vladimir Kuklin <vkuklin@mirantis.com>
+Code-Review+2: Alexey Shtokolov <ashtokolov@mirantis.com>
+Workflow+1: Alexey Shtokolov <ashtokolov@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 28 Mar 2017 17:39:05 +0000
+Reviewed-on: https://review.openstack.org/450875
+Project: openstack/fuel-astute
+Branch: refs/heads/stable/newton
