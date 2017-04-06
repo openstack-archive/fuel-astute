@@ -59,7 +59,6 @@ describe Astute::Server::Dispatcher do
 
     it 'should remove nodes when check passes' do
       orchestrator.stubs(:check_ceph_osds).returns({"status" => "ready"}).once
-      orchestrator.stubs(:remove_ceph_mons).returns({"status" => "ready"}).once
       Astute::Provisioner.any_instance.expects(:remove_nodes).once
       dispatcher.remove_nodes(data)
     end

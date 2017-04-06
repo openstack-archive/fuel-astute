@@ -244,10 +244,6 @@ module Astute
       PreDelete.check_ceph_osds(Context.new(task_id, reporter), nodes)
     end
 
-    def remove_ceph_mons(reporter, task_id, nodes)
-      PreDelete.remove_ceph_mons(Context.new(task_id, reporter), nodes)
-    end
-
     def perform_pre_deletion_tasks(reporter, task_id, nodes, options={})
       result = {'status' => 'ready'}
       # This option is no longer Ceph-specific and should be renamed
@@ -256,8 +252,6 @@ module Astute
         result = check_for_offline_nodes(reporter, task_id, nodes)
         return result if result['status'] != 'ready'
         result = check_ceph_osds(reporter, task_id, nodes)
-        return result if result['status'] != 'ready'
-        result = remove_ceph_mons(reporter, task_id, nodes)
       end
       result
     end
