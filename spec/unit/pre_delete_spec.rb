@@ -184,14 +184,6 @@ describe Astute::PreDelete do
           .returns(build_mcresult(stdout="", node['id'], 0))
       end
 
-      mclient.expects(:execute).with({:cmd =>
-        "sed -i \"s/mon_initial_members.*/mon_initial_members = node-3/g\" /etc/ceph/ceph.conf"})
-        .returns(build_mcresult(stdout="", "3", 0))
-
-      mclient.expects(:execute).with({:cmd =>
-        "sed -i \"s/mon_host.*/mon_host = 192.168.0.13/g\" /etc/ceph/ceph.conf"})
-        .returns(build_mcresult(stdout="", "3", 0))
-
       expect(Astute::PreDelete.remove_ceph_mons(ctx, nodes)).to eq(success_result)
     end
 
