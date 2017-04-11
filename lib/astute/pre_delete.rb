@@ -80,49 +80,17 @@ module Astute
 
     def self.remove_ceph_mons(ctx, nodes)
       answer = {"status" => "ready"}
-      ceph_mon_nodes = nodes.select { |n| n["roles"].include? "controller" }
-      ceph_mons = ceph_mon_nodes.collect{ |n| n["slave_name"] }
+
+      ceph_mon_nodes = nodes.select { |n| n['roles'].include? 'controller' }
       return answer if ceph_mon_nodes.empty?
 
-      #Get the list of mon nodes
-      result = {}
-      shell = nil
-
-      ceph_mon_nodes.each do |ceph_mon_node|
-        shell = MClient.new(ctx, "execute_shell_command", [ceph_mon_node["id"]], timeout=120, retries=1)
-        result = shell.execute(:cmd => "ceph -f json mon dump").first.results
-        break if result[:data][:exit_code] == 0
-      end
-
-      if result[:data][:exit_code] != 0
-        Astute.logger.debug "Ceph mon has not been found or has not been configured properly" \
-          " Safely removing nodes..."
-        return answer
-      end
-
-      mon_dump = JSON.parse(result[:data][:stdout])
-      left_mons = mon_dump['mons'].select { | n | n if ! ceph_mons.include? n['name'] }
-      left_mon_names = left_mons.collect { |n| n['name'] }
-      left_mon_ips = left_mons.collect { |n| n['addr'].split(":")[0] }
-
       #Remove nodes from ceph cluster
-      Astute.logger.info("Removing ceph mons #{ceph_mons} from cluster")
       ceph_mon_nodes.each do |node|
-        shell = MClient.new(ctx, "execute_shell_command", [node["id"]], timeout=120, retries=1)
+        shell = MClient.new(ctx, 'execute_shell_command', [node['id']], timeout=120, retries=1)
         #remove node from ceph mon list
-        shell.execute(:cmd => "ceph mon remove #{node["slave_name"]}").first.results
+        shell.execute(:cmd => "ceph mon remove #{node['slave_name']}").first.results
+        Astute.logger.info("Ceph monitor(#{node['slave_name']}) has been removed from cluster")
       end
-
-      #Fix the ceph.conf on the left mon nodes
-      left_mon_names.each do |node|
-        mon_initial_members_cmd = "sed -i \"s/mon_initial_members.*/mon_initial_members\ = #{left_mon_names.join(" ")}/g\" /etc/ceph/ceph.conf"
-        mon_host_cmd = "sed -i \"s/mon_host.*/mon_host\ = #{left_mon_ips.join(" ")}/g\" /etc/ceph/ceph.conf"
-        shell = MClient.new(ctx, "execute_shell_command", [node.split('-')[1]], timeout=120, retries=1)
-        shell.execute(:cmd => mon_initial_members_cmd).first.results
-        shell.execute(:cmd => mon_host_cmd).first.results
-      end
-
-      Astute.logger.info("Ceph mons are left in cluster: #{left_mon_names}")
 
       answer
     end

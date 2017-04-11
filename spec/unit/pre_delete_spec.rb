@@ -128,18 +128,6 @@ describe Astute::PreDelete do
 
   describe '#remove_ceph_mons' do
 
-    let(:mon_cmd) { "ceph -f json mon dump" }
-    let(:json_resp) do
-      '{
-        "epoch": 5,
-        "mons": [
-          {"name":"node-1", "addr":"192.168.0.11:6789\/0"},
-          {"name":"node-2", "addr":"192.168.0.12:6789\/0"},
-          {"name":"node-3", "addr":"192.168.0.13:6789\/0"}
-        ]
-      }'
-    end
-
     def mon_rm_cmd(slave_name)
       "ceph mon remove #{slave_name}"
     end
@@ -157,40 +145,16 @@ describe Astute::PreDelete do
         ]
       }
 
-      it "should do nothing if no nodes have ceph-osd role" do
+      it "should do nothing if no nodes have controller role" do
         expect(Astute::PreDelete.remove_ceph_mons(ctx, nodes)).to eq(success_result)
       end
     end
 
-    it 'should ignore nodes with unconfigured or failed ceph mons' do
-      mclient.expects(:execute).with({:cmd => mon_cmd}).twice
-        .returns(build_mcresult(stdout="", "1", 42))
-        .then.returns(build_mcresult(stdout=json_resp, "2", 1))
-
-      nodes.each do |node|
-        mclient.expects(:execute).with({:cmd => mon_rm_cmd(node['slave_name'])}).never
-      end
-
-      expect(Astute::PreDelete.remove_ceph_mons(ctx, nodes)).to eq(success_result)
-    end
-
     it 'should find and delete live ceph mon installation' do
-      mclient.expects(:execute).with({:cmd => mon_cmd}).twice
-        .returns(build_mcresult(stdout="", "1", 42))
-        .then.returns(build_mcresult(stdout=json_resp, "2", 0))
-
       nodes.each do |node|
         mclient.expects(:execute).with({:cmd => mon_rm_cmd(node['slave_name'])}).once
           .returns(build_mcresult(stdout="", node['id'], 0))
       end
-
-      mclient.expects(:execute).with({:cmd =>
-        "sed -i \"s/mon_initial_members.*/mon_initial_members = node-3/g\" /etc/ceph/ceph.conf"})
-        .returns(build_mcresult(stdout="", "3", 0))
-
-      mclient.expects(:execute).with({:cmd =>
-        "sed -i \"s/mon_host.*/mon_host = 192.168.0.13/g\" /etc/ceph/ceph.conf"})
-        .returns(build_mcresult(stdout="", "3", 0))
 
       expect(Astute::PreDelete.remove_ceph_mons(ctx, nodes)).to eq(success_result)
     end
